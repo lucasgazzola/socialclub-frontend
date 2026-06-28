@@ -1,0 +1,21 @@
+name: socialclub-frontend
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Levanta el frontend en modo desarrollo (hot-reload).
+#   docker compose up --build
+# Requiere que el backend esté corriendo aparte (ver repo socialclub-backend).
+# La app queda en http://localhost:5173
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  frontend:
+    build:
+      context: .
+      target: dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - '5173:5173'
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
