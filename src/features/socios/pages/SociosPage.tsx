@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';
@@ -20,12 +21,15 @@ const POR_PAGINA = 10;
  */
 export function SociosPage() {
 <<<<<<< HEAD
+<<<<<<< HEAD
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 
 =======
+=======
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
   const location = useLocation();
   const [busqueda, setBusqueda] = useState('');
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
@@ -45,6 +49,7 @@ export function SociosPage() {
       return () => clearTimeout(timer);
     }
   }, [mensajeState]);
+<<<<<<< HEAD
 <<<<<<< HEAD
 
   useEffect(() => {

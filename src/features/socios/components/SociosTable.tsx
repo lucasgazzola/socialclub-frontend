@@ -24,6 +24,11 @@ export function SociosTable({ socios }: SociosTableProps) {
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
+=======
+  const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const esAdmin = usuario?.roles.includes('ADMIN');
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
   if (socios.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">

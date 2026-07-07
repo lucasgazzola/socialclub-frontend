@@ -8,6 +8,7 @@ export const ROUTES = {
   dashboard: '/',
   socios: '/socios',
 <<<<<<< HEAD
+<<<<<<< HEAD
   sociosNuevo: '/socios/nuevo',
   sociosEditar: '/socios/:id/editar',
   cuotas: '/cuotas',
