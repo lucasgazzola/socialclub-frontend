@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import type { Paginated } from '@/types/api';
-import type { Socio, SociosQuery } from '../types';
+import type { Socio, SocioFormData, SociosQuery } from '../types';
 
 export const sociosApi = {
   async list(query: SociosQuery = {}): Promise<Paginated<Socio>> {
@@ -10,6 +10,11 @@ export const sociosApi = {
 
   async getById(id: number): Promise<Socio> {
     const { data } = await apiClient.get<Socio>(`/socios/${id}`);
+    return data;
+  },
+
+  async create(formData: SocioFormData): Promise<Socio> {
+    const { data } = await apiClient.post<Socio>('/socios', formData);
     return data;
   },
 };

@@ -1,3 +1,7 @@
+import type { SocioFormData } from './schemas';
+
+export type { SocioFormData };
+
 export interface CategoriaSocio {
   id: number;
   nombre: string;
@@ -24,3 +28,5 @@ export interface SociosQuery {
   pagina?: number;
   porPagina?: number;
 }
+
+

@@ -1,6 +1,9 @@
-import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { ROUTES } from '@/routes/paths';
 import { useSocios } from '../hooks/useSocios';
 import { SociosTable } from '../components/SociosTable';
 
@@ -13,9 +16,34 @@ const POR_PAGINA = 10;
  * Eventos, etc.
  */
 export function SociosPage() {
-  const [busqueda, setBusqueda] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { usuario } = useAuth();
+  const esAdmin = usuario?.roles.includes('ADMIN');
+
   const [textoInput, setTextoInput] = useState('');
+  const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
+  const [mensaje, setMensaje] = useState<string | null>(null);
+
+  const mensajeState = (location.state as { mensaje?: string } | null)?.mensaje;
+
+  useEffect(() => {
+    if (mensajeState) {
+      setMensaje(mensajeState);
+      window.history.replaceState({}, document.title);
+      const timer = setTimeout(() => setMensaje(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensajeState]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPagina(1);
+      setBusqueda(textoInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [textoInput]);
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
@@ -25,32 +53,35 @@ export function SociosPage() {
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
 
-  const buscar = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPagina(1);
-    setBusqueda(textoInput.trim());
-  };
-
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
-          <p className="mt-1 text-sm text-slate-500">Consultá y filtrá los socios del club.</p>
+          <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
-        <form onSubmit={buscar} className="flex w-full max-w-sm items-end gap-2">
+        <div className="flex items-center gap-2">
           <Input
             id="busqueda"
             placeholder="Buscar por nombre, apellido o DNI"
             value={textoInput}
             onChange={(e) => setTextoInput(e.target.value)}
+            className="w-64"
           />
-          <Button type="submit" variant="secondary">
-            <Search size={16} />
-            Buscar
-          </Button>
-        </form>
+          {esAdmin && (
+            <Button onClick={() => navigate(ROUTES.sociosNuevo)} className="whitespace-nowrap">
+              <Plus size={16} />
+              Nuevo Socio
+            </Button>
+          )}
+        </div>
       </header>
+
+      {mensaje && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {mensaje}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-12">
