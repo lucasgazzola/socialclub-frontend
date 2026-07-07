@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';
@@ -18,11 +19,16 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
+<<<<<<< HEAD
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 
+=======
+  const location = useLocation();
+  const [busqueda, setBusqueda] = useState('');
+>>>>>>> 9d9d3ee (feat[US-13]: editar socio)
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [busqueda, setBusqueda] = useState('');
@@ -39,6 +45,7 @@ export function SociosPage() {
       return () => clearTimeout(timer);
     }
   }, [mensajeState]);
+<<<<<<< HEAD
 
   useEffect(() => {
     const timer = setTimeout(() => {

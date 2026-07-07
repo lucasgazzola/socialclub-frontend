@@ -101,4 +101,7 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
       </div>
     </form>
   );
+<<<<<<< HEAD
+}
+=======
 }
