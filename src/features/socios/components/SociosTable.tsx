@@ -13,11 +13,6 @@ interface SociosTableProps {
 
 /** Tabla de presentación de socios (componente "tonto", sin lógica de datos). */
 export function SociosTable({ socios }: SociosTableProps) {
-  const [confirmId, setConfirmId] = useState<number | null>(null);
-  const { mutate: desactivar, isPending } = useDesactivarSocio();
-  const navigate = useNavigate();
-  const { usuario } = useAuth();
-  const esAdmin = usuario?.roles.includes('ADMIN');
 
   if (socios.length === 0) {
     return (
@@ -35,6 +30,7 @@ export function SociosTable({ socios }: SociosTableProps) {
             <th className="px-4 py-3 font-medium">Apellido y nombre</th>
             <th className="px-4 py-3 font-medium">DNI</th>
             <th className="px-4 py-3 font-medium">Email</th>
+            <th className="px-4 py-3 font-medium">Email</th>
             <th className="px-4 py-3 font-medium">Categoría</th>
             <th className="px-4 py-3 font-medium">Estado</th>
             <th className="px-4 py-3 font-medium">Acciones</th>
@@ -48,6 +44,7 @@ export function SociosTable({ socios }: SociosTableProps) {
                 {socio.apellido}, {socio.nombre}
               </td>
               <td className="px-4 py-3 text-slate-600">{socio.dni}</td>
+              <td className="px-4 py-3 text-slate-600">{socio.email ?? '—'}</td>
               <td className="px-4 py-3 text-slate-600">{socio.email ?? '—'}</td>
               <td className="px-4 py-3 text-slate-600">{socio.categoria?.nombre ?? '—'}</td>
               <td className="px-4 py-3">

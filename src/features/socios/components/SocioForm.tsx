@@ -31,7 +31,7 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
       await onSubmit(values);
     } catch (error) {
       const err = error as Error & { status?: number };
-      if (err.status === 409 || err.message?.toLowerCase().includes('dni')) {
+      if (err.status === 409) {
         setErrorServidor('Ya existe un socio registrado con ese DNI.');
       } else {
         setErrorServidor(err.message ?? 'Ocurrió un error inesperado. Intentá nuevamente.');
