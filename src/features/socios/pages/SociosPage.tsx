@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
-<<<<<<< HEAD
-<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-=======
-=======
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
-import { useLocation } from 'react-router-dom';
-import { Search } from 'lucide-react';
->>>>>>> 9d9d3ee (feat[US-13]: editar socio)
 import { Button, Input, Spinner } from '@/components/ui';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { ROUTES } from '@/routes/paths';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import { useSocios } from '../hooks/useSocios';
@@ -24,20 +18,13 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
-<<<<<<< HEAD
-<<<<<<< HEAD
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 
-=======
-=======
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
-  const location = useLocation();
-  const [busqueda, setBusqueda] = useState('');
->>>>>>> 9d9d3ee (feat[US-13]: editar socio)
   const [textoInput, setTextoInput] = useState('');
+  const [busqueda, setBusqueda] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -52,8 +39,6 @@ export function SociosPage() {
       return () => clearTimeout(timer);
     }
   }, [mensajeState]);
-<<<<<<< HEAD
-<<<<<<< HEAD
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -62,12 +47,6 @@ export function SociosPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [textoInput]);
-
-  const { data: categorias } = useCategorias();
-=======
->>>>>>> 9d9d3ee (feat[US-13]: editar socio)
-=======
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
@@ -78,7 +57,6 @@ export function SociosPage() {
   });
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
-  const hayResultados = (data?.items.length ?? 0) > 0;
 
   return (
     <div className="space-y-6">
@@ -86,13 +64,16 @@ export function SociosPage() {
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
           <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
+          <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
+        <div className="flex items-center gap-2">
         <div className="flex items-center gap-2">
           <Input
             id="busqueda"
             placeholder="Buscar por nombre, apellido o DNI"
             value={textoInput}
             onChange={(e) => setTextoInput(e.target.value)}
+            className="w-64"
             className="w-64"
           />
           {esAdmin && (
@@ -102,7 +83,20 @@ export function SociosPage() {
             </Button>
           )}
         </div>
+          {esAdmin && (
+            <Button onClick={() => navigate(ROUTES.sociosNuevo)} className="whitespace-nowrap">
+              <Plus size={16} />
+              Nuevo Socio
+            </Button>
+          )}
+        </div>
       </header>
+
+      {mensaje && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {mensaje}
+        </div>
+      )}
 
       {mensaje && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
