@@ -9,10 +9,6 @@ export const sociosKeys = {
   detail: (id: number) => [...sociosKeys.all, 'detail', id] as const,
 };
 
-/**
- * Hook de datos de socios. Encapsula react-query para que las páginas/componentes
- * no conozcan los detalles del cache ni del fetching.
- */
 export function useSocios(query: SociosQuery) {
   return useQuery({
     queryKey: sociosKeys.list(query),
@@ -28,6 +24,7 @@ export function useSocio(id: number) {
   });
 }
 
+<<<<<<< HEAD
 export function useCrearSocio() {
   const qc = useQueryClient();
   return useMutation({
@@ -37,3 +34,12 @@ export function useCrearSocio() {
 }
 
 
+=======
+export function useEditarSocio(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<SocioFormData>) => sociosApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: sociosKeys.all }),
+  });
+}
+>>>>>>> 9d9d3ee (feat[US-13]: editar socio)

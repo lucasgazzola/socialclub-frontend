@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+=======
+import { useLocation } from 'react-router-dom';
+import { Search } from 'lucide-react';
+>>>>>>> 9d9d3ee (feat[US-13]: editar socio)
 import { Button, Input, Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
@@ -16,11 +21,16 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
+<<<<<<< HEAD
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 
+=======
+  const location = useLocation();
+  const [busqueda, setBusqueda] = useState('');
+>>>>>>> 9d9d3ee (feat[US-13]: editar socio)
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
@@ -36,6 +46,7 @@ export function SociosPage() {
       return () => clearTimeout(timer);
     }
   }, [mensajeState]);
+<<<<<<< HEAD
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -46,6 +57,8 @@ export function SociosPage() {
   }, [textoInput]);
 
   const { data: categorias } = useCategorias();
+=======
+>>>>>>> 9d9d3ee (feat[US-13]: editar socio)
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,

@@ -33,4 +33,19 @@ export interface SociosQuery {
   porPagina?: number;
 }
 
+<<<<<<< HEAD
 
+=======
+/** Convierte un Socio (de API) en datos de formulario. */
+export function socioToFormData(socio: Socio): SocioFormData {
+  return {
+    nombre: socio.nombre,
+    apellido: socio.apellido,
+    dni: socio.dni,
+    fechaNacimiento: socio.fechaNacimiento ?? undefined,
+    email: socio.email ?? undefined,
+    telefono: socio.telefono ?? undefined,
+    categoriaId: socio.categoriaId ?? undefined,
+  };
+}
+>>>>>>> 9d9d3ee (feat[US-13]: editar socio)
