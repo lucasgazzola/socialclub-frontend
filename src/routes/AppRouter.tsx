@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
+import { EditarSocioPage } from '@/features/socios/pages/EditarSocioPage';
 import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -23,9 +24,14 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
 
-          {/* Socios: accesible a ADMIN y COLABORADOR */}
+          {/* Socios: consulta accesible a ADMIN y COLABORADOR */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
+          </Route>
+
+          {/* Socios: editar solo ADMIN */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
+            <Route path="socios/:id/editar" element={<EditarSocioPage />} />
           </Route>
 
           {/* Usuarios: solo ADMIN */}

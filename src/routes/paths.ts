@@ -6,5 +6,6 @@ export const ROUTES = {
   login: '/login',
   dashboard: '/',
   socios: '/socios',
+  sociosEditar: '/socios/:id/editar',
   usuarios: '/usuarios',
 } as const;

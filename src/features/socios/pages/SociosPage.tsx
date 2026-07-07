@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';
 import { useSocios } from '../hooks/useSocios';
@@ -13,9 +14,22 @@ const POR_PAGINA = 10;
  * Eventos, etc.
  */
 export function SociosPage() {
+  const location = useLocation();
   const [busqueda, setBusqueda] = useState('');
   const [textoInput, setTextoInput] = useState('');
   const [pagina, setPagina] = useState(1);
+  const [mensaje, setMensaje] = useState<string | null>(null);
+
+  const mensajeState = (location.state as { mensaje?: string } | null)?.mensaje;
+
+  useEffect(() => {
+    if (mensajeState) {
+      setMensaje(mensajeState);
+      window.history.replaceState({}, document.title);
+      const timer = setTimeout(() => setMensaje(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensajeState]);
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
@@ -51,6 +65,12 @@ export function SociosPage() {
           </Button>
         </form>
       </header>
+
+      {mensaje && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {mensaje}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-12">
