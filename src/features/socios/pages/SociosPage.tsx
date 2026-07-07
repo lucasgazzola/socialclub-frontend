@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
@@ -18,11 +18,8 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { usuario } = useAuth();
-  const esAdmin = usuario?.roles.includes('ADMIN');
-
+  const [busqueda, setBusqueda] = useState('');
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [busqueda, setBusqueda] = useState('');
@@ -39,14 +36,6 @@ export function SociosPage() {
       return () => clearTimeout(timer);
     }
   }, [mensajeState]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPagina(1);
-      setBusqueda(textoInput.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [textoInput]);
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
@@ -91,12 +80,6 @@ export function SociosPage() {
           )}
         </div>
       </header>
-
-      {mensaje && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {mensaje}
-        </div>
-      )}
 
       {mensaje && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
