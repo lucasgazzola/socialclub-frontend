@@ -7,10 +7,9 @@ export const ROUTES = {
   register: '/register',
   dashboard: '/',
   socios: '/socios',
-<<<<<<< HEAD
   sociosNuevo: '/socios/nuevo',
   sociosEditar: '/socios/:id/editar',
-  cuotas: '/cuotas',
+  sociosEditar: '/socios/:id/editar',
   usuarios: '/usuarios',
   auditoria: '/auditoria',
   inscripcion: '/inscripcion',

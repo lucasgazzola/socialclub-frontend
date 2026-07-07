@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 =======
+=======
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
 import { useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
@@ -24,12 +27,15 @@ const POR_PAGINA = 10;
  */
 export function SociosPage() {
 <<<<<<< HEAD
+<<<<<<< HEAD
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 
 =======
+=======
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
   const location = useLocation();
   const [busqueda, setBusqueda] = useState('');
   const [textoInput, setTextoInput] = useState('');
@@ -48,6 +54,7 @@ export function SociosPage() {
     }
   }, [mensajeState]);
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -60,6 +67,8 @@ export function SociosPage() {
   const { data: categorias } = useCategorias();
 =======
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
+=======
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
