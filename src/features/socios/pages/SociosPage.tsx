@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+=======
+import { useLocation } from 'react-router-dom';
+import { Search } from 'lucide-react';
+>>>>>>> 9d9d3ee (feat[US-13]: editar socio)
 import { Button, Input, Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
@@ -16,12 +21,13 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
+<<<<<<< HEAD
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 
-  const navigate = useNavigate();
+=======
   const location = useLocation();
   const [busqueda, setBusqueda] = useState('');
   const [textoInput, setTextoInput] = useState('');
@@ -39,26 +45,7 @@ export function SociosPage() {
       return () => clearTimeout(timer);
     }
   }, [mensajeState]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPagina(1);
-      setBusqueda(textoInput.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [textoInput]);
-  const [mensaje, setMensaje] = useState<string | null>(null);
-
-  const mensajeState = (location.state as { mensaje?: string } | null)?.mensaje;
-
-  useEffect(() => {
-    if (mensajeState) {
-      setMensaje(mensajeState);
-      window.history.replaceState({}, document.title);
-      const timer = setTimeout(() => setMensaje(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [mensajeState]);
+<<<<<<< HEAD
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -69,6 +56,8 @@ export function SociosPage() {
   }, [textoInput]);
 
   const { data: categorias } = useCategorias();
+=======
+>>>>>>> 9d9d3ee (feat[US-13]: editar socio)
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
