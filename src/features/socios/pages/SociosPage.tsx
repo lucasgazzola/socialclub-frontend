@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-<<<<<<< HEAD
-<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';
@@ -20,19 +18,11 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
-<<<<<<< HEAD
-<<<<<<< HEAD
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 
-=======
-=======
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
-  const location = useLocation();
-  const [busqueda, setBusqueda] = useState('');
->>>>>>> 9d9d3ee (feat[US-13]: editar socio)
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [busqueda, setBusqueda] = useState('');
@@ -49,8 +39,6 @@ export function SociosPage() {
       return () => clearTimeout(timer);
     }
   }, [mensajeState]);
-<<<<<<< HEAD
-<<<<<<< HEAD
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -75,6 +63,7 @@ export function SociosPage() {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
+          <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
           <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -102,6 +91,12 @@ export function SociosPage() {
           )}
         </div>
       </header>
+
+      {mensaje && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {mensaje}
+        </div>
+      )}
 
       {mensaje && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
