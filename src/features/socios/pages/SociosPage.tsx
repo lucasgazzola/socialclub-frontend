@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
@@ -18,10 +18,15 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { usuario } = useAuth();
+  const esAdmin = usuario?.roles.includes('ADMIN');
+
+  const navigate = useNavigate();
   const location = useLocation();
   const [busqueda, setBusqueda] = useState('');
   const [textoInput, setTextoInput] = useState('');
-  const [busqueda, setBusqueda] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -37,6 +42,36 @@ export function SociosPage() {
     }
   }, [mensajeState]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPagina(1);
+      setBusqueda(textoInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [textoInput]);
+  const [mensaje, setMensaje] = useState<string | null>(null);
+
+  const mensajeState = (location.state as { mensaje?: string } | null)?.mensaje;
+
+  useEffect(() => {
+    if (mensajeState) {
+      setMensaje(mensajeState);
+      window.history.replaceState({}, document.title);
+      const timer = setTimeout(() => setMensaje(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensajeState]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPagina(1);
+      setBusqueda(textoInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [textoInput]);
+
+  const { data: categorias } = useCategorias();
+
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
     categoriaId,
@@ -46,6 +81,7 @@ export function SociosPage() {
   });
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
+  const hayResultados = (data?.items.length ?? 0) > 0;
 
   return (
     <div className="space-y-6">
@@ -54,15 +90,14 @@ export function SociosPage() {
           <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
           <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
           <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
+          <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
-        <div className="flex items-center gap-2">
         <div className="flex items-center gap-2">
           <Input
             id="busqueda"
             placeholder="Buscar por nombre, apellido o DNI"
             value={textoInput}
             onChange={(e) => setTextoInput(e.target.value)}
-            className="w-64"
             className="w-64"
           />
           {esAdmin && (
@@ -72,14 +107,13 @@ export function SociosPage() {
             </Button>
           )}
         </div>
-          {esAdmin && (
-            <Button onClick={() => navigate(ROUTES.sociosNuevo)} className="whitespace-nowrap">
-              <Plus size={16} />
-              Nuevo Socio
-            </Button>
-          )}
-        </div>
       </header>
+
+      {mensaje && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {mensaje}
+        </div>
+      )}
 
       {mensaje && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">

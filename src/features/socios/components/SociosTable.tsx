@@ -27,6 +27,7 @@ export function SociosTable({ socios }: SociosTableProps) {
             <th className="px-4 py-3 font-medium">Apellido y nombre</th>
             <th className="px-4 py-3 font-medium">DNI</th>
             <th className="px-4 py-3 font-medium">Email</th>
+            <th className="px-4 py-3 font-medium">Email</th>
             <th className="px-4 py-3 font-medium">Categoría</th>
             <th className="px-4 py-3 font-medium">Estado</th>
             <th className="px-4 py-3 font-medium">Acciones</th>
@@ -39,6 +40,7 @@ export function SociosTable({ socios }: SociosTableProps) {
                 {socio.apellido}, {socio.nombre}
               </td>
               <td className="px-4 py-3 text-slate-600">{socio.dni}</td>
+              <td className="px-4 py-3 text-slate-600">{socio.email ?? '—'}</td>
               <td className="px-4 py-3 text-slate-600">{socio.email ?? '—'}</td>
               <td className="px-4 py-3 text-slate-600">{socio.categoria?.nombre ?? '—'}</td>
               <td className="px-4 py-3">
