@@ -7,10 +7,14 @@ export const ROUTES = {
   dashboard: '/',
   socios: '/socios',
 <<<<<<< HEAD
+<<<<<<< HEAD
   sociosNuevo: '/socios/nuevo',
 =======
   sociosEditar: '/socios/:id/editar',
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
+=======
+  sociosEditar: '/socios/:id/editar',
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
   usuarios: '/usuarios',
   inscripcion: '/inscripcion',
 } as const;

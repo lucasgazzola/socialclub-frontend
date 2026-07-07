@@ -34,8 +34,11 @@ export interface SociosQuery {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
+=======
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
 /** Convierte un Socio (de API) en datos de formulario. */
 export function socioToFormData(socio: Socio): SocioFormData {
   return {
@@ -48,4 +51,7 @@ export function socioToFormData(socio: Socio): SocioFormData {
     categoriaId: socio.categoriaId ?? undefined,
   };
 }
+<<<<<<< HEAD
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
+=======
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)

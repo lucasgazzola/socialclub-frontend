@@ -22,12 +22,17 @@ export const sociosApi = {
   },
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   async create(formData: SocioFormData): Promise<Socio> {
     const { data } = await apiClient.post<Socio>('/socios', formData);
 =======
   async update(id: number, formData: Partial<SocioFormData>): Promise<Socio> {
     const { data } = await apiClient.patch<Socio>(`/socios/${id}`, formData);
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
+=======
+  async update(id: number, formData: Partial<SocioFormData>): Promise<Socio> {
+    const { data } = await apiClient.patch<Socio>(`/socios/${id}`, formData);
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
     return data;
   },
 };

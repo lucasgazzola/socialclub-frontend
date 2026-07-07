@@ -25,6 +25,7 @@ export function useSocio(id: number) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export function useCrearSocio() {
   const qc = useQueryClient();
   return useMutation({
@@ -35,6 +36,8 @@ export function useCrearSocio() {
 
 
 =======
+=======
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
 export function useEditarSocio(id: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -42,4 +45,7 @@ export function useEditarSocio(id: number) {
     onSuccess: () => qc.invalidateQueries({ queryKey: sociosKeys.all }),
   });
 }
+<<<<<<< HEAD
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
+=======
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
