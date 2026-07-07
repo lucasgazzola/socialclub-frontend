@@ -17,10 +17,13 @@ export const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiError>) => {
+    const status = error.response?.status;
     const raw = error.response?.data?.message;
     const mensaje = Array.isArray(raw)
       ? raw.join(', ')
       : (raw ?? 'Ocurrió un error inesperado. Intentá nuevamente.');
-    return Promise.reject(new Error(mensaje));
+    const err = new Error(mensaje);
+    (err as { status?: number }).status = status;
+    return Promise.reject(err);
   },
 );

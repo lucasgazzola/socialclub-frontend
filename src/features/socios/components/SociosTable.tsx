@@ -6,6 +6,7 @@ interface SociosTableProps {
 
 /** Tabla de presentación de socios (componente "tonto", sin lógica de datos). */
 export function SociosTable({ socios }: SociosTableProps) {
+
   if (socios.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
@@ -21,6 +22,7 @@ export function SociosTable({ socios }: SociosTableProps) {
           <tr>
             <th className="px-4 py-3 font-medium">Apellido y nombre</th>
             <th className="px-4 py-3 font-medium">DNI</th>
+            <th className="px-4 py-3 font-medium">Email</th>
             <th className="px-4 py-3 font-medium">Categoría</th>
             <th className="px-4 py-3 font-medium">Estado</th>
           </tr>
@@ -32,6 +34,7 @@ export function SociosTable({ socios }: SociosTableProps) {
                 {socio.apellido}, {socio.nombre}
               </td>
               <td className="px-4 py-3 text-slate-600">{socio.dni}</td>
+              <td className="px-4 py-3 text-slate-600">{socio.email ?? '—'}</td>
               <td className="px-4 py-3 text-slate-600">{socio.categoria?.nombre ?? '—'}</td>
               <td className="px-4 py-3">
                 <span

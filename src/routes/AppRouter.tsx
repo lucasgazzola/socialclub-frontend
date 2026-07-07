@@ -3,6 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { SociosPage } from '@/features/socios/pages/SociosPage';
+import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { InscripcionPage } from '@/features/inscripcion/pages/InscripcionPage';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -24,9 +25,14 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
 
-          {/* Socios: accesible a ADMIN y COLABORADOR */}
+          {/* Socios: consulta accesible a ADMIN y COLABORADOR */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
+          </Route>
+
+          {/* Socios: crear y editar solo ADMIN */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
+            <Route path="socios/nuevo" element={<CrearSocioPage />} />
           </Route>
 
           {/* Usuarios: solo ADMIN */}

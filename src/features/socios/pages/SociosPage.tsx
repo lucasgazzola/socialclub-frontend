@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Search } from 'lucide-react';
-import { Button, Input, Select, Spinner } from '@/components/ui';
-import type { EstadoSocioFiltro } from '../types';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import { Button, Input, Spinner } from '@/components/ui';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { ROUTES } from '@/routes/paths';
 import { useSocios } from '../hooks/useSocios';
 import { useCategorias } from '../hooks/useCategorias';
 import { SociosTable } from '../components/SociosTable';
@@ -14,11 +16,34 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
-  const [busqueda, setBusqueda] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { usuario } = useAuth();
+  const esAdmin = usuario?.roles.includes('ADMIN');
+
   const [textoInput, setTextoInput] = useState('');
-  const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
-  const [estado, setEstado] = useState<EstadoSocioFiltro | undefined>(undefined);
+  const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
+  const [mensaje, setMensaje] = useState<string | null>(null);
+
+  const mensajeState = (location.state as { mensaje?: string } | null)?.mensaje;
+
+  useEffect(() => {
+    if (mensajeState) {
+      setMensaje(mensajeState);
+      window.history.replaceState({}, document.title);
+      const timer = setTimeout(() => setMensaje(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [mensajeState]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPagina(1);
+      setBusqueda(textoInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [textoInput]);
 
   const { data: categorias } = useCategorias();
 
@@ -33,70 +58,35 @@ export function SociosPage() {
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
 
-  const buscar = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPagina(1);
-    setBusqueda(textoInput.trim());
-  };
-
-  const cambiarCategoria = (value: string) => {
-    setPagina(1);
-    setCategoriaId(value ? Number(value) : undefined);
-  };
-
-  const cambiarEstado = (value: string) => {
-    setPagina(1);
-    setEstado(value ? (value as EstadoSocioFiltro) : undefined);
-  };
-
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
-          <p className="mt-1 text-sm text-slate-500">Buscá y filtrá los socios del club.</p>
+          <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
-
-        <div className="flex w-full max-w-3xl flex-wrap items-end gap-2">
-          <form onSubmit={buscar} className="flex flex-1 min-w-[220px] items-end gap-2">
-            <Input
-              id="busqueda"
-              placeholder="Buscar por nombre, apellido o DNI"
-              value={textoInput}
-              onChange={(e) => setTextoInput(e.target.value)}
-            />
-            <Button type="submit" variant="secondary">
-              <Search size={16} />
-              Buscar
+        <div className="flex items-center gap-2">
+          <Input
+            id="busqueda"
+            placeholder="Buscar por nombre, apellido o DNI"
+            value={textoInput}
+            onChange={(e) => setTextoInput(e.target.value)}
+            className="w-64"
+          />
+          {esAdmin && (
+            <Button onClick={() => navigate(ROUTES.sociosNuevo)} className="whitespace-nowrap">
+              <Plus size={16} />
+              Nuevo Socio
             </Button>
-          </form>
-
-          <Select
-            id="categoria"
-            value={categoriaId ?? ''}
-            onChange={(e) => cambiarCategoria(e.target.value)}
-            className="min-w-[160px]"
-          >
-            <option value="">Todas las categorías</option>
-            {categorias?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-          </Select>
-
-          <Select
-            id="estado"
-            value={estado ?? ''}
-            onChange={(e) => cambiarEstado(e.target.value)}
-            className="min-w-[140px]"
-          >
-            <option value="">Todos los estados</option>
-            <option value="ALTA">Alta</option>
-            <option value="BAJA">Baja</option>
-          </Select>
+          )}
         </div>
       </header>
+
+      {mensaje && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {mensaje}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-12">
