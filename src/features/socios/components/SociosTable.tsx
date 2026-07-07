@@ -3,6 +3,11 @@ import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
+import { useNavigate } from 'react-router-dom';
+import { Pencil } from 'lucide-react';
+import { Button } from '@/components/ui';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { ROUTES } from '@/routes/paths';
 import type { Socio } from '../types';
 
 interface SociosTableProps {
@@ -10,6 +15,9 @@ interface SociosTableProps {
 }
 
 export function SociosTable({ socios }: SociosTableProps) {
+  const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const esAdmin = usuario?.roles.includes('ADMIN');
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
@@ -29,9 +37,9 @@ export function SociosTable({ socios }: SociosTableProps) {
             <th className="px-4 py-3 font-medium">Apellido y nombre</th>
             <th className="px-4 py-3 font-medium">DNI</th>
             <th className="px-4 py-3 font-medium">Email</th>
-            <th className="px-4 py-3 font-medium">Email</th>
             <th className="px-4 py-3 font-medium">Categoría</th>
             <th className="px-4 py-3 font-medium">Estado</th>
+            {esAdmin && <th className="px-4 py-3 font-medium">Acciones</th>}
             {esAdmin && <th className="px-4 py-3 font-medium">Acciones</th>}
           </tr>
         </thead>
@@ -42,7 +50,6 @@ export function SociosTable({ socios }: SociosTableProps) {
                 {socio.apellido}, {socio.nombre}
               </td>
               <td className="px-4 py-3 text-slate-600">{socio.dni}</td>
-              <td className="px-4 py-3 text-slate-600">{socio.email ?? '—'}</td>
               <td className="px-4 py-3 text-slate-600">{socio.email ?? '—'}</td>
               <td className="px-4 py-3 text-slate-600">{socio.categoria?.nombre ?? '—'}</td>
               <td className="px-4 py-3">
@@ -56,6 +63,18 @@ export function SociosTable({ socios }: SociosTableProps) {
                   {socio.activo ? 'Alta' : 'Baja'}
                 </span>
               </td>
+              {esAdmin && (
+                <td className="px-4 py-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(ROUTES.sociosEditar.replace(':id', String(socio.id)))}
+                  >
+                    <Pencil size={14} />
+                    Editar
+                  </Button>
+                </td>
+              )}
               {esAdmin && (
                 <td className="px-4 py-3">
                   <Button
