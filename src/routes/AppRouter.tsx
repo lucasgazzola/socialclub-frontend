@@ -32,6 +32,7 @@ export function AppRouter() {
           </Route>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
           {/* Socios: crear y editar solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="socios/nuevo" element={<CrearSocioPage />} />
@@ -40,6 +41,11 @@ export function AppRouter() {
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="socios/:id/editar" element={<EditarSocioPage />} />
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
+=======
+          {/* Socios: editar solo ADMIN */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
+            <Route path="socios/:id/editar" element={<EditarSocioPage />} />
+>>>>>>> 0d96dd6 (feat[US-13]: editar socio)
           </Route>
 
           {/* Usuarios: solo ADMIN */}

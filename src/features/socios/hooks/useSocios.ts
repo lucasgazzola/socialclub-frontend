@@ -28,6 +28,7 @@ export function useSocio(id: number) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export function useCrearSocio() {
   const qc = useQueryClient();
   return useMutation({
