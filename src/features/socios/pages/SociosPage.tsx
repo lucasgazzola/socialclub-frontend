@@ -1,29 +1,37 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-import { Button, Input, Spinner } from '@/components/ui';
+import { Button, Input, Select, Spinner } from '@/components/ui';
+import type { EstadoSocioFiltro } from '../types';
 import { useSocios } from '../hooks/useSocios';
+import { useCategorias } from '../hooks/useCategorias';
 import { SociosTable } from '../components/SociosTable';
 
 const POR_PAGINA = 10;
 
 /**
- * Página de consulta de socios (US-15). Sirve de plantilla del patrón de las
- * features: estado local de UI + hook de datos (react-query) + componentes de
- * presentación. El equipo puede replicar esta estructura para Usuarios, Cuotas,
- * Eventos, etc.
+ * Página de búsqueda y filtrado de socios (US-15).
+ * Toda la búsqueda, el filtrado por categoría/estado y la paginación
+ * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
   const [busqueda, setBusqueda] = useState('');
   const [textoInput, setTextoInput] = useState('');
+  const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
+  const [estado, setEstado] = useState<EstadoSocioFiltro | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
+
+  const { data: categorias } = useCategorias();
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
+    categoriaId,
+    estado,
     pagina,
     porPagina: POR_PAGINA,
   });
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
+  const hayResultados = (data?.items.length ?? 0) > 0;
 
   const buscar = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,25 +39,63 @@ export function SociosPage() {
     setBusqueda(textoInput.trim());
   };
 
+  const cambiarCategoria = (value: string) => {
+    setPagina(1);
+    setCategoriaId(value ? Number(value) : undefined);
+  };
+
+  const cambiarEstado = (value: string) => {
+    setPagina(1);
+    setEstado(value ? (value as EstadoSocioFiltro) : undefined);
+  };
+
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
-          <p className="mt-1 text-sm text-slate-500">Consultá y filtrá los socios del club.</p>
+          <p className="mt-1 text-sm text-slate-500">Buscá y filtrá los socios del club.</p>
         </div>
-        <form onSubmit={buscar} className="flex w-full max-w-sm items-end gap-2">
-          <Input
-            id="busqueda"
-            placeholder="Buscar por nombre, apellido o DNI"
-            value={textoInput}
-            onChange={(e) => setTextoInput(e.target.value)}
-          />
-          <Button type="submit" variant="secondary">
-            <Search size={16} />
-            Buscar
-          </Button>
-        </form>
+
+        <div className="flex w-full max-w-3xl flex-wrap items-end gap-2">
+          <form onSubmit={buscar} className="flex flex-1 min-w-[220px] items-end gap-2">
+            <Input
+              id="busqueda"
+              placeholder="Buscar por nombre, apellido o DNI"
+              value={textoInput}
+              onChange={(e) => setTextoInput(e.target.value)}
+            />
+            <Button type="submit" variant="secondary">
+              <Search size={16} />
+              Buscar
+            </Button>
+          </form>
+
+          <Select
+            id="categoria"
+            value={categoriaId ?? ''}
+            onChange={(e) => cambiarCategoria(e.target.value)}
+            className="min-w-[160px]"
+          >
+            <option value="">Todas las categorías</option>
+            {categorias?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </Select>
+
+          <Select
+            id="estado"
+            value={estado ?? ''}
+            onChange={(e) => cambiarEstado(e.target.value)}
+            className="min-w-[140px]"
+          >
+            <option value="">Todos los estados</option>
+            <option value="ALTA">Alta</option>
+            <option value="BAJA">Baja</option>
+          </Select>
+        </div>
       </header>
 
       {isLoading ? (
@@ -64,32 +110,34 @@ export function SociosPage() {
         <>
           <SociosTable socios={data?.items ?? []} />
 
-          <div className="flex items-center justify-between text-sm text-slate-500">
-            <span>
-              {data?.total ?? 0} socio(s){isFetching ? ' · actualizando…' : ''}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={pagina <= 1}
-                onClick={() => setPagina((p) => Math.max(1, p - 1))}
-              >
-                Anterior
-              </Button>
+          {hayResultados && (
+            <div className="flex items-center justify-between text-sm text-slate-500">
               <span>
-                Página {pagina} de {totalPaginas}
+                {data?.total ?? 0} socio(s){isFetching ? ' · actualizando…' : ''}
               </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={pagina >= totalPaginas}
-                onClick={() => setPagina((p) => p + 1)}
-              >
-                Siguiente
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={pagina <= 1}
+                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                >
+                  Anterior
+                </Button>
+                <span>
+                  Página {pagina} de {totalPaginas}
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={pagina >= totalPaginas}
+                  onClick={() => setPagina((p) => p + 1)}
+                >
+                  Siguiente
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
     </div>
