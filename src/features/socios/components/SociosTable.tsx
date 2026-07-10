@@ -8,8 +8,8 @@ interface SociosTableProps {
 export function SociosTable({ socios }: SociosTableProps) {
   if (socios.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
-        No se encontraron socios.
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
+        No se encontraron resultados
       </div>
     );
   }
@@ -41,7 +41,7 @@ export function SociosTable({ socios }: SociosTableProps) {
                       : 'rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500'
                   }
                 >
-                  {socio.activo ? 'Activo' : 'Baja'}
+                  {socio.activo ? 'Alta' : 'Baja'}
                 </span>
               </td>
             </tr>

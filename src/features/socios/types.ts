@@ -18,9 +18,13 @@ export interface Socio {
   creadoEn: string;
 }
 
-/** Parámetros del listado de socios (búsqueda + paginación). */
+export type EstadoSocioFiltro = 'ALTA' | 'BAJA';
+
+/** Parámetros del listado de socios (US-15: búsqueda, filtros + paginación). */
 export interface SociosQuery {
   busqueda?: string;
+  categoriaId?: number;
+  estado?: EstadoSocioFiltro;
   pagina?: number;
   porPagina?: number;
 }
