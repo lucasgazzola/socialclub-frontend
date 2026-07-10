@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { queryClient } from '@/lib/api/query-client';
 import { authApi } from '../api/auth.api';
 import type { LoginPayload, UsuarioAutenticado } from '../types';
 import { AuthContext } from './auth-context';
@@ -34,6 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await authApi.logout();
     setUsuario(null);
+    // Descarta el estado del servidor cacheado (socios, usuarios, ...) para no
+    // filtrar datos de una sesión a la siguiente (US-40).
+    queryClient.clear();
   }, []);
 
   return (
