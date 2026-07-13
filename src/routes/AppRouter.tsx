@@ -8,6 +8,7 @@ import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
+import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from './paths';
 

@@ -1,34 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useDesactivarSocio } from '../hooks/useDesactivarSocio';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ROUTES } from '@/routes/paths';
 import type { Socio } from '../types';
 
 interface SociosTableProps {
   socios: Socio[];
 }
 
-/** Tabla de presentación de socios (componente "tonto", sin lógica de datos). */
 export function SociosTable({ socios }: SociosTableProps) {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const { mutate: desactivar, isPending } = useDesactivarSocio();
-  const navigate = useNavigate();
-  const { usuario } = useAuth();
-  const esAdmin = usuario?.roles.includes('ADMIN');
 
-=======
-  const navigate = useNavigate();
-  const { usuario } = useAuth();
-  const esAdmin = usuario?.roles.includes('ADMIN');
->>>>>>> 9d9d3ee (feat[US-13]: editar socio)
-=======
-  const navigate = useNavigate();
-  const { usuario } = useAuth();
-  const esAdmin = usuario?.roles.includes('ADMIN');
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
   if (socios.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
@@ -72,51 +54,39 @@ export function SociosTable({ socios }: SociosTableProps) {
                 </span>
               </td>
               <td className="px-4 py-3">
-                <div className="flex items-center gap-2">
-                  {esAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(ROUTES.sociosEditar.replace(':id', String(socio.id)))}
-                    >
-                      <Pencil size={14} />
-                      Editar
-                    </Button>
-                  )}
-                  {socio.activo && (
-                    confirmId === socio.id ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500">¿Confirmar baja?</span>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          disabled={isPending}
-                          onClick={() => {
-                            desactivar(socio.id);
-                            setConfirmId(null);
-                          }}
-                        >
-                          Sí
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setConfirmId(null)}
-                        >
-                          No
-                        </Button>
-                      </div>
-                    ) : (
+                {socio.activo && (
+                  confirmId === socio.id ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500">¿Confirmar baja?</span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={isPending}
+                        onClick={() => {
+                          desactivar(socio.id);
+                          setConfirmId(null);
+                        }}
+                      >
+                        Sí
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setConfirmId(socio.id)}
+                        onClick={() => setConfirmId(null)}
                       >
-                        Dar de baja
+                        No
                       </Button>
-                    )
-                  )}
-                </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setConfirmId(socio.id)}
+                    >
+                      Dar de baja
+                    </Button>
+                  )
+                )}
               </td>
             </tr>
           ))}
