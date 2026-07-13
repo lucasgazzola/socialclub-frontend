@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { Button, Input, Spinner } from '@/components/ui';
+import { Button, Input, Select, Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
+import type { EstadoSocioFiltro } from '../types';
 import { useSocios } from '../hooks/useSocios';
+import { useCategorias } from '../hooks/useCategorias';
 import { SociosTable } from '../components/SociosTable';
 
 const POR_PAGINA = 10;
 
-/**
- * Página de consulta de socios (US-15). Sirve de plantilla del patrón de las
- * features: estado local de UI + hook de datos (react-query) + componentes de
- * presentación. El equipo puede replicar esta estructura para Usuarios, Cuotas,
- * Eventos, etc.
- */
 export function SociosPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,6 +19,8 @@ export function SociosPage() {
 
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
+  const [estado, setEstado] = useState<EstadoSocioFiltro | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
@@ -45,29 +43,71 @@ export function SociosPage() {
     return () => clearTimeout(timer);
   }, [textoInput]);
 
+  const { data: categorias } = useCategorias();
+
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
+    categoriaId,
+    estado,
     pagina,
     porPagina: POR_PAGINA,
   });
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
+  const hayResultados = (data?.items.length ?? 0) > 0;
+
+  const cambiarCategoria = (value: string) => {
+    setPagina(1);
+    setCategoriaId(value ? Number(value) : undefined);
+  };
+
+  const cambiarEstado = (value: string) => {
+    setPagina(1);
+    setEstado(value ? (value as EstadoSocioFiltro) : undefined);
+  };
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
           <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex w-full max-w-3xl flex-wrap items-end gap-2">
           <Input
             id="busqueda"
             placeholder="Buscar por nombre, apellido o DNI"
             value={textoInput}
             onChange={(e) => setTextoInput(e.target.value)}
-            className="w-64"
+            className="min-w-[220px] flex-1"
           />
+
+          <Select
+            id="categoria"
+            value={categoriaId ?? ''}
+            onChange={(e) => cambiarCategoria(e.target.value)}
+            className="min-w-[160px]"
+          >
+            <option value="">Todas las categorías</option>
+            {categorias?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </Select>
+
+          <Select
+            id="estado"
+            value={estado ?? ''}
+            onChange={(e) => cambiarEstado(e.target.value)}
+            className="min-w-[140px]"
+          >
+            <option value="">Todos los estados</option>
+            <option value="ALTA">Alta</option>
+            <option value="BAJA">Baja</option>
+          </Select>
+
           {esAdmin && (
             <Button onClick={() => navigate(ROUTES.sociosNuevo)} className="whitespace-nowrap">
               <Plus size={16} />
@@ -95,32 +135,34 @@ export function SociosPage() {
         <>
           <SociosTable socios={data?.items ?? []} />
 
-          <div className="flex items-center justify-between text-sm text-slate-500">
-            <span>
-              {data?.total ?? 0} socio(s){isFetching ? ' · actualizando…' : ''}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={pagina <= 1}
-                onClick={() => setPagina((p) => Math.max(1, p - 1))}
-              >
-                Anterior
-              </Button>
+          {hayResultados && (
+            <div className="flex items-center justify-between text-sm text-slate-500">
               <span>
-                Página {pagina} de {totalPaginas}
+                {data?.total ?? 0} socio(s){isFetching ? ' · actualizando…' : ''}
               </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={pagina >= totalPaginas}
-                onClick={() => setPagina((p) => p + 1)}
-              >
-                Siguiente
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={pagina <= 1}
+                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                >
+                  Anterior
+                </Button>
+                <span>
+                  Página {pagina} de {totalPaginas}
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={pagina >= totalPaginas}
+                  onClick={() => setPagina((p) => p + 1)}
+                >
+                  Siguiente
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
     </div>

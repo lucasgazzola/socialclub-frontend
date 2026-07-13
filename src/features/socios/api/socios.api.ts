@@ -4,7 +4,15 @@ import type { Socio, SocioFormData, SociosQuery } from '../types';
 
 export const sociosApi = {
   async list(query: SociosQuery = {}): Promise<Paginated<Socio>> {
-    const { data } = await apiClient.get<Paginated<Socio>>('/socios', { params: query });
+    const { data } = await apiClient.get<Paginated<Socio>>('/socios', {
+      params: {
+        busqueda: query.busqueda || undefined,
+        categoriaId: query.categoriaId || undefined,
+        estado: query.estado || undefined,
+        pagina: query.pagina,
+        porPagina: query.porPagina,
+      },
+    });
     return data;
   },
 
@@ -15,6 +23,11 @@ export const sociosApi = {
 
   async create(formData: SocioFormData): Promise<Socio> {
     const { data } = await apiClient.post<Socio>('/socios', formData);
+    return data;
+  },
+
+  async update(id: number, formData: Partial<SocioFormData>): Promise<Socio> {
+    const { data } = await apiClient.patch<Socio>(`/socios/${id}`, formData);
     return data;
   },
 };

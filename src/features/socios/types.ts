@@ -22,11 +22,26 @@ export interface Socio {
   creadoEn: string;
 }
 
-/** Parámetros del listado de socios (búsqueda + paginación). */
+export type EstadoSocioFiltro = 'ALTA' | 'BAJA';
+
+/** Parámetros del listado de socios (US-15: búsqueda, filtros + paginación). */
 export interface SociosQuery {
   busqueda?: string;
+  categoriaId?: number;
+  estado?: EstadoSocioFiltro;
   pagina?: number;
   porPagina?: number;
 }
 
-
+/** Convierte un Socio (de API) en datos de formulario. */
+export function socioToFormData(socio: Socio): SocioFormData {
+  return {
+    nombre: socio.nombre,
+    apellido: socio.apellido,
+    dni: socio.dni,
+    fechaNacimiento: socio.fechaNacimiento ?? undefined,
+    email: socio.email ?? undefined,
+    telefono: socio.telefono ?? undefined,
+    categoriaId: socio.categoriaId ?? undefined,
+  };
+}

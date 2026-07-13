@@ -1,3 +1,8 @@
+import { useNavigate } from 'react-router-dom';
+import { Pencil } from 'lucide-react';
+import { Button } from '@/components/ui';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { ROUTES } from '@/routes/paths';
 import type { Socio } from '../types';
 
 interface SociosTableProps {
@@ -6,11 +11,13 @@ interface SociosTableProps {
 
 /** Tabla de presentación de socios (componente "tonto", sin lógica de datos). */
 export function SociosTable({ socios }: SociosTableProps) {
-
+  const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const esAdmin = usuario?.roles.includes('ADMIN');
   if (socios.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
-        No se encontraron socios.
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
+        No se encontraron resultados
       </div>
     );
   }
@@ -25,6 +32,7 @@ export function SociosTable({ socios }: SociosTableProps) {
             <th className="px-4 py-3 font-medium">Email</th>
             <th className="px-4 py-3 font-medium">Categoría</th>
             <th className="px-4 py-3 font-medium">Estado</th>
+            {esAdmin && <th className="px-4 py-3 font-medium">Acciones</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -44,9 +52,21 @@ export function SociosTable({ socios }: SociosTableProps) {
                       : 'rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500'
                   }
                 >
-                  {socio.activo ? 'Activo' : 'Baja'}
+                  {socio.activo ? 'Alta' : 'Baja'}
                 </span>
               </td>
+              {esAdmin && (
+                <td className="px-4 py-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(ROUTES.sociosEditar.replace(':id', String(socio.id)))}
+                  >
+                    <Pencil size={14} />
+                    Editar
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
