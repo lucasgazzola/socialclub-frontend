@@ -21,8 +21,8 @@ export const sociosApi = {
     return data;
   },
 
-  async update(id: number, formData: Partial<SocioFormData>): Promise<Socio> {
-    const { data } = await apiClient.patch<Socio>(`/socios/${id}`, formData);
-    return data;
+  async deactivate(id: number): Promise<Socio> {
+  const { data } = await apiClient.delete<Socio>(`/socios/${id}`);
+  return data;
   },
 };

@@ -9,10 +9,7 @@ import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
-import { CuotasPage } from '@/features/cuotas/pages/CuotasPage';
-import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
-import { EventosPage } from '@/features/eventos/pages/EventosPage';
-import { CrearEventoPage } from '@/features/eventos/pages/CrearEventoPage';
+import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from './paths';
 
@@ -37,14 +34,11 @@ export function AppRouter() {
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="usuarios" element={<UsuariosPage />} />
-            <Route path="cuotas" element={<CuotasPage />} />
           </Route>
 
-          {/* Eventos y entradas: ADMIN y COLABORADOR */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
-            <Route path="eventos" element={<EventosPage />} />
-            <Route path="eventos/nuevo" element={<CrearEventoPage />} />
-            <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
+          {/* Auditoría: solo ADMIN */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
+            <Route path="auditoria" element={<AuditoriaPage />} />
           </Route>
         </Route>
       </Route>
