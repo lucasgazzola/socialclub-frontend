@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, Coins, LayoutDashboard, LogOut, ShieldCheck, Users } from 'lucide-react';
+import { ClipboardList, LayoutDashboard, LogOut, ShieldCheck, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
