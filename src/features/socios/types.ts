@@ -1,3 +1,7 @@
+import type { SocioFormData } from './schemas';
+
+export type { SocioFormData };
+
 export interface CategoriaSocio {
   id: number;
   nombre: string;
@@ -27,4 +31,17 @@ export interface SociosQuery {
   estado?: EstadoSocioFiltro;
   pagina?: number;
   porPagina?: number;
+}
+
+/** Convierte un Socio (de API) en datos de formulario. */
+export function socioToFormData(socio: Socio): SocioFormData {
+  return {
+    nombre: socio.nombre,
+    apellido: socio.apellido,
+    dni: socio.dni,
+    fechaNacimiento: socio.fechaNacimiento ?? undefined,
+    email: socio.email ?? undefined,
+    telefono: socio.telefono ?? undefined,
+    categoriaId: socio.categoriaId ?? undefined,
+  };
 }
