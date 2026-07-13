@@ -4,6 +4,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
+import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from './paths';
 
@@ -31,6 +32,11 @@ export function AppRouter() {
           {/* Usuarios: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="usuarios" element={<UsuariosPage />} />
+          </Route>
+
+          {/* Auditoría: solo ADMIN */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
+            <Route path="auditoria" element={<AuditoriaPage />} />
           </Route>
         </Route>
       </Route>

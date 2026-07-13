@@ -7,4 +7,5 @@ export const ROUTES = {
   dashboard: '/',
   socios: '/socios',
   usuarios: '/usuarios',
+  auditoria: '/auditoria',
 } as const;

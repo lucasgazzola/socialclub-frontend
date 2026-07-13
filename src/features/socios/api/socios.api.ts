@@ -20,4 +20,9 @@ export const sociosApi = {
     const { data } = await apiClient.get<Socio>(`/socios/${id}`);
     return data;
   },
+
+  async deactivate(id: number): Promise<Socio> {
+  const { data } = await apiClient.delete<Socio>(`/socios/${id}`);
+  return data;
+  },
 };
