@@ -9,5 +9,6 @@ export const ROUTES = {
   socios: '/socios',
   sociosNuevo: '/socios/nuevo',
   usuarios: '/usuarios',
-  auditoria: '/auditoria',
+  eventos: '/eventos',
+  comprarEntradas: (eventoId: number) => `/eventos/${eventoId}/entradas`,
 } as const;
