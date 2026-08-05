@@ -13,4 +13,6 @@ export const ROUTES = {
   usuarios: '/usuarios',
   inscripcion: '/inscripcion',
   auditoria: '/auditoria',
+  eventos: '/eventos',
+  comprarEntradas: (eventoId: number) => `/eventos/${eventoId}/entradas`,
 } as const;
