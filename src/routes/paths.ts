@@ -18,4 +18,5 @@ export const ROUTES = {
   cuotas: '/cuotas',
   usuarios: '/usuarios',
   auditoria: '/auditoria',
+  inscripcion: '/inscripcion',
 } as const;

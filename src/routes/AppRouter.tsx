@@ -8,6 +8,7 @@ import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
+import { InscripcionPage } from '@/features/inscripcion/pages/InscripcionPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from './paths';
 
@@ -35,6 +36,11 @@ export function AppRouter() {
           {/* Auditoría: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="auditoria" element={<AuditoriaPage />} />
+          </Route>
+
+          {/* Inscripciones: ADMIN y DELEGADO */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'DELEGADO']} />}>
+            <Route path="inscripcion" element={<InscripcionPage />} />
           </Route>
         </Route>
       </Route>
