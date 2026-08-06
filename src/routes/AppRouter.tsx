@@ -46,6 +46,11 @@ export function AppRouter() {
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="auditoria" element={<AuditoriaPage />} />
           </Route>
+
+          {/* Inscripciones: ADMIN y DELEGADO */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'DELEGADO']} />}>
+            <Route path="inscripcion" element={<InscripcionPage />} />
+          </Route>
         </Route>
       </Route>
 
