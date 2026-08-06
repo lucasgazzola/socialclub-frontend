@@ -14,7 +14,7 @@ export const ROUTES = {
 >>>>>>> 9d9d3ee (feat[US-13]: editar socio)
 =======
   sociosEditar: '/socios/:id/editar',
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
+  cuotas: '/cuotas',
   usuarios: '/usuarios',
   eventos: '/eventos',
   comprarEntradas: (eventoId: number) => `/eventos/${eventoId}/entradas`,
