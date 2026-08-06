@@ -17,7 +17,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: ROUTES.dashboard, label: 'Inicio', icon: LayoutDashboard },
   { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
-  { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
+  { to: ROUTES.inscripcion, label: 'Inscripciones', icon: ClipboardList, roles: ['ADMIN', 'DELEGADO'] },
   { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
   { to: ROUTES.auditoria, label: 'Auditoría', icon: ClipboardList, roles: ['ADMIN'] },
 ];
