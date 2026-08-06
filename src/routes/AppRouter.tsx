@@ -10,6 +10,7 @@ import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
+import { CuotasPage } from '@/features/cuotas/pages/CuotasPage';
 import { EventosPage } from '@/features/entradas/pages/EventosPage';
 import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -38,6 +39,7 @@ export function AppRouter() {
           {/* Usuarios: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="usuarios" element={<UsuariosPage />} />
+            <Route path="cuotas" element={<CuotasPage />} />
           </Route>
 
           {/* Eventos y entradas: ADMIN y COLABORADOR */}
