@@ -42,6 +42,7 @@ export function AppRouter() {
           {/* Usuarios: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="usuarios" element={<UsuariosPage />} />
+            <Route path="cuotas" element={<CuotasPage />} />
           </Route>
 
           {/* Eventos y entradas: ADMIN y COLABORADOR */}
