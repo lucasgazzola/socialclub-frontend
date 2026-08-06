@@ -16,6 +16,13 @@ import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPa
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from './paths';
 
+/**
+ * Árbol de rutas de la aplicación.
+ *
+ * - `/login` y `/register` son públicas.
+ * - El resto vive detrás de `ProtectedRoute` (sesión activa) y del `AppLayout`.
+ * - Algunas secciones suman una guarda por rol.
+ */
 export function AppRouter() {
   return (
     <Routes>
