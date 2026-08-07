@@ -4,6 +4,7 @@
  */
 export const ROUTES = {
   login: '/login',
+  register: '/register',
   dashboard: '/',
   socios: '/socios',
   sociosNuevo: '/socios/nuevo',
