@@ -1,4 +1,4 @@
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useAuth } from '../hooks/useAuth';
@@ -23,6 +23,12 @@ export function LoginPage() {
           <p className="mt-1 text-sm text-slate-500">Ingresá con tu cuenta administrativa</p>
         </div>
         <LoginForm onSuccess={() => navigate(destino, { replace: true })} />
+        <p className="mt-6 text-center text-sm text-slate-500">
+          ¿No tenés cuenta?{' '}
+          <Link to={ROUTES.register} className="font-medium text-brand-700 hover:underline">
+            Registrate
+          </Link>
+        </p>
       </Card>
     </div>
   );

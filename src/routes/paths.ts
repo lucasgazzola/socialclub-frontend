@@ -4,10 +4,14 @@
  */
 export const ROUTES = {
   login: '/login',
+  register: '/register',
   dashboard: '/',
   socios: '/socios',
   sociosNuevo: '/socios/nuevo',
   sociosEditar: '/socios/:id/editar',
+  cuotas: '/cuotas',
   usuarios: '/usuarios',
+  eventos: '/eventos',
+  comprarEntradas: (eventoId: number) => `/eventos/${eventoId}/entradas`,
   auditoria: '/auditoria',
 } as const;
