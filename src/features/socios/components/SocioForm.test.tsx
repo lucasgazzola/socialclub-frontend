@@ -1,18 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react';
 import { z } from 'zod';
 import { SocioForm } from './SocioForm';
 
 /**
- * No se incluyó `../schemas.ts` (esquema zod real del formulario) en el
- * material provisto, así que mockeamos `socioFormSchema` con un esquema
- * equivalente al comportamiento esperado por la matriz de casos:
+ * Se mockeo `socioFormSchema` con un esquema equivalente:
  *   - nombre, apellido, dni: obligatorios
  *   - email: formato válido, obligatorio
  *   - fechaNacimiento, telefono: opcionales
- * Si el esquema real difiere (p.ej. dni con regex de 7-8 dígitos, telefono
- * obligatorio, etc.), ajustar este mock para que coincida 1 a 1.
  */
 vi.mock('../schemas', () => {
   const socioFormSchema = z.object({
@@ -26,17 +23,18 @@ vi.mock('../schemas', () => {
   return { socioFormSchema };
 });
 
-// Mock liviano de los componentes de UI para poder aserir sobre labels,
-// inputs y mensajes de error sin depender de su implementación interna.
+// Mock de los componentes de UI para inputs y mensajes de error sin depender de su implementación interna.
 vi.mock('@/components/ui', () => ({
-  Input: ({ id, label, error, ...props }: any) => (
+  Input: ({ id, label, error, ...props }: { id: string; label: string; error?: string } & InputHTMLAttributes<HTMLInputElement>) => (
     <div>
       <label htmlFor={id}>{label}</label>
       <input id={id} {...props} />
       {error && <p role="alert">{error}</p>}
     </div>
   ),
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Button: ({ children, ...props }: { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button {...props}>{children}</button>
+  ),
 }));
 
 const navigateMock = vi.fn();
@@ -163,14 +161,6 @@ describe('SocioForm', () => {
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-
-      // Nota: SocioForm no renderiza un mensaje de éxito propio (solo maneja
-      // errorServidor); el toast/mensaje "Socio registrado exitosamente" se
-      // dispara típicamente en la página que consume este form (p.ej.
-      // SocioCreatePage) tras resolver la promesa de onSubmit. Esa página no
-      // fue provista, así que ese mensaje debe testearse ahí, con un test del
-      // estilo: render(<SocioCreatePage />) -> completar -> guardar ->
-      // expect(await screen.findByText(/registrado exitosamente/i)).
     });
   });
 });
