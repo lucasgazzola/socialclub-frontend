@@ -57,9 +57,11 @@ export function UsuariosPage() {
       return;
     }
 
-    const { password: _password, ...resto } = values as UsuarioEditFormValues & {
-      password?: string;
-    };
+    const resto = Object.fromEntries(
+      Object.entries(values as UsuarioEditFormValues & { password?: string }).filter(
+        ([key]) => key !== 'password',
+      ),
+    ) as UpdateUsuarioDto;
 
     const payload: UpdateUsuarioDto = {
       ...resto,
