@@ -5,7 +5,7 @@ import { Button } from '@/components/ui';
 
 interface ModalProps {
   open: boolean;
-  title: string;
+  title: ReactNode;
   description?: string;
   onClose: () => void;
   children: ReactNode;
@@ -38,7 +38,7 @@ export function Modal({
       <section
         role="dialog"
         aria-modal="true"
-        className={`relative z-10 w-full max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-2xl ${className}`}
+        className={`relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl ${className}`}
       >
         <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
           <div>
