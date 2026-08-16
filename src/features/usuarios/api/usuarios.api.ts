@@ -32,5 +32,9 @@ export const usuariosApi = {
     const { data } = await apiClient.delete<Usuario>(`/usuarios/${id}`);
     return data;
   },
-};
 
+  async activate(id: number): Promise<Usuario> {
+    const { data } = await apiClient.patch<Usuario>(`/usuarios/${id}/activar`);
+    return data;
+  },
+};

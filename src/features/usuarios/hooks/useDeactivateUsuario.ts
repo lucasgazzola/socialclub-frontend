@@ -10,10 +10,10 @@ export function useDeactivateUsuario() {
     mutationFn: usuariosApi.deactivate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: usuariosKeys.all });
-      toast.success('Usuario deshabilitado correctamente');
+      toast.success('Usuario desactivado correctamente');
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : 'Error al deshabilitar el usuario');
+      toast.error(error instanceof Error ? error.message : 'Error al desactivar el usuario');
     },
   });
 }
