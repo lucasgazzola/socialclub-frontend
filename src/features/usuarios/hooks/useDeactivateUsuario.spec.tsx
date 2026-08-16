@@ -105,24 +105,24 @@ describe('HU3 - Dar de baja a un usuario administrativo', () => {
       // inicio de sesion y operaciones en el sistema
     });
 
-    it('si la API devuelve error al deshabilitar, el usuario sigue activo', async () => {
-      const apiError = new Error('Error al deshabilitar el usuario');
+    it('si la API devuelve error al desactivar, el usuario sigue activo', async () => {
+      const apiError = new Error('Error al desactivar el usuario');
       (usuariosApi.deactivate as ReturnType<typeof vi.fn>).mockRejectedValue(apiError);
 
       const { result } = renderHook(() => useDeactivateUsuario(), { wrapper: createWrapper() });
 
       await expect(result.current.mutateAsync(1)).rejects.toThrow(
-        'Error al deshabilitar el usuario',
+        'Error al desactivar el usuario',
       );
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Error al deshabilitar el usuario');
+        expect(toast.error).toHaveBeenCalledWith('Error al desactivar el usuario');
       });
     });
   });
 
   describe('Criterio: El sistema confirma la acción con un mensaje claro', () => {
-    it('muestra toast.success con "Usuario deshabilitado correctamente" tras dar de baja', async () => {
+    it('muestra toast.success con "Usuario desactivado correctamente" tras dar de baja', async () => {
       (usuariosApi.deactivate as ReturnType<typeof vi.fn>).mockResolvedValue(
         buildDeactivatedUser(),
       );
@@ -132,7 +132,7 @@ describe('HU3 - Dar de baja a un usuario administrativo', () => {
       await result.current.mutateAsync(1);
 
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith('Usuario deshabilitado correctamente');
+        expect(toast.success).toHaveBeenCalledWith('Usuario desactivado correctamente');
       });
       expect(toast.success).toHaveBeenCalledTimes(1);
     });
@@ -160,7 +160,7 @@ describe('HU3 - Dar de baja a un usuario administrativo', () => {
       await expect(result.current.mutateAsync(1)).rejects.toBe('Error');
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Error al deshabilitar el usuario');
+        expect(toast.error).toHaveBeenCalledWith('Error al desactivar el usuario');
       });
     });
   });
