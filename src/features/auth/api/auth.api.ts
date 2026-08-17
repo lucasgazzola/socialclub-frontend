@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api/client';
-import type { LoginPayload, RegisterPayload, UsuarioAutenticado } from '../types';
+import type { LoginPayload, RegisterPayload, AuthenticatedUser } from '../types';
 
 /**
  * Capa de acceso a la API del módulo de auth. Las features nunca llaman a
@@ -7,25 +7,25 @@ import type { LoginPayload, RegisterPayload, UsuarioAutenticado } from '../types
  * los endpoints en un único lugar fácil de mantener.
  */
 export const authApi = {
-  async register(payload: RegisterPayload): Promise<UsuarioAutenticado> {
-    const { data } = await apiClient.post<{ usuario: UsuarioAutenticado }>(
+  async register(payload: RegisterPayload): Promise<AuthenticatedUser> {
+    const { data } = await apiClient.post<{ user: AuthenticatedUser }>(
       '/auth/register',
       payload,
     );
-    return data.usuario;
+    return data.user;
   },
 
-  async login(payload: LoginPayload): Promise<UsuarioAutenticado> {
-    const { data } = await apiClient.post<{ usuario: UsuarioAutenticado }>('/auth/login', payload);
-    return data.usuario;
+  async login(payload: LoginPayload): Promise<AuthenticatedUser> {
+    const { data } = await apiClient.post<{ user: AuthenticatedUser }>('/auth/login', payload);
+    return data.user;
   },
 
   async logout(): Promise<void> {
     await apiClient.post('/auth/logout');
   },
 
-  async me(): Promise<UsuarioAutenticado> {
-    const { data } = await apiClient.get<UsuarioAutenticado>('/auth/me');
+  async me(): Promise<AuthenticatedUser> {
+    const { data } = await apiClient.get<AuthenticatedUser>('/auth/me');
     return data;
   },
 };

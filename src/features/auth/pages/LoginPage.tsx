@@ -5,13 +5,13 @@ import { useAuth } from '../hooks/useAuth';
 import { LoginForm } from '../components/LoginForm';
 
 export function LoginPage() {
-  const { usuario } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Si ya hay sesión, redirige al destino original (o al inicio).
   const destino = (location.state as { from?: string } | null)?.from ?? ROUTES.dashboard;
-  if (usuario) {
+  if (user) {
     return <Navigate to={destino} replace />;
   }
 

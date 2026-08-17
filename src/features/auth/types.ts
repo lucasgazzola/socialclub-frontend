@@ -1,12 +1,12 @@
-export type RolNombre = 'ADMIN' | 'COLABORADOR';
+export type RoleName = 'ADMIN' | 'COLLABORATOR';
 
-/** Usuario autenticado tal como lo expone el backend en /auth/me y /auth/login. */
-export interface UsuarioAutenticado {
+/** User autenticado tal como lo expone el backend en /auth/me y /auth/login. */
+export interface AuthenticatedUser {
   id: number;
   email: string;
-  nombre?: string;
-  apellido?: string;
-  roles: RolNombre[];
+  name?: string;
+  lastName?: string;
+  roles: RoleName[];
 }
 
 export interface LoginPayload {
@@ -18,6 +18,6 @@ export interface LoginPayload {
 export interface RegisterPayload {
   email: string;
   password: string;
-  nombre: string;
-  apellido: string;
+  name: string;
+  lastName: string;
 }

@@ -4,8 +4,8 @@
 export interface Paginated<T> {
   items: T[];
   total: number;
-  pagina: number;
-  porPagina: number;
+  page: number;
+  perPage: number;
 }
 
 /** Formato uniforme de error que devuelve el backend (HttpExceptionFilter). */

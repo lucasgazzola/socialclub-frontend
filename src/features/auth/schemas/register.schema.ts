@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 /** Validación del registro público (US-38), alineada con el backend. */
 export const registerSchema = z.object({
-  nombre: z.string().min(1, 'El nombre es obligatorio'),
-  apellido: z.string().min(1, 'El apellido es obligatorio'),
+  name: z.string().min(1, 'El nombre es obligatorio'),
+  lastName: z.string().min(1, 'El apellido es obligatorio'),
   email: z.string().email('Ingresá un email válido'),
   password: z
     .string()

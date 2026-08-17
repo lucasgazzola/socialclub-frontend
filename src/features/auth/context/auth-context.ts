@@ -1,9 +1,9 @@
 import { createContext } from 'react';
-import type { LoginPayload, UsuarioAutenticado } from '../types';
+import type { LoginPayload, AuthenticatedUser } from '../types';
 
 export interface AuthContextValue {
-  usuario: UsuarioAutenticado | null;
-  cargando: boolean;
+  user: AuthenticatedUser | null;
+  loading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
   logout: () => Promise<void>;
 }

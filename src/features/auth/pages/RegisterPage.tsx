@@ -6,11 +6,11 @@ import { useAuth } from '../hooks/useAuth';
 import { RegisterForm } from '../components/RegisterForm';
 
 export function RegisterPage() {
-  const { usuario } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Si ya hay sesión activa no tiene sentido registrarse: al inicio.
-  if (usuario) {
+  if (user) {
     return <Navigate to={ROUTES.dashboard} replace />;
   }
 

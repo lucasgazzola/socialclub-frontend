@@ -3,7 +3,7 @@ import { CalendarDays, Coins, LayoutDashboard, LogOut, ShieldCheck, Users } from
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import type { RolNombre } from '@/features/auth/types';
+import type { RoleName } from '@/features/auth/types';
 import { ROUTES } from '@/routes/paths';
 import { cn } from '@/lib/utils/cn';
 
@@ -11,23 +11,23 @@ interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
-  roles?: RolNombre[];
+  roles?: RoleName[];
 }
 
 const navItems: NavItem[] = [
   { to: ROUTES.dashboard, label: 'Inicio', icon: LayoutDashboard },
-  { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
-  { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
-  { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
-  { to: ROUTES.cuotas, label: 'Cuotas deportivas', icon: Coins, roles: ['ADMIN'] },
+  { to: ROUTES.members, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLLABORATOR'] },
+  { to: ROUTES.events, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLLABORATOR'] },
+  { to: ROUTES.users, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
+  { to: ROUTES.fees, label: 'Cuotas deportivas', icon: Coins, roles: ['ADMIN'] },
 ];
 
 /** Estructura visual de las páginas autenticadas: sidebar + contenido. */
 export function AppLayout() {
-  const { usuario, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const itemsVisibles = navItems.filter(
-    (item) => !item.roles || item.roles.some((rol) => usuario?.roles.includes(rol)),
+    (item) => !item.roles || item.roles.some((rol) => user?.roles.includes(rol)),
   );
 
   return (
@@ -60,9 +60,9 @@ export function AppLayout() {
 
         <div className="border-t border-slate-200 pt-4">
           <p className="px-2 text-sm font-medium text-slate-700">
-            {usuario?.nombre} {usuario?.apellido}
+            {user?.name} {user?.lastName}
           </p>
-          <p className="px-2 text-xs text-slate-500">{usuario?.email}</p>
+          <p className="px-2 text-xs text-slate-500">{user?.email}</p>
           <Button variant="ghost" size="sm" className="mt-3 w-full justify-start" onClick={() => void logout()}>
             <LogOut size={16} />
             Cerrar sesión

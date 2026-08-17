@@ -11,7 +11,7 @@ interface RegisterFormProps {
 
 /**
  * Formulario de registro público (US-38). No inicia sesión: al crear la cuenta
- * el usuario es redirigido al login para ingresar con sus credenciales.
+ * el user es redirigido al login para ingresar con sus credenciales.
  */
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
@@ -39,16 +39,16 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         type="text"
         label="Nombre"
         autoComplete="given-name"
-        error={errors.nombre?.message}
-        {...register('nombre')}
+        error={errors.name?.message}
+        {...register('name')}
       />
       <Input
         id="apellido"
         type="text"
         label="Apellido"
         autoComplete="family-name"
-        error={errors.apellido?.message}
-        {...register('apellido')}
+        error={errors.lastName?.message}
+        {...register('lastName')}
       />
       <Input
         id="email"

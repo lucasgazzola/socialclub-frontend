@@ -3,13 +3,13 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
-import { EditarSocioPage } from '@/features/socios/pages/EditarSocioPage';
-import { SociosPage } from '@/features/socios/pages/SociosPage';
-import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
-import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
-import { CuotasPage } from '@/features/cuotas/pages/CuotasPage';
-import { EventosPage } from '@/features/entradas/pages/EventosPage';
-import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
+import { EditMemberPage } from '@/features/members/pages/EditMemberPage';
+import { MembersPage } from '@/features/members/pages/MembersPage';
+import { CreateMemberPage } from '@/features/members/pages/CreateMemberPage';
+import { UsersPage } from '@/features/users/pages/UsersPage';
+import { FeesPage } from '@/features/fees/pages/FeesPage';
+import { EventsPage } from '@/features/tickets/pages/EventsPage';
+import { BuyTicketsPage } from '@/features/tickets/pages/BuyTicketsPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from './paths';
 
@@ -30,27 +30,27 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
 
-          {/* Socios: consulta accesible a ADMIN y COLABORADOR */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
-            <Route path="socios" element={<SociosPage />} />
+          {/* Socios: consulta accesible a ADMIN y COLLABORATOR */}
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'COLLABORATOR']} />}>
+            <Route path="members" element={<MembersPage />} />
           </Route>
 
           {/* Socios: crear y editar solo ADMIN */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
-            <Route path="socios/nuevo" element={<CrearSocioPage />} />
-            <Route path="socios/:id/editar" element={<EditarSocioPage />} />
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="members/new" element={<CreateMemberPage />} />
+            <Route path="members/:id/edit" element={<EditMemberPage />} />
           </Route>
 
           {/* Usuarios: solo ADMIN */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
-            <Route path="usuarios" element={<UsuariosPage />} />
-            <Route path="cuotas" element={<CuotasPage />} />
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="users" element={<UsersPage />} />
+            <Route path="fees" element={<FeesPage />} />
           </Route>
 
-          {/* Eventos y entradas: ADMIN y COLABORADOR */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
-            <Route path="eventos" element={<EventosPage />} />
-            <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
+          {/* Eventos y entradas: ADMIN y COLLABORATOR */}
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'COLLABORATOR']} />}>
+            <Route path="events" element={<EventsPage />} />
+            <Route path="events/:eventId/tickets" element={<BuyTicketsPage />} />
           </Route>
         </Route>
       </Route>
