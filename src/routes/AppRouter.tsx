@@ -11,18 +11,12 @@ import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { CuotasPage } from '@/features/cuotas/pages/CuotasPage';
-import { EventosPage } from '@/features/entradas/pages/EventosPage';
 import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
+import { EventosPage } from '@/features/eventos/pages/EventosPage';
+import { CrearEventoPage } from '@/features/eventos/pages/CrearEventoPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from './paths';
 
-/**
- * Árbol de rutas de la aplicación.
- *
- * - `/login` y `/register` son públicas.
- * - El resto vive detrás de `ProtectedRoute` (sesión activa) y del `AppLayout`.
- * - Algunas secciones suman una guarda por rol.
- */
 export function AppRouter() {
   return (
     <Routes>
@@ -34,16 +28,13 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
 
-          {/* Socios: consulta accesible a ADMIN y COLABORADOR */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
           </Route>
 
-          {/* Socios: crear y editar solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="socios/nuevo" element={<CrearSocioPage />} />
 
-          {/* Usuarios: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="usuarios" element={<UsuariosPage />} />
             <Route path="cuotas" element={<CuotasPage />} />
@@ -52,6 +43,7 @@ export function AppRouter() {
           {/* Eventos y entradas: ADMIN y COLABORADOR */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="eventos" element={<EventosPage />} />
+            <Route path="eventos/nuevo" element={<CrearEventoPage />} />
             <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
           </Route>
         </Route>
