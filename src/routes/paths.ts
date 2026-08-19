@@ -15,4 +15,5 @@ export const ROUTES = {
   comprarEntradas: (eventoId: number) => `/eventos/${eventoId}/entradas`,
   crearEvento: '/eventos/nuevo',
   eventosAdmin: '/eventos/admin',
+  auditoria: '/auditoria',
 } as const;

@@ -11,6 +11,7 @@ import { CuotasPage } from '@/features/cuotas/pages/CuotasPage';
 import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { CrearEventoPage } from '@/features/eventos/pages/CrearEventoPage';
+import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ROUTES } from './paths';
 
@@ -43,6 +44,11 @@ export function AppRouter() {
             <Route path="eventos" element={<EventosPage />} />
             <Route path="eventos/nuevo" element={<CrearEventoPage />} />
             <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
+          </Route>
+
+          {/* Auditoría: solo ADMIN */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
+            <Route path="auditoria" element={<AuditoriaPage />} />
           </Route>
         </Route>
       </Route>

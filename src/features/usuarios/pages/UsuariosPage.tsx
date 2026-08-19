@@ -1,72 +1,63 @@
-import { useMemo, useState } from 'react';
-import { AlertCircle, BadgeCheck, Edit3, Plus, Power } from 'lucide-react';
+import { useState } from 'react';
+import { BadgeAlertIcon, BadgeCheck, Edit3, UserPlus, UserRoundCheck, UserRoundX } from 'lucide-react';
 import { Button, Card, Spinner } from '@/components/ui';
-import { UsuarioForm } from '../components/UsuarioForm';
+import { useActivateUsuario } from '../hooks/useActivateUsuario';
 import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario';
 import { useUsers } from '../hooks/useUsers';
 import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto } from '../types';
-import { UsuarioEditModal } from './components/UsuarioEditModal';
+import { UsuarioFormModal } from './components/UsuarioFormModal';
 import type { UsuarioCreateFormValues, UsuarioEditFormValues } from '../schemas/usuario.schema';
 
 export function UsuariosPage() {
-  const [modoFormulario, setModoFormulario] = useState<'crear' | 'editar' | null>(null);
+  const [modoFormulario, setModoFormulario] = useState<'crear' | 'editar'>('crear');
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null);
-  const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const { data: usuarios = [], isLoading, isError, error } = useUsers();
   const createUsuario = useCreateUsuario();
   const updateUsuario = useUpdateUsuario();
   const deactivateUsuario = useDeactivateUsuario();
-
-  const formularioVisible = modoFormulario !== null;
-  const tituloFormulario = useMemo(
-    () => (modoFormulario === 'editar' ? 'Editar usuario' : 'Nuevo usuario'),
-    [modoFormulario],
-  );
+  const activateUsuario = useActivateUsuario();
 
   function abrirCreacion() {
     setUsuarioSeleccionado(null);
-    setModoFormulario((actual) => (actual === 'crear' ? null : 'crear'));
+    setModoFormulario('crear');
+    setModalAbierto(true);
   }
 
   function abrirEdicion(usuario: Usuario) {
-    setUsuarioEditando(usuario);
-    setEditModalOpen(true);
+    setUsuarioSeleccionado(usuario);
+    setModoFormulario('editar');
+    setModalAbierto(true);
   }
 
-  function cerrarFormulario() {
-    setModoFormulario(null);
+  function cerrarModal() {
+    setModalAbierto(false);
     setUsuarioSeleccionado(null);
-  }
-
-  function cerrarEdicion() {
-    setEditModalOpen(false);
-    setUsuarioEditando(null);
   }
 
   async function handleCreate(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
     await createUsuario.mutateAsync(values as CreateUsuarioDto);
-    cerrarFormulario();
   }
 
-  async function handleUpdate(values: UsuarioEditFormValues) {
-    if (!usuarioEditando) {
+  async function handleUpdate(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
+    if (!usuarioSeleccionado) {
       return;
     }
 
-    const { password: _password, ...resto } = values as UsuarioEditFormValues & {
-      password?: string;
-    };
+    const resto = Object.fromEntries(
+      Object.entries(values as UsuarioEditFormValues & { password?: string }).filter(
+        ([key]) => key !== 'password',
+      ),
+    ) as UpdateUsuarioDto;
 
     const payload: UpdateUsuarioDto = {
       ...resto,
     };
 
-    await updateUsuario.mutateAsync({ id: usuarioEditando.id, payload });
-    cerrarEdicion();
+    await updateUsuario.mutateAsync({ id: usuarioSeleccionado.id, payload });
   }
 
   async function handleSubmit(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
@@ -78,16 +69,25 @@ export function UsuariosPage() {
     await handleCreate(values);
   }
 
-  async function confirmarBaja(usuario: Usuario) {
-    const confirmado = window.confirm(
-      `¿Deshabilitar a ${usuario.nombre} ${usuario.apellido}? Esta acción se puede revertir más adelante desde la base de datos.`,
-    );
-
-    if (!confirmado) {
-      return;
+  /** Alterna el estado del usuario: da de baja si está activo, lo reactiva si no. */
+  async function confirmarCambioEstado(usuario: Usuario) {
+    if (usuario.activo) {
+      const confirmado = window.confirm(
+        `¿Desactivar a ${usuario.nombre} ${usuario.apellido}? Podés volver a activarlo cuando quieras.`,
+      );
+      if (!confirmado) {
+        return;
+      }
+      await deactivateUsuario.mutateAsync(usuario.id);
+    } else {
+      const confirmado = window.confirm(
+        `¿Habilitar nuevamente a ${usuario.nombre} ${usuario.apellido}?`,
+      );
+      if (!confirmado) {
+        return;
+      }
+      await activateUsuario.mutateAsync(usuario.id);
     }
-
-    await deactivateUsuario.mutateAsync(usuario.id);
   }
 
   return (
@@ -95,42 +95,21 @@ export function UsuariosPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Usuarios administrativos</h1>
-          <p className="mt-1 text-sm text-slate-500">Creá, editá y deshabilitá usuarios de gestión.</p>
+          <p className="mt-1 text-sm text-slate-500">Creá y editá usuarios de gestión.</p>
         </div>
 
         <Button onClick={abrirCreacion}>
-          <Plus size={16} />
-          {formularioVisible && modoFormulario === 'crear' ? 'Cerrar formulario' : 'Nuevo usuario'}
+          <UserPlus size={16} />
+          Nuevo usuario
         </Button>
       </header>
 
-      {formularioVisible && (
-        <Card className="p-6">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">{tituloFormulario}</h2>
-              <p className="text-sm text-slate-500">
-                Completá los datos básicos y asigná los roles correspondientes.
-              </p>
-            </div>
-            <Button variant="ghost" onClick={cerrarFormulario}>
-              Cancelar
-            </Button>
-          </div>
-
-          <UsuarioForm
-            modo={modoFormulario}
-            usuarioInicial={usuarioSeleccionado}
-            onSubmit={handleSubmit}
-          />
-        </Card>
-      )}
-
-      <UsuarioEditModal
-        open={editModalOpen}
-        usuario={usuarioEditando}
-        onClose={cerrarEdicion}
-        onSave={handleUpdate}
+      <UsuarioFormModal
+        open={modalAbierto}
+        modo={modoFormulario}
+        usuario={usuarioSeleccionado}
+        onClose={cerrarModal}
+        onSubmit={handleSubmit}
       />
 
       {isLoading ? (
@@ -160,11 +139,11 @@ export function UsuariosPage() {
                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
                           usuario.activo
                             ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-slate-100 text-slate-500'
+                            : 'bg-red-100 text-red-500'
                         }`}
                       >
-                        {usuario.activo ? <BadgeCheck size={12} /> : <AlertCircle size={12} />}
-                        {usuario.activo ? 'Activo' : 'Deshabilitado'}
+                        {usuario.activo ? <BadgeCheck size={12} /> : <BadgeAlertIcon size={12} />}
+                        {usuario.activo ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>
                     <p className="text-sm text-slate-600">{usuario.email}</p>
@@ -179,13 +158,13 @@ export function UsuariosPage() {
                       Editar
                     </Button>
                     <Button
-                      variant="danger"
+                      variant={usuario.activo ? 'danger' : 'success'}
                       size="sm"
-                      disabled={!usuario.activo || deactivateUsuario.isPending}
-                      onClick={() => void confirmarBaja(usuario)}
+                      disabled={deactivateUsuario.isPending || activateUsuario.isPending}
+                      onClick={() => void confirmarCambioEstado(usuario)}
                     >
-                      <Power size={16} />
-                      Deshabilitar
+                      {usuario.activo ? <UserRoundX size={18} /> : <UserRoundCheck size={18} />}
+                      {usuario.activo ? 'Desactivar' : 'Activar'}
                     </Button>
                   </div>
                 </div>
@@ -194,7 +173,6 @@ export function UsuariosPage() {
           })}
         </div>
       )}
-
     </div>
   );
 }
