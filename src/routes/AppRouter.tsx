@@ -24,7 +24,6 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
 
-          {/* Socios: consulta accesible a ADMIN y COLABORADOR */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
           </Route>
@@ -39,7 +38,6 @@ export function AppRouter() {
             <Route path="socios/:id/editar" element={<EditarSocioPage />} />
           </Route>
 
-          {/* Usuarios: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="usuarios" element={<UsuariosPage />} />
             <Route path="cuotas" element={<CuotasPage />} />
@@ -48,6 +46,7 @@ export function AppRouter() {
           {/* Eventos y entradas: ADMIN y COLABORADOR */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="eventos" element={<EventosPage />} />
+            <Route path="eventos/nuevo" element={<CrearEventoPage />} />
             <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
           </Route>
         </Route>
