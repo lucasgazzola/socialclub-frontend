@@ -45,5 +45,3 @@ export function socioToFormData(socio: Socio): SocioFormData {
     categoriaId: socio.categoriaId ?? undefined,
   };
 }
-
-
