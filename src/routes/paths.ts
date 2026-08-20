@@ -9,7 +9,6 @@ export const ROUTES = {
   socios: '/socios',
   sociosNuevo: '/socios/nuevo',
   sociosEditar: '/socios/:id/editar',
-  sociosEditar: '/socios/:id/editar',
   cuotas: '/cuotas',
   usuarios: '/usuarios',
   auditoria: '/auditoria',

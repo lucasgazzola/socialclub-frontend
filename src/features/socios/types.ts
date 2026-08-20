@@ -2,10 +2,6 @@ import type { SocioFormData } from './schemas';
 
 export type { SocioFormData };
 
-import type { SocioFormData } from './schemas';
-
-export type { SocioFormData };
-
 export interface CategoriaSocio {
   id: number;
   nombre: string;

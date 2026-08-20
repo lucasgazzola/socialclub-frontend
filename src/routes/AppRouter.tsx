@@ -6,10 +6,7 @@ import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { EditarSocioPage } from '@/features/socios/pages/EditarSocioPage';
 import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
-import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
-import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
-import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { InscripcionPage } from '@/features/inscripcion/pages/InscripcionPage';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -34,11 +31,6 @@ export function AppRouter() {
             <Route path="socios/:id/editar" element={<EditarSocioPage />} />
           </Route>
 
-          {/* Socios: editar solo ADMIN */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
-            <Route path="socios/:id/editar" element={<EditarSocioPage />} />
-          </Route>
-
           {/* Usuarios: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="usuarios" element={<UsuariosPage />} />
@@ -47,6 +39,11 @@ export function AppRouter() {
           {/* Auditoría: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="auditoria" element={<AuditoriaPage />} />
+          </Route>
+
+          {/* Inscripción: ADMIN y DELEGADO (alineado con los guards del backend) */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'DELEGADO']} />}>
+            <Route path="inscripcion" element={<InscripcionPage />} />
           </Route>
         </Route>
       </Route>

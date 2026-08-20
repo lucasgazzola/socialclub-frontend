@@ -1,21 +1,10 @@
 import { useEffect, useState } from 'react';
-<<<<<<< HEAD
-<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-=======
-=======
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
-import { useLocation } from 'react-router-dom';
-import { Search } from 'lucide-react';
->>>>>>> 9d9d3ee (feat[US-13]: editar socio)
 import { Button, Input, Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ROUTES } from '@/routes/paths';
 import { useSocios } from '../hooks/useSocios';
-import { useCategorias } from '../hooks/useCategorias';
 import { SociosTable } from '../components/SociosTable';
 
 const POR_PAGINA = 10;
@@ -26,20 +15,13 @@ const POR_PAGINA = 10;
  * se resuelven en el backend; el frontend solo mantiene el estado de los filtros.
  */
 export function SociosPage() {
-<<<<<<< HEAD
-<<<<<<< HEAD
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
 
-=======
-=======
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
-  const location = useLocation();
   const [busqueda, setBusqueda] = useState('');
   const [textoInput, setTextoInput] = useState('');
-  const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
@@ -53,9 +35,6 @@ export function SociosPage() {
       return () => clearTimeout(timer);
     }
   }, [mensajeState]);
-<<<<<<< HEAD
-<<<<<<< HEAD
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setPagina(1);
@@ -64,16 +43,8 @@ export function SociosPage() {
     return () => clearTimeout(timer);
   }, [textoInput]);
 
-  const { data: categorias } = useCategorias();
-=======
->>>>>>> 9d9d3ee (feat[US-13]: editar socio)
-=======
->>>>>>> 0d96dd6 (feat[US-13]: editar socio)
-
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
-    categoriaId,
-    estado,
     pagina,
     porPagina: POR_PAGINA,
   });
@@ -86,8 +57,6 @@ export function SociosPage() {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
-          <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
-          <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
           <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -106,12 +75,6 @@ export function SociosPage() {
           )}
         </div>
       </header>
-
-      {mensaje && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {mensaje}
-        </div>
-      )}
 
       {mensaje && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
