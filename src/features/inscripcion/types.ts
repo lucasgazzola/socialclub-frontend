@@ -42,16 +42,7 @@ export interface CrearInscripcionPayload {
   categoriaDisciplinaId?: number;
 }
 
-export interface CuotaGenerada {
-  id: number;
-  periodo: string;
-  monto: string;
-  fechaVencimiento: string;
-}
-
 export interface InscripcionCreada {
   persona: { id: number; nombre: string; apellido: string; dni: string };
   inscripcion: { id: number; disciplinaId: number; categoriaDisciplinaId: number | null };
-  cuotaGenerada: CuotaGenerada | null;
-  aviso?: string;
 }

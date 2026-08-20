@@ -23,7 +23,7 @@ type ModoParticipante = 'busqueda' | 'encontrado' | 'nuevo';
  * 2a. Si existe → se selecciona, no se vuelven a pedir sus datos.
  * 2b. Si no existe → se completa el alta (nombre, apellido, dni, etc.).
  * 3. En ambos casos, se elige disciplina y (si corresponde) categoría.
- * 4. Confirmar → POST /inscripciones.
+ * 4. Confirmar → POST /inscripcion.
  */
 export function InscripcionPage() {
   const [modo, setModo] = useState<ModoParticipante>('busqueda');
@@ -54,8 +54,6 @@ export function InscripcionPage() {
 
   const handleBuscar = async (dni: string) => {
     const resultado = await busqueda.buscar(dni);
-    
-    console.log("Resultado de la búsqueda:", resultado);
 
     if (resultado?.participante) {
       setValue('personaId', resultado.participante.id);
@@ -120,14 +118,6 @@ export function InscripcionPage() {
             <p className="font-medium">
               {resultado.persona.nombre} {resultado.persona.apellido} quedó inscripto correctamente.
             </p>
-            {resultado.cuotaGenerada ? (
-              <p>
-                Se generó la cuota del período {resultado.cuotaGenerada.periodo} por $
-                {resultado.cuotaGenerada.monto}.
-              </p>
-            ) : (
-              resultado.aviso && <p>{resultado.aviso}</p>
-            )}
           </div>
         </div>
       )}

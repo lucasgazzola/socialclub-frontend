@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import axios from 'axios';
 import { buscarParticipantePorDni } from '../api/inscripcion.api';
 import type { ParticipanteEncontrado } from '../types';
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { listarDisciplinasActivas } from '../api/disciplina.api';
-import type { DisciplinaOption } from '../../inscripcion/types';
+import type { DisciplinaOption } from '../types';
 
 export function useDisciplinasActivas() {
   const [disciplinas, setDisciplinas] = useState<DisciplinaOption[]>([]);

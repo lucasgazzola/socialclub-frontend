@@ -1,7 +1,7 @@
 import { Controller, type Control, type FieldErrors } from 'react-hook-form';
 import { Select } from '@/components/ui';
 import type { InscripcionFormValues } from '../schemas/inscripcion.schema';
-import type { DisciplinaOption } from '../types';
+import type { DisciplinaOption } from '../../disciplinas/types';
 
 interface DisciplinaCategoriaSelectorProps {
   control: Control<InscripcionFormValues>;
