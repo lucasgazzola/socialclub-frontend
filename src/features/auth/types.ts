@@ -1,4 +1,4 @@
-export type RolNombre = 'ADMIN' | 'COLABORADOR';
+export type RolNombre = 'ADMIN' | 'COLABORADOR' | 'DELEGADO';
 
 /** Usuario autenticado tal como lo expone el backend en /auth/me y /auth/login. */
 export interface UsuarioAutenticado {

@@ -11,7 +11,6 @@ interface SociosTableProps {
   socios: Socio[];
 }
 
-/** Tabla de presentación de socios (componente "tonto", sin lógica de datos). */
 export function SociosTable({ socios }: SociosTableProps) {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const { mutate: desactivar, isPending } = useDesactivarSocio();

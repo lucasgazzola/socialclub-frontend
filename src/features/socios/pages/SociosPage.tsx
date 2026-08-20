@@ -6,7 +6,6 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import type { EstadoSocioFiltro } from '../types';
 import { useSocios } from '../hooks/useSocios';
-import { useCategorias } from '../hooks/useCategorias';
 import { SociosTable } from '../components/SociosTable';
 
 const POR_PAGINA = 10;
@@ -47,8 +46,6 @@ export function SociosPage() {
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
-    categoriaId,
-    estado,
     pagina,
     porPagina: POR_PAGINA,
   });

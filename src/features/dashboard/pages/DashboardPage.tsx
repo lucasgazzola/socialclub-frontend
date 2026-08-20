@@ -1,4 +1,4 @@
-import { Users, ShieldCheck, ScrollText } from 'lucide-react';
+import { Users, ShieldCheck, ScrollText, UserPlus } from 'lucide-react';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
@@ -17,6 +17,11 @@ const modulos = [
     titulo: 'Auditoría',
     descripcion: 'Registro inalterable de todas las operaciones del sistema.',
     icon: ScrollText,
+  },
+  {
+    titulo: 'Inscripción',
+    descripcion: 'Gestión de las inscripciones de participantes a una o varias disciplinas.',
+    icon: UserPlus,
   },
 ];
 
