@@ -16,4 +16,5 @@ export const ROUTES = {
   crearEvento: '/eventos/nuevo',
   eventosAdmin: '/eventos/admin',
   auditoria: '/auditoria',
+  inscripcion: '/inscripcion',
 } as const;

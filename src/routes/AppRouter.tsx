@@ -13,6 +13,7 @@ import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { CrearEventoPage } from '@/features/eventos/pages/CrearEventoPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
+import { InscripcionPage } from '@/features/inscripcion/pages/InscripcionPage';
 import { ROUTES } from './paths';
 
 export function AppRouter() {
