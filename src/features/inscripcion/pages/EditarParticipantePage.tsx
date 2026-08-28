@@ -63,7 +63,7 @@ export function EditarParticipantePage() {
         nombre: primera.persona.nombre,
         apellido: primera.persona.apellido,
         dni: primera.persona.dni,
-        fechaNacimiento: '',
+        fechaNacimiento: primera.persona.fechaNacimiento ? primera.persona.fechaNacimiento.split('T')[0] : '',
         email: primera.persona.email ?? '',
         telefono: primera.persona.telefono ?? '',
         disciplinaId: 0,
