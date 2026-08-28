@@ -1,4 +1,5 @@
-import { UserRound, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { UserRound, X, Edit } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import type { ParticipanteEncontrado } from '../types';
 
@@ -7,8 +8,13 @@ interface ParticipanteSeleccionadoProps {
   onCambiar: () => void;
 }
 
-/** Tarjeta que confirma al participante ya existente elegido en la búsqueda. */
 export function ParticipanteSeleccionado({ participante, onCambiar }: ParticipanteSeleccionadoProps) {
+  const navigate = useNavigate();
+
+  const handleEditar = () => {
+    navigate(`/participante/${participante.id}/editar`);
+  };
+
   return (
     <Card className="flex items-start justify-between gap-4 p-4">
       <div className="flex gap-3">
@@ -34,10 +40,16 @@ export function ParticipanteSeleccionado({ participante, onCambiar }: Participan
           )}
         </div>
       </div>
-      <Button type="button" variant="ghost" size="sm" onClick={onCambiar}>
-        <X size={14} />
-        Cambiar
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button type="button" variant="ghost" size="sm" onClick={handleEditar}>
+          <Edit size={14} />
+          Editar
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onCambiar}>
+          <X size={14} />
+          Cambiar
+        </Button>
+      </div>
     </Card>
   );
 }

@@ -1,32 +1,25 @@
-import { useCallback, useState } from 'react';
-import axios from 'axios';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { crearInscripcion } from '../api/inscripcion.api';
+import { inscripcionesKeys } from './useInscripciones';
 import type { CrearInscripcionPayload, InscripcionCreada } from '../types';
+import { toast } from 'sonner';
 
 export function useCrearInscripcion() {
-  const [enviando, setEnviando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const enviar = useCallback(
-    async (payload: CrearInscripcionPayload): Promise<InscripcionCreada | null> => {
-      setEnviando(true);
-      setError(null);
-      try {
-        return await crearInscripcion(payload);
-      } catch (err) {
-        let mensaje = 'No se pudo registrar la inscripción. Intentá de nuevo.';
-        if (axios.isAxiosError(err) && err.response?.data?.message) {
-          const backendMessage = err.response.data.message;
-          mensaje = Array.isArray(backendMessage) ? backendMessage.join(', ') : backendMessage;
-        }
-        setError(mensaje);
-        return null;
-      } finally {
-        setEnviando(false);
-      }
+  const qc = useQueryClient();
+  const mutation = useMutation<InscripcionCreada, Error, CrearInscripcionPayload>({
+    mutationFn: crearInscripcion,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: inscripcionesKeys.all });
+      toast.success('Inscripción registrada correctamente');
     },
-    [],
-  );
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
-  return { enviar, enviando, error };
+  return {
+    enviar: mutation.mutateAsync,
+    enviando: mutation.isPending,
+    error: mutation.isError ? mutation.error?.message : null,
+  };
 }

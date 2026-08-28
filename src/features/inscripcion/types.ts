@@ -46,3 +46,29 @@ export interface InscripcionCreada {
   persona: { id: number; nombre: string; apellido: string; dni: string };
   inscripcion: { id: number; disciplinaId: number; categoriaDisciplinaId: number | null };
 }
+
+export interface Inscripcion {
+  id: number;
+  personaId: number;
+  persona: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    dni: string;
+    fechaNacimiento: string | null;
+    email: string | null;
+    telefono: string | null;
+  };
+  disciplinaId: number;
+  disciplina: { id: number; nombre: string };
+  categoriaDisciplinaId: number | null;
+  categoriaDisciplina: { id: number; nombre: string } | null;
+  fechaInscripcion: string;
+  activo: boolean;
+}
+
+export interface InscripcionesQuery {
+  busqueda?: string;
+  pagina?: number;
+  porPagina?: number;
+}
