@@ -15,29 +15,33 @@ const DISCIPLINAS_MOCK: DisciplinaOption[] = [
   {
     id: 1,
     nombre: 'Fútbol',
+    activo: true,
     categorias: [
-      { id: 2, nombre: 'Sub-15' },
-      { id: 1, nombre: 'Sub-17' },
-      { id: 3, nombre: 'Primera' },
+      { id: 2, nombre: 'Sub-15', activo: true },
+      { id: 1, nombre: 'Sub-17', activo: true },
+      { id: 3, nombre: 'Primera', activo: true },
     ],
   },
   {
     id: 2,
     nombre: 'Natación',
+    activo: true,
     categorias: [
-      { id: 201, nombre: 'Infantil' },
-      { id: 202, nombre: 'Juvenil' },
-      { id: 203, nombre: 'Adultos' },
+      { id: 201, nombre: 'Infantil', activo: true },
+      { id: 202, nombre: 'Juvenil', activo: true },
+      { id: 203, nombre: 'Adultos', activo: true },
     ],
   },
   {
     id: 3,
     nombre: 'Ajedrez',
+    activo: true,
     categorias: [],
   },
   {
     id: 4,
     nombre: 'Yoga',
+    activo: true,
     categorias: [],
   },
 ];
