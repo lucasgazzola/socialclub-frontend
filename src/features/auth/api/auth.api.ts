@@ -24,6 +24,14 @@ export const authApi = {
     await apiClient.post('/auth/logout');
   },
 
+  /**
+   * Re-firma la cookie del JWT con los roles actuales despues de hacerse SOCIO.
+   */
+  async refresh(): Promise<UsuarioAutenticado> {
+    const { data } = await apiClient.post<{ usuario: UsuarioAutenticado }>('/auth/refresh');
+    return data.usuario;
+  },
+
   async me(): Promise<UsuarioAutenticado> {
     const { data } = await apiClient.get<UsuarioAutenticado>('/auth/me');
     return data;

@@ -5,6 +5,7 @@ import { Button, Input, Select, Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import type { EstadoSocioFiltro } from '../types';
+import { useCategorias } from '../hooks/useCategorias';
 import { useSocios } from '../hooks/useSocios';
 import { SociosTable } from '../components/SociosTable';
 
@@ -77,14 +78,14 @@ export function SociosPage() {
             placeholder="Buscar por nombre, apellido o DNI"
             value={textoInput}
             onChange={(e) => setTextoInput(e.target.value)}
-            className="min-w-[220px] flex-1"
+            className="min-w-55 flex-1"
           />
 
           <Select
             id="categoria"
             value={categoriaId ?? ''}
             onChange={(e) => cambiarCategoria(e.target.value)}
-            className="min-w-[160px]"
+            className="min-w-40"
           >
             <option value="">Todas las categorías</option>
             {categorias?.map((c) => (
@@ -98,7 +99,7 @@ export function SociosPage() {
             id="estado"
             value={estado ?? ''}
             onChange={(e) => cambiarEstado(e.target.value)}
-            className="min-w-[140px]"
+            className="min-w-35"
           >
             <option value="">Todos los estados</option>
             <option value="ALTA">Alta</option>

@@ -11,3 +11,15 @@ export const socioFormSchema = z.object({
 });
 
 export type SocioFormData = z.infer<typeof socioFormSchema>;
+
+/** Formulario de 'Hacerme socio'. Solo DNI y categoria son editables. */
+export const hacermeSocioFormSchema = z.object({
+  dni: z
+    .string()
+    .min(6, 'El DNI debe tener al menos 6 dígitos')
+    .max(20)
+    .regex(/^\d+$/, 'Solo números'),
+  categoriaId: z.string().min(1, 'Elegí una categoría de socio'),
+});
+
+export type HacermeSocioFormValues = z.infer<typeof hacermeSocioFormSchema>;

@@ -26,8 +26,9 @@ export const sociosApi = {
     return data;
   },
 
-  async create(formData: SocioFormData): Promise<Socio> {
-    const { data } = await apiClient.post<Socio>('/socios', formData);
+  /** US-09: Alta como socio del usuario logueado. */
+  async registrarme(datos: { dni: string; categoriaId: number }): Promise<Socio> {
+    const { data } = await apiClient.post<Socio>('/socios/registrar', datos);
     return data;
   },
 
