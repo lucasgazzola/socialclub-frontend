@@ -35,6 +35,7 @@ export function EventosPage() {
                 <th className="px-4 py-3 font-medium">Descripción</th>
                 <th className="px-4 py-3 font-medium">Entradas disponibles</th>
                 <th className="px-4 py-3 font-medium">Entradas vendidas</th>
+                <th className="px-4 py-3 font-medium text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -44,6 +45,17 @@ export function EventosPage() {
                   <td className="px-4 py-3 text-slate-600">{evento.descripcion ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{evento.entradasDisponibles}</td>
                   <td className="px-4 py-3 text-slate-600">{evento.entradasVendidas}</td>
+                  <td className="px-4 py-3 text-right">
+                    <Link to={ROUTES.comprarEntradas(evento.id)}>
+                      <Button
+                        size="sm"
+                        variant={evento.entradasDisponibles > 0 ? 'secondary' : 'ghost'}
+                        disabled={evento.entradasDisponibles <= 0}
+                      >
+                        Comprar entradas
+                      </Button>
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
