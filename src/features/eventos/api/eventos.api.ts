@@ -7,6 +7,11 @@ export const eventosApi = {
     return data;
   },
 
+  async getById(id: number): Promise<Evento> {
+    const { data } = await apiClient.get<Evento>(`/eventos/${id}`);
+    return data;
+  },
+
   async create(formData: CrearEventoFormData): Promise<Evento> {
     const { data } = await apiClient.post<Evento>('/eventos', formData);
     return data;
