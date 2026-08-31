@@ -6,6 +6,7 @@ export const ROUTES = {
   login: '/login',
   register: '/register',
   dashboard: '/',
+  hacermeSocio: '/hacerme-socio',
   socios: '/socios',
   sociosNuevo: '/socios/nuevo',
   sociosEditar: '/socios/:id/editar',

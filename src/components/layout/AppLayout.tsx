@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, Coins, ClipboardList, LayoutDashboard, LogOut, ShieldCheck, Users, Form, UserPlus } from 'lucide-react';
+import { CalendarDays, Coins, ClipboardList, LayoutDashboard, LogOut, ShieldCheck, Users, UserPlus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -12,10 +12,13 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   roles?: RolNombre[];
+  /** Si está activo, el ítem solo se muestra cuando el usuario NO tiene Persona asociada. */
+  soloSinPersona?: boolean;
 }
 
 const navItems: NavItem[] = [
   { to: ROUTES.dashboard, label: 'Inicio', icon: LayoutDashboard },
+  { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinPersona: true },
   { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
@@ -29,7 +32,9 @@ export function AppLayout() {
   const { usuario, logout } = useAuth();
 
   const itemsVisibles = navItems.filter(
-    (item) => !item.roles || item.roles.some((rol) => usuario?.roles.includes(rol)),
+    (item) =>
+      (!item.soloSinPersona || !usuario?.persona) &&
+      (!item.roles || item.roles.some((rol) => usuario?.roles.includes(rol))),
   );
 
   return (
