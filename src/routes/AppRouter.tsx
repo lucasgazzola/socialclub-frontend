@@ -4,6 +4,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { HacermeSocioPage } from '@/features/socios/pages/HacermeSocioPage';
+import { PerfilSocioPage } from '@/features/socios/pages/PerfilSocioPage';
 import { EditarSocioPage } from '@/features/socios/pages/EditarSocioPage';
 import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
@@ -30,6 +31,7 @@ export function AppRouter() {
 
           {/* Cualquier usuario autenticado */}
           <Route path={ROUTES.hacermeSocio} element={<HacermeSocioPage />} />
+          <Route path={ROUTES.perfil} element={<PerfilSocioPage />} />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
