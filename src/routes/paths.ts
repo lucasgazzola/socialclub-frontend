@@ -18,4 +18,5 @@ export const ROUTES = {
   eventosAdmin: '/eventos/admin',
   auditoria: '/auditoria',
   inscripcion: '/inscripcion',
+  perfil: '/perfil',
 } as const;

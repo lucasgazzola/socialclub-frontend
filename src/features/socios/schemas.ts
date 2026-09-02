@@ -23,3 +23,29 @@ export const hacermeSocioFormSchema = z.object({
 });
 
 export type HacermeSocioFormValues = z.infer<typeof hacermeSocioFormSchema>;
+
+/** Formulario de 'Editar datos personales' (US-11). */
+export const perfilSocioSchema = z.object({
+  nombre: z
+    .string()
+    .min(1, 'El nombre es obligatorio')
+    .max(30, 'El nombre no puede tener más de 30 caracteres')
+    .regex(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s'-]+$/, 'El nombre solo puede contener letras'),
+  apellido: z
+    .string()
+    .min(1, 'El apellido es obligatorio')
+    .max(30, 'El apellido no puede tener más de 30 caracteres')
+    .regex(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s'-]+$/, 'El apellido solo puede contener letras'),
+  email: z
+    .string()
+    .min(1, 'El email es obligatorio')
+    .email('El formato de email no es válido (ejemplo: usuario@dominio.com)'),
+  telefono: z
+    .string()
+    .max(30, 'El teléfono no puede tener más de 30 caracteres')
+    .optional()
+    .or(z.literal('')),
+});
+
+export type PerfilSocioFormData = z.infer<typeof perfilSocioSchema>;
+
