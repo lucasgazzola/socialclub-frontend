@@ -25,3 +25,16 @@ export interface CrearEntradasResult {
   cantidad: number;
   entradas: Entrada[];
 }
+
+export interface ValidarEntradaDto {
+  token: string;
+}
+
+export interface ValidarAccesoResponse {
+  acceso: 'PERMITIDO';
+  entrada: {
+    id: number;
+    eventoId: number;
+    eventoNombre: string;
+  };
+}

@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, Coins, ClipboardList, LayoutDashboard, LogOut, ShieldCheck, Users, UserPlus } from 'lucide-react';
+import { CalendarDays, Coins, ClipboardList, LayoutDashboard, LogOut, ShieldCheck, Users, UserPlus, QrCode } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -21,11 +21,13 @@ const navItems: NavItem[] = [
   { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinPersona: true },
   { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
+  { to: ROUTES.validarAcceso, label: 'Validar Acceso QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
   { to: ROUTES.cuotas, label: 'Cuotas deportivas', icon: Coins, roles: ['ADMIN'] },
   { to: ROUTES.auditoria, label: 'Auditoría', icon: ClipboardList, roles: ['ADMIN'] },
   { to: ROUTES.inscripcion, label: 'Inscripción', icon: UserPlus, roles: ['ADMIN', 'DELEGADO']}
 ];
+
 
 /** Estructura visual de las páginas autenticadas: sidebar + contenido. */
 export function AppLayout() {
@@ -38,8 +40,8 @@ export function AppLayout() {
   );
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 flex-col justify-between border-r border-slate-200 bg-white px-4 py-6">
+    <div className="flex h-screen overflow-hidden">
+      <aside className="flex w-60 shrink-0 flex-col justify-between border-r border-slate-200 bg-white px-4 py-6 sticky top-0 h-screen overflow-y-auto">
         <div>
           <div className="mb-8 px-2">
             <p className="text-lg font-semibold text-brand-700">SocialClub</p>
@@ -77,9 +79,9 @@ export function AppLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 bg-slate-50 p-8">
+      <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
         <Outlet />
       </main>
     </div>
   );
-}
+}

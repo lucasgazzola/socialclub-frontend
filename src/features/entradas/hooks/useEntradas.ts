@@ -58,3 +58,18 @@ export function useEntradasPorEvento(eventoId: number) {
     enabled: !!eventoId,
   });
 }
+
+export function useValidarEntrada() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => entradasApi.validarEntrada(token),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: entradasKeys.all });
+      if (data.entrada?.eventoId) {
+        qc.invalidateQueries({ queryKey: ['eventos', data.entrada.eventoId] });
+        qc.invalidateQueries({ queryKey: entradasKeys.porEvento(data.entrada.eventoId) });
+      }
+    },
+  });
+}

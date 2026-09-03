@@ -18,4 +18,8 @@ export const ROUTES = {
   eventosAdmin: '/eventos/admin',
   auditoria: '/auditoria',
   inscripcion: '/inscripcion',
+  validarAcceso: '/entradas/validar',
+  validarAccesoEvento: (eventoId: number) => `/eventos/${eventoId}/validar`,
 } as const;
+
+

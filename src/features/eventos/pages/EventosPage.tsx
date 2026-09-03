@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Ticket } from 'lucide-react';
 import { Button, Spinner } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useEventos } from '../hooks/useEventos';
@@ -35,6 +36,7 @@ export function EventosPage() {
                 <th className="px-4 py-3 font-medium">Descripción</th>
                 <th className="px-4 py-3 font-medium">Entradas disponibles</th>
                 <th className="px-4 py-3 font-medium">Entradas vendidas</th>
+                <th className="px-4 py-3 text-right font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -44,6 +46,14 @@ export function EventosPage() {
                   <td className="px-4 py-3 text-slate-600">{evento.descripcion ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{evento.entradasDisponibles}</td>
                   <td className="px-4 py-3 text-slate-600">{evento.entradasVendidas}</td>
+                  <td className="px-4 py-3 text-right">
+                    <Link to={ROUTES.comprarEntradas(evento.id)}>
+                      <Button size="sm" variant="secondary">
+                        <Ticket size={14} className="mr-1.5" />
+                        Generar entradas
+                      </Button>
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -53,3 +63,4 @@ export function EventosPage() {
     </div>
   );
 }
+
