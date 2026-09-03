@@ -11,7 +11,6 @@ import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { CuotasPage } from '@/features/cuotas/pages/CuotasPage';
 import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
-import { ValidarAccesoPage } from '@/features/entradas/pages/ValidarAccesoPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { CrearEventoPage } from '@/features/eventos/pages/CrearEventoPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
@@ -53,7 +52,6 @@ export function AppRouter() {
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="eventos" element={<EventosPage />} />
             <Route path="eventos/nuevo" element={<CrearEventoPage />} />
-            <Route path="eventos/validar" element={<ValidarAccesoPage />} />
             <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
           </Route>
 

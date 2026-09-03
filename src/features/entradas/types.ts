@@ -25,19 +25,3 @@ export interface CrearEntradasResult {
   cantidad: number;
   entradas: Entrada[];
 }
-
-/** Estado informado al validar el acceso (incluye NO_ENCONTRADA además de los de la entrada). */
-export type EstadoValidacion = EstadoEntrada | 'NO_ENCONTRADA';
-
-/** Resultado de validar el acceso por QR (US-31). */
-export interface ResultadoValidacion {
-  valido: boolean;
-  estado: EstadoValidacion;
-  motivo: string;
-  entrada: {
-    id: number;
-    token: string;
-    estado: EstadoEntrada;
-    evento: { id: number; nombre: string };
-  } | null;
-}

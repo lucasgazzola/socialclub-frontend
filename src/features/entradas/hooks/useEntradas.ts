@@ -35,13 +35,3 @@ export function useEntradasPorEvento(eventoId: number) {
     enabled: !!eventoId,
   });
 }
-
-/**
- * Custom Hook (mutacion) para validar el acceso por QR (US-31). Envía el token
- * leído y devuelve el resultado del control de acceso.
- */
-export function useValidarAcceso() {
-  return useMutation({
-    mutationFn: (token: string) => entradasApi.validarAcceso(token),
-  });
-}
