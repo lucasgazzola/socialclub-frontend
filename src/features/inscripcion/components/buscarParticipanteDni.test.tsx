@@ -4,14 +4,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { BuscarParticipanteDni } from './buscarParticipanteDni';
 
 vi.mock('@/components/ui', () => ({
-  Input: ({ label, ...props }: any) => (
+  Input: ({ label, ...props }: { label?: string } & React.ComponentProps<'input'>) => (
     <div>
       <label>{label}</label>
       <input {...props} />
     </div>
   ),
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-  Spinner: ({ className }: any) => <span className={className} aria-label="spinner" />,
+  Button: ({ children, ...props }: React.ComponentProps<'button'>) => <button {...props}>{children}</button>,
+  Spinner: ({ className }: { className?: string }) => <span className={className} aria-label="spinner" />,
 }));
 
 describe('BuscarParticipanteDni', () => {

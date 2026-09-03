@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { UserRound, X, Edit } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
+import { ROUTES } from '@/routes/paths';
 import type { ParticipanteEncontrado } from '../types';
 
 interface ParticipanteSeleccionadoProps {
@@ -12,6 +13,11 @@ export function ParticipanteSeleccionado({ participante, onCambiar }: Participan
   const navigate = useNavigate();
 
   const handleEditar = () => {
+    // Participante sin disciplina no es "participante" aún → es Persona/Socio
+    if (participante.inscripciones.length === 0) {
+      navigate(ROUTES.sociosEditar.replace(':id', String(participante.id)));
+      return;
+    }
     navigate(`/participante/${participante.id}/editar`);
   };
 
