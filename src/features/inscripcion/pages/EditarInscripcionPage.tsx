@@ -72,13 +72,13 @@ export function EditarInscripcionPage() {
   // Sync selected disciplines with form when user changes selection
   useEffect(() => {
     if (selectedDisciplinaId > 0) {
-      const seleccionada = disciplinasSeleccionadas.find(d => d.disciplinaId === selectedDisciplinaId);
+      const seleccionada = disciplinasSeleccionadas.find((d) => d.disciplinaId === selectedDisciplinaId);
       if (seleccionada) {
         setValue('disciplinaId', seleccionada.disciplinaId, { shouldValidate: true });
         setValue('categoriaDisciplinaId', seleccionada.categoriaDisciplinaId ?? undefined, { shouldValidate: true });
       }
     }
-  }, [selectedDisciplinaId, setValue]);
+  }, [selectedDisciplinaId, disciplinasSeleccionadas, setValue]);
 
   const onSubmit = async (data: InscripcionFormValues) => {
     const seleccionada = disciplinasSeleccionadas.find(d => d.disciplinaId === data.disciplinaId);

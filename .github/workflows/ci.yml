@@ -1,5 +1,5 @@
 # CI del frontend — en PRs a dev/test/main y push a dev.
-# Sin tests (decisión del equipo): valida lint + typecheck + build.
+# Valida lint + typecheck + tests (Vitest con cobertura) + build.
 name: CI
 
 on:
@@ -27,6 +27,19 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      # Corre los tests con cobertura. El umbral (ratchet) está en vitest.config.ts > test.coverage.thresholds.
+      # Objetivo DoD: 70% en componentes/hooks críticos. Subir el ratchet a medida que se agregan tests.
+      - name: Tests + cobertura (Vitest)
+        run: npm run test:cov
+
+      - name: Publicar cobertura (evidencia de ejecución)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend
+          path: coverage/
+          if-no-files-found: warn
 
       - name: Build
         run: npm run build

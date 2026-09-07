@@ -62,13 +62,9 @@ export function BuscarParticipanteDni({
       </div>
 
       {noEncontrado && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <span>No hay ningún participante registrado con ese DNI.</span>
-          <Button type="button" variant="secondary" size="sm" onClick={onRegistrarNuevo}>
-            <UserPlus size={14} />
-            Registrar nuevo
-          </Button>
-        </div>
+        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          No hay resultados para ese DNI.
+        </p>
       )}
 
       {error && (
@@ -76,6 +72,18 @@ export function BuscarParticipanteDni({
           {error}
         </p>
       )}
+
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+        <span className="text-sm text-slate-600">
+          '¿No encontraste al participante?'
+        </span>
+        <Button type="button" variant="secondary" size="sm" onClick={onRegistrarNuevo}>
+          <UserPlus size={14} />
+          Inscribir nuevo participante
+        </Button>
+      </div>
+
+      
     </div>
   );
 }

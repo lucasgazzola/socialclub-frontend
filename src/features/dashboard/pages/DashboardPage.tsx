@@ -1,4 +1,4 @@
-import { CalendarDays, CreditCard, ScrollText, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { CalendarDays, CreditCard, ScrollText, ShieldCheck, User, UserPlus, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -84,6 +84,7 @@ function PanelAdministracion() {
 /** Pantalla principal del socio */
 function PanelSocio() {
   const { usuario } = useAuth();
+  const navigate = useNavigate();
   const persona = usuario?.persona;
 
   if (!persona) {
@@ -93,13 +94,19 @@ function PanelSocio() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-900">
-          Hola, {usuario?.nombre ?? usuario?.email} 👋
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Bienvenido a tu espacio de socio de SocialClub.
-        </p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            Hola, {usuario?.nombre ?? usuario?.email} 👋
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Bienvenido a tu espacio de socio de SocialClub.
+          </p>
+        </div>
+        <Button onClick={() => navigate(ROUTES.perfil)}>
+          <User size={16} />
+          Editar mis datos
+        </Button>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

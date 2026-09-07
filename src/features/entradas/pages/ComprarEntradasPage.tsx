@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Download, Ticket } from 'lucide-react';
 import { Button, Card, Input, Spinner } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
-import { useCrearEntradas, useEvento } from '../hooks/useEntradas';
+import { useEvento } from '@/features/eventos/hooks/useEventos';
+import { useCrearEntradas } from '../hooks/useEntradas';
 import { QRCode } from '../components/QRCode';
 import type { Entrada } from '../types';
 
