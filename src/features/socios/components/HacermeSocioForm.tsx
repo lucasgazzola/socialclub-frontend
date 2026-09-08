@@ -7,7 +7,7 @@ import { hacermeSocioFormSchema, type HacermeSocioFormValues } from '../schemas'
 
 interface HacermeSocioFormProps {
   /** Datos del usuario logueado que se precompletan (solo lectura). */
-  defaultValues: { nombre: string; apellido: string; email: string };
+  defaultValues: { nombre: string; apellido: string; email: string; dni?: string };
   onSubmit: (data: { dni: string; categoriaId: number }) => Promise<void>;
   submitLabel?: string;
 }
@@ -15,7 +15,7 @@ interface HacermeSocioFormProps {
 /**
  * US-09 — Formulario "Hacerme socio".
  * Nombre, apellido y email se muestran precargados desde la cuenta del usuario
- * (solo lectura); el usuario ingresa únicamente DNI y categoría de socio.
+ * (solo lectura); el usuario ingresa únicamente DNI (si no lo tiene ya) y categoría de socio.
  */
 export function HacermeSocioForm({
   defaultValues,
@@ -25,12 +25,17 @@ export function HacermeSocioForm({
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
   const { data: categorias, isLoading: cargandoCategorias } = useCategorias();
 
+  const dniExistente = defaultValues.dni && defaultValues.dni.trim() !== '';
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<HacermeSocioFormValues>({
     resolver: zodResolver(hacermeSocioFormSchema),
+    defaultValues: {
+      dni: defaultValues.dni ?? '',
+    },
   });
 
   const onFormSubmit = handleSubmit(async (values) => {
@@ -71,13 +76,24 @@ export function HacermeSocioForm({
           className="sm:col-span-2"
         />
 
-        <Input
-          id="dni"
-          label="DNI"
-          placeholder="Ej: 12345678"
-          error={errors.dni?.message}
-          {...register('dni')}
-        />
+        {dniExistente ? (
+          <Input
+            id="dni-readonly"
+            label="DNI"
+            value={defaultValues.dni}
+            readOnly
+            disabled
+            className="cursor-not-allowed bg-slate-100 text-slate-500"
+          />
+        ) : (
+          <Input
+            id="dni"
+            label="DNI"
+            placeholder="Ej: 12345678"
+            error={errors.dni?.message}
+            {...register('dni')}
+          />
+        )}
 
         <div className="w-full">
           <label htmlFor="categoriaId" className="mb-1 block text-sm font-medium text-slate-700">
