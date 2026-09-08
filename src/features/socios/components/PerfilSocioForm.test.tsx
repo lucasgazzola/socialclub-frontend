@@ -26,10 +26,15 @@ const mockPersona: PersonaDeUsuario = {
   dni: '40123456',
   email: 'lucas@club.com',
   telefono: '351 123 4567',
-  categoriaId: 1,
-  categoria: { id: 1, nombre: 'Activo' },
-  fechaAlta: '2025-01-01',
-  activo: true,
+  membresias: [
+    {
+      id: 1,
+      categoriaId: 1,
+      categoria: { id: 1, nombre: 'Activo' },
+      fechaAlta: '2025-01-01',
+      activo: true,
+    },
+  ],
 };
 
 describe('PerfilSocioForm (US-11)', () => {

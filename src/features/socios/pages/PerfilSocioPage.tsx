@@ -1,22 +1,17 @@
-import { Navigate } from 'react-router-dom';
 import { Card } from '@/components/ui';
-import { ROUTES } from '@/routes/paths';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { PerfilSocioForm } from '../components/PerfilSocioForm';
 
 /**
- * US-11: Editar datos personales del socio registrado.
+ * US-11: Editar datos personales.
+ * Accesible para cualquier usuario autenticado (todos tienen persona).
+ * Si tiene membresía activa muestra info de socio read-only.
  */
 export function PerfilSocioPage() {
   const { usuario } = useAuth();
 
   if (!usuario) {
     return null;
-  }
-
-  // Si el usuario no tiene ficha de socio, no corresponde esta página
-  if (!usuario.persona) {
-    return <Navigate to={ROUTES.dashboard} replace />;
   }
 
   return (
@@ -29,7 +24,7 @@ export function PerfilSocioPage() {
       </header>
 
       <Card className="p-6 shadow-sm">
-        <PerfilSocioForm usuario={usuario} persona={usuario.persona} />
+        <PerfilSocioForm usuario={usuario} persona={usuario.persona ?? null} />
       </Card>
     </div>
   );

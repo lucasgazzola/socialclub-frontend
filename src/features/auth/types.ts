@@ -2,17 +2,26 @@ import type { CategoriaSocio } from '@/features/socios/types';
 
 export type RolNombre = 'ADMIN' | 'COLABORADOR' | 'DELEGADO' | 'SOCIO';
 
-/** Persona vinculada al Usuario logueado (US-09). */
+/** Membresía de una persona (período como socio). */
+export interface MembresiaDePersona {
+  id: number;
+  categoriaId: number;
+  categoria?: CategoriaSocio | null;
+  fechaAlta: string;
+  fechaBaja?: string | null;
+  activo: boolean;
+}
+
+/** Persona vinculada al Usuario logueado. Siempre existe tras el registro. */
 export interface PersonaDeUsuario {
   id: number;
-  dni: string;
+  nombre?: string;
+  apellido?: string;
+  dni?: string | null;
   email?: string | null;
   telefono?: string | null;
   fechaNacimiento?: string | null;
-  categoriaId?: number | null;
-  categoria?: CategoriaSocio | null;
-  fechaAlta: string;
-  activo: boolean;
+  membresias: MembresiaDePersona[];
 }
 
 /** Usuario autenticado tal como lo expone el backend en /auth/me y /auth/login. */

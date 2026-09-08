@@ -12,16 +12,14 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   roles?: RolNombre[];
-  /** Si está activo, el ítem solo se muestra cuando el usuario NO tiene Persona asociada. */
-  soloSinPersona?: boolean;
-  /** Si esta activo, el item solo se muestra cuando el usuario TIENE Persona asociada. */
-  soloConPersona?: boolean;
+  /** Si está activo, el ítem solo se muestra cuando el usuario NO tiene membresía activa. */
+  soloSinMembresia?: boolean;
 }
 
 const navItems: NavItem[] = [
   { to: ROUTES.dashboard, label: 'Inicio', icon: LayoutDashboard },
-  { to: ROUTES.perfil, label: 'Mi perfil', icon: User, soloConPersona: true },
-  { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinPersona: true },
+  { to: ROUTES.perfil, label: 'Mi perfil', icon: User },
+  { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
   { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
@@ -34,10 +32,11 @@ const navItems: NavItem[] = [
 export function AppLayout() {
   const { usuario, logout } = useAuth();
 
+  const tieneMembresia = usuario?.persona?.membresias?.some((m) => m.activo);
+
   const itemsVisibles = navItems.filter(
     (item) =>
-      (!item.soloSinPersona || !usuario?.persona) &&
-      (!item.soloConPersona || !!usuario?.persona) &&
+      (!item.soloSinMembresia || !tieneMembresia) &&
       (!item.roles || item.roles.some((rol) => usuario?.roles.includes(rol))),
   );
 

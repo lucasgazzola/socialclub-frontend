@@ -9,7 +9,7 @@ import type { PersonaDeUsuario, UsuarioAutenticado } from '@/features/auth/types
 
 interface PerfilSocioFormProps {
   usuario: UsuarioAutenticado;
-  persona: PersonaDeUsuario;
+  persona: PersonaDeUsuario | null;
 }
 
 export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
@@ -17,6 +17,8 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
   const [mensajeError, setMensajeError] = useState<string | null>(null);
 
   const { mutateAsync: updatePerfil, isPending } = useUpdatePerfilSocio();
+
+  const membresiaActiva = persona?.membresias?.find((m) => m.activo);
 
   const {
     register,
@@ -27,8 +29,8 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
     defaultValues: {
       nombre: usuario.nombre || '',
       apellido: usuario.apellido || '',
-      email: persona.email || usuario.email || '',
-      telefono: persona.telefono || '',
+      email: persona?.email || usuario.email || '',
+      telefono: persona?.telefono || '',
     },
   });
 
@@ -73,54 +75,56 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
         </div>
       )}
 
-      {/* Sección: Datos Inalterables / Solo Lectura */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-        <h3 className="mb-3 text-sm font-semibold text-slate-700">Información de la membresía (Solo lectura)</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <label htmlFor="dni" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
-              <Lock size={14} className="text-slate-400" />
-              DNI
-            </label>
-            <Input
-              id="dni"
-              value={persona.dni}
-              readOnly
-              disabled
-              className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
-            />
-            <p className="mt-1 text-xs text-slate-400">El DNI es inalterable en el sistema.</p>
-          </div>
+      {/* Sección: Datos Inalterables / Solo Lectura — SOLO si tiene membresía activa */}
+      {membresiaActiva && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+          <h3 className="mb-3 text-sm font-semibold text-slate-700">Información de la membresía (Solo lectura)</h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label htmlFor="dni" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                <Lock size={14} className="text-slate-400" />
+                DNI
+              </label>
+              <Input
+                id="dni"
+                value={persona?.dni ?? '—'}
+                readOnly
+                disabled
+                className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
+              />
+              <p className="mt-1 text-xs text-slate-400">El DNI es inalterable en el sistema.</p>
+            </div>
 
-          <div>
-            <label htmlFor="categoria" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
-              <Lock size={14} className="text-slate-400" />
-              Categoría
-            </label>
-            <Input
-              id="categoria"
-              value={persona.categoria?.nombre || 'Socio'}
-              readOnly
-              disabled
-              className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
-            />
-          </div>
+            <div>
+              <label htmlFor="categoria" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                <Lock size={14} className="text-slate-400" />
+                Categoría
+              </label>
+              <Input
+                id="categoria"
+                value={membresiaActiva.categoria?.nombre || 'Socio'}
+                readOnly
+                disabled
+                className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
+              />
+            </div>
 
-          <div>
-            <label htmlFor="estado" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
-              <Lock size={14} className="text-slate-400" />
-              Estado
-            </label>
-            <Input
-              id="estado"
-              value={persona.activo ? 'Activo' : 'Inactivo'}
-              readOnly
-              disabled
-              className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
-            />
+            <div>
+              <label htmlFor="estado" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                <Lock size={14} className="text-slate-400" />
+                Estado
+              </label>
+              <Input
+                id="estado"
+                value={membresiaActiva.activo ? 'Activo' : 'Inactivo'}
+                readOnly
+                disabled
+                className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Sección: Datos Editables */}
       <div>
