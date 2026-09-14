@@ -48,7 +48,11 @@ export function EventosPage() {
                   <td className="px-4 py-3 text-slate-600">{evento.entradasVendidas}</td>
                   <td className="px-4 py-3 text-right">
                     <Link to={ROUTES.comprarEntradas(evento.id)}>
-                      <Button size="sm" variant="secondary">
+                      <Button
+                        size="sm"
+                        variant={evento.entradasDisponibles > 0 ? 'secondary' : 'ghost'}
+                        disabled={evento.entradasDisponibles <= 0}
+                      >
                         <Ticket size={14} className="mr-1.5" />
                         Generar entradas
                       </Button>
@@ -63,4 +67,3 @@ export function EventosPage() {
     </div>
   );
 }
-

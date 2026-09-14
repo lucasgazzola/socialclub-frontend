@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Card, Spinner, Button, Input } from '@/components/ui';
+import { ROUTES } from '@/routes/paths';
 import { useInscripcionesPorPersona } from '../hooks/useInscripciones';
 import { useDisciplinasActivas } from '../../disciplinas/hooks/useDisciplinasActivas';
 import { useForm, Controller } from 'react-hook-form';
@@ -79,6 +80,13 @@ export function EditarParticipantePage() {
     }
   }, [inscripciones, reset]);
 
+  // Persona sin inscripciones no es "participante" → redirigir a editar socio
+  useEffect(() => {
+    if (!loadingInscripciones && inscripciones && inscripciones.length === 0 && !errorInscripciones) {
+      navigate(ROUTES.sociosEditar.replace(':id', String(personaId)), { replace: true });
+    }
+  }, [loadingInscripciones, inscripciones, errorInscripciones, personaId, navigate]);
+
   const disciplinasConCategoria = disciplinasSeleccionadas.map((d) => {
     const disc = disciplinas.find((disciplina) => disciplina.id === d.disciplinaId);
     const cat = disc?.categorias.find((c) => c.id === d.categoriaDisciplinaId);
@@ -156,6 +164,14 @@ export function EditarParticipantePage() {
   }
 
   if (errorInscripciones || !participante) {
+    // Si es array vacío, el redirect del useEffect ya se encarga; evitar flash de error
+    if (inscripciones && inscripciones.length === 0 && !errorInscripciones) {
+      return (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-6 w-6" />
+        </div>
+      );
+    }
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
         No se pudo cargar el participante.

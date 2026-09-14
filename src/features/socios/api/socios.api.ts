@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/api/client';
 import type { Paginated } from '@/types/api';
 import type { Socio, SocioFormData, SociosQuery } from '../types';
+import type { PerfilSocioFormData } from '../schemas';
 
 export const sociosApi = {
   async create(formData: SocioFormData): Promise<Socio> {
@@ -32,13 +33,19 @@ export const sociosApi = {
     return data;
   },
 
+  /** US-11: Editar datos personales del socio logueado. */
+  async updatePerfil(formData: PerfilSocioFormData): Promise<Socio> {
+    const { data } = await apiClient.patch<Socio>('/socios/perfil', formData);
+    return data;
+  },
+
   async update(id: number, formData: Partial<SocioFormData>): Promise<Socio> {
     const { data } = await apiClient.patch<Socio>(`/socios/${id}`, formData);
     return data;
   },
 
   async deactivate(id: number): Promise<Socio> {
-  const { data } = await apiClient.delete<Socio>(`/socios/${id}`);
-  return data;
+    const { data } = await apiClient.delete<Socio>(`/socios/${id}`);
+    return data;
   },
 };

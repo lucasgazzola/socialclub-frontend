@@ -61,7 +61,7 @@ export function InscripcionPage() {
     } else if (resultado?.noEncontrado) {
       setValue('personaId', undefined);
       setValue('dni', dni);
-      setModo('nuevo');
+      setModo('busqueda');
     }
   };
 

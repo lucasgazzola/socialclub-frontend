@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { sociosApi } from '../api/socios.api';
+import type { PerfilSocioFormData } from '../schemas';
 import type { SocioFormData, SociosQuery } from '../types';
 
 /** Claves de cache de react-query para el módulo de socios. */
@@ -39,3 +41,17 @@ export function useEditarSocio(id: number) {
     onSuccess: () => qc.invalidateQueries({ queryKey: sociosKeys.all }),
   });
 }
+
+/** US-11: Hook para actualizar los datos personales del socio logueado. */
+export function useUpdatePerfilSocio() {
+  const qc = useQueryClient();
+  const { refrescar } = useAuth();
+  return useMutation({
+    mutationFn: (data: PerfilSocioFormData) => sociosApi.updatePerfil(data),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: sociosKeys.all });
+      await refrescar();
+    },
+  });
+}
+

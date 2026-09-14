@@ -7,27 +7,8 @@ import { entradasApi } from '../api/entradas.api';
  */
 export const entradasKeys = {
   all: ['entradas'] as const,
-  eventos: ['eventos'] as const,
-  evento: (id: number) => ['eventos', id] as const,
   porEvento: (eventoId: number) => [...entradasKeys.all, 'por-evento', eventoId] as const,
 };
-
-// Hook para consultar la lista de todos los eventos.
-export function useEventos() {
-  return useQuery({
-    queryKey: entradasKeys.eventos,
-    queryFn: () => entradasApi.listarEventos(),
-  });
-}
-
-// Hook para consultar los detalles de un evento especifico por su ID.
-export function useEvento(id: number) {
-  return useQuery({
-    queryKey: entradasKeys.evento(id),
-    queryFn: () => entradasApi.getEvento(id),
-    enabled: !!id,
-  });
-}
 
 /**
  * Custom Hook (mutacion) para crear entradas. Se hace de esta forma para que al terminar
@@ -44,8 +25,8 @@ export function useCrearEntradas() {
      * Asegura que la pantalla se actualice automaticamente con los datos nuevos, sin tener que hacer un fetch manual.
      */
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: entradasKeys.eventos });
-      qc.invalidateQueries({ queryKey: entradasKeys.evento(data.eventoId) });
+      qc.invalidateQueries({ queryKey: ['eventos'] });
+      qc.invalidateQueries({ queryKey: ['eventos', data.eventoId] });
       qc.invalidateQueries({ queryKey: entradasKeys.porEvento(data.eventoId) });
     },
   });
@@ -72,4 +53,4 @@ export function useValidarEntrada() {
       }
     },
   });
-}
+}

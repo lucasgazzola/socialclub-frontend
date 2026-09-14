@@ -1,4 +1,4 @@
-import { CalendarDays, CreditCard, ScrollText, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { CalendarDays, CreditCard, ScrollText, ShieldCheck, User, UserPlus, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -84,22 +84,30 @@ function PanelAdministracion() {
 /** Pantalla principal del socio */
 function PanelSocio() {
   const { usuario } = useAuth();
+  const navigate = useNavigate();
   const persona = usuario?.persona;
+  const membresiaActiva = persona?.membresias?.find((m) => m.activo);
 
-  if (!persona) {
-    // Por consistencia: rol SOCIO sin ficha asociada (estado transitorio).
+  if (!persona || !membresiaActiva) {
+    // Por consistencia: rol SOCIO sin membresía activa (estado transitorio).
     return <PantallaNeutra />;
   }
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-900">
-          Hola, {usuario?.nombre ?? usuario?.email} 👋
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Bienvenido a tu espacio de socio de SocialClub.
-        </p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            Hola, {usuario?.nombre ?? usuario?.email} 👋
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Bienvenido a tu espacio de socio de SocialClub.
+          </p>
+        </div>
+        <Button onClick={() => navigate(ROUTES.perfil)}>
+          <User size={16} />
+          Editar mis datos
+        </Button>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -108,7 +116,7 @@ function PanelSocio() {
             <Users size={20} />
           </div>
           <h2 className="font-medium text-slate-900">Categoría</h2>
-          <p className="mt-1 text-sm text-slate-500">{persona.categoria?.nombre ?? '—'}</p>
+          <p className="mt-1 text-sm text-slate-500">{membresiaActiva.categoria?.nombre ?? '—'}</p>
         </Card>
 
         <Card className="p-5">
@@ -116,7 +124,7 @@ function PanelSocio() {
             <CalendarDays size={20} />
           </div>
           <h2 className="font-medium text-slate-900">Socio desde</h2>
-          <p className="mt-1 text-sm text-slate-500">{formatearFecha(persona.fechaAlta)}</p>
+          <p className="mt-1 text-sm text-slate-500">{formatearFecha(membresiaActiva.fechaAlta)}</p>
         </Card>
 
         <Card className="p-5">
@@ -124,7 +132,7 @@ function PanelSocio() {
             <CreditCard size={20} />
           </div>
           <h2 className="font-medium text-slate-900">DNI</h2>
-          <p className="mt-1 text-sm text-slate-500">{persona.dni}</p>
+          <p className="mt-1 text-sm text-slate-500">{persona.dni ?? '—'}</p>
         </Card>
       </div>
     </div>

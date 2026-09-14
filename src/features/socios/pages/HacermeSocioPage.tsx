@@ -16,8 +16,9 @@ export function HacermeSocioPage() {
   const navigate = useNavigate();
   const { mutateAsync } = useRegistrarmeSocio();
 
-  // Si el usuario ya tiene Persona asociada, no puede duplicar el alta.
-  if (usuario?.persona) {
+  // Si el usuario ya tiene una membresía activa, no puede duplicar el alta.
+  const tieneMembresia = usuario?.persona?.membresias?.some((m) => m.activo);
+  if (tieneMembresia) {
     return <Navigate to={ROUTES.dashboard} replace />;
   }
 
@@ -50,6 +51,7 @@ export function HacermeSocioPage() {
             nombre: usuario.nombre ?? '',
             apellido: usuario.apellido ?? '',
             email: usuario.email,
+            dni: usuario.persona?.dni ?? '',
           }}
           onSubmit={handleSubmit}
         />

@@ -19,9 +19,20 @@ vi.mock('../schemas', () => {
     fechaNacimiento: z.string().optional(),
     email: z.string().min(1, 'El email es obligatorio').email('El formato de email no es válido'),
     telefono: z.string().optional(),
+    categoriaId: z.number().int().optional(),
   });
   return { socioFormSchema };
 });
+
+vi.mock('../hooks/useCategorias', () => ({
+  useCategorias: () => ({
+    data: [
+      { id: 1, nombre: 'Activo' },
+      { id: 2, nombre: 'Premium' },
+    ],
+    isLoading: false,
+  }),
+}));
 
 // Mock de los componentes de UI para inputs y mensajes de error sin depender de su implementación interna.
 vi.mock('@/components/ui', () => ({
@@ -30,6 +41,12 @@ vi.mock('@/components/ui', () => ({
       <label htmlFor={id}>{label}</label>
       <input id={id} {...props} />
       {error && <p role="alert">{error}</p>}
+    </div>
+  ),
+  Select: ({ id, children, ...props }: { id: string; children?: ReactNode } & React.InputHTMLAttributes<HTMLSelectElement>) => (
+    <div>
+      <label htmlFor={id}>Categoría</label>
+      <select id={id} {...props}>{children}</select>
     </div>
   ),
   Button: ({ children, ...props }: { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) => (
@@ -75,13 +92,16 @@ describe('SocioForm', () => {
   });
 
   describe('TC-019: registrar un nuevo socio con datos válidos', () => {
-    it('llama a onSubmit con los datos ingresados y no muestra errores', async () => {
+    it('muestra la categoría y la incluye en el submit', async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
 
       render(<SocioForm onSubmit={onSubmit} submitLabel="Guardar" />);
 
+      expect(screen.getByLabelText('Categoría')).toBeInTheDocument();
+
       await completarFormulario(user);
+      await user.selectOptions(screen.getByLabelText('Categoría'), '2');
       await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
@@ -91,6 +111,7 @@ describe('SocioForm', () => {
           apellido: 'Pérez',
           dni: '30111222',
           email: 'juan.perez@example.com',
+          categoriaId: 2,
         }),
       );
       expect(screen.queryByText(/error/i)).not.toBeInTheDocument();

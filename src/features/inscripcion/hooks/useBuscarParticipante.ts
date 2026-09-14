@@ -25,9 +25,13 @@ export function useBuscarParticipante() {
       const participante = await buscarParticipantePorDni(dni);
       setEstado({ cargando: false, participante, noEncontrado: false, error: null });
       return { participante, noEncontrado: false };
-    } catch (error: any) {
-      const mensajeError = error?.message || '';
-      const status = error?.response?.status || error?.status;
+    } catch (error: unknown) {
+      const mensajeError = error instanceof Error ? error.message : '';
+      const status =
+        error instanceof Error
+          ? (error as Error & { status?: number; response?: { status?: number } }).response?.status ??
+            (error as Error & { status?: number }).status
+          : undefined;
 
       if (status === 404 || mensajeError.includes('404') || mensajeError.includes('Cannot GET')) {
         setEstado({ cargando: false, participante: null, noEncontrado: true, error: null });
