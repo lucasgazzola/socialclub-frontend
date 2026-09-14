@@ -21,6 +21,7 @@ import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { InscripcionPage } from '@/features/inscripcion/pages/InscripcionPage';
 import { EditarParticipantePage } from '@/features/inscripcion/pages/EditarParticipantePage';
+import { CargarDocumentacionPage } from '@/features/documentacion/pages/CargarDocumentacionPage';
 import { ROUTES } from './paths';
 
 export function AppRouter() {
@@ -72,6 +73,7 @@ export function AppRouter() {
           {/* Inscripción: ADMIN y DELEGADO (alineado con los guards del backend) */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'DELEGADO']} />}>
             <Route path="inscripcion" element={<InscripcionPage />} />
+            <Route path="documentacion" element={<CargarDocumentacionPage />} />
             <Route path="participante/:id/editar" element={<EditarParticipantePage />} />
           </Route>
 
