@@ -10,6 +10,10 @@ import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { CrearSocioPage } from '@/features/socios/pages/CrearSocioPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { CuotasPage } from '@/features/cuotas/pages/CuotasPage';
+import { CuotasHubPage } from '@/features/cuotas/pages/CuotasHubPage';
+import { CuotaSocialPage } from '@/features/cuota-social/pages/CuotaSocialPage';
+import { CrearCuotaSocialPage } from '@/features/cuota-social/pages/CrearCuotaSocialPage';
+import { EditarCuotaSocialPage } from '@/features/cuota-social/pages/EditarCuotaSocialPage';
 import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { CrearEventoPage } from '@/features/eventos/pages/CrearEventoPage';
@@ -45,7 +49,11 @@ export function AppRouter() {
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="usuarios" element={<UsuariosPage />} />
-            <Route path="cuotas" element={<CuotasPage />} />
+            <Route path="cuotas" element={<CuotasHubPage />} />
+            <Route path="cuotas/deportiva" element={<CuotasPage />} />
+            <Route path="cuotas/social" element={<CuotaSocialPage />} />
+            <Route path="cuotas/social/nueva" element={<CrearCuotaSocialPage />} />
+            <Route path="cuotas/social/:id/editar" element={<EditarCuotaSocialPage />} />
           </Route>
 
           {/* Eventos y entradas: ADMIN y COLABORADOR */}
