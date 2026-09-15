@@ -1,5 +1,17 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, Coins, ClipboardList, FileCheck, LayoutDashboard, LogOut, ShieldCheck, User, Users, UserPlus } from 'lucide-react';
+import {
+  CalendarDays,
+  Coins,
+  ClipboardList,
+  FileCheck,
+  LayoutDashboard,
+  LogOut,
+  ShieldCheck,
+  User,
+  Users,
+  UserPlus,
+  UserRound,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -26,7 +38,18 @@ const navItems: NavItem[] = [
   { to: ROUTES.cuotas, label: 'Cuotas', icon: Coins, roles: ['ADMIN'] },
   { to: ROUTES.auditoria, label: 'Auditoría', icon: ClipboardList, roles: ['ADMIN'] },
   { to: ROUTES.inscripcion, label: 'Inscripción', icon: UserPlus, roles: ['ADMIN', 'DELEGADO'] },
-  { to: ROUTES.documentacion, label: 'Documentación', icon: FileCheck, roles: ['ADMIN', 'DELEGADO'] }
+  {
+    to: ROUTES.participantes,
+    label: 'Participantes',
+    icon: UserRound,
+    roles: ['ADMIN', 'COLABORADOR'],
+  },
+  {
+    to: ROUTES.documentacion,
+    label: 'Documentación',
+    icon: FileCheck,
+    roles: ['ADMIN', 'DELEGADO'],
+  },
 ];
 
 /** Estructura visual de las páginas autenticadas: sidebar + contenido. */
@@ -46,7 +69,7 @@ export function AppLayout() {
       <aside className="flex w-60 flex-col justify-between border-r border-slate-200 bg-white px-4 py-6">
         <div>
           <div className="mb-8 px-2">
-            <p className="text-lg font-semibold text-brand-700">SocialClub</p>
+            <p className="text-brand-700 text-lg font-semibold">SocialClub</p>
             <p className="text-xs text-slate-500">Panel de gestión</p>
           </div>
           <nav className="space-y-1">
@@ -74,7 +97,12 @@ export function AppLayout() {
             {usuario?.nombre} {usuario?.apellido}
           </p>
           <p className="px-2 text-xs text-slate-500">{usuario?.email}</p>
-          <Button variant="ghost" size="sm" className="mt-3 w-full justify-start" onClick={() => void logout()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3 w-full justify-start"
+            onClick={() => void logout()}
+          >
             <LogOut size={16} />
             Cerrar sesión
           </Button>

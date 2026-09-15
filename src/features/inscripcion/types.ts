@@ -65,10 +65,18 @@ export interface Inscripcion {
   categoriaDisciplina: { id: number; nombre: string } | null;
   fechaInscripcion: string;
   activo: boolean;
+  /** Estado legible que expone el listado de participantes (US-08). */
+  estado?: EstadoInscripcionFiltro;
 }
 
+/** Estado de la participación de un participante en una disciplina. */
+export type EstadoInscripcionFiltro = 'INSCRIPTO' | 'BAJA';
+
+/** Parámetros del listado de participantes (US-08: búsqueda, filtros + paginación). */
 export interface InscripcionesQuery {
   busqueda?: string;
+  disciplinaId?: number;
+  estado?: EstadoInscripcionFiltro;
   pagina?: number;
   porPagina?: number;
 }
