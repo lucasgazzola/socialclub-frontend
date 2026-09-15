@@ -69,6 +69,40 @@ export interface Inscripcion {
   estado?: EstadoInscripcionFiltro;
 }
 
+/** Una disciplina (inscripción) dentro del detalle de un participante (US-08). */
+export interface DisciplinaInscripta {
+  inscripcionId: number;
+  disciplinaId: number;
+  disciplina: { id: number; nombre: string };
+  categoriaDisciplinaId: number | null;
+  categoriaDisciplina: { id: number; nombre: string } | null;
+  fechaInscripcion: string;
+  activo: boolean;
+  /** Estado legible de la inscripción en esta disciplina. */
+  estado: EstadoInscripcionFiltro;
+}
+
+/**
+ * Fila del listado de participantes (US-08): una fila por participante con
+ * todas sus disciplinas. El estado agregado es INSCRIPTO si tiene al menos
+ * una inscripción activa, BAJA en caso contrario.
+ */
+export interface ParticipanteConDisciplinas {
+  personaId: number;
+  persona: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    dni: string;
+    fechaNacimiento: string | null;
+    email: string | null;
+    telefono: string | null;
+  };
+  disciplinas: DisciplinaInscripta[];
+  cantidadDisciplinas: number;
+  estado: EstadoInscripcionFiltro;
+}
+
 /** Estado de la participación de un participante en una disciplina. */
 export type EstadoInscripcionFiltro = 'INSCRIPTO' | 'BAJA';
 

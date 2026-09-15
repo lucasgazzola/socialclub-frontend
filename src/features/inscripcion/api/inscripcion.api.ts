@@ -4,6 +4,7 @@ import type {
   InscripcionCreada,
   Inscripcion,
   InscripcionesQuery,
+  ParticipanteConDisciplinas,
   ParticipanteEncontrado,
 } from '../types';
 import type { Paginated } from '@/types/api';
@@ -40,8 +41,8 @@ export async function actualizarInscripcion(
 
 export async function listarInscripciones(
   query: InscripcionesQuery = {},
-): Promise<Paginated<Inscripcion>> {
-  const { data } = await apiClient.get<Paginated<Inscripcion>>('/inscripcion', {
+): Promise<Paginated<ParticipanteConDisciplinas>> {
+  const { data } = await apiClient.get<Paginated<ParticipanteConDisciplinas>>('/inscripcion', {
     params: {
       busqueda: query.busqueda || undefined,
       disciplinaId: query.disciplinaId || undefined,
