@@ -74,7 +74,7 @@ describe('UsuariosPage', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
   });
 
-  it('muestra la lista de usuarios con su estado activo/inactivo (TC-011)', () => {
+  it('muestra la grilla de usuarios con su estado activo/inactivo (TC-011)', () => {
     state.usuarios = [
       buildUsuario(),
       buildUsuario({
@@ -92,6 +92,30 @@ describe('UsuariosPage', () => {
     expect(screen.getByText('Ana Pérez')).toBeInTheDocument();
     expect(screen.getByText('Activo')).toBeInTheDocument();
     expect(screen.getByText('Inactivo')).toBeInTheDocument();
+
+    // Una fila por usuario, en el orden que devuelve el backend.
+    const filas = screen.getAllByRole('listitem');
+    expect(filas).toHaveLength(2);
+    expect(filas[0]).toHaveTextContent('Admin Gestor');
+    expect(filas[1]).toHaveTextContent('Ana Pérez');
+  });
+
+  it('muestra el DNI agrupado de a miles y los roles del usuario', () => {
+    state.usuarios = [
+      buildUsuario({
+        dni: '30111222',
+        roles: [
+          { rol: { id: 2, nombre: 'ADMIN' } },
+          { rol: { id: 3, nombre: 'COLABORADOR' } },
+        ],
+      }),
+    ];
+
+    render(<UsuariosPage />);
+
+    expect(screen.getByText('30.111.222')).toBeInTheDocument();
+    expect(screen.getByText('ADMIN')).toBeInTheDocument();
+    expect(screen.getByText('COLABORADOR')).toBeInTheDocument();
   });
 
   it('permite crear un usuario válido y cierra el modal al confirmar (TC-006, TC-012)', async () => {
@@ -224,6 +248,90 @@ describe('UsuariosPage', () => {
     expect(window.confirm).toHaveBeenCalled();
     await waitFor(() => {
       expect(state.activateMutateAsync).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('orden y filtro de la grilla (DT-03)', () => {
+    function dosUsuariosActivos() {
+      return [
+        buildUsuario(),
+        buildUsuario({
+          id: 2,
+          nombre: 'Ana',
+          apellido: 'Pérez',
+          email: 'ana@socialclub.local',
+        }),
+      ];
+    }
+
+    it('posiciona arriba al usuario al que se le acaba de cambiar el estado', async () => {
+      state.usuarios = dosUsuariosActivos();
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Admin Gestor');
+
+      // Se desactiva al segundo usuario de la lista.
+      await user.click(screen.getAllByRole('button', { name: /desactivar/i })[1]);
+
+      await waitFor(() => {
+        expect(state.deactivateMutateAsync).toHaveBeenCalledWith(2);
+      });
+
+      await waitFor(() => {
+        const filas = screen.getAllByRole('listitem');
+        expect(filas[0]).toHaveTextContent('Ana Pérez');
+        expect(filas[0]).toHaveAttribute('aria-current', 'true');
+      });
+    });
+
+    it('no reordena la grilla si el administrador cancela la confirmación', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      state.usuarios = dosUsuariosActivos();
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      await user.click(screen.getAllByRole('button', { name: /desactivar/i })[1]);
+
+      expect(state.deactivateMutateAsync).not.toHaveBeenCalled();
+      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Admin Gestor');
+    });
+
+    it('filtra la grilla por estado y limpia el usuario destacado', async () => {
+      state.usuarios = [
+        buildUsuario(),
+        buildUsuario({
+          id: 2,
+          nombre: 'Ana',
+          apellido: 'Pérez',
+          email: 'ana@socialclub.local',
+          activo: false,
+        }),
+      ];
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      await user.selectOptions(screen.getByLabelText(/filtrar por estado/i), 'inactivos');
+
+      const filas = screen.getAllByRole('listitem');
+      expect(filas).toHaveLength(1);
+      expect(filas[0]).toHaveTextContent('Ana Pérez');
+      expect(filas[0]).not.toHaveAttribute('aria-current');
+    });
+
+    it('avisa cuando ningún usuario coincide con el filtro', async () => {
+      state.usuarios = [buildUsuario()];
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      await user.selectOptions(screen.getByLabelText(/filtrar por estado/i), 'inactivos');
+
+      expect(screen.getByText(/ningún usuario coincide con el filtro/i)).toBeInTheDocument();
+      expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
     });
   });
 });
