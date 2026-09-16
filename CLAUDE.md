@@ -29,6 +29,7 @@ Consume la API del repo hermano `socialclub-backend` (`/api/v1`).
 - Ramas: `feature|fix|bug|issue/<descripcion>` desde **`dev`**. Flujo: `feature/* → dev → test → main`.
 - Commits: `feat[US-XX]: <descripción>` (también `fix[...]`, `test[US-XX]`). **Nunca** trailer `Co-Authored-By: Claude` ni atribución de IA.
 - Merge a `dev` vía **Pull Request**, enlazado a la tarjeta de la US en GitHub Projects.
+- **`gh pr create` siempre con `--base dev`.** La rama por defecto de GitHub es `main`. Sin `--base`, el PR apunta a producción. Única excepción: `hotfix/` → `--base main` y después también a `dev`. Verificar en el PR que **base = `dev`** antes de avisar que está listo.
 - Deploy en **Vercel** (proyectos separados para `test` y `main`, cada uno con su `VITE_API_URL`).
 
 ## Definition of Done (del equipo)
@@ -51,6 +52,7 @@ npm run lint
 
 ## Reglas para agentes de IA
 - Seguí el flujo y la nomenclatura de arriba. No mergees ni pushees sin que el usuario lo pida.
+- Al abrir un PR: `gh pr create --base dev ...`. Nunca asumas que el default del repo es `dev`.
 - Mantené los textos de UI en español; alineá los campos al contrato del backend (revisá `socialclub-backend`).
 - Verificá con `npm run typecheck` + `npm test` + `npm run build` antes de dar algo por terminado.
 - Skills del equipo en `.claude/skills/`. Documentación del proyecto en `docs/` del repo backend.
