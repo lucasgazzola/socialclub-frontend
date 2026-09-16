@@ -58,6 +58,8 @@ export interface Inscripcion {
     fechaNacimiento: string | null;
     email: string | null;
     telefono: string | null;
+    /** US-07: estado propio del participante (Inactivo = dado de baja). */
+    activo: boolean;
   };
   disciplinaId: number;
   disciplina: { id: number; nombre: string };
@@ -97,6 +99,8 @@ export interface ParticipanteConDisciplinas {
     fechaNacimiento: string | null;
     email: string | null;
     telefono: string | null;
+    /** US-07: estado propio del participante (Inactivo = dado de baja). */
+    activo: boolean;
   };
   disciplinas: DisciplinaInscripta[];
   cantidadDisciplinas: number;
@@ -113,4 +117,46 @@ export interface InscripcionesQuery {
   estado?: EstadoInscripcionFiltro;
   pagina?: number;
   porPagina?: number;
+}
+
+/** Disciplina de la que se dio de baja al participante (US-07). */
+export interface DisciplinaDadaDeBaja {
+  inscripcionId: number;
+  disciplinaId: number;
+  disciplina: string;
+}
+
+/**
+ * Resultado de dar de baja a un participante (US-07): el participante queda
+ * Inactivo y sin disciplinas vigentes.
+ */
+export interface BajaParticipanteResultado {
+  personaId: number;
+  activo: boolean;
+  disciplinasDadasDeBaja: number;
+  disciplinas: DisciplinaDadaDeBaja[];
+}
+
+/** Resultado de reactivar a un participante dado de baja (US-07). */
+export interface ActivacionParticipanteResultado {
+  personaId: number;
+  activo: boolean;
+}
+/** US-06: edición de los datos básicos de un participante sin inscripciones vigentes (US-07). */
+export interface ActualizarDatosPersonaPayload {
+  nombre?: string;
+  apellido?: string;
+  dni?: string;
+  fechaNacimiento?: string;
+  email?: string;
+  telefono?: string;
+}
+
+/** Respuesta de PATCH /personas/:id. */
+export interface PersonaActualizada {
+  id: number;
+  nombre: string;
+  apellido: string;
+  dni: string;
+  activo: boolean;
 }

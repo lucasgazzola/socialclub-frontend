@@ -67,8 +67,9 @@ export function AppRouter() {
             <Route path="auditoria" element={<AuditoriaPage />} />
           </Route>
 
-          {/* Participantes (US-08): búsqueda y filtrado — ADMIN y COLABORADOR */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
+          {/* Participantes (US-08): búsqueda y filtrado — ADMIN, COLABORADOR y DELEGADO
+              (desde US-07 el delegado necesita el listado para dar de baja) */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR', 'DELEGADO']} />}>
             <Route path="participantes" element={<ParticipantesPage />} />
           </Route>
 

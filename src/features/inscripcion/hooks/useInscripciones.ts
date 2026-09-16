@@ -10,7 +10,7 @@ export const inscripcionesKeys = {
   all: ['inscripciones'] as const,
   list: (query: InscripcionesQuery) => [...inscripcionesKeys.all, 'list', query] as const,
   detail: (id: number) => [...inscripcionesKeys.all, 'detail', id] as const,
-  byPersona: (personaId: number) => [...inscripcionesKeys.all, 'byPersona', personaId] as const,
+  byPersona: (personaId: number, incluirBajas = false) => [...inscripcionesKeys.all, 'byPersona', personaId, incluirBajas] as const,
 };
 
 export function useInscripciones(query: InscripcionesQuery = {}) {
@@ -33,10 +33,10 @@ export function useInscripcion(id: number) {
   });
 }
 
-export function useInscripcionesPorPersona(personaId: number) {
+export function useInscripcionesPorPersona(personaId: number, incluirBajas = false) {
   return useQuery({
-    queryKey: inscripcionesKeys.byPersona(personaId),
-    queryFn: () => getInscripcionesPorPersona(personaId),
+    queryKey: inscripcionesKeys.byPersona(personaId, incluirBajas),
+    queryFn: () => getInscripcionesPorPersona(personaId, incluirBajas),
     enabled: !!personaId,
   });
 }

@@ -1,18 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Pencil } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { CheckCircle2, ChevronDown, ChevronUp, Pencil, UserMinus } from 'lucide-react';
+import { Button, ConfirmDialog } from '@/components/ui';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
+import { useActivarParticipante } from '../hooks/useActivarParticipante';
+import { useDarDeBajaParticipante } from '../hooks/useDarDeBajaParticipante';
 import type { ParticipanteConDisciplinas } from '../types';
 
 interface ParticipantesTableProps {
   participantes: ParticipanteConDisciplinas[];
-}
-
-/** Etiqueta del estado agregado del participante (US-08). */
-function etiquetaEstado(participante: ParticipanteConDisciplinas) {
-  const activo = participante.estado === 'INSCRIPTO';
-  return { texto: activo ? 'Inscripto' : 'Baja', activo };
 }
 
 /** Etiqueta del estado de una inscripción puntual del participante. */
@@ -35,13 +32,71 @@ function BadgeEstado({ activo, texto }: { activo: boolean; texto: string }) {
   );
 }
 
+/** Badge del estado propio del participante (US-07: Activo/Inactivo). */
+function BadgeParticipante({ activo }: { activo: boolean }) {
+  return (
+    <span
+      className={
+        activo
+          ? 'rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700'
+          : 'rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700'
+      }
+    >
+      {activo ? 'Activo' : 'Inactivo'}
+    </span>
+  );
+}
+
 /**
  * US-08 — Listado de participantes: una fila por participante y, al
  * expandirla, todas las disciplinas en las que está inscripto.
+ * US-07 — Desde acá el delegado (o un admin) puede dar de baja al
+ * participante: la baja alcanza a todas sus disciplinas.
  */
 export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
   const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
+  const [participanteAConfirmar, setParticipanteAConfirmar] =
+    useState<ParticipanteConDisciplinas | null>(null);
+  const [participanteAReactivar, setParticipanteAReactivar] =
+    useState<ParticipanteConDisciplinas | null>(null);
+  const { mutateAsync: darDeBaja, isPending: dandoDeBaja } = useDarDeBajaParticipante();
+  const { mutateAsync: activar, isPending: activando } = useActivarParticipante();
+
+  // El backend además valida el rol: acá sólo se oculta lo que no corresponde.
+  const puedeDarDeBaja =
+    usuario?.roles.some((rol) => rol === 'ADMIN' || rol === 'DELEGADO') ?? false;
+
+  const confirmarBaja = async () => {
+    const participante = participanteAConfirmar;
+    if (!participante) {
+      return;
+    }
+
+    try {
+      await darDeBaja(participante.personaId);
+      setParticipanteAConfirmar(null);
+    } catch {
+      // El hook ya avisa del error con un toast; el diálogo queda abierto
+      // para poder reintentar.
+    }
+  };
+
+  const confirmarReactivacion = async () => {
+    const participante = participanteAReactivar;
+    if (!participante) {
+      return;
+    }
+
+    try {
+      await activar(participante.personaId);
+      setParticipanteAReactivar(null);
+    } catch {
+      // El hook ya avisa del error con un toast; el diálogo queda abierto
+      // para poder reintentar.
+    }
+  };
 
   const toggleExpandido = (personaId: number) => {
     setExpandidos((prev) => {
@@ -77,15 +132,16 @@ export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
         </thead>
         <tbody className="divide-y divide-slate-100">
           {participantes.map((participante) => {
-            const estado = etiquetaEstado(participante);
             const expandido = expandidos.has(participante.personaId);
             return (
               <ParticipanteRow
                 key={participante.personaId}
                 participante={participante}
-                estado={estado}
                 expandido={expandido}
+                puedeDarDeBaja={puedeDarDeBaja}
                 onToggle={() => toggleExpandido(participante.personaId)}
+                onDarDeBaja={() => setParticipanteAConfirmar(participante)}
+                onReactivar={() => setParticipanteAReactivar(participante)}
                 onEditar={() =>
                   navigate(
                     ROUTES.participantesEditar.replace(':id', String(participante.personaId)),
@@ -96,23 +152,72 @@ export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
           })}
         </tbody>
       </table>
+
+      <ConfirmDialog
+        open={participanteAConfirmar !== null}
+        variant="danger"
+        title="Dar de baja al participante"
+        description={
+          participanteAConfirmar
+            ? `${participanteAConfirmar.persona.apellido}, ${participanteAConfirmar.persona.nombre} no va a poder participar de ninguna disciplina.`
+            : undefined
+        }
+        confirmLabel="Dar de baja"
+        loading={dandoDeBaja}
+        onConfirm={() => void confirmarBaja()}
+        onCancel={() => setParticipanteAConfirmar(null)}
+      >
+        {participanteAConfirmar ? (
+          <p className="text-sm text-slate-600">
+            Se desactiva su estado (pasa a Inactivo), se dan de baja sus{' '}
+            {participanteAConfirmar.disciplinas.filter((d) => d.activo).length} disciplina(s)
+            vigente(s) y no se le van a generar nuevas cuotas. Podés reactivarlo más adelante.
+          </p>
+        ) : null}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={participanteAReactivar !== null}
+        variant="success"
+        title="Reactivar al participante"
+        description={
+          participanteAReactivar
+            ? `${participanteAReactivar.persona.apellido}, ${participanteAReactivar.persona.nombre} va a poder inscribirse de nuevo.`
+            : undefined
+        }
+        confirmLabel="Reactivar"
+        loading={activando}
+        onConfirm={() => void confirmarReactivacion()}
+        onCancel={() => setParticipanteAReactivar(null)}
+      >
+        {participanteAReactivar ? (
+          <p className="text-sm text-slate-600">
+            Su estado pasa a Activo. Las disciplinas no se re-inscriben solas: cada inscripción
+            se hace por separado.
+          </p>
+        ) : null}
+      </ConfirmDialog>
     </div>
   );
 }
 
 interface ParticipanteRowProps {
   participante: ParticipanteConDisciplinas;
-  estado: { texto: string; activo: boolean };
   expandido: boolean;
+  puedeDarDeBaja: boolean;
   onToggle: () => void;
+  onDarDeBaja: () => void;
+  onReactivar: () => void;
   onEditar: () => void;
 }
 
 function ParticipanteRow({
   participante,
-  estado,
   expandido,
+  puedeDarDeBaja,
   onToggle,
+  onDarDeBaja,
+  onReactivar,
   onEditar,
 }: ParticipanteRowProps) {
   const nombres = participante.disciplinas.map((d) => d.disciplina.nombre);
@@ -131,7 +236,9 @@ function ParticipanteRow({
           {restantes > 0 && <span className="ml-1 text-xs text-slate-400">+{restantes} más</span>}
         </td>
         <td className="px-4 py-3">
-          <BadgeEstado activo={estado.activo} texto={estado.texto} />
+          <div className="flex items-center gap-1">
+            <BadgeParticipante activo={participante.persona.activo} />
+          </div>
         </td>
         <td className="px-4 py-3">
           <div className="flex items-center gap-1">
@@ -149,6 +256,28 @@ function ParticipanteRow({
               <Pencil size={14} />
               Editar
             </Button>
+            {puedeDarDeBaja && participante.persona.activo && (
+              <Button
+                variant="danger"
+                size="sm"
+                aria-label={`Dar de baja a ${participante.persona.apellido}, ${participante.persona.nombre}`}
+                onClick={onDarDeBaja}
+              >
+                <UserMinus size={14} />
+                Dar de baja
+              </Button>
+            )}
+            {puedeDarDeBaja && !participante.persona.activo && (
+              <Button
+                variant="success"
+                size="sm"
+                aria-label={`Reactivar a ${participante.persona.apellido}, ${participante.persona.nombre}`}
+                onClick={onReactivar}
+              >
+                <CheckCircle2 size={14} />
+                Reactivar
+              </Button>
+            )}
           </div>
         </td>
       </tr>
