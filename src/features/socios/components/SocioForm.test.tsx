@@ -91,7 +91,7 @@ describe('SocioForm', () => {
     navigateMock.mockClear();
   });
 
-  describe('TC-019: registrar un nuevo socio con datos válidos', () => {
+  describe('TC-026: registrar un nuevo socio con datos válidos', () => {
     it('muestra la categoría y la incluye en el submit', async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
@@ -118,7 +118,7 @@ describe('SocioForm', () => {
     });
   });
 
-  describe('TC-020: DNI duplicado (feedback en el formulario)', () => {
+  describe('TC-027: DNI duplicado (feedback en el formulario)', () => {
     it('muestra el mensaje de error del servidor y no navega', async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockRejectedValue(
@@ -137,7 +137,7 @@ describe('SocioForm', () => {
     });
   });
 
-  describe('TC-021: campos obligatorios vacíos', () => {
+  describe('TC-028: campos obligatorios vacíos', () => {
     it('no permite guardar y muestra error cuando el nombre está vacío', async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
@@ -155,7 +155,7 @@ describe('SocioForm', () => {
     });
   });
 
-  describe('TC-022: formato de correo electrónico inválido', () => {
+  describe('TC-029: formato de correo electrónico inválido', () => {
     it('rechaza el email con formato inválido y no llama a onSubmit', async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn();
@@ -170,7 +170,7 @@ describe('SocioForm', () => {
     });
   });
 
-  describe('TC-025: confirmación de registro exitoso', () => {
+  describe('TC-032: confirmación de registro exitoso', () => {
     it('con datos válidos, resuelve onSubmit sin mostrar error de servidor', async () => {
       const user = userEvent.setup();
       const onSubmit = vi.fn().mockResolvedValue(undefined);
