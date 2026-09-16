@@ -19,8 +19,12 @@ export const ROUTES = {
   eventosAdmin: '/eventos/admin',
   auditoria: '/auditoria',
   inscripcion: '/inscripcion',
+  validarAcceso: '/entradas/validar',
+  validarAccesoEvento: (eventoId: number) => `/eventos/${eventoId}/validar`,
   participantes: '/participantes',
   participantesEditar: '/participante/:id/editar',
   documentacion: '/documentacion',
   perfil: '/perfil',
 } as const;
+
+

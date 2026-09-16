@@ -13,6 +13,7 @@ import { CuotasHubPage } from '@/features/cuotas/pages/CuotasHubPage';
 import { CuotaSocialPage } from '@/features/cuota-social/pages/CuotaSocialPage';
 import { EditarCuotaSocialPage } from '@/features/cuota-social/pages/EditarCuotaSocialPage';
 import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
+import { ValidarAccesoPage } from '@/features/entradas/pages/ValidarAccesoPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -56,7 +57,10 @@ export function AppRouter() {
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="eventos" element={<EventosPage />} />
             <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
+            <Route path="eventos/:eventoId/validar" element={<ValidarAccesoPage />} />
+            <Route path="entradas/validar" element={<ValidarAccesoPage />} />
           </Route>
+
 
           {/* Auditoría: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>

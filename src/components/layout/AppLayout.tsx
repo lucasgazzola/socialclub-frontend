@@ -6,6 +6,7 @@ import {
   FileCheck,
   LayoutDashboard,
   LogOut,
+  QrCode,
   ShieldCheck,
   User,
   Users,
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
   { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
+  { to: ROUTES.validarAcceso, label: 'Validar Acceso QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
   { to: ROUTES.cuotas, label: 'Cuotas', icon: Coins, roles: ['ADMIN'] },
   { to: ROUTES.auditoria, label: 'Auditoría', icon: ClipboardList, roles: ['ADMIN'] },
@@ -65,8 +67,8 @@ export function AppLayout() {
   );
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 flex-col justify-between border-r border-slate-200 bg-white px-4 py-6">
+    <div className="flex h-screen overflow-hidden">
+      <aside className="flex w-60 shrink-0 flex-col justify-between border-r border-slate-200 bg-white px-4 py-6 sticky top-0 h-screen overflow-y-auto">
         <div>
           <div className="mb-8 px-2">
             <p className="text-brand-700 text-lg font-semibold">SocialClub</p>
@@ -109,7 +111,7 @@ export function AppLayout() {
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 bg-slate-50 p-8">
+      <main className="min-w-0 flex-1 overflow-y-auto bg-slate-50 p-8">
         <Outlet />
       </main>
     </div>

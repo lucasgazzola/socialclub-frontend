@@ -15,11 +15,15 @@ export const entradasKeys = {
  * invalide las queries relevantes y de esta forma la UI se mantenga sincronizada con el backend.
  */
 export function useCrearEntradas() {
-  const qc = useQueryClient();
-
+  const qc = useQueryClient(); // Invalida queries despues de una mutacion, para que se refresquen los datos.
   return useMutation({
+    // mutationFn es la funcion que llama a CrearEntradas para el evento especifico con su respectiva cantidad de entradas.
     mutationFn: ({ eventoId, cantidad }: { eventoId: number; cantidad: number }) =>
       entradasApi.crearEntradas(eventoId, cantidad),
+    /** 
+     * onSuccess es la funcion que se ejecuta despues de que la mutacion se completa exitosamente.
+     * Asegura que la pantalla se actualice automaticamente con los datos nuevos, sin tener que hacer un fetch manual.
+     */
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['eventos'] });
       qc.invalidateQueries({ queryKey: ['eventos', data.eventoId] });
@@ -33,5 +37,20 @@ export function useEntradasPorEvento(eventoId: number) {
     queryKey: entradasKeys.porEvento(eventoId),
     queryFn: () => entradasApi.listarEntradasPorEvento(eventoId),
     enabled: !!eventoId,
+  });
+}
+
+export function useValidarEntrada() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => entradasApi.validarEntrada(token),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: entradasKeys.all });
+      if (data.entrada?.eventoId) {
+        qc.invalidateQueries({ queryKey: ['eventos', data.entrada.eventoId] });
+        qc.invalidateQueries({ queryKey: entradasKeys.porEvento(data.entrada.eventoId) });
+      }
+    },
   });
 }

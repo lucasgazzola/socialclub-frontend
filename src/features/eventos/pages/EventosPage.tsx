@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Ticket } from 'lucide-react';
 import { Button, Modal, Spinner } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { EventoForm } from '../components/EventoForm';
@@ -55,7 +55,7 @@ export function EventosPage() {
                 <th className="px-4 py-3 font-medium">Descripción</th>
                 <th className="px-4 py-3 font-medium">Entradas disponibles</th>
                 <th className="px-4 py-3 font-medium">Entradas vendidas</th>
-                <th className="px-4 py-3 font-medium text-right">Acciones</th>
+                <th className="px-4 py-3 text-right font-medium">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -72,7 +72,8 @@ export function EventosPage() {
                         variant={evento.entradasDisponibles > 0 ? 'secondary' : 'ghost'}
                         disabled={evento.entradasDisponibles <= 0}
                       >
-                        Comprar entradas
+                        <Ticket size={14} className="mr-1.5" />
+                        Generar entradas
                       </Button>
                     </Link>
                   </td>
