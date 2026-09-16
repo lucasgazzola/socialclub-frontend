@@ -35,6 +35,7 @@ export function Modal({
   className = '',
 }: ModalProps) {
   const dialogRef = useRef<HTMLElement | null>(null);
+  const contenidoRef = useRef<HTMLDivElement | null>(null);
   const tituloId = useId();
   const descripcionId = useId();
 
@@ -95,10 +96,13 @@ export function Modal({
     const overflowPrevio = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    // El foco arranca en el primer control del modal; si no hay ninguno, en el
-    // contenedor, para que los lectores de pantalla anuncien el diálogo.
+    // El foco arranca en el primer control del CONTENIDO —el primer campo del
+    // formulario—, no en el primer enfocable del diálogo, que en orden DOM es
+    // el botón de cerrar del encabezado. Si no hay contenido enfocable (p. ej.
+    // una confirmación), se enfoca el contenedor para que los lectores de
+    // pantalla anuncien el diálogo y el Tab siga hacia los botones.
     const dialogo = dialogRef.current;
-    const primerFocusable = dialogo?.querySelector<HTMLElement>(FOCUSABLES);
+    const primerFocusable = contenidoRef.current?.querySelector<HTMLElement>(FOCUSABLES);
     (primerFocusable ?? dialogo)?.focus();
 
     return () => {
@@ -149,7 +153,12 @@ export function Modal({
         </header>
 
         {children ? (
-          <div className="max-h-[calc(100vh-240px)] overflow-y-auto px-6 py-5">{children}</div>
+          <div
+            ref={contenidoRef}
+            className="max-h-[calc(100vh-240px)] overflow-y-auto px-6 py-5"
+          >
+            {children}
+          </div>
         ) : null}
 
         {footer ? <footer className="border-t border-slate-200 px-6 py-4">{footer}</footer> : null}

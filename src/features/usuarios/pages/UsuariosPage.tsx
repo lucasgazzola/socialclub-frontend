@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { UserPlus } from 'lucide-react';
-import { Button, Card, Select, Spinner } from '@/components/ui';
+import { Button, Card, ConfirmDialog, Select, Spinner } from '@/components/ui';
 import { useActivateUsuario } from '../hooks/useActivateUsuario';
 import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
@@ -26,6 +26,9 @@ export function UsuariosPage() {
    * se limpia al cambiar el filtro o al recargar la pantalla.
    */
   const [usuarioDestacadoId, setUsuarioDestacadoId] = useState<number | null>(null);
+
+  /** Usuario cuyo cambio de estado está esperando confirmación (DT-04). */
+  const [usuarioAConfirmar, setUsuarioAConfirmar] = useState<Usuario | null>(null);
 
   const { data: usuarios = [], isLoading, isError, error } = useUsers();
   const createUsuario = useCreateUsuario();
@@ -106,26 +109,23 @@ export function UsuariosPage() {
     await handleCreate(values);
   }
 
-  /** Alterna el estado del usuario: da de baja si está activo, lo reactiva si no. */
-  async function confirmarCambioEstado(usuario: Usuario) {
+  /**
+   * Alterna el estado del usuario: da de baja si está activo, lo reactiva si
+   * no. La confirmación la pide el ConfirmDialog, no window.confirm (DT-04).
+   */
+  async function aplicarCambioEstado() {
+    const usuario = usuarioAConfirmar;
+    if (!usuario) {
+      return;
+    }
+
     if (usuario.activo) {
-      const confirmado = window.confirm(
-        `¿Desactivar a ${usuario.nombre} ${usuario.apellido}? Podés volver a activarlo cuando quieras.`,
-      );
-      if (!confirmado) {
-        return;
-      }
       await deactivateUsuario.mutateAsync(usuario.id);
     } else {
-      const confirmado = window.confirm(
-        `¿Habilitar nuevamente a ${usuario.nombre} ${usuario.apellido}?`,
-      );
-      if (!confirmado) {
-        return;
-      }
       await activateUsuario.mutateAsync(usuario.id);
     }
 
+    setUsuarioAConfirmar(null);
     setUsuarioDestacadoId(usuario.id);
   }
 
@@ -149,6 +149,23 @@ export function UsuariosPage() {
         usuario={usuarioSeleccionado}
         onClose={cerrarModal}
         onSubmit={handleSubmit}
+      />
+
+      <ConfirmDialog
+        open={usuarioAConfirmar !== null}
+        variant={usuarioAConfirmar?.activo ? 'danger' : 'success'}
+        title={usuarioAConfirmar?.activo ? 'Desactivar usuario' : 'Habilitar usuario'}
+        description={
+          usuarioAConfirmar?.activo
+            ? `${usuarioAConfirmar.nombre} ${usuarioAConfirmar.apellido} no va a poder iniciar sesión. Podés volver a habilitarlo cuando quieras.`
+            : usuarioAConfirmar
+              ? `${usuarioAConfirmar.nombre} ${usuarioAConfirmar.apellido} va a poder iniciar sesión de nuevo.`
+              : undefined
+        }
+        confirmLabel={usuarioAConfirmar?.activo ? 'Desactivar' : 'Habilitar'}
+        loading={cambioDeEstadoEnCurso}
+        onConfirm={() => void aplicarCambioEstado()}
+        onCancel={() => setUsuarioAConfirmar(null)}
       />
 
       {isLoading ? (
@@ -192,7 +209,7 @@ export function UsuariosPage() {
               usuarioDestacadoId={usuarioDestacadoId}
               accionesDeshabilitadas={cambioDeEstadoEnCurso}
               onEditar={abrirEdicion}
-              onCambiarEstado={(usuario) => void confirmarCambioEstado(usuario)}
+              onCambiarEstado={setUsuarioAConfirmar}
             />
           )}
         </>
