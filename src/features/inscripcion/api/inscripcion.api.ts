@@ -1,11 +1,15 @@
 import { apiClient } from '@/lib/api/client';
 import type {
+  ActualizarDatosPersonaPayload,
+  ActivacionParticipanteResultado,
+  BajaParticipanteResultado,
   CrearInscripcionPayload,
   InscripcionCreada,
   Inscripcion,
   InscripcionesQuery,
   ParticipanteConDisciplinas,
   ParticipanteEncontrado,
+  PersonaActualizada,
 } from '../types';
 import type { Paginated } from '@/types/api';
 
@@ -26,8 +30,22 @@ export async function getInscripcion(id: number): Promise<Inscripcion> {
   return data;
 }
 
-export async function getInscripcionesPorPersona(personaId: number): Promise<Inscripcion[]> {
-  const { data } = await apiClient.get<Inscripcion[]>(`/inscripcion/persona/${personaId}`);
+export async function getInscripcionesPorPersona(
+  personaId: number,
+  incluirBajas = false,
+ ): Promise<Inscripcion[]> {
+  const { data } = await apiClient.get<Inscripcion[]>(`/inscripcion/persona/${personaId}`, {
+    params: { incluirBajas: incluirBajas || undefined },
+  });
+  return data;
+}
+
+/** US-06: editar los datos básicos de un participante sin inscripciones vigentes (US-07). */
+export async function actualizarDatosPersona(
+  personaId: number,
+  payload: ActualizarDatosPersonaPayload,
+ ): Promise<PersonaActualizada> {
+  const { data } = await apiClient.patch<PersonaActualizada>(`/personas/${personaId}`, payload);
   return data;
 }
 
@@ -51,5 +69,25 @@ export async function listarInscripciones(
       porPagina: query.porPagina,
     },
   });
+  return data;
+}
+
+/** US-07: dar de baja a un participante (baja lógica en todas sus disciplinas). */
+export async function darDeBajaParticipante(
+  personaId: number,
+): Promise<BajaParticipanteResultado> {
+  const { data } = await apiClient.delete<BajaParticipanteResultado>(
+    `/inscripcion/persona/${personaId}`,
+  );
+  return data;
+}
+
+/** US-07: reactivar a un participante dado de baja. */
+export async function activarParticipante(
+  personaId: number,
+): Promise<ActivacionParticipanteResultado> {
+  const { data } = await apiClient.patch<ActivacionParticipanteResultado>(
+    `/inscripcion/persona/${personaId}/activar`,
+  );
   return data;
 }

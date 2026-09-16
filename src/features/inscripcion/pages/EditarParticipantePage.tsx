@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { Card, Spinner, Button, Input } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useInscripcionesPorPersona } from '../hooks/useInscripciones';
+import { actualizarDatosPersona } from '../api/inscripcion.api';
+import { toast } from 'sonner';
 import { useDisciplinasActivas } from '../../disciplinas/hooks/useDisciplinasActivas';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,7 +27,7 @@ export function EditarParticipantePage() {
   const navigate = useNavigate();
 
   const { data: inscripciones, isLoading: loadingInscripciones, error: errorInscripciones } =
-    useInscripcionesPorPersona(personaId);
+    useInscripcionesPorPersona(personaId, true);
   const { disciplinas, cargando: cargandoDisciplinas } = useDisciplinasActivas();
   const { enviar: crearInscripcion, enviando: creando } = useCrearInscripcion();
   const { mutateAsync: actualizarInscripcion, isPending: actualizando } = useActualizarInscripcion();
@@ -71,7 +73,9 @@ export function EditarParticipantePage() {
         categoriaDisciplinaId: undefined,
       });
 
-      const disciplinasIniciales = inscripciones.map((insc) => ({
+      const disciplinasIniciales = inscripciones
+        .filter((insc) => insc.activo)
+        .map((insc) => ({
         disciplinaId: insc.disciplinaId,
         categoriaDisciplinaId: insc.categoriaDisciplinaId ?? undefined,
         inscripcionId: insc.id,
@@ -80,7 +84,7 @@ export function EditarParticipantePage() {
     }
   }, [inscripciones, reset]);
 
-  // Persona sin inscripciones no es "participante" → redirigir a editar socio
+  // Persona sin inscripciones (ni siquiera dadas de baja) no es "participante" → redirigir a editar socio
   useEffect(() => {
     if (!loadingInscripciones && inscripciones && inscripciones.length === 0 && !errorInscripciones) {
       navigate(ROUTES.sociosEditar.replace(':id', String(personaId)), { replace: true });
@@ -132,6 +136,27 @@ export function EditarParticipantePage() {
       email: data.email || undefined,
       telefono: data.telefono || undefined,
     };
+
+    // Sin disciplinas para crear/actualizar, el camino por inscripción no
+    // tiene dónde escribir los datos: guardarlos directo en la Persona
+    // (participante dado de baja o reactivado sin disciplinas, US-07).
+    if (disciplinasSeleccionadas.length === 0) {
+      try {
+        await actualizarDatosPersona(personaId, {
+          nombre: data.nombre,
+          apellido: data.apellido,
+          dni: data.dni,
+          fechaNacimiento: data.fechaNacimiento || undefined,
+          email: data.email || undefined,
+          telefono: data.telefono || undefined,
+        });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'No se pudo guardar el participante');
+        return;
+      }
+      navigate('/inscripcion', { state: { mensaje: 'Participante actualizado correctamente.' } });
+      return;
+    }
 
     for (const d of disciplinasSeleccionadas) {
       if (d.inscripcionId) {
@@ -194,6 +219,14 @@ export function EditarParticipantePage() {
           </Button>
         </div>
       </header>
+
+      {!participante.activo && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Este participante está <strong>Inactivo</strong> (dado de baja): podés editar sus datos,
+          pero para inscribirlo en disciplinas tenés que reactivarlo desde el listado de
+          participantes.
+        </div>
+      )}
 
       <Card className="p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

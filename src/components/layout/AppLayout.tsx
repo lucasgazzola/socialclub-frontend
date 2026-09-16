@@ -42,7 +42,7 @@ const navItems: NavItem[] = [
     to: ROUTES.participantes,
     label: 'Participantes',
     icon: UserRound,
-    roles: ['ADMIN', 'COLABORADOR'],
+    roles: ['ADMIN', 'COLABORADOR', 'DELEGADO'],
   },
   {
     to: ROUTES.documentacion,
