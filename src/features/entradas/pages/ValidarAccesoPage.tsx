@@ -123,9 +123,12 @@ export function ValidarAccesoPage() {
 
       setCurrentResult(item);
       setHistory((prev) => [item, ...prev]);
-    } catch (err: any) {
-      const statusHttp = err?.response?.status;
-      const errorMsg = err?.response?.data?.message || err?.message || 'Error al validar la entrada.';
+    } catch (err) {
+      // Forma del error de axios, sin recurrir a `any`.
+      const error = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      const statusHttp = error?.response?.status;
+      const errorMsg =
+        error?.response?.data?.message || error?.message || 'Error al validar la entrada.';
 
       let scanStatus: ScanHistoryItem['status'] = 'INVALIDA';
       if (statusHttp === 409) {

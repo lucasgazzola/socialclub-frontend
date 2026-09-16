@@ -46,10 +46,12 @@ describe('EventosPage', () => {
     } as never);
   });
 
-  it('muestra un botón para comprar entradas y lo conecta con la ruta del evento', () => {
+  it('muestra la acción de generar entradas y la conecta con la ruta del evento', () => {
     renderPage();
 
-    const link = screen.getByRole('link', { name: 'Comprar entradas' });
+    // El nombre accesible sale del texto del botón: si se renombra la acción,
+    // este caso falla y hay que actualizarlo acá.
+    const link = screen.getByRole('link', { name: /generar entradas/i });
     expect(link).toHaveAttribute('href', '/eventos/12/entradas');
   });
 
