@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { RegisterForm } from './RegisterForm';
 
 /**
- * (TC-074/TC-075):
+ * (TC-081/TC-082):
  *   - email: formato inválido -> "Ingresá un email válido"
  *   - password: mínimo 8 caracteres, con mayúscula, minúscula, número y
  *     carácter especial
@@ -84,7 +84,7 @@ describe('RegisterForm', () => {
     vi.mocked(authApi.register).mockReset();
   });
 
-  describe('TC-070: registrarse con datos válidos', () => {
+  describe('TC-077: registrarse con datos válidos', () => {
     it('llama a authApi.register con los datos ingresados y ejecuta onSuccess', async () => {
       const user = userEvent.setup();
       const onSuccess = vi.fn();
@@ -129,7 +129,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  describe('TC-073: rechazo por email ya existente', () => {
+  describe('TC-080: rechazo por email ya existente', () => {
     it('muestra el error del servidor devuelto por authApi.register y no llama a onSuccess', async () => {
       const user = userEvent.setup();
       const onSuccess = vi.fn();
@@ -149,7 +149,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  describe('TC-074: validar contraseña débil', () => {
+  describe('TC-081: validar contraseña débil', () => {
     it('rechaza una contraseña que no cumple la política y no envía la solicitud', async () => {
       const user = userEvent.setup();
 
@@ -167,7 +167,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  describe('TC-075: validar formato de email', () => {
+  describe('TC-082: validar formato de email', () => {
     it('rechaza un email inválido con "Ingresá un email válido" y no envía la solicitud', async () => {
       const user = userEvent.setup();
 
@@ -181,7 +181,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  describe('TC-076: validar campos obligatorios (nombre y apellido)', () => {
+  describe('TC-083: validar campos obligatorios (nombre y apellido)', () => {
     it('indica que el nombre es obligatorio cuando se deja vacío', async () => {
       const user = userEvent.setup();
 
