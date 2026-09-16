@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { eventosApi } from '../api/eventos.api';
 
 export const eventosKeys = {
@@ -28,6 +29,10 @@ export function useCrearEvento() {
     mutationFn: eventosApi.create,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: eventosKeys.all });
+      toast.success('Evento creado correctamente');
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Error al crear el evento');
     },
   });
 }

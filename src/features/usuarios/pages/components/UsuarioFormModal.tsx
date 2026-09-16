@@ -1,8 +1,7 @@
 import { BadgeCheck, BadgeAlertIcon, UserPlus, Edit3 } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, Modal } from '@/components/ui';
 import { UsuarioForm } from '../../components/UsuarioForm';
 import type { Usuario } from '../../types';
-import { Modal } from './Modal';
 import type {
   UsuarioCreateFormValues,
   UsuarioEditFormValues,
