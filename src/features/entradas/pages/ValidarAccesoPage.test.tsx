@@ -1,9 +1,30 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ValidarAccesoPage } from './ValidarAccesoPage';
 import { entradasApi } from '../api/entradas.api';
+
+/**
+ * La página toma el evento de la ruta (`/eventos/:eventoId/validar`) y, si no
+ * lo tiene, muestra primero la pantalla de selección. Para llegar al escáner
+ * hay que entrar con el parámetro y tener el evento en la lista, así que se
+ * mockea `useEventos`: sin eso la página se queda en "No se encontraron
+ * eventos" y ningún control del escáner existe en el DOM.
+ */
+const EVENTO = {
+  id: 1,
+  nombre: 'Torneo Nocturno de Pádel',
+  descripcion: 'Evento de prueba',
+  entradasDisponibles: 50,
+  entradasVendidas: 10,
+  creadoEn: '2026-09-01T00:00:00.000Z',
+};
+
+vi.mock('@/features/eventos/hooks/useEventos', () => ({
+  useEventos: () => ({ data: [EVENTO], isLoading: false, isError: false }),
+  eventosKeys: { all: ['eventos'], list: () => ['eventos', 'list'] },
+}));
 
 vi.mock('../api/entradas.api', () => ({
   entradasApi: {
@@ -45,15 +66,19 @@ describe('ValidarAccesoPage', () => {
   const renderComponent = () =>
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <ValidarAccesoPage />
+        <MemoryRouter initialEntries={[`/eventos/${EVENTO.id}/validar`]}>
+          <Routes>
+            <Route path="/eventos/:eventoId/validar" element={<ValidarAccesoPage />} />
+          </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
   it('renders the header and scanner options', () => {
     renderComponent();
-    expect(screen.getByText('Validación de Acceso por QR')).toBeInTheDocument();
+    // Con el evento en la ruta, la página va directo al panel de control:
+    // "Validación de Acceso por QR" es el título de la pantalla de selección.
+    expect(screen.getByText(`Control de Acceso: ${EVENTO.nombre}`)).toBeInTheDocument();
     expect(screen.getByText('Escáner de Cámara')).toBeInTheDocument();
     expect(screen.getByText('Ingreso Manual / Archivo')).toBeInTheDocument();
   });
@@ -63,11 +88,11 @@ describe('ValidarAccesoPage', () => {
       acceso: 'PERMITIDO' as const,
       entrada: {
         id: 10,
-        eventoId: 5,
-        eventoNombre: 'Torneo Nocturno de Pádel',
+        eventoId: EVENTO.id,
+        eventoNombre: EVENTO.nombre,
       },
     };
-    (entradasApi.validarEntrada as any).mockResolvedValueOnce(mockSuccessResponse);
+    vi.mocked(entradasApi.validarEntrada).mockResolvedValueOnce(mockSuccessResponse);
 
     renderComponent();
 
@@ -97,7 +122,7 @@ describe('ValidarAccesoPage', () => {
         },
       },
     };
-    (entradasApi.validarEntrada as any).mockRejectedValueOnce(mockConflictError);
+    vi.mocked(entradasApi.validarEntrada).mockRejectedValueOnce(mockConflictError);
 
     renderComponent();
 
@@ -123,13 +148,11 @@ describe('ValidarAccesoPage', () => {
         eventoNombre: 'Torneo de Pádel',
       },
     };
-    (entradasApi.validarEntrada as any).mockResolvedValueOnce(mockSuccessResponse);
+    vi.mocked(entradasApi.validarEntrada).mockResolvedValueOnce(mockSuccessResponse);
 
+    // El evento que se controla sale de la ruta (EVENTO.id = 1) y la entrada
+    // escaneada pertenece al 99, así que tiene que detectarse el desvío.
     renderComponent();
-
-    // Seleccionar evento específico con id 5 (simulado en el select)
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: '5' } });
 
     fireEvent.click(screen.getByText('Ingreso Manual / Archivo'));
     const input = screen.getByLabelText(/Token UUID de la Entrada/i);
@@ -140,7 +163,9 @@ describe('ValidarAccesoPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('¡ENTRADA DE OTRO EVENTO!')).toBeInTheDocument();
-      expect(screen.getByText(/⚠️ Esta entrada es válida, pero no corresponde al evento seleccionado./i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Esta entrada es válida, pero no corresponde a este evento/i),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -94,7 +94,7 @@ export function QRScanner({ onScan, isScanningPaused = false }: QRScannerProps) 
 
       isScanningRef.current = true;
       setIsCameraActive(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error al iniciar escáner de QR:', err);
       setIsCameraActive(false);
       setCameraError('Error al iniciar la cámara. Verifica los permisos del navegador.');
@@ -131,7 +131,7 @@ export function QRScanner({ onScan, isScanningPaused = false }: QRScannerProps) 
       if (decodedText) {
         onScan(decodedText.trim());
       }
-    } catch (err) {
+    } catch {
       alert('No se pudo encontrar un código QR en la imagen proporcionada.');
     }
   };
