@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Button, Card, Input, Select, Spinner } from '@/components/ui';
+import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
 import { CuotaForm } from '../components/CuotaForm';
 import { CuotasTable } from '../components/CuotasTable';
@@ -48,7 +48,7 @@ export function CuotasPage() {
 
   function abrirCreacion() {
     setCuotaEditando(null);
-    setModoFormulario((actual) => (actual === 'crear' ? null : 'crear'));
+    setModoFormulario('crear');
   }
 
   function abrirEdicion(cuota: ConfiguracionCuotaDeportiva) {
@@ -96,37 +96,31 @@ export function CuotasPage() {
 
         <Button onClick={abrirCreacion}>
           <Plus size={16} />
-          {formularioVisible && modoFormulario === 'crear' ? 'Cerrar formulario' : 'Configurar cuota'}
+          Configurar cuota
         </Button>
       </header>
 
-      {formularioVisible && (
-        <Card className="p-6">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">
-                {modoFormulario === 'editar' ? 'Editar cuota deportiva' : 'Nueva cuota deportiva'}
-              </h2>
-              <p className="text-sm text-slate-500">
-                {modoFormulario === 'editar'
-                  ? 'Actualizá el monto de la configuración existente.'
-                  : 'Elegí disciplina, categoría y el monto mensual.'}
-              </p>
-            </div>
-            <Button variant="ghost" onClick={cerrarFormulario}>
-              Cancelar
-            </Button>
-          </div>
-
+      <Modal
+        open={formularioVisible}
+        title={modoFormulario === 'editar' ? 'Editar cuota deportiva' : 'Nueva cuota deportiva'}
+        description={
+          modoFormulario === 'editar'
+            ? 'Actualizá el monto de la configuración existente.'
+            : 'Elegí disciplina, categoría y el monto mensual.'
+        }
+        onClose={cerrarFormulario}
+      >
+        {modoFormulario && (
           <CuotaForm
+            key={cuotaEditando?.id ?? 'crear'}
             modo={modoFormulario}
             configuracionInicial={cuotaEditando}
             disciplinas={disciplinas}
             categorias={categorias}
             onSubmit={handleSubmit}
           />
-        </Card>
-      )}
+        )}
+      </Modal>
 
       <div className="flex flex-wrap items-end gap-2">
         <Select

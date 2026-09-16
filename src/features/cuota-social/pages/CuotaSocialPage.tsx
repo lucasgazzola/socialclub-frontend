@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input, Select, Spinner } from '@/components/ui';
+import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
+import { CuotaSocialForm } from '../components/CuotaSocialForm';
 import { CuotaSocialTable } from '../components/CuotaSocialTable';
+import { useConfigurarCuotaSocial } from '../hooks/useConfigurarCuotaSocial';
 import { useCuotaSocial } from '../hooks/useCuotaSocial';
+import type { CuotaSocialFormValues } from '../schemas';
 import { ROUTES } from '@/routes/paths';
 
 const POR_PAGINA = 10;
@@ -16,8 +19,10 @@ export function CuotaSocialPage() {
   const [periodoInput, setPeriodoInput] = useState('');
   const [periodo, setPeriodo] = useState<string | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const { data: categorias = [] } = useCategorias();
+  const configurarCuota = useConfigurarCuotaSocial();
 
   const { data, isLoading, isError, error, isFetching } = useCuotaSocial({
     categoriaId,
@@ -28,6 +33,15 @@ export function CuotaSocialPage() {
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
+
+  async function handleCrear(values: CuotaSocialFormValues) {
+    await configurarCuota.mutateAsync({
+      categoriaId: values.categoriaId,
+      monto: values.monto,
+      ...(values.periodoAplicacion ? { periodoAplicacion: values.periodoAplicacion } : {}),
+    });
+    setModalAbierto(false);
+  }
 
   function aplicarPeriodo() {
     setPagina(1);
@@ -51,11 +65,20 @@ export function CuotaSocialPage() {
           </p>
         </div>
 
-        <Button onClick={() => navigate(ROUTES.cuotaSocialNuevo)}>
+        <Button onClick={() => setModalAbierto(true)}>
           <Plus size={16} />
           Configurar cuota social
         </Button>
       </header>
+
+      <Modal
+        open={modalAbierto}
+        title="Nueva cuota social"
+        description="Elegí la categoría y definí el monto mensual. Los cambios aplican desde el período siguiente."
+        onClose={() => setModalAbierto(false)}
+      >
+        <CuotaSocialForm modo="crear" categorias={categorias} onSubmit={handleCrear} />
+      </Modal>
 
       <div className="flex flex-wrap items-end gap-2">
         <Select

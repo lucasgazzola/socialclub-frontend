@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { Button, Input, Select, Spinner } from '@/components/ui';
+import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ROUTES } from '@/routes/paths';
 import type { EstadoSocioFiltro } from '../types';
 import { useCategorias } from '../hooks/useCategorias';
 import { useSocios } from '../hooks/useSocios';
+import { SocioForm } from '../components/SocioForm';
 import { SociosTable } from '../components/SociosTable';
+import { useCrearSocio } from '../hooks/useSocios';
 
 const POR_PAGINA = 10;
 
 export function SociosPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
@@ -23,6 +23,7 @@ export function SociosPage() {
   const [estado, setEstado] = useState<EstadoSocioFiltro | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const mensajeState = (location.state as { mensaje?: string } | null)?.mensaje;
 
@@ -44,6 +45,7 @@ export function SociosPage() {
   }, [textoInput]);
 
   const { data: categorias } = useCategorias();
+  const crearSocio = useCrearSocio();
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
@@ -53,6 +55,12 @@ export function SociosPage() {
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
+
+  const handleCrear = async (data: Parameters<typeof crearSocio.mutateAsync>[0]) => {
+    await crearSocio.mutateAsync(data);
+    setModalAbierto(false);
+    setMensaje('Socio registrado correctamente.');
+  };
 
   const cambiarCategoria = (value: string) => {
     setPagina(1);
@@ -107,13 +115,22 @@ export function SociosPage() {
           </Select>
 
           {esAdmin && (
-            <Button onClick={() => navigate(ROUTES.sociosNuevo)} className="whitespace-nowrap">
+            <Button onClick={() => setModalAbierto(true)} className="whitespace-nowrap">
               <Plus size={16} />
               Nuevo Socio
             </Button>
           )}
         </div>
       </header>
+
+      <Modal
+        open={modalAbierto}
+        title="Nuevo socio"
+        description="Completá los datos para registrar un nuevo socio."
+        onClose={() => setModalAbierto(false)}
+      >
+        <SocioForm onSubmit={handleCrear} submitLabel="Crear socio" />
+      </Modal>
 
       {mensaje && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
