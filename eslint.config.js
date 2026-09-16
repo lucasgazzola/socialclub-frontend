@@ -46,9 +46,16 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.cjs'],
+    // Scripts de tooling del equipo (exportación de casos y de la evidencia de
+    // ejecución): corren en Node, no en el browser.
+    files: ['**/*.{cjs,mjs}'],
     languageOptions: {
       globals: globals.node,
+    },
+    rules: {
+      // registro-ejecucion.mjs limpia los códigos ANSI de la salida de Vitest,
+      // así que necesita el carácter de escape en la expresión regular.
+      'no-control-regex': 'off',
     },
   },
 );
