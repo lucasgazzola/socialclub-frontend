@@ -17,9 +17,11 @@ export function useInscripciones(query: InscripcionesQuery = {}) {
   const pagina = query.pagina ?? 1;
   const porPagina = query.porPagina ?? 10;
   const busqueda = query.busqueda;
+  const disciplinaId = query.disciplinaId;
+  const estado = query.estado;
   return useQuery({
-    queryKey: inscripcionesKeys.list({ pagina, porPagina, busqueda }),
-    queryFn: () => listarInscripciones({ pagina, porPagina, busqueda }),
+    queryKey: inscripcionesKeys.list({ pagina, porPagina, busqueda, disciplinaId, estado }),
+    queryFn: () => listarInscripciones({ pagina, porPagina, busqueda, disciplinaId, estado }),
   });
 }
 

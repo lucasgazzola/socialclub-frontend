@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Usuario } from '../types';
 import { UsuariosPage } from './UsuariosPage';
@@ -71,10 +71,15 @@ describe('UsuariosPage', () => {
     state.updateMutateAsync.mockResolvedValue(undefined);
     state.deactivateMutateAsync.mockResolvedValue(undefined);
     state.activateMutateAsync.mockResolvedValue(undefined);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
   });
 
-  it('muestra la lista de usuarios con su estado activo/inactivo (TC-011)', () => {
+  /** Confirma la acción en el ConfirmDialog abierto. */
+  async function confirmarEnDialogo(user: ReturnType<typeof userEvent.setup>, etiqueta: RegExp) {
+    const dialogo = await screen.findByRole('dialog');
+    await user.click(within(dialogo).getByRole('button', { name: etiqueta }));
+  }
+
+  it('muestra la grilla de usuarios con su estado activo/inactivo (TC-011)', () => {
     state.usuarios = [
       buildUsuario(),
       buildUsuario({
@@ -92,6 +97,30 @@ describe('UsuariosPage', () => {
     expect(screen.getByText('Ana Pérez')).toBeInTheDocument();
     expect(screen.getByText('Activo')).toBeInTheDocument();
     expect(screen.getByText('Inactivo')).toBeInTheDocument();
+
+    // Una fila por usuario, en el orden que devuelve el backend.
+    const filas = screen.getAllByRole('listitem');
+    expect(filas).toHaveLength(2);
+    expect(filas[0]).toHaveTextContent('Admin Gestor');
+    expect(filas[1]).toHaveTextContent('Ana Pérez');
+  });
+
+  it('muestra el DNI agrupado de a miles y los roles del usuario', () => {
+    state.usuarios = [
+      buildUsuario({
+        dni: '30111222',
+        roles: [
+          { rol: { id: 2, nombre: 'ADMIN' } },
+          { rol: { id: 3, nombre: 'COLABORADOR' } },
+        ],
+      }),
+    ];
+
+    render(<UsuariosPage />);
+
+    expect(screen.getByText('30.111.222')).toBeInTheDocument();
+    expect(screen.getByText('ADMIN')).toBeInTheDocument();
+    expect(screen.getByText('COLABORADOR')).toBeInTheDocument();
   });
 
   it('permite crear un usuario válido y cierra el modal al confirmar (TC-006, TC-012)', async () => {
@@ -186,7 +215,7 @@ describe('UsuariosPage', () => {
     });
   });
 
-  it('deshabilita un usuario activo tras confirmar la acción (TC-011)', async () => {
+  it('deshabilita un usuario activo tras confirmar en el diálogo (TC-011)', async () => {
     state.usuarios = [buildUsuario()];
     const user = userEvent.setup();
 
@@ -194,36 +223,146 @@ describe('UsuariosPage', () => {
 
     await user.click(screen.getByRole('button', { name: /desactivar/i }));
 
-    expect(window.confirm).toHaveBeenCalled();
+    const dialogo = await screen.findByRole('dialog');
+    expect(dialogo).toHaveTextContent(/no va a poder iniciar sesión/i);
+    expect(state.deactivateMutateAsync).not.toHaveBeenCalled();
+
+    await confirmarEnDialogo(user, /desactivar/i);
+
     await waitFor(() => {
       expect(state.deactivateMutateAsync).toHaveBeenCalledWith(1);
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
   it('no deshabilita al usuario si el administrador cancela la confirmación', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     state.usuarios = [buildUsuario()];
     const user = userEvent.setup();
 
     render(<UsuariosPage />);
 
     await user.click(screen.getByRole('button', { name: /desactivar/i }));
+    await confirmarEnDialogo(user, /cancelar/i);
 
-    expect(window.confirm).toHaveBeenCalled();
+    expect(state.deactivateMutateAsync).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('cierra la confirmación con Escape sin aplicar el cambio (DT-04)', async () => {
+    state.usuarios = [buildUsuario()];
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    await user.click(screen.getByRole('button', { name: /desactivar/i }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
     expect(state.deactivateMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('permite reactivar un usuario inactivo tras confirmar la acción', async () => {
+  it('permite reactivar un usuario inactivo tras confirmar en el diálogo', async () => {
     state.usuarios = [buildUsuario({ activo: false })];
     const user = userEvent.setup();
 
     render(<UsuariosPage />);
 
     await user.click(screen.getByRole('button', { name: /activar/i }));
+    await confirmarEnDialogo(user, /habilitar/i);
 
-    expect(window.confirm).toHaveBeenCalled();
     await waitFor(() => {
       expect(state.activateMutateAsync).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('orden y filtro de la grilla (DT-03)', () => {
+    function dosUsuariosActivos() {
+      return [
+        buildUsuario(),
+        buildUsuario({
+          id: 2,
+          nombre: 'Ana',
+          apellido: 'Pérez',
+          email: 'ana@socialclub.local',
+        }),
+      ];
+    }
+
+    it('posiciona arriba al usuario al que se le acaba de cambiar el estado', async () => {
+      state.usuarios = dosUsuariosActivos();
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Admin Gestor');
+
+      // Se desactiva al segundo usuario de la lista.
+      await user.click(screen.getAllByRole('button', { name: /desactivar/i })[1]);
+      await confirmarEnDialogo(user, /desactivar/i);
+
+      await waitFor(() => {
+        expect(state.deactivateMutateAsync).toHaveBeenCalledWith(2);
+      });
+
+      await waitFor(() => {
+        const filas = screen.getAllByRole('listitem');
+        expect(filas[0]).toHaveTextContent('Ana Pérez');
+        expect(filas[0]).toHaveAttribute('aria-current', 'true');
+      });
+    });
+
+    it('no reordena la grilla si el administrador cancela la confirmación', async () => {
+      state.usuarios = dosUsuariosActivos();
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      await user.click(screen.getAllByRole('button', { name: /desactivar/i })[1]);
+      await confirmarEnDialogo(user, /cancelar/i);
+
+      expect(state.deactivateMutateAsync).not.toHaveBeenCalled();
+      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Admin Gestor');
+    });
+
+    it('filtra la grilla por estado y limpia el usuario destacado', async () => {
+      state.usuarios = [
+        buildUsuario(),
+        buildUsuario({
+          id: 2,
+          nombre: 'Ana',
+          apellido: 'Pérez',
+          email: 'ana@socialclub.local',
+          activo: false,
+        }),
+      ];
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      await user.selectOptions(screen.getByLabelText(/filtrar por estado/i), 'inactivos');
+
+      const filas = screen.getAllByRole('listitem');
+      expect(filas).toHaveLength(1);
+      expect(filas[0]).toHaveTextContent('Ana Pérez');
+      expect(filas[0]).not.toHaveAttribute('aria-current');
+    });
+
+    it('avisa cuando ningún usuario coincide con el filtro', async () => {
+      state.usuarios = [buildUsuario()];
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      await user.selectOptions(screen.getByLabelText(/filtrar por estado/i), 'inactivos');
+
+      expect(screen.getByText(/ningún usuario coincide con el filtro/i)).toBeInTheDocument();
+      expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
     });
   });
 });

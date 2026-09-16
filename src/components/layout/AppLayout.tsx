@@ -1,5 +1,18 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, Coins, ClipboardList, LayoutDashboard, LogOut, QrCode, ShieldCheck, User, Users, UserPlus } from 'lucide-react';
+import {
+  CalendarDays,
+  Coins,
+  ClipboardList,
+  FileCheck,
+  LayoutDashboard,
+  LogOut,
+  QrCode,
+  ShieldCheck,
+  User,
+  Users,
+  UserPlus,
+  UserRound,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -24,9 +37,21 @@ const navItems: NavItem[] = [
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.validarAcceso, label: 'Validar Acceso QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
-  { to: ROUTES.cuotas, label: 'Cuotas deportivas', icon: Coins, roles: ['ADMIN'] },
+  { to: ROUTES.cuotas, label: 'Cuotas', icon: Coins, roles: ['ADMIN'] },
   { to: ROUTES.auditoria, label: 'Auditoría', icon: ClipboardList, roles: ['ADMIN'] },
-  { to: ROUTES.inscripcion, label: 'Inscripción', icon: UserPlus, roles: ['ADMIN', 'DELEGADO']}
+  { to: ROUTES.inscripcion, label: 'Inscripción', icon: UserPlus, roles: ['ADMIN', 'DELEGADO'] },
+  {
+    to: ROUTES.participantes,
+    label: 'Participantes',
+    icon: UserRound,
+    roles: ['ADMIN', 'COLABORADOR'],
+  },
+  {
+    to: ROUTES.documentacion,
+    label: 'Documentación',
+    icon: FileCheck,
+    roles: ['ADMIN', 'DELEGADO'],
+  },
 ];
 
 /** Estructura visual de las páginas autenticadas: sidebar + contenido. */
@@ -46,7 +71,7 @@ export function AppLayout() {
       <aside className="flex w-60 shrink-0 flex-col justify-between border-r border-slate-200 bg-white px-4 py-6 sticky top-0 h-screen overflow-y-auto">
         <div>
           <div className="mb-8 px-2">
-            <p className="text-lg font-semibold text-brand-700">SocialClub</p>
+            <p className="text-brand-700 text-lg font-semibold">SocialClub</p>
             <p className="text-xs text-slate-500">Panel de gestión</p>
           </div>
           <nav className="space-y-1">
@@ -74,14 +99,19 @@ export function AppLayout() {
             {usuario?.nombre} {usuario?.apellido}
           </p>
           <p className="px-2 text-xs text-slate-500">{usuario?.email}</p>
-          <Button variant="ghost" size="sm" className="mt-3 w-full justify-start" onClick={() => void logout()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3 w-full justify-start"
+            onClick={() => void logout()}
+          >
             <LogOut size={16} />
             Cerrar sesión
           </Button>
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
+      <main className="min-w-0 flex-1 overflow-y-auto bg-slate-50 p-8">
         <Outlet />
       </main>
     </div>

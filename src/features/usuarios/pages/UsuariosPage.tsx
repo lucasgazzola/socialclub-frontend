@@ -1,25 +1,65 @@
-import { useState } from 'react';
-import { BadgeAlertIcon, BadgeCheck, Edit3, UserPlus, UserRoundCheck, UserRoundX } from 'lucide-react';
-import { Button, Card, Spinner } from '@/components/ui';
+import { useMemo, useState } from 'react';
+import { UserPlus } from 'lucide-react';
+import { Button, Card, ConfirmDialog, Select, Spinner } from '@/components/ui';
 import { useActivateUsuario } from '../hooks/useActivateUsuario';
 import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario';
 import { useUsers } from '../hooks/useUsers';
+import { UsuariosGrid } from '../components/UsuariosGrid';
 import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto } from '../types';
 import { UsuarioFormModal } from './components/UsuarioFormModal';
 import type { UsuarioCreateFormValues, UsuarioEditFormValues } from '../schemas/usuario.schema';
+
+type FiltroEstado = 'todos' | 'activos' | 'inactivos';
 
 export function UsuariosPage() {
   const [modoFormulario, setModoFormulario] = useState<'crear' | 'editar'>('crear');
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('todos');
+
+  /**
+   * Último usuario al que se le cambió el estado (DT-03). Se muestra primero y
+   * resaltado para no perderlo de vista, porque el backend devuelve el listado
+   * ordenado por apellido y la fila queda donde estaba. Es estado de la vista:
+   * se limpia al cambiar el filtro o al recargar la pantalla.
+   */
+  const [usuarioDestacadoId, setUsuarioDestacadoId] = useState<number | null>(null);
+
+  /** Usuario cuyo cambio de estado está esperando confirmación (DT-04). */
+  const [usuarioAConfirmar, setUsuarioAConfirmar] = useState<Usuario | null>(null);
 
   const { data: usuarios = [], isLoading, isError, error } = useUsers();
   const createUsuario = useCreateUsuario();
   const updateUsuario = useUpdateUsuario();
   const deactivateUsuario = useDeactivateUsuario();
   const activateUsuario = useActivateUsuario();
+
+  const cambioDeEstadoEnCurso = deactivateUsuario.isPending || activateUsuario.isPending;
+
+  const totalActivos = usuarios.filter((usuario) => usuario.activo).length;
+  const totalInactivos = usuarios.length - totalActivos;
+
+  const usuariosVisibles = useMemo(() => {
+    const filtrados = usuarios.filter((usuario) => {
+      if (filtroEstado === 'activos') return usuario.activo;
+      if (filtroEstado === 'inactivos') return !usuario.activo;
+      return true;
+    });
+
+    const destacado = filtrados.find((usuario) => usuario.id === usuarioDestacadoId);
+    if (!destacado) {
+      return filtrados;
+    }
+
+    return [destacado, ...filtrados.filter((usuario) => usuario.id !== destacado.id)];
+  }, [usuarios, filtroEstado, usuarioDestacadoId]);
+
+  function cambiarFiltro(valor: FiltroEstado) {
+    setFiltroEstado(valor);
+    setUsuarioDestacadoId(null);
+  }
 
   function abrirCreacion() {
     setUsuarioSeleccionado(null);
@@ -69,25 +109,24 @@ export function UsuariosPage() {
     await handleCreate(values);
   }
 
-  /** Alterna el estado del usuario: da de baja si está activo, lo reactiva si no. */
-  async function confirmarCambioEstado(usuario: Usuario) {
+  /**
+   * Alterna el estado del usuario: da de baja si está activo, lo reactiva si
+   * no. La confirmación la pide el ConfirmDialog, no window.confirm (DT-04).
+   */
+  async function aplicarCambioEstado() {
+    const usuario = usuarioAConfirmar;
+    if (!usuario) {
+      return;
+    }
+
     if (usuario.activo) {
-      const confirmado = window.confirm(
-        `¿Desactivar a ${usuario.nombre} ${usuario.apellido}? Podés volver a activarlo cuando quieras.`,
-      );
-      if (!confirmado) {
-        return;
-      }
       await deactivateUsuario.mutateAsync(usuario.id);
     } else {
-      const confirmado = window.confirm(
-        `¿Habilitar nuevamente a ${usuario.nombre} ${usuario.apellido}?`,
-      );
-      if (!confirmado) {
-        return;
-      }
       await activateUsuario.mutateAsync(usuario.id);
     }
+
+    setUsuarioAConfirmar(null);
+    setUsuarioDestacadoId(usuario.id);
   }
 
   return (
@@ -112,6 +151,23 @@ export function UsuariosPage() {
         onSubmit={handleSubmit}
       />
 
+      <ConfirmDialog
+        open={usuarioAConfirmar !== null}
+        variant={usuarioAConfirmar?.activo ? 'danger' : 'success'}
+        title={usuarioAConfirmar?.activo ? 'Desactivar usuario' : 'Habilitar usuario'}
+        description={
+          usuarioAConfirmar?.activo
+            ? `${usuarioAConfirmar.nombre} ${usuarioAConfirmar.apellido} no va a poder iniciar sesión. Podés volver a habilitarlo cuando quieras.`
+            : usuarioAConfirmar
+              ? `${usuarioAConfirmar.nombre} ${usuarioAConfirmar.apellido} va a poder iniciar sesión de nuevo.`
+              : undefined
+        }
+        confirmLabel={usuarioAConfirmar?.activo ? 'Desactivar' : 'Habilitar'}
+        loading={cambioDeEstadoEnCurso}
+        onConfirm={() => void aplicarCambioEstado()}
+        onCancel={() => setUsuarioAConfirmar(null)}
+      />
+
       {isLoading ? (
         <div className="flex justify-center py-12">
           <Spinner className="h-6 w-6" />
@@ -123,55 +179,40 @@ export function UsuariosPage() {
       ) : usuarios.length === 0 ? (
         <Card className="p-6 text-sm text-slate-500">No hay usuarios cargados todavía.</Card>
       ) : (
-        <div className="grid gap-4">
-          {usuarios.map((usuario) => {
-            const roles = usuario.roles.map((rol) => rol.rol.nombre).join(', ');
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-500">
+              {usuarios.length} usuario(s) · {totalActivos} activo(s) · {totalInactivos}{' '}
+              inactivo(s)
+            </p>
 
-            return (
-              <Card key={usuario.id} className="p-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-semibold text-slate-900">
-                        {usuario.nombre} {usuario.apellido}
-                      </h3>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          usuario.activo
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-red-100 text-red-500'
-                        }`}
-                      >
-                        {usuario.activo ? <BadgeCheck size={12} /> : <BadgeAlertIcon size={12} />}
-                        {usuario.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-600">{usuario.email}</p>
-                    <p className="text-sm text-slate-500">
-                      DNI: {usuario.dni ?? 'Sin dato'} · Roles: {roles || 'Sin roles'}
-                    </p>
-                  </div>
+            <Select
+              id="filtroEstado"
+              aria-label="Filtrar por estado"
+              value={filtroEstado}
+              onChange={(e) => cambiarFiltro(e.target.value as FiltroEstado)}
+              className="min-w-[170px]"
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="activos">Solo activos</option>
+              <option value="inactivos">Solo inactivos</option>
+            </Select>
+          </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => abrirEdicion(usuario)}>
-                      <Edit3 size={16} />
-                      Editar
-                    </Button>
-                    <Button
-                      variant={usuario.activo ? 'danger' : 'success'}
-                      size="sm"
-                      disabled={deactivateUsuario.isPending || activateUsuario.isPending}
-                      onClick={() => void confirmarCambioEstado(usuario)}
-                    >
-                      {usuario.activo ? <UserRoundX size={18} /> : <UserRoundCheck size={18} />}
-                      {usuario.activo ? 'Desactivar' : 'Activar'}
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+          {usuariosVisibles.length === 0 ? (
+            <Card className="p-6 text-sm text-slate-500">
+              Ningún usuario coincide con el filtro seleccionado.
+            </Card>
+          ) : (
+            <UsuariosGrid
+              usuarios={usuariosVisibles}
+              usuarioDestacadoId={usuarioDestacadoId}
+              accionesDeshabilitadas={cambioDeEstadoEnCurso}
+              onEditar={abrirEdicion}
+              onCambiarEstado={setUsuarioAConfirmar}
+            />
+          )}
+        </>
       )}
     </div>
   );
