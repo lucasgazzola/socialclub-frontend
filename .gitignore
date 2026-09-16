@@ -24,3 +24,15 @@ npm-debug.log*
 
 # Documento de credenciales (secretos reales) — NUNCA commitear
 CREDENCIALES.md
+
+# Reporte de cobertura (generado)
+coverage/
+# Documentación binaria del proyecto (vive en Google Drive / repo backend)
+docs/
+# Config local de Claude Code (por usuario)
+.claude/settings.local.json
+
+# Artefactos generados por los skills de testing (evidencia bajo demanda)
+jest-results.json
+vitest-results.json
+registro-ejecucion*.csv

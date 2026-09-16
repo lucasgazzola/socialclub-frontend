@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { socioFormSchema, type SocioFormData } from '../schemas';
 import { ROUTES } from '@/routes/paths';
+import { useCategorias } from '../hooks/useCategorias';
 
 interface SocioFormProps {
   defaultValues?: SocioFormData;
@@ -15,6 +16,7 @@ interface SocioFormProps {
 export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormProps) {
   const navigate = useNavigate();
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
+  const { data: categorias, isLoading: cargandoCategorias } = useCategorias();
 
   const {
     register,
@@ -85,6 +87,29 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
           error={errors.telefono?.message}
           {...register('telefono')}
         />
+
+        <div className="w-full sm:col-span-2">
+          <label htmlFor="categoriaId" className="mb-1 block text-sm font-medium text-slate-700">
+            Categoría de socio
+          </label>
+          <Select
+            id="categoriaId"
+            disabled={cargandoCategorias}
+            {...register('categoriaId', {
+              setValueAs: (value) => (value === '' ? undefined : Number(value)),
+            })}
+          >
+            <option value="">{cargandoCategorias ? 'Cargando categorías…' : 'Seleccioná una categoría'}</option>
+            {categorias?.map((categoria) => (
+              <option key={categoria.id} value={categoria.id}>
+                {categoria.nombre}
+              </option>
+            ))}
+          </Select>
+          {errors.categoriaId && (
+            <p className="mt-1 text-xs text-red-600">{errors.categoriaId.message}</p>
+          )}
+        </div>
       </div>
 
       {errorServidor && (

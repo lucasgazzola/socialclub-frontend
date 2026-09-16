@@ -1,4 +1,10 @@
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldErrors } from 'react-hook-form';
+
+function hasPasswordFieldError(
+  errors: FieldErrors<UsuarioCreateFormValues | UsuarioEditFormValues>,
+): errors is FieldErrors<UsuarioCreateFormValues> {
+  return 'password' in errors;
+}
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input } from '@/components/ui';
 import {
@@ -44,7 +50,7 @@ export function UsuarioForm({
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<any>({
+  } = useForm<UsuarioCreateFormValues | UsuarioEditFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
   });
@@ -53,19 +59,26 @@ export function UsuarioForm({
     setValueAs: (value) => String(value ?? '').replace(/\D/g, '').slice(0, 8),
   });
 
+  const passwordError = hasPasswordFieldError(errors)
+    ? errors.password?.message
+    : undefined;
+
+  const rolesError =
+    typeof errors.roles?.message === 'string' ? errors.roles.message : undefined;
+
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Input
         id="nombre"
         label="Nombre"
-        error={errors.nombre?.message as string | undefined}
+        error={typeof errors.nombre?.message === 'string' ? errors.nombre.message : undefined}
         {...register('nombre')}
       />
 
       <Input
         id="apellido"
         label="Apellido"
-        error={errors.apellido?.message as string | undefined}
+        error={typeof errors.apellido?.message === 'string' ? errors.apellido.message : undefined}
         {...register('apellido')}
       />
 
@@ -76,7 +89,7 @@ export function UsuarioForm({
         pattern="[0-9]*"
         maxLength={8}
         label="DNI"
-        error={errors.dni?.message as string | undefined}
+        error={typeof errors.dni?.message === 'string' ? errors.dni.message : undefined}
         {...dniRegistration}
       />
 
@@ -84,7 +97,7 @@ export function UsuarioForm({
         id="email"
         type="email"
         label="Email"
-        error={errors.email?.message as string | undefined}
+        error={typeof errors.email?.message === 'string' ? errors.email.message : undefined}
         {...register('email')}
       />
 
@@ -93,7 +106,7 @@ export function UsuarioForm({
           id="password"
           type="password"
           label="Contraseña"
-          error={errors.password?.message as string | undefined}
+          error={passwordError}
           {...register('password')}
         />
       ) : mostrarPasswordField && modo === 'editar' ? (
@@ -101,7 +114,7 @@ export function UsuarioForm({
           id="password"
           type="password"
           label="Nueva contraseña"
-          error={errors.password?.message as string | undefined}
+          error={passwordError}
           placeholder="Dejar en blanco para mantener la actual"
           {...register('password')}
         />
@@ -120,9 +133,7 @@ export function UsuarioForm({
           COLABORADOR
         </label>
 
-        {errors.roles && (
-          <p className="text-sm text-red-600">{errors.roles.message as string}</p>
-        )}
+        {rolesError && <p className="text-sm text-red-600">{rolesError}</p>}
       </fieldset>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

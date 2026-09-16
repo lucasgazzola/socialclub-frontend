@@ -6,6 +6,8 @@ export interface AuthContextValue {
   cargando: boolean;
   login: (payload: LoginPayload) => Promise<void>;
   logout: () => Promise<void>;
+  /** Re-consulta /auth/me y actualiza el usuario (roles y persona). */
+  refrescar: () => Promise<UsuarioAutenticado>;
 }
 
 /**

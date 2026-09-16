@@ -30,6 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (payload: LoginPayload) => {
     const u = await authApi.login(payload);
     setUsuario(u);
+    // Se decide la pantalla principal segun el rol real del usuario.
+    try {
+      const perfil = await authApi.me();
+      setUsuario(perfil);
+    } catch {
+      // Si 'me()' falla, deja lo del login.
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -40,8 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.clear();
   }, []);
 
+  const refrescar = useCallback(async () => {
+    const perfil = await authApi.me();
+    setUsuario(perfil);
+    return perfil;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ usuario, cargando, login, logout }}>
+    <AuthContext.Provider value={{ usuario, cargando, login, logout, refrescar }}>
       {children}
     </AuthContext.Provider>
   );

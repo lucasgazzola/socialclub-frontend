@@ -1,72 +1,103 @@
 import { useMemo, useState } from 'react';
-import { AlertCircle, BadgeCheck, Edit3, Plus, Power } from 'lucide-react';
-import { Button, Card, Spinner } from '@/components/ui';
-import { UsuarioForm } from '../components/UsuarioForm';
+import { UserPlus } from 'lucide-react';
+import { Button, Card, ConfirmDialog, Select, Spinner } from '@/components/ui';
+import { useActivateUsuario } from '../hooks/useActivateUsuario';
 import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario';
 import { useUsers } from '../hooks/useUsers';
+import { UsuariosGrid } from '../components/UsuariosGrid';
 import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto } from '../types';
-import { UsuarioEditModal } from './components/UsuarioEditModal';
+import { UsuarioFormModal } from './components/UsuarioFormModal';
 import type { UsuarioCreateFormValues, UsuarioEditFormValues } from '../schemas/usuario.schema';
 
+type FiltroEstado = 'todos' | 'activos' | 'inactivos';
+
 export function UsuariosPage() {
-  const [modoFormulario, setModoFormulario] = useState<'crear' | 'editar' | null>(null);
+  const [modoFormulario, setModoFormulario] = useState<'crear' | 'editar'>('crear');
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null);
-  const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('todos');
+
+  /**
+   * Último usuario al que se le cambió el estado (DT-03). Se muestra primero y
+   * resaltado para no perderlo de vista, porque el backend devuelve el listado
+   * ordenado por apellido y la fila queda donde estaba. Es estado de la vista:
+   * se limpia al cambiar el filtro o al recargar la pantalla.
+   */
+  const [usuarioDestacadoId, setUsuarioDestacadoId] = useState<number | null>(null);
+
+  /** Usuario cuyo cambio de estado está esperando confirmación (DT-04). */
+  const [usuarioAConfirmar, setUsuarioAConfirmar] = useState<Usuario | null>(null);
 
   const { data: usuarios = [], isLoading, isError, error } = useUsers();
   const createUsuario = useCreateUsuario();
   const updateUsuario = useUpdateUsuario();
   const deactivateUsuario = useDeactivateUsuario();
+  const activateUsuario = useActivateUsuario();
 
-  const formularioVisible = modoFormulario !== null;
-  const tituloFormulario = useMemo(
-    () => (modoFormulario === 'editar' ? 'Editar usuario' : 'Nuevo usuario'),
-    [modoFormulario],
-  );
+  const cambioDeEstadoEnCurso = deactivateUsuario.isPending || activateUsuario.isPending;
+
+  const totalActivos = usuarios.filter((usuario) => usuario.activo).length;
+  const totalInactivos = usuarios.length - totalActivos;
+
+  const usuariosVisibles = useMemo(() => {
+    const filtrados = usuarios.filter((usuario) => {
+      if (filtroEstado === 'activos') return usuario.activo;
+      if (filtroEstado === 'inactivos') return !usuario.activo;
+      return true;
+    });
+
+    const destacado = filtrados.find((usuario) => usuario.id === usuarioDestacadoId);
+    if (!destacado) {
+      return filtrados;
+    }
+
+    return [destacado, ...filtrados.filter((usuario) => usuario.id !== destacado.id)];
+  }, [usuarios, filtroEstado, usuarioDestacadoId]);
+
+  function cambiarFiltro(valor: FiltroEstado) {
+    setFiltroEstado(valor);
+    setUsuarioDestacadoId(null);
+  }
 
   function abrirCreacion() {
     setUsuarioSeleccionado(null);
-    setModoFormulario((actual) => (actual === 'crear' ? null : 'crear'));
+    setModoFormulario('crear');
+    setModalAbierto(true);
   }
 
   function abrirEdicion(usuario: Usuario) {
-    setUsuarioEditando(usuario);
-    setEditModalOpen(true);
+    setUsuarioSeleccionado(usuario);
+    setModoFormulario('editar');
+    setModalAbierto(true);
   }
 
-  function cerrarFormulario() {
-    setModoFormulario(null);
+  function cerrarModal() {
+    setModalAbierto(false);
     setUsuarioSeleccionado(null);
-  }
-
-  function cerrarEdicion() {
-    setEditModalOpen(false);
-    setUsuarioEditando(null);
   }
 
   async function handleCreate(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
     await createUsuario.mutateAsync(values as CreateUsuarioDto);
-    cerrarFormulario();
   }
 
-  async function handleUpdate(values: UsuarioEditFormValues) {
-    if (!usuarioEditando) {
+  async function handleUpdate(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
+    if (!usuarioSeleccionado) {
       return;
     }
 
-    const { password: _password, ...resto } = values as UsuarioEditFormValues & {
-      password?: string;
-    };
+    const resto = Object.fromEntries(
+      Object.entries(values as UsuarioEditFormValues & { password?: string }).filter(
+        ([key]) => key !== 'password',
+      ),
+    ) as UpdateUsuarioDto;
 
     const payload: UpdateUsuarioDto = {
       ...resto,
     };
 
-    await updateUsuario.mutateAsync({ id: usuarioEditando.id, payload });
-    cerrarEdicion();
+    await updateUsuario.mutateAsync({ id: usuarioSeleccionado.id, payload });
   }
 
   async function handleSubmit(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
@@ -78,16 +109,24 @@ export function UsuariosPage() {
     await handleCreate(values);
   }
 
-  async function confirmarBaja(usuario: Usuario) {
-    const confirmado = window.confirm(
-      `¿Deshabilitar a ${usuario.nombre} ${usuario.apellido}? Esta acción se puede revertir más adelante desde la base de datos.`,
-    );
-
-    if (!confirmado) {
+  /**
+   * Alterna el estado del usuario: da de baja si está activo, lo reactiva si
+   * no. La confirmación la pide el ConfirmDialog, no window.confirm (DT-04).
+   */
+  async function aplicarCambioEstado() {
+    const usuario = usuarioAConfirmar;
+    if (!usuario) {
       return;
     }
 
-    await deactivateUsuario.mutateAsync(usuario.id);
+    if (usuario.activo) {
+      await deactivateUsuario.mutateAsync(usuario.id);
+    } else {
+      await activateUsuario.mutateAsync(usuario.id);
+    }
+
+    setUsuarioAConfirmar(null);
+    setUsuarioDestacadoId(usuario.id);
   }
 
   return (
@@ -95,42 +134,38 @@ export function UsuariosPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Usuarios administrativos</h1>
-          <p className="mt-1 text-sm text-slate-500">Creá, editá y deshabilitá usuarios de gestión.</p>
+          <p className="mt-1 text-sm text-slate-500">Creá y editá usuarios de gestión.</p>
         </div>
 
         <Button onClick={abrirCreacion}>
-          <Plus size={16} />
-          {formularioVisible && modoFormulario === 'crear' ? 'Cerrar formulario' : 'Nuevo usuario'}
+          <UserPlus size={16} />
+          Nuevo usuario
         </Button>
       </header>
 
-      {formularioVisible && (
-        <Card className="p-6">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">{tituloFormulario}</h2>
-              <p className="text-sm text-slate-500">
-                Completá los datos básicos y asigná los roles correspondientes.
-              </p>
-            </div>
-            <Button variant="ghost" onClick={cerrarFormulario}>
-              Cancelar
-            </Button>
-          </div>
+      <UsuarioFormModal
+        open={modalAbierto}
+        modo={modoFormulario}
+        usuario={usuarioSeleccionado}
+        onClose={cerrarModal}
+        onSubmit={handleSubmit}
+      />
 
-          <UsuarioForm
-            modo={modoFormulario}
-            usuarioInicial={usuarioSeleccionado}
-            onSubmit={handleSubmit}
-          />
-        </Card>
-      )}
-
-      <UsuarioEditModal
-        open={editModalOpen}
-        usuario={usuarioEditando}
-        onClose={cerrarEdicion}
-        onSave={handleUpdate}
+      <ConfirmDialog
+        open={usuarioAConfirmar !== null}
+        variant={usuarioAConfirmar?.activo ? 'danger' : 'success'}
+        title={usuarioAConfirmar?.activo ? 'Desactivar usuario' : 'Habilitar usuario'}
+        description={
+          usuarioAConfirmar?.activo
+            ? `${usuarioAConfirmar.nombre} ${usuarioAConfirmar.apellido} no va a poder iniciar sesión. Podés volver a habilitarlo cuando quieras.`
+            : usuarioAConfirmar
+              ? `${usuarioAConfirmar.nombre} ${usuarioAConfirmar.apellido} va a poder iniciar sesión de nuevo.`
+              : undefined
+        }
+        confirmLabel={usuarioAConfirmar?.activo ? 'Desactivar' : 'Habilitar'}
+        loading={cambioDeEstadoEnCurso}
+        onConfirm={() => void aplicarCambioEstado()}
+        onCancel={() => setUsuarioAConfirmar(null)}
       />
 
       {isLoading ? (
@@ -144,57 +179,41 @@ export function UsuariosPage() {
       ) : usuarios.length === 0 ? (
         <Card className="p-6 text-sm text-slate-500">No hay usuarios cargados todavía.</Card>
       ) : (
-        <div className="grid gap-4">
-          {usuarios.map((usuario) => {
-            const roles = usuario.roles.map((rol) => rol.rol.nombre).join(', ');
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-500">
+              {usuarios.length} usuario(s) · {totalActivos} activo(s) · {totalInactivos}{' '}
+              inactivo(s)
+            </p>
 
-            return (
-              <Card key={usuario.id} className="p-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-semibold text-slate-900">
-                        {usuario.nombre} {usuario.apellido}
-                      </h3>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          usuario.activo
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-slate-100 text-slate-500'
-                        }`}
-                      >
-                        {usuario.activo ? <BadgeCheck size={12} /> : <AlertCircle size={12} />}
-                        {usuario.activo ? 'Activo' : 'Deshabilitado'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-600">{usuario.email}</p>
-                    <p className="text-sm text-slate-500">
-                      DNI: {usuario.dni ?? 'Sin dato'} · Roles: {roles || 'Sin roles'}
-                    </p>
-                  </div>
+            <Select
+              id="filtroEstado"
+              aria-label="Filtrar por estado"
+              value={filtroEstado}
+              onChange={(e) => cambiarFiltro(e.target.value as FiltroEstado)}
+              className="min-w-[170px]"
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="activos">Solo activos</option>
+              <option value="inactivos">Solo inactivos</option>
+            </Select>
+          </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => abrirEdicion(usuario)}>
-                      <Edit3 size={16} />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      disabled={!usuario.activo || deactivateUsuario.isPending}
-                      onClick={() => void confirmarBaja(usuario)}
-                    >
-                      <Power size={16} />
-                      Deshabilitar
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+          {usuariosVisibles.length === 0 ? (
+            <Card className="p-6 text-sm text-slate-500">
+              Ningún usuario coincide con el filtro seleccionado.
+            </Card>
+          ) : (
+            <UsuariosGrid
+              usuarios={usuariosVisibles}
+              usuarioDestacadoId={usuarioDestacadoId}
+              accionesDeshabilitadas={cambioDeEstadoEnCurso}
+              onEditar={abrirEdicion}
+              onCambiarEstado={setUsuarioAConfirmar}
+            />
+          )}
+        </>
       )}
-
     </div>
   );
 }

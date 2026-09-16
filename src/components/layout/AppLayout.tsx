@@ -1,5 +1,18 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, Coins, LayoutDashboard, LogOut, ShieldCheck, Users } from 'lucide-react';
+import {
+  CalendarDays,
+  Coins,
+  ClipboardList,
+  FileCheck,
+  LayoutDashboard,
+  LogOut,
+  QrCode,
+  ShieldCheck,
+  User,
+  Users,
+  UserPlus,
+  UserRound,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -12,30 +25,53 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   roles?: RolNombre[];
+  /** Si está activo, el ítem solo se muestra cuando el usuario NO tiene membresía activa. */
+  soloSinMembresia?: boolean;
 }
 
 const navItems: NavItem[] = [
   { to: ROUTES.dashboard, label: 'Inicio', icon: LayoutDashboard },
+  { to: ROUTES.perfil, label: 'Mi perfil', icon: User },
+  { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
   { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
+  { to: ROUTES.validarAcceso, label: 'Validar Acceso QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
-  { to: ROUTES.cuotas, label: 'Cuotas deportivas', icon: Coins, roles: ['ADMIN'] },
+  { to: ROUTES.cuotas, label: 'Cuotas', icon: Coins, roles: ['ADMIN'] },
+  { to: ROUTES.auditoria, label: 'Auditoría', icon: ClipboardList, roles: ['ADMIN'] },
+  { to: ROUTES.inscripcion, label: 'Inscripción', icon: UserPlus, roles: ['ADMIN', 'DELEGADO'] },
+  {
+    to: ROUTES.participantes,
+    label: 'Participantes',
+    icon: UserRound,
+    roles: ['ADMIN', 'COLABORADOR', 'DELEGADO'],
+  },
+  {
+    to: ROUTES.documentacion,
+    label: 'Documentación',
+    icon: FileCheck,
+    roles: ['ADMIN', 'DELEGADO'],
+  },
 ];
 
 /** Estructura visual de las páginas autenticadas: sidebar + contenido. */
 export function AppLayout() {
   const { usuario, logout } = useAuth();
 
+  const tieneMembresia = usuario?.persona?.membresias?.some((m) => m.activo);
+
   const itemsVisibles = navItems.filter(
-    (item) => !item.roles || item.roles.some((rol) => usuario?.roles.includes(rol)),
+    (item) =>
+      (!item.soloSinMembresia || !tieneMembresia) &&
+      (!item.roles || item.roles.some((rol) => usuario?.roles.includes(rol))),
   );
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 flex-col justify-between border-r border-slate-200 bg-white px-4 py-6">
+    <div className="flex h-screen overflow-hidden">
+      <aside className="flex w-60 shrink-0 flex-col justify-between border-r border-slate-200 bg-white px-4 py-6 sticky top-0 h-screen overflow-y-auto">
         <div>
           <div className="mb-8 px-2">
-            <p className="text-lg font-semibold text-brand-700">SocialClub</p>
+            <p className="text-brand-700 text-lg font-semibold">SocialClub</p>
             <p className="text-xs text-slate-500">Panel de gestión</p>
           </div>
           <nav className="space-y-1">
@@ -63,14 +99,19 @@ export function AppLayout() {
             {usuario?.nombre} {usuario?.apellido}
           </p>
           <p className="px-2 text-xs text-slate-500">{usuario?.email}</p>
-          <Button variant="ghost" size="sm" className="mt-3 w-full justify-start" onClick={() => void logout()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3 w-full justify-start"
+            onClick={() => void logout()}
+          >
             <LogOut size={16} />
             Cerrar sesión
           </Button>
         </div>
       </aside>
 
-      <main className="flex-1 bg-slate-50 p-8">
+      <main className="min-w-0 flex-1 overflow-y-auto bg-slate-50 p-8">
         <Outlet />
       </main>
     </div>

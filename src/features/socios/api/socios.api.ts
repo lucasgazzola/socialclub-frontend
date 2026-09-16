@@ -1,8 +1,14 @@
 import { apiClient } from '@/lib/api/client';
 import type { Paginated } from '@/types/api';
 import type { Socio, SocioFormData, SociosQuery } from '../types';
+import type { PerfilSocioFormData } from '../schemas';
 
 export const sociosApi = {
+  async create(formData: SocioFormData): Promise<Socio> {
+    const { data } = await apiClient.post<Socio>('/socios', formData);
+    return data;
+  },
+
   async list(query: SociosQuery = {}): Promise<Paginated<Socio>> {
     const { data } = await apiClient.get<Paginated<Socio>>('/socios', {
       params: {
@@ -21,13 +27,25 @@ export const sociosApi = {
     return data;
   },
 
-  async create(formData: SocioFormData): Promise<Socio> {
-    const { data } = await apiClient.post<Socio>('/socios', formData);
+  /** US-09: Alta como socio del usuario logueado. */
+  async registrarme(datos: { dni: string; categoriaId: number }): Promise<Socio> {
+    const { data } = await apiClient.post<Socio>('/socios/registrar', datos);
+    return data;
+  },
+
+  /** US-11: Editar datos personales del socio logueado. */
+  async updatePerfil(formData: PerfilSocioFormData): Promise<Socio> {
+    const { data } = await apiClient.patch<Socio>('/socios/perfil', formData);
     return data;
   },
 
   async update(id: number, formData: Partial<SocioFormData>): Promise<Socio> {
     const { data } = await apiClient.patch<Socio>(`/socios/${id}`, formData);
+    return data;
+  },
+
+  async deactivate(id: number): Promise<Socio> {
+    const { data } = await apiClient.delete<Socio>(`/socios/${id}`);
     return data;
   },
 };

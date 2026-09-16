@@ -1,6 +1,8 @@
-import { Users, ShieldCheck, ScrollText } from 'lucide-react';
-import { Card } from '@/components/ui';
+import { CalendarDays, CreditCard, ScrollText, ShieldCheck, User, UserPlus, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { ROUTES } from '@/routes/paths';
 
 const modulos = [
   {
@@ -18,9 +20,39 @@ const modulos = [
     descripcion: 'Registro inalterable de todas las operaciones del sistema.',
     icon: ScrollText,
   },
+  {
+    titulo: 'Inscripción',
+    descripcion: 'Gestión de las inscripciones de participantes a una o varias disciplinas.',
+    icon: UserPlus,
+  },
 ];
 
+function formatearFecha(iso?: string | null) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+/**
+ * Pantalla principal segun el rol del usuario:
+ * - ADMIN/COLABORADOR: panel de administración.
+ * - SOCIO: pantalla principal de socio.
+ * - Sin roles: pantalla neutra con la opción 'Hacerme socio'.
+ */
 export function DashboardPage() {
+  const { usuario } = useAuth();
+
+  if (usuario?.roles.some((rol) => rol === 'ADMIN' || rol === 'COLABORADOR')) {
+    return <PanelAdministracion />;
+  }
+
+  if (usuario?.roles.includes('SOCIO')) {
+    return <PanelSocio />;
+  }
+
+  return <PantallaNeutra />;
+}
+
+function PanelAdministracion() {
   const { usuario } = useAuth();
 
   return (
@@ -45,6 +77,95 @@ export function DashboardPage() {
           </Card>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Pantalla principal del socio */
+function PanelSocio() {
+  const { usuario } = useAuth();
+  const navigate = useNavigate();
+  const persona = usuario?.persona;
+  const membresiaActiva = persona?.membresias?.find((m) => m.activo);
+
+  if (!persona || !membresiaActiva) {
+    // Por consistencia: rol SOCIO sin membresía activa (estado transitorio).
+    return <PantallaNeutra />;
+  }
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            Hola, {usuario?.nombre ?? usuario?.email} 👋
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Bienvenido a tu espacio de socio de SocialClub.
+          </p>
+        </div>
+        <Button onClick={() => navigate(ROUTES.perfil)}>
+          <User size={16} />
+          Editar mis datos
+        </Button>
+      </header>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="p-5">
+          <div className="mb-3 inline-flex rounded-lg bg-brand-50 p-2 text-brand-700">
+            <Users size={20} />
+          </div>
+          <h2 className="font-medium text-slate-900">Categoría</h2>
+          <p className="mt-1 text-sm text-slate-500">{membresiaActiva.categoria?.nombre ?? '—'}</p>
+        </Card>
+
+        <Card className="p-5">
+          <div className="mb-3 inline-flex rounded-lg bg-brand-50 p-2 text-brand-700">
+            <CalendarDays size={20} />
+          </div>
+          <h2 className="font-medium text-slate-900">Socio desde</h2>
+          <p className="mt-1 text-sm text-slate-500">{formatearFecha(membresiaActiva.fechaAlta)}</p>
+        </Card>
+
+        <Card className="p-5">
+          <div className="mb-3 inline-flex rounded-lg bg-brand-50 p-2 text-brand-700">
+            <CreditCard size={20} />
+          </div>
+          <h2 className="font-medium text-slate-900">DNI</h2>
+          <p className="mt-1 text-sm text-slate-500">{persona.dni ?? '—'}</p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/** Pantalla para usuarios autenticados sin roles/Persona. */
+function PantallaNeutra() {
+  const { usuario } = useAuth();
+  const navigate = useNavigate();
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Hola, {usuario?.nombre ?? usuario?.email}
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">Bienvenido a SocialClub.</p>
+      </header>
+
+      <Card className="max-w-xl p-6">
+        <div className="mb-3 inline-flex rounded-lg bg-brand-50 p-2 text-brand-700">
+          <UserPlus size={20} />
+        </div>
+        <h2 className="text-lg font-medium text-slate-900">Sumate al club</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Hacete socio y accedé a los beneficios de la membresía del club.
+        </p>
+        <Button className="mt-4" onClick={() => navigate(ROUTES.hacermeSocio)}>
+          <UserPlus size={16} />
+          Hacerme socio
+        </Button>
+      </Card>
     </div>
   );
 }

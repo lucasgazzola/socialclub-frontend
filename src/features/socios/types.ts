@@ -19,6 +19,9 @@ export interface Socio {
   activo: boolean;
   categoriaId?: number | null;
   categoria?: CategoriaSocio | null;
+  /** Fecha de alta del socio */
+  fechaAlta?: string;
+  usuarioId?: number | null;
   creadoEn: string;
 }
 
