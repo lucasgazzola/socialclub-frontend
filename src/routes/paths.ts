@@ -25,6 +25,7 @@ export const ROUTES = {
   participantesEditar: '/participante/:id/editar',
   documentacion: '/documentacion',
   perfil: '/perfil',
+  misCuotas: '/mis-cuotas',
 } as const;
 
 

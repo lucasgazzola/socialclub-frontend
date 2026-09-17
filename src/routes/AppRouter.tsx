@@ -21,6 +21,7 @@ import { InscripcionPage } from '@/features/inscripcion/pages/InscripcionPage';
 import { EditarParticipantePage } from '@/features/inscripcion/pages/EditarParticipantePage';
 import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPage';
 import { CargarDocumentacionPage } from '@/features/documentacion/pages/CargarDocumentacionPage';
+import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
 import { ROUTES } from './paths';
 
 export function AppRouter() {
@@ -36,6 +37,7 @@ export function AppRouter() {
           {/* Cualquier usuario autenticado */}
           <Route path={ROUTES.hacermeSocio} element={<HacermeSocioPage />} />
           <Route path={ROUTES.perfil} element={<PerfilSocioPage />} />
+          <Route path={ROUTES.misCuotas} element={<MisCuotasPage />} />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />

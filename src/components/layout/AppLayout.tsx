@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import {
   CalendarDays,
   Coins,
+  CreditCard,
   ClipboardList,
   FileCheck,
   LayoutDashboard,
@@ -32,6 +33,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: ROUTES.dashboard, label: 'Inicio', icon: LayoutDashboard },
   { to: ROUTES.perfil, label: 'Mi perfil', icon: User },
+  { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, roles: ['SOCIO', 'ADMIN', 'COLABORADOR'] },
   { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
   { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
