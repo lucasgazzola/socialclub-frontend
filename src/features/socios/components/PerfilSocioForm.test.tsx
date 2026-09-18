@@ -4,11 +4,21 @@ import userEvent from '@testing-library/user-event';
 import { PerfilSocioForm } from './PerfilSocioForm';
 import type { PersonaDeUsuario, UsuarioAutenticado } from '@/features/auth/types';
 
-const mockMutateAsync = vi.fn();
+const { mockMutateAsync, mockDarseDeBajaMutateAsync } = vi.hoisted(() => ({
+  mockMutateAsync: vi.fn(),
+  mockDarseDeBajaMutateAsync: vi.fn(),
+}));
 
 vi.mock('../hooks/useSocios', () => ({
   useUpdatePerfilSocio: () => ({
     mutateAsync: mockMutateAsync,
+    isPending: false,
+  }),
+}));
+
+vi.mock('../hooks/useDarseDeBajaSocio', () => ({
+  useDarseDeBajaSocio: () => ({
+    mutateAsync: mockDarseDeBajaMutateAsync,
     isPending: false,
   }),
 }));
@@ -153,5 +163,24 @@ describe('PerfilSocioForm (US-11)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'El correo electrónico ya se encuentra registrado por otro usuario activo.',
     );
+  });
+
+  it('US-42: muestra la opción de darse de baja cuando tiene membresía activa y abre el modal', async () => {
+    const user = userEvent.setup();
+    mockDarseDeBajaMutateAsync.mockResolvedValueOnce({});
+
+    render(<PerfilSocioForm usuario={mockUsuario} persona={mockPersona} />);
+
+    const bajaBtn = screen.getByRole('button', { name: /Solicitar baja como socio/i });
+    expect(bajaBtn).toBeInTheDocument();
+
+    await user.click(bajaBtn);
+
+    expect(screen.getByText(/Confirmar baja como socio/i)).toBeInTheDocument();
+
+    const confirmModalBtn = screen.getByRole('button', { name: /Sí, confirmar baja/i });
+    await user.click(confirmModalBtn);
+
+    expect(mockDarseDeBajaMutateAsync).toHaveBeenCalledTimes(1);
   });
 });

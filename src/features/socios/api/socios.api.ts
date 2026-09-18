@@ -48,4 +48,10 @@ export const sociosApi = {
     const { data } = await apiClient.delete<Socio>(`/socios/${id}`);
     return data;
   },
+
+  /** US-42: Darme de baja como socio logueado. */
+  async darseDeBaja(): Promise<Socio> {
+    const { data } = await apiClient.post<Socio>('/socios/darse-de-baja');
+    return data;
+  },
 };
