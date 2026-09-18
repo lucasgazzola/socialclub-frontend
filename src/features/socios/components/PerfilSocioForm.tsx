@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, AlertCircle, Lock } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Lock, UserX } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { perfilSocioSchema, type PerfilSocioFormData } from '../schemas';
 import { useUpdatePerfilSocio } from '../hooks/useSocios';
+import { useDarseDeBajaSocio } from '../hooks/useDarseDeBajaSocio';
+import { ModalConfirmarBajaSocio } from './ModalConfirmarBajaSocio';
 import type { PersonaDeUsuario, UsuarioAutenticado } from '@/features/auth/types';
 
 interface PerfilSocioFormProps {
@@ -15,8 +17,10 @@ interface PerfilSocioFormProps {
 export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [mensajeError, setMensajeError] = useState<string | null>(null);
+  const [modalBajaAbierto, setModalBajaAbierto] = useState(false);
 
   const { mutateAsync: updatePerfil, isPending } = useUpdatePerfilSocio();
+  const { mutateAsync: darseDeBaja, isPending: isBajaPending } = useDarseDeBajaSocio();
 
   const membresiaActiva = persona?.membresias?.find((m) => m.activo);
 
@@ -166,11 +170,44 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex items-center gap-3 pt-2 border-b border-slate-200 pb-6">
         <Button type="submit" disabled={isPending}>
           {isPending ? 'Guardando cambios…' : 'Guardar Cambios'}
         </Button>
       </div>
+
+      {/* Sección: Darme de baja como socio — SOLO si tiene membresía activa */}
+      {membresiaActiva && (
+        <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 space-y-3">
+          <div className="flex items-center gap-2 text-red-800 font-semibold text-sm">
+            <UserX size={18} className="text-red-600" />
+            <span>Darme de baja como socio</span>
+          </div>
+          <p className="text-xs text-red-700">
+            Si decidís darte de baja, tu estado cambiará a Inactivo y no podrás acceder a los beneficios exclusivos para socios. Tu usuario y tus registros se conservarán en el sistema.
+          </p>
+          <div>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={() => setModalBajaAbierto(true)}
+            >
+              Solicitar baja como socio
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <ModalConfirmarBajaSocio
+        open={modalBajaAbierto}
+        onClose={() => setModalBajaAbierto(false)}
+        onConfirm={async () => {
+          await darseDeBaja();
+          setModalBajaAbierto(false);
+        }}
+        isPending={isBajaPending}
+      />
     </form>
   );
 }
