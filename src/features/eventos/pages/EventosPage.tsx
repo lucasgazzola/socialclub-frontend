@@ -20,7 +20,7 @@ export function EventosPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Eventos</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Eventos</h1>
           <p className="mt-1 text-sm text-slate-500">Gestioná los eventos del club.</p>
         </div>
         <Button onClick={() => setModalAbierto(true)} className="self-start shadow-xs sm:self-auto">

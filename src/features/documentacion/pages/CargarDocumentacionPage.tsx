@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { FileCheck } from 'lucide-react';
 import { Button, Card, Input } from '@/components/ui';
 import { env } from '@/config/env';
 import { ROUTES } from '@/routes/paths';
@@ -52,10 +51,10 @@ export function CargarDocumentacionPage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="max-w-3xl space-y-6">
       <header className="mb-6">
-        <h1 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
-          <FileCheck size={22} /> Cargar documentación obligatoria
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          Cargar documentación obligatoria
         </h1>
         <p className="mt-1 text-sm text-slate-500">
           Buscá al participante por DNI y cargá su documentación con la fecha de vencimiento.

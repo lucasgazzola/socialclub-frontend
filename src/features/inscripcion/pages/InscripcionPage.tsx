@@ -103,10 +103,10 @@ export function InscripcionPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-slate-800">Nueva inscripción</h1>
-        <p className="text-sm text-slate-500">
+    <div className="max-w-3xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Nueva inscripción</h1>
+        <p className="mt-1 text-sm text-slate-500">
           Buscá al participante por DNI o registrá uno nuevo, y asignalo a una disciplina.
         </p>
       </div>

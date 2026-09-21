@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Filter, Plus } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
 import { CuotaForm } from '../components/CuotaForm';
@@ -87,7 +87,7 @@ export function CuotasPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Cuotas deportivas</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Cuotas deportivas</h1>
           <p className="mt-1 text-sm text-slate-500">
             Configurá el monto mensual de la cuota por disciplina y categoría. Los cambios aplican
             desde el período siguiente.
@@ -130,6 +130,7 @@ export function CuotasPage() {
             setPagina(1);
             setDisciplinaId(e.target.value ? Number(e.target.value) : undefined);
           }}
+          leftIcon={<Filter />}
           className="min-w-[180px]"
         >
           <option value="">Todas las disciplinas</option>
@@ -147,6 +148,7 @@ export function CuotasPage() {
             setPagina(1);
             setCategoriaId(e.target.value ? Number(e.target.value) : undefined);
           }}
+          leftIcon={<Filter />}
           className="min-w-[160px]"
         >
           <option value="">Todas las categorías</option>

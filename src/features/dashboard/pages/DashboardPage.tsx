@@ -80,13 +80,13 @@ function PanelAdministracion() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-600/15 mb-2">
-            <Sparkles className="size-3" /> C.A. y B.S. Unión · Panel de Gestión
+            <Sparkles className="size-3" /> SocialClub · Panel de Gestión
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Hola, {usuario?.nombre ?? usuario?.email}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Bienvenido al panel central de C.A. y B.S. Unión. Consultá el estado de la gestión y accedé a los módulos principales.
+            Bienvenido al panel central de SocialClub. Consultá el estado de la gestión y accedé a los módulos principales.
           </p>
         </div>
 
@@ -161,7 +161,7 @@ function PanelSocio() {
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/15 mb-2">
             Membresía Activa
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Hola, {usuario?.nombre ?? usuario?.email} 👋
           </h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -211,7 +211,7 @@ function PantallaNeutra() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Hola, {usuario?.nombre ?? usuario?.email}
         </h1>
         <p className="mt-1 text-sm text-slate-500">Bienvenido a SocialClub.</p>

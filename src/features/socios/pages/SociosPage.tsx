@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Filter, Plus, Search } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { EstadoSocioFiltro } from '../types';
@@ -78,7 +78,7 @@ export function SociosPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Socios</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Socios</h1>
           <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
 
@@ -90,7 +90,9 @@ export function SociosPage() {
         )}
       </header>
 
-      {/* Selector de estado estilo pestañas segmentadas (Apex) */}
+      {/* Controles de filtro y búsqueda agrupados */}
+      <div className="space-y-3">
+        {/* Selector de estado estilo pestañas segmentadas (Apex) */}
       <div>
         <StatusTabs<string>
           value={estado ?? 'TODOS'}
@@ -134,6 +136,7 @@ export function SociosPage() {
             id="categoria"
             value={categoriaId ?? ''}
             onChange={(e) => cambiarCategoria(e.target.value)}
+            leftIcon={<Filter />}
             className="w-full sm:w-52"
           >
             <option value="">Todas las categorías</option>
@@ -144,6 +147,7 @@ export function SociosPage() {
             ))}
           </Select>
         </div>
+      </div>
       </div>
 
       <Modal

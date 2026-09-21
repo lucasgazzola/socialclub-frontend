@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
+import { useContext, useEffect, useState } from 'react';
+import { Filter, Plus, Search } from 'lucide-react';
 import { Button, Input, Select, Spinner, StatusTabs } from '@/components/ui';
+import { AuthContext } from '@/features/auth/context/auth-context';
+import { ROUTES } from '@/routes/paths';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import type { EstadoInscripcionFiltro } from '../types';
 import { useInscripciones } from '../hooks/useInscripciones';
@@ -15,6 +17,8 @@ const POR_PAGINA = 10;
  * búsqueda por nombre/apellido/DNI con filtros de disciplina y estado.
  */
 export function ParticipantesPage() {
+  const auth = useContext(AuthContext);
+  const puedeInscribir = !auth || auth.usuario?.roles.some((r) => ['ADMIN', 'DELEGADO'].includes(r));
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
@@ -55,14 +59,28 @@ export function ParticipantesPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Participantes</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Buscá participantes y filtrá por disciplina o estado.
-        </p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Participantes</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Buscá participantes y filtrá por disciplina o estado.
+          </p>
+        </div>
+
+        {puedeInscribir && (
+          <a
+            href={ROUTES.inscripcion}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-500 transition-colors self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Nueva inscripción
+          </a>
+        )}
       </header>
 
-      {/* Selector de estado estilo pestañas segmentadas (Apex) */}
+      {/* Controles de filtro y búsqueda agrupados */}
+      <div className="space-y-3">
+        {/* Selector de estado estilo pestañas segmentadas (Apex) */}
       <div>
         <StatusTabs<string>
           value={estado ?? 'TODOS'}
@@ -107,6 +125,7 @@ export function ParticipantesPage() {
             aria-label="Filtrar por disciplina"
             value={disciplinaId ?? ''}
             onChange={(e) => cambiarDisciplina(e.target.value)}
+            leftIcon={<Filter />}
             className="w-full sm:w-52"
           >
             <option value="">Todas las disciplinas</option>
@@ -117,6 +136,7 @@ export function ParticipantesPage() {
             ))}
           </Select>
         </div>
+      </div>
       </div>
 
       {isLoading ? (

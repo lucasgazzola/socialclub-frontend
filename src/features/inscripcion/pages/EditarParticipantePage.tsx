@@ -209,12 +209,12 @@ export function EditarParticipantePage() {
       <header>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Editar participante</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Editar participante</h1>
             <p className="mt-1 text-sm text-slate-500">
               Modificá los datos y las disciplinas de <strong>{participante.apellido}, {participante.nombre}</strong>.
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/inscripcion')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.participantes)}>
             ← Volver
           </Button>
         </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pencil } from 'lucide-react';
+import { Pencil, UserMinus } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { useDesactivarSocio } from '../hooks/useDesactivarSocio';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -55,7 +55,7 @@ export function SociosTable({ socios }: SociosTableProps) {
                   </Badge>
                 </td>
                 <td className="px-5 py-3.5 text-right">
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-1.5">
                     {esAdmin && (
                       <Button
                         variant="ghost"
@@ -96,8 +96,9 @@ export function SociosTable({ socios }: SociosTableProps) {
                           className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                           onClick={() => setConfirmId(socio.id)}
                         >
-                          Dar de baja
-                        </Button>
+                            <UserMinus size={14} />
+                            Dar de baja
+                          </Button>
                       )
                     )}
                   </div>

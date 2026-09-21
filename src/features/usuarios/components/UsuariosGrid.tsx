@@ -1,4 +1,4 @@
-import { BadgeAlertIcon, BadgeCheck, Edit3, UserRoundCheck, UserRoundX } from 'lucide-react';
+import { Pencil, UserRoundCheck, UserMinus } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
 import type { Usuario } from '../types';
@@ -142,7 +142,6 @@ export function UsuariosGrid({
                   {/* 5 · Estado (arriba a la derecha en la versión tarjeta) */}
                   <div className="col-start-2 row-start-1 justify-self-end lg:col-start-5 lg:row-start-1 lg:justify-self-start">
                     <Badge variant={usuario.activo ? 'success' : 'danger'}>
-                      {usuario.activo ? <BadgeCheck size={13} /> : <BadgeAlertIcon size={13} />}
                       {usuario.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
                   </div>
@@ -183,18 +182,18 @@ export function UsuariosGrid({
                   </div>
 
                   {/* 6 · Acciones */}
-                  <div className="col-span-2 col-start-1 row-start-5 flex gap-2 lg:col-span-1 lg:col-start-6 lg:row-start-1 lg:justify-self-end">
-                    <Button variant="secondary" size="sm" onClick={() => onEditar(usuario)}>
-                      <Edit3 size={14} />
+                  <div className="col-span-2 col-start-1 row-start-5 flex gap-1.5 lg:col-span-1 lg:col-start-6 lg:row-start-1 lg:justify-self-end">
+                    <Button variant="ghost" size="sm" onClick={() => onEditar(usuario)}>
+                      <Pencil size={14} />
                       Editar
                     </Button>
                     <Button
-                      variant={usuario.activo ? 'danger' : 'success'}
+                      variant="ghost" className={usuario.activo ? 'text-rose-600 hover:bg-rose-50 hover:text-rose-700' : 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700'}
                       size="sm"
                       disabled={accionesDeshabilitadas}
                       onClick={() => onCambiarEstado(usuario)}
                     >
-                      {usuario.activo ? <UserRoundX size={14} /> : <UserRoundCheck size={14} />}
+                      {usuario.activo ? <UserMinus size={14} /> : <UserRoundCheck size={14} />}
                       {usuario.activo ? 'Desactivar' : 'Activar'}
                     </Button>
                   </div>

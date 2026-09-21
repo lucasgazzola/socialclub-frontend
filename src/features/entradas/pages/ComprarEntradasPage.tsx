@@ -70,7 +70,7 @@ export function ComprarEntradasPage() {
           <ArrowLeft size={24} />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Comprar entradas</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Comprar entradas</h1>
           <p className="mt-1 text-sm text-slate-500">
             {isLoading ? 'Cargando evento…' : evento?.nombre}
           </p>
