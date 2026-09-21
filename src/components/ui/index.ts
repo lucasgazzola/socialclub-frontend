@@ -1,7 +1,12 @@
 export { Button } from './Button';
 export { Input } from './Input';
-export { Card } from './Card';
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
+export { Badge } from './Badge';
+export type { BadgeVariant } from './Badge';
 export { Spinner, FullScreenLoader } from './Spinner';
 export { Select } from './Select';
 export { Modal } from './Modal';
 export { ConfirmDialog } from './ConfirmDialog';
+export { StatusTabs } from './StatusTabs';
+export type { StatusTabItem } from './StatusTabs';
+export { ClubLogo } from './ClubLogo';

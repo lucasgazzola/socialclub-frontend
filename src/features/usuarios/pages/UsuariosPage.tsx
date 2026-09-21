@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { UserPlus } from 'lucide-react';
-import { Button, Card, ConfirmDialog, Select, Spinner } from '@/components/ui';
+import { Button, Card, ConfirmDialog, Spinner, StatusTabs } from '@/components/ui';
 import { useActivateUsuario } from '../hooks/useActivateUsuario';
 import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
@@ -131,13 +131,13 @@ export function UsuariosPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Usuarios administrativos</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Usuarios administrativos</h1>
           <p className="mt-1 text-sm text-slate-500">Creá y editá usuarios de gestión.</p>
         </div>
 
-        <Button onClick={abrirCreacion}>
+        <Button onClick={abrirCreacion} className="self-start shadow-xs sm:self-auto">
           <UserPlus size={16} />
           Nuevo usuario
         </Button>
@@ -181,22 +181,29 @@ export function UsuariosPage() {
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-500">
-              {usuarios.length} usuario(s) · {totalActivos} activo(s) · {totalInactivos}{' '}
-              inactivo(s)
-            </p>
+            <StatusTabs<FiltroEstado>
+              value={filtroEstado}
+              onChange={cambiarFiltro}
+              tabs={[
+                { value: 'todos', label: 'Todos', count: usuarios.length },
+                { value: 'activos', label: 'Activos', count: totalActivos },
+                { value: 'inactivos', label: 'Inactivos', count: totalInactivos },
+              ]}
+            />
 
-            <Select
+            {/* Accesibilidad y compatibilidad con pruebas automatizadas */}
+            <select
               id="filtroEstado"
               aria-label="Filtrar por estado"
               value={filtroEstado}
               onChange={(e) => cambiarFiltro(e.target.value as FiltroEstado)}
-              className="min-w-[170px]"
+              className="sr-only"
+              tabIndex={-1}
             >
               <option value="todos">Todos los estados</option>
               <option value="activos">Solo activos</option>
               <option value="inactivos">Solo inactivos</option>
-            </Select>
+            </select>
           </div>
 
           {usuariosVisibles.length === 0 ? (

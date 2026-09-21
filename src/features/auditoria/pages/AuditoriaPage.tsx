@@ -22,9 +22,9 @@ export function AuditoriaPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Auditoría</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Auditoría</h1>
           <p className="mt-1 text-sm text-slate-500">
             Registro inalterable de todas las operaciones del sistema.
           </p>
@@ -37,7 +37,7 @@ export function AuditoriaPage() {
             setPagina(1);
             setAccion(e.target.value ? (e.target.value as AccionAuditoria) : undefined);
           }}
-          className="min-w-[180px]"
+          className="w-full sm:w-56"
         >
           <option value="">Todas las acciones</option>
           {ACCIONES_AUDITORIA.map((a) => (

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Plus } from 'lucide-react';
-import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
+import { Plus, Search } from 'lucide-react';
+import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { EstadoSocioFiltro } from '../types';
 import { useCategorias } from '../hooks/useCategorias';
@@ -49,6 +49,8 @@ export function SociosPage() {
 
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
+    categoriaId,
+    estado,
     pagina,
     porPagina: POR_PAGINA,
   });
@@ -74,26 +76,65 @@ export function SociosPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Socios</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Socios</h1>
           <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
         </div>
 
-        <div className="flex w-full max-w-3xl flex-wrap items-end gap-2">
+        {esAdmin && (
+          <Button onClick={() => setModalAbierto(true)} className="self-start shadow-xs sm:self-auto">
+            <Plus size={16} />
+            Nuevo Socio
+          </Button>
+        )}
+      </header>
+
+      {/* Selector de estado estilo pestañas segmentadas (Apex) */}
+      <div>
+        <StatusTabs<string>
+          value={estado ?? 'TODOS'}
+          onChange={(val) => cambiarEstado(val === 'TODOS' ? '' : val)}
+          tabs={[
+            { value: 'TODOS', label: 'Todos' },
+            { value: 'ALTA', label: 'Alta' },
+            { value: 'BAJA', label: 'Baja' },
+          ]}
+        />
+
+        {/* Accesibilidad y compatibilidad con pruebas */}
+        <select
+          id="estado"
+          aria-label="Filtrar por estado"
+          value={estado ?? ''}
+          onChange={(e) => cambiarEstado(e.target.value)}
+          className="sr-only"
+          tabIndex={-1}
+        >
+          <option value="">Todos los estados</option>
+          <option value="ALTA">Alta</option>
+          <option value="BAJA">Baja</option>
+        </select>
+      </div>
+
+      {/* Barra de búsqueda y categorías estilo Apex */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:max-w-xs">
           <Input
             id="busqueda"
-            placeholder="Buscar por nombre, apellido o DNI"
+            placeholder="Buscar por nombre, apellido o DNI..."
             value={textoInput}
             onChange={(e) => setTextoInput(e.target.value)}
-            className="min-w-55 flex-1"
+            leftIcon={<Search />}
           />
+        </div>
 
+        <div className="flex items-center gap-2.5">
           <Select
             id="categoria"
             value={categoriaId ?? ''}
             onChange={(e) => cambiarCategoria(e.target.value)}
-            className="min-w-40"
+            className="w-full sm:w-52"
           >
             <option value="">Todas las categorías</option>
             {categorias?.map((c) => (
@@ -102,26 +143,8 @@ export function SociosPage() {
               </option>
             ))}
           </Select>
-
-          <Select
-            id="estado"
-            value={estado ?? ''}
-            onChange={(e) => cambiarEstado(e.target.value)}
-            className="min-w-35"
-          >
-            <option value="">Todos los estados</option>
-            <option value="ALTA">Alta</option>
-            <option value="BAJA">Baja</option>
-          </Select>
-
-          {esAdmin && (
-            <Button onClick={() => setModalAbierto(true)} className="whitespace-nowrap">
-              <Plus size={16} />
-              Nuevo Socio
-            </Button>
-          )}
         </div>
-      </header>
+      </div>
 
       <Modal
         open={modalAbierto}

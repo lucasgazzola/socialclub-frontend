@@ -80,7 +80,7 @@ export function CuotaSocialPage() {
         <CuotaSocialForm modo="crear" categorias={categorias} onSubmit={handleCrear} />
       </Modal>
 
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="flex flex-wrap items-center gap-2.5">
         <Select
           id="filtroCategoria"
           value={categoriaId ?? ''}
@@ -88,7 +88,7 @@ export function CuotaSocialPage() {
             setPagina(1);
             setCategoriaId(e.target.value ? Number(e.target.value) : undefined);
           }}
-          className="min-w-[160px]"
+          className="w-full sm:w-48"
         >
           <option value="">Todas las categorías</option>
           {categorias.map((categoria) => (
@@ -104,9 +104,9 @@ export function CuotaSocialPage() {
           placeholder="2026-10"
           value={periodoInput}
           onChange={(e) => setPeriodoInput(e.target.value)}
-          className="min-w-[160px]"
+          containerClassName="w-full sm:w-48"
         />
-        <Button variant="secondary" onClick={aplicarPeriodo}>
+        <Button variant="secondary" onClick={aplicarPeriodo} className="w-full sm:w-auto">
           Filtrar
         </Button>
       </div>

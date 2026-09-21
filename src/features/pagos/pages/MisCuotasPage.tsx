@@ -58,37 +58,14 @@ export function MisCuotasPage() {
     );
   }
 
-  // Si el usuario no tiene membresia activa se muestra un error.
   if (isError) {
-    const status = (error as { status?: number })?.status;
-    const sinMembresia =
-      status === 400 ||
-      (error instanceof Error &&
-        (error.message.toLowerCase().includes('membresía') ||
-          error.message.toLowerCase().includes('membresia')));
-
-    if (sinMembresia) {
-      return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-            <span className="text-3xl">🎫</span>
-          </div>
-          <h2 className="text-lg font-semibold text-slate-800">No tenés una membresía activa</h2>
-          <p className="mt-2 max-w-sm text-sm text-slate-500">
-            Esta sección es exclusiva para socios con membresía activa. Si querés unirte al club,
-            podés registrarte como socio desde el menú.
-          </p>
-        </div>
-      );
-    }
-
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-700">
         <h3 className="font-semibold">Error al cargar la información de cuotas</h3>
         <p className="mt-1 text-sm">
           {error instanceof Error
             ? error.message
-            : 'No se pudo obtener el estado de cuotas. Intentá nuevamente.'}
+            : 'No se pudo obtener el estado de cuotas. Asegurate de tener una membresía activa.'}
         </p>
       </div>
     );
