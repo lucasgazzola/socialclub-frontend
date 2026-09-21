@@ -18,12 +18,12 @@ export function EventosPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Eventos</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Eventos</h1>
           <p className="mt-1 text-sm text-slate-500">Gestioná los eventos del club.</p>
         </div>
-        <Button onClick={() => setModalAbierto(true)}>
+        <Button onClick={() => setModalAbierto(true)} className="self-start shadow-xs sm:self-auto">
           <Plus size={16} />
           Nuevo evento
         </Button>
@@ -47,25 +47,25 @@ export function EventosPage() {
           No se pudieron cargar los eventos.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-4 py-3 font-medium">Nombre</th>
-                <th className="px-4 py-3 font-medium">Descripción</th>
-                <th className="px-4 py-3 font-medium">Entradas disponibles</th>
-                <th className="px-4 py-3 font-medium">Entradas vendidas</th>
-                <th className="px-4 py-3 text-right font-medium">Acciones</th>
+                <th className="px-5 py-3.5">Nombre</th>
+                <th className="px-5 py-3.5">Descripción</th>
+                <th className="px-5 py-3.5">Entradas disponibles</th>
+                <th className="px-5 py-3.5">Entradas vendidas</th>
+                <th className="px-5 py-3.5 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {eventos?.map((evento) => (
-                <tr key={evento.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{evento.nombre}</td>
-                  <td className="px-4 py-3 text-slate-600">{evento.descripcion ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{evento.entradasDisponibles}</td>
-                  <td className="px-4 py-3 text-slate-600">{evento.entradasVendidas}</td>
-                  <td className="px-4 py-3 text-right">
+                <tr key={evento.id} className="transition-colors hover:bg-slate-50/70">
+                  <td className="px-5 py-3.5 font-medium text-slate-900">{evento.nombre}</td>
+                  <td className="px-5 py-3.5 text-slate-600">{evento.descripcion ?? '—'}</td>
+                  <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{evento.entradasDisponibles}</td>
+                  <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{evento.entradasVendidas}</td>
+                  <td className="px-5 py-3.5 text-right">
                     <Link to={ROUTES.comprarEntradas(evento.id)}>
                       <Button
                         size="sm"

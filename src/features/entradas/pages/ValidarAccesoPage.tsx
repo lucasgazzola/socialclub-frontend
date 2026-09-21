@@ -190,11 +190,10 @@ export function ValidarAccesoPage() {
   // ----------------─────────────────────────────────────────────────────────────
   if (selectedEventoId === null) {
     return (
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="space-y-6">
         <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <ShieldCheck className="text-brand-600" size={28} />
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Validación de Acceso por QR
             </h1>
             <p className="text-sm text-slate-500">
@@ -337,7 +336,7 @@ export function ValidarAccesoPage() {
   // VISTA 2: ESCÁNER DE CÁMARA + CONTROL DE ACCESO (Evento Seleccionado)
   // ----------------─────────────────────────────────────────────────────────────
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
       {/* Botón para cambiar de evento */}
       <div className="flex items-center justify-between">
         <Button
@@ -357,8 +356,7 @@ export function ValidarAccesoPage() {
 
       {/* Encabezado sin dropdown adicional */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <ShieldCheck className="text-brand-600" size={28} />
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Control de Acceso: {eventoSeleccionado?.nombre}
         </h1>
         <p className="text-sm text-slate-500">

@@ -9,7 +9,7 @@ export function CuotasHubPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Cuotas</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Cuotas</h1>
         <p className="mt-1 text-sm text-slate-500">
           Configurá cuotas sociales y deportivas. Elegí el tipo de cuota que querés gestionar.
         </p>

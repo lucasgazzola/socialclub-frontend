@@ -37,9 +37,9 @@ export function HacermeSocioPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="max-w-2xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Hacerme socio</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Hacerme socio</h1>
         <p className="mt-1 text-sm text-slate-500">
           Sumate al club y accedé a los beneficios de la membresía.
         </p>

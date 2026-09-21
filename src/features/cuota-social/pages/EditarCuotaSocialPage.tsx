@@ -43,13 +43,13 @@ export function EditarCuotaSocialPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-2xl space-y-6">
       <header>
         <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.cuotaSocial)}>
           <ArrowLeft size={16} />
           Volver a Cuota social
         </Button>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-900">Editar cuota social</h1>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Editar cuota social</h1>
         <p className="mt-1 text-sm text-slate-500">
           Actualizá el monto de <strong>{cuota.categoria.nombre}</strong> · Período{' '}
           <strong>{cuota.periodoAplicacion}</strong>.
