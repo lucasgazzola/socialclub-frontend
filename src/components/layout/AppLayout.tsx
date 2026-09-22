@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Dumbbell,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ClubLogo } from '@/components/ui';
@@ -66,6 +67,7 @@ const navSections: NavSection[] = [
         icon: FileCheck,
         roles: ['ADMIN', 'DELEGADO'],
       },
+      { to: ROUTES.disciplinas, label: 'Disciplinas', icon: Dumbbell, roles: ['ADMIN', 'COLABORADOR'] },
     ],
   },
   {
@@ -95,6 +97,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.validarAcceso]: 'Control de Acceso QR',
   [ROUTES.usuarios]: 'Usuarios Administrativos',
   [ROUTES.cuotas]: 'Configuración de Cuotas',
+  [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
   [ROUTES.inscripcion]: 'Inscripción a Disciplinas',
   [ROUTES.participantes]: 'Participantes de Disciplinas',
