@@ -2,20 +2,46 @@
 
 /* ───────────────────────────────────────────────────────────────────────────
  * Design tokens (Tailwind v4: configuración CSS-first vía @theme).
- * Definir la paleta de marca acá la hace disponible como utilidades
- * (bg-brand-600, text-brand-700, etc.) en toda la app.
+ * Inspirado en Apex Dashboard (shadcn/ui + Tailwind v4).
  * ─────────────────────────────────────────────────────────────────────────── */
 @theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Paleta Oficial: SocialClub (Azul y Naranja) */
   --color-brand-50: #eff6ff;
   --color-brand-100: #dbeafe;
   --color-brand-200: #bfdbfe;
   --color-brand-300: #93c5fd;
   --color-brand-400: #60a5fa;
   --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-800: #1e40af;
+  --color-brand-600: #005fc2; /* Azul principal del logo */
+  --color-brand-700: #004bb0;
+  --color-brand-800: #003fb0; /* Azul oscuro del logo */
   --color-brand-900: #1e3a8a;
+  --color-brand-950: #172554;
+
+  --color-accent-50: #fff7ed;
+  --color-accent-100: #ffedd5;
+  --color-accent-200: #fed7aa;
+  --color-accent-300: #fdba74;
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-accent-700: #c2410c;
+  --color-accent-800: #9a3412;
+  --color-accent-900: #7c2d12;
+  --color-accent-950: #431407;
+
+  /* Tokens de Superficie y Acentos Apex (Deep Blue) */
+  --color-sidebar-bg: #020617;
+  --color-sidebar-surface: #0f172a;
+  --color-sidebar-border: #1e293b;
+  --color-sidebar-muted: #94a3b8;
+  --color-sidebar-active: #005fc2;
+}
+
+html {
+  scrollbar-gutter: stable;
 }
 
 html,
@@ -25,5 +51,25 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  font-family: var(--font-sans);
+  @apply bg-slate-50/70 text-slate-900 antialiased;
+}
+
+/* Scrollbar estilizado sutil (Apex Dashboard) */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
 }

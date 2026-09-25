@@ -85,7 +85,7 @@ export function MisCuotasPage() {
               <Coins size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">{resumen?.socioNombre}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{resumen?.socioNombre}</h1>
               <p className="text-xs text-slate-500 font-medium">
                 Categoría: <span className="text-slate-700">{resumen?.categoria}</span>
               </p>

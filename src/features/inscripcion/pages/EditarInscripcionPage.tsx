@@ -121,7 +121,7 @@ export function EditarInscripcionPage() {
       <header>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Editar participante</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Editar participante</h1>
             <p className="mt-1 text-sm text-slate-500">
               Modificá los datos de <strong>{inscripcion.persona.apellido}, {inscripcion.persona.nombre}</strong>.
             </p>

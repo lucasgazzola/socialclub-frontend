@@ -1,5 +1,5 @@
-import { BadgeAlertIcon, BadgeCheck, Edit3, UserRoundCheck, UserRoundX } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Pencil, UserRoundCheck, UserMinus } from 'lucide-react';
+import { Badge, Button } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
 import type { Usuario } from '../types';
 
@@ -81,7 +81,7 @@ export function UsuariosGrid({
   onCambiarEstado,
 }: UsuariosGridProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
       {/* El scroll vive acá para que encabezado y filas se desplacen juntos y
           la página nunca scrollee de costado. */}
       <div className="overflow-x-auto">
@@ -89,8 +89,8 @@ export function UsuariosGrid({
           <div
             aria-hidden="true"
             className={cn(
-              'hidden gap-x-3 border-b border-slate-200 bg-slate-50 px-5 py-3',
-              'text-xs font-medium uppercase tracking-wide text-slate-500 lg:grid',
+              'hidden gap-x-3 border-b border-slate-200/80 bg-slate-50/75 px-5 py-3.5',
+              'text-xs font-semibold uppercase tracking-wider text-slate-500 lg:grid',
               COLUMNAS,
             )}
           >
@@ -141,17 +141,9 @@ export function UsuariosGrid({
 
                   {/* 5 · Estado (arriba a la derecha en la versión tarjeta) */}
                   <div className="col-start-2 row-start-1 justify-self-end lg:col-start-5 lg:row-start-1 lg:justify-self-start">
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold',
-                        usuario.activo
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-red-100 text-red-500',
-                      )}
-                    >
-                      {usuario.activo ? <BadgeCheck size={12} /> : <BadgeAlertIcon size={12} />}
+                    <Badge variant={usuario.activo ? 'success' : 'danger'}>
                       {usuario.activo ? 'Activo' : 'Inactivo'}
-                    </span>
+                    </Badge>
                   </div>
 
                   {/* 2 · Email — el truncado va en la celda (bloque), no en el
@@ -190,18 +182,18 @@ export function UsuariosGrid({
                   </div>
 
                   {/* 6 · Acciones */}
-                  <div className="col-span-2 col-start-1 row-start-5 flex gap-2 lg:col-span-1 lg:col-start-6 lg:row-start-1 lg:justify-self-end">
-                    <Button variant="secondary" size="sm" onClick={() => onEditar(usuario)}>
-                      <Edit3 size={14} />
+                  <div className="col-span-2 col-start-1 row-start-5 flex gap-1.5 lg:col-span-1 lg:col-start-6 lg:row-start-1 lg:justify-self-end">
+                    <Button variant="ghost" size="sm" onClick={() => onEditar(usuario)}>
+                      <Pencil size={14} />
                       Editar
                     </Button>
                     <Button
-                      variant={usuario.activo ? 'danger' : 'success'}
+                      variant="ghost" className={usuario.activo ? 'text-rose-600 hover:bg-rose-50 hover:text-rose-700' : 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700'}
                       size="sm"
                       disabled={accionesDeshabilitadas}
                       onClick={() => onCambiarEstado(usuario)}
                     >
-                      {usuario.activo ? <UserRoundX size={14} /> : <UserRoundCheck size={14} />}
+                      {usuario.activo ? <UserMinus size={14} /> : <UserRoundCheck size={14} />}
                       {usuario.activo ? 'Desactivar' : 'Activar'}
                     </Button>
                   </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, ChevronDown, ChevronUp, Pencil, UserMinus } from 'lucide-react';
-import { Button, ConfirmDialog } from '@/components/ui';
+import { Badge, Button, ConfirmDialog } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import { useActivarParticipante } from '../hooks/useActivarParticipante';
@@ -20,30 +20,18 @@ function etiquetaEstadoDisciplina(activo: boolean, estado?: string) {
 
 function BadgeEstado({ activo, texto }: { activo: boolean; texto: string }) {
   return (
-    <span
-      className={
-        activo
-          ? 'rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700'
-          : 'rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500'
-      }
-    >
+    <Badge variant={activo ? 'success' : 'secondary'}>
       {texto}
-    </span>
+    </Badge>
   );
 }
 
 /** Badge del estado propio del participante (US-07: Activo/Inactivo). */
 function BadgeParticipante({ activo }: { activo: boolean }) {
   return (
-    <span
-      className={
-        activo
-          ? 'rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700'
-          : 'rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700'
-      }
-    >
+    <Badge variant={activo ? 'success' : 'secondary'}>
       {activo ? 'Activo' : 'Inactivo'}
-    </span>
+    </Badge>
   );
 }
 
@@ -119,17 +107,18 @@ export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
-          <tr>
-            <th className="px-4 py-3 font-medium">Apellido y nombre</th>
-            <th className="px-4 py-3 font-medium">DNI</th>
-            <th className="px-4 py-3 font-medium">Disciplinas</th>
-            <th className="px-4 py-3 font-medium">Estado</th>
-            <th className="px-4 py-3 font-medium">Acciones</th>
-          </tr>
-        </thead>
+    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <tr>
+              <th className="px-5 py-3.5">Apellido y nombre</th>
+              <th className="px-5 py-3.5">DNI</th>
+              <th className="px-5 py-3.5">Disciplinas</th>
+              <th className="px-5 py-3.5">Estado</th>
+              <th className="px-5 py-3.5 text-right font-medium">Acciones</th>
+            </tr>
+          </thead>
         <tbody className="divide-y divide-slate-100">
           {participantes.map((participante) => {
             const expandido = expandidos.has(participante.personaId);
@@ -152,6 +141,7 @@ export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
           })}
         </tbody>
       </table>
+      </div>
 
       <ConfirmDialog
         open={participanteAConfirmar !== null}
@@ -226,22 +216,20 @@ function ParticipanteRow({
 
   return (
     <>
-      <tr className="hover:bg-slate-50">
-        <td className="px-4 py-3 text-slate-900">
+      <tr className="transition-colors hover:bg-slate-50/70">
+        <td className="px-5 py-3.5 font-medium text-slate-900">
           {participante.persona.apellido}, {participante.persona.nombre}
         </td>
-        <td className="px-4 py-3 text-slate-600">{participante.persona.dni}</td>
-        <td className="px-4 py-3 text-slate-600">
+        <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{participante.persona.dni}</td>
+        <td className="px-5 py-3.5 text-slate-600">
           {nombres.length === 0 ? '—' : visibles.join(', ')}
           {restantes > 0 && <span className="ml-1 text-xs text-slate-400">+{restantes} más</span>}
         </td>
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-1">
-            <BadgeParticipante activo={participante.persona.activo} />
-          </div>
+        <td className="px-5 py-3.5">
+          <BadgeParticipante activo={participante.persona.activo} />
         </td>
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-1">
+        <td className="px-5 py-3.5 text-right">
+          <div className="flex items-center justify-end gap-1.5">
             <Button
               variant="ghost"
               size="sm"
@@ -258,8 +246,9 @@ function ParticipanteRow({
             </Button>
             {puedeDarDeBaja && participante.persona.activo && (
               <Button
-                variant="danger"
+                variant="ghost"
                 size="sm"
+                className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                 aria-label={`Dar de baja a ${participante.persona.apellido}, ${participante.persona.nombre}`}
                 onClick={onDarDeBaja}
               >
@@ -269,8 +258,9 @@ function ParticipanteRow({
             )}
             {puedeDarDeBaja && !participante.persona.activo && (
               <Button
-                variant="success"
+                variant="ghost"
                 size="sm"
+                className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
                 aria-label={`Reactivar a ${participante.persona.apellido}, ${participante.persona.nombre}`}
                 onClick={onReactivar}
               >

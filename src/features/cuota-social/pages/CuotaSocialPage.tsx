@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Filter, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
@@ -58,7 +58,7 @@ export function CuotaSocialPage() {
               Volver a Cuotas
             </Button>
           </div>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-900">Cuota social</h1>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Cuota social</h1>
           <p className="mt-1 text-sm text-slate-500">
             Configurá el monto mensual de la cuota social por categoría. Los cambios aplican desde el
             período siguiente.
@@ -80,7 +80,7 @@ export function CuotaSocialPage() {
         <CuotaSocialForm modo="crear" categorias={categorias} onSubmit={handleCrear} />
       </Modal>
 
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="flex flex-wrap items-center gap-2.5">
         <Select
           id="filtroCategoria"
           value={categoriaId ?? ''}
@@ -88,7 +88,8 @@ export function CuotaSocialPage() {
             setPagina(1);
             setCategoriaId(e.target.value ? Number(e.target.value) : undefined);
           }}
-          className="min-w-[160px]"
+          leftIcon={<Filter />}
+          className="w-full sm:w-48"
         >
           <option value="">Todas las categorías</option>
           {categorias.map((categoria) => (
@@ -104,9 +105,9 @@ export function CuotaSocialPage() {
           placeholder="2026-10"
           value={periodoInput}
           onChange={(e) => setPeriodoInput(e.target.value)}
-          className="min-w-[160px]"
+          containerClassName="w-full sm:w-48"
         />
-        <Button variant="secondary" onClick={aplicarPeriodo}>
+        <Button variant="secondary" onClick={aplicarPeriodo} className="w-full sm:w-auto">
           Filtrar
         </Button>
       </div>

@@ -10,6 +10,7 @@ export const ROUTES = {
   socios: '/socios',
   sociosEditar: '/socios/:id/editar',
   cuotas: '/cuotas',
+  disciplinas: '/disciplinas',
   cuotaDeportiva: '/cuotas/deportiva',
   cuotaSocial: '/cuotas/social',
   cuotaSocialEditar: (id: number) => `/cuotas/social/${id}/editar`,

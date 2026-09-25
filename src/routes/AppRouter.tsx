@@ -22,6 +22,7 @@ import { EditarParticipantePage } from '@/features/inscripcion/pages/EditarParti
 import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPage';
 import { CargarDocumentacionPage } from '@/features/documentacion/pages/CargarDocumentacionPage';
 import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
+import { DisciplinasPage } from '@/features/disciplinas/pages/DisciplinasPage';
 import { ROUTES } from './paths';
 
 export function AppRouter() {
@@ -41,6 +42,7 @@ export function AppRouter() {
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
+            <Route path="disciplinas" element={<DisciplinasPage />} />
           </Route>
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>

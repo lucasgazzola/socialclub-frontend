@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, Spinner } from '@/components/ui';
+import { ArrowLeft } from 'lucide-react';
+import { Button, Card, Spinner } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { SocioForm } from '../components/SocioForm';
 import { useEditarSocio, useSocio } from '../hooks/useSocios';
@@ -35,9 +36,18 @@ export function EditarSocioPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-2xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Editar socio</h1>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(ROUTES.socios)}
+          className="mb-2 -ml-2 text-slate-500 hover:text-slate-900"
+        >
+          <ArrowLeft size={16} />
+          Volver a socios
+        </Button>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Editar socio</h1>
         <p className="mt-1 text-sm text-slate-500">
           Modificá los datos de <strong>{socio.apellido}, {socio.nombre}</strong>.
         </p>
