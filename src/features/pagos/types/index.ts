@@ -39,3 +39,22 @@ export interface RespuestaPago {
   estadoFinancieroActual: EstadoFinancieroSocio;
   cuotasPendientesRestantes: number;
 }
+
+export type MetodoPagoSecretaria = 'EFECTIVO' | 'TRANSFERENCIA' | 'DEBITO' | 'CREDITO' | 'OTRO';
+
+export interface CuotasPendientesSocioResponse {
+  personaId: number;
+  socioNombre: string;
+  dni: string;
+  categoria: string;
+  categoriaId: number;
+  estadoFinanciero: EstadoFinancieroSocio;
+  cuotasPendientes: CuotaPendiente[];
+  totalAdeudado: number;
+}
+
+export interface RegistrarPagoSocioPayload {
+  periodos: string[];
+  metodoPago: MetodoPagoSecretaria;
+  observaciones?: string;
+}

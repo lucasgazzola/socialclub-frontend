@@ -3,4 +3,6 @@ export const pagosKeys = {
   all: ['pagos'] as const,
   misCuotas: () => [...pagosKeys.all, 'mis-cuotas'] as const,
   historial: () => [...pagosKeys.all, 'historial'] as const,
+  cuotasPendientesSocio: (socioId: number) =>
+    [...pagosKeys.all, 'socio', socioId, 'cuotas-pendientes'] as const,
 };
