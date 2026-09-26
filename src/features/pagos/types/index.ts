@@ -58,3 +58,45 @@ export interface RegistrarPagoSocioPayload {
   metodoPago: MetodoPagoSecretaria;
   observaciones?: string;
 }
+
+// ── US-21 · Cuota deportiva (secretaría) ──────────────────────────────────────
+
+export type EstadoDeudaDeportiva = 'AL_DIA' | 'MOROSO';
+
+export interface CuotaDeportivaPendiente {
+  disciplinaId: number;
+  disciplinaNombre: string;
+  periodo: string; // "YYYY-MM"
+  monto: number;
+}
+
+export interface PendientesDeportivosResponse {
+  personaId: number;
+  participanteNombre: string;
+  dni: string | null;
+  categoria: string | null;
+  categoriaId: number | null;
+  estadoDeuda: EstadoDeudaDeportiva;
+  cuotasPendientes: CuotaDeportivaPendiente[];
+  totalAdeudado: number;
+}
+
+export interface RegistrarPagoDeportivoPayload {
+  disciplinaId: number;
+  periodos: string[];
+  metodoPago: MetodoPagoSecretaria;
+  observaciones?: string;
+}
+
+export interface RespuestaPagoDeportivo {
+  mensaje: string;
+  montoTotal: number;
+  fechaHora: string;
+  periodosCubiertos: string[];
+  disciplinaId: number;
+  disciplinaNombre: string;
+  usuarioResponsableId: number;
+  pagos: PagoRealizado[];
+  estadoDeudaActual: EstadoDeudaDeportiva;
+  cuotasPendientesRestantes: number;
+}

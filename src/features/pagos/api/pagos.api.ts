@@ -2,9 +2,12 @@ import { apiClient } from '@/lib/api/client';
 import type {
   CuotasPendientesSocioResponse,
   PagoRealizado,
+  PendientesDeportivosResponse,
+  RegistrarPagoDeportivoPayload,
   RegistrarPagoPayload,
   RegistrarPagoSocioPayload,
   RespuestaPago,
+  RespuestaPagoDeportivo,
   ResumenCuotas,
 } from '../types';
 
@@ -36,6 +39,26 @@ export const pagosApi = {
     payload: RegistrarPagoSocioPayload,
   ): Promise<RespuestaPago> {
     const { data } = await apiClient.post<RespuestaPago>(`/pagos/socio/${socioId}`, payload);
+    return data;
+  },
+
+  // ── US-21 · Cuota deportiva (secretaría) ────────────────────────────────────
+
+  async getPendientesDeportivos(personaId: number): Promise<PendientesDeportivosResponse> {
+    const { data } = await apiClient.get<PendientesDeportivosResponse>(
+      `/pagos-deportivos/persona/${personaId}/pendientes`,
+    );
+    return data;
+  },
+
+  async registrarPagoDeportivo(
+    personaId: number,
+    payload: RegistrarPagoDeportivoPayload,
+  ): Promise<RespuestaPagoDeportivo> {
+    const { data } = await apiClient.post<RespuestaPagoDeportivo>(
+      `/pagos-deportivos/persona/${personaId}`,
+      payload,
+    );
     return data;
   },
 };
