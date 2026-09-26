@@ -5,4 +5,6 @@ export const pagosKeys = {
   historial: () => [...pagosKeys.all, 'historial'] as const,
   cuotasPendientesSocio: (socioId: number) =>
     [...pagosKeys.all, 'socio', socioId, 'cuotas-pendientes'] as const,
+  pendientesDeportivos: (personaId: number) =>
+    [...pagosKeys.all, 'deportivos', personaId, 'pendientes'] as const,
 };

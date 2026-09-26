@@ -76,6 +76,12 @@ const navSections: NavSection[] = [
       { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
       { to: ROUTES.validarAcceso, label: 'Validar QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
       { to: ROUTES.cuotas, label: 'Cuotas deportivas', icon: Coins, roles: ['ADMIN'] },
+      {
+        to: ROUTES.cobrarCuotaDeportiva,
+        label: 'Cobrar cuota deportiva',
+        icon: CreditCard,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
     ],
   },
   {
@@ -97,6 +103,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.validarAcceso]: 'Control de Acceso QR',
   [ROUTES.usuarios]: 'Usuarios Administrativos',
   [ROUTES.cuotas]: 'Configuración de Cuotas',
+  [ROUTES.cobrarCuotaDeportiva]: 'Cobro de Cuota Deportiva',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
   [ROUTES.inscripcion]: 'Inscripción a Disciplinas',

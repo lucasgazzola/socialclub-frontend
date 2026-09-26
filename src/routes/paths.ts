@@ -27,6 +27,7 @@ export const ROUTES = {
   documentacion: '/documentacion',
   perfil: '/perfil',
   misCuotas: '/mis-cuotas',
+  cobrarCuotaDeportiva: '/cuotas/deportiva/cobrar',
 } as const;
 
 
