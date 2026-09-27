@@ -47,3 +47,13 @@ export interface RegisterPayload {
   nombre: string;
   apellido: string;
 }
+
+/**
+ * US-41: cuerpo de `PATCH /auth/cambiar-contrasena`. El backend rechaza el
+ * cambio (401) si `passwordActual` no coincide con la guardada.
+ */
+export interface CambiarContrasenaPayload {
+  passwordActual: string;
+  nuevaContrasena: string;
+  confirmarNuevaContrasena: string;
+}

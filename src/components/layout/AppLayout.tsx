@@ -96,6 +96,7 @@ const navSections: NavSection[] = [
 const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.dashboard]: 'Panel de Inicio',
   [ROUTES.perfil]: 'Mi Perfil',
+  [ROUTES.cambiarContrasena]: 'Cambiar Contraseña',
   [ROUTES.misCuotas]: 'Mis Cuotas',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',
