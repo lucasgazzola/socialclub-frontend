@@ -40,11 +40,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await authApi.logout();
-    setUsuario(null);
-    // Descarta el estado del servidor cacheado (socios, usuarios, ...) para no
-    // filtrar datos de una sesión a la siguiente (US-40).
-    queryClient.clear();
+    try {
+      await authApi.logout();
+    } finally {
+      // Se limpia el estado local aunque el backend ya haya invalidado la
+      // sesión (p. ej. US-41 borra la cookie al cambiar la contraseña y el
+      // logout posterior responde 401) — US-40.
+      setUsuario(null);
+      queryClient.clear();
+    }
   }, []);
 
   const refrescar = useCallback(async () => {
