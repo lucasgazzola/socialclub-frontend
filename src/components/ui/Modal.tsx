@@ -42,6 +42,10 @@ export function Modal({
   // Guardamos quién tenía el foco para devolvérselo al cerrar: si no, el foco
   // vuelve al <body> y quien navega con teclado pierde el lugar en la página.
   const elementoPrevioRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   const manejarTab = useCallback((evento: KeyboardEvent) => {
     const dialogo = dialogRef.current;
@@ -82,7 +86,7 @@ export function Modal({
     function manejarTeclado(evento: KeyboardEvent) {
       if (evento.key === 'Escape') {
         evento.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -110,7 +114,7 @@ export function Modal({
       document.body.style.overflow = overflowPrevio;
       elementoPrevioRef.current?.focus();
     };
-  }, [open, onClose, manejarTab]);
+  }, [open, manejarTab]);
 
   if (!open) {
     return null;

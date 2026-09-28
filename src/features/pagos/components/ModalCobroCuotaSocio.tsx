@@ -102,14 +102,16 @@ export function ModalCobroCuotaSocio({
     }
   };
 
+  const handleClose = () => {
+    if (!registrarPagoMutation.isPending) {
+      onClose();
+    }
+  };
+
   return (
     <Modal
       open={open}
-      onClose={() => {
-        if (!registrarPagoMutation.isPending) {
-          onClose();
-        }
-      }}
+      onClose={handleClose}
       title="Registrar cobro de cuota social"
       description="Cobro y actualización del estado de deuda por secretaría."
       className="max-w-2xl"
