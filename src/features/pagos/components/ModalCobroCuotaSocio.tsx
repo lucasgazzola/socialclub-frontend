@@ -41,7 +41,7 @@ export function ModalCobroCuotaSocio({
   const registrarPagoMutation = useRegistrarPagoSocio(socioId);
 
   const [selectedPeriodos, setSelectedPeriodos] = useState<string[]>([]);
-  const [metodoPago, setMetodoPago] = useState<MetodoPagoSecretaria>('EFECTIVO');
+  const [metodoPago, setMetodoPago] = useState<MetodoPagoSecretaria | ''>('');
   const [observaciones, setObservaciones] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -49,7 +49,7 @@ export function ModalCobroCuotaSocio({
   useEffect(() => {
     if (open && socio) {
       setSelectedPeriodos([]);
-      setMetodoPago('EFECTIVO');
+      setMetodoPago('');
       setObservaciones('');
       setValidationError(null);
     }
@@ -270,8 +270,14 @@ export function ModalCobroCuotaSocio({
                 <Select
                   id="select-metodo-pago"
                   value={metodoPago}
-                  onChange={(e) => setMetodoPago(e.target.value as MetodoPagoSecretaria)}
+                  onChange={(e) => {
+                    setValidationError(null);
+                    setMetodoPago(e.target.value as MetodoPagoSecretaria);
+                  }}
                 >
+                  <option value="" disabled>
+                    Seleccionar método de pago
+                  </option>
                   {METODOS_PAGO_SECRETARIA.map((m) => (
                     <option key={m.value} value={m.value}>
                       {m.label}
