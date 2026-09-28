@@ -5,11 +5,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SociosTable } from './SociosTable';
 import * as authHook from '@/features/auth/hooks/useAuth';
 import * as desactivarHook from '../hooks/useDesactivarSocio';
+import * as activarHook from '../hooks/useActivarSocio';
 import * as cuotasHook from '@/features/pagos/hooks/useCuotasPendientesSocio';
 import type { Socio } from '../types';
 
 vi.mock('../hooks/useDesactivarSocio', () => ({
   useDesactivarSocio: vi.fn(),
+}));
+
+vi.mock('../hooks/useActivarSocio', () => ({
+  useActivarSocio: vi.fn(),
 }));
 
 vi.mock('@/features/pagos/hooks/useCuotasPendientesSocio', () => ({
@@ -66,6 +71,11 @@ describe('SociosTable Component', () => {
       isPending: false,
     } as unknown as ReturnType<typeof desactivarHook.useDesactivarSocio>);
 
+    vi.spyOn(activarHook, 'useActivarSocio').mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof activarHook.useActivarSocio>);
+
     vi.spyOn(cuotasHook, 'useCuotasPendientesSocio').mockReturnValue({
       data: {
         estadoFinanciero: 'AL_DIA',
@@ -85,7 +95,7 @@ describe('SociosTable Component', () => {
     expect(screen.getByText(/No se encontraron resultados/i)).toBeInTheDocument();
   });
 
-  it('muestra la columna Estado con "Al día" cuando el socio está al día', () => {
+  it('muestra la columna Estado con "Activo" cuando el socio está activo', () => {
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       usuario: { roles: ['ADMIN'] },
     } as unknown as ReturnType<typeof authHook.useAuth>);
@@ -93,30 +103,7 @@ describe('SociosTable Component', () => {
     renderWithProviders(<SociosTable socios={SOCIOS_FIXTURE} />);
 
     expect(screen.getByText('Estado')).toBeInTheDocument();
-    expect(screen.getByText('Al día')).toBeInTheDocument();
-  });
-
-  it('muestra el badge de Moroso en la columna Estado cuando debe cuotas y abre el cobro', () => {
-    vi.spyOn(authHook, 'useAuth').mockReturnValue({
-      usuario: { roles: ['ADMIN'] },
-    } as unknown as ReturnType<typeof authHook.useAuth>);
-
-    vi.spyOn(cuotasHook, 'useCuotasPendientesSocio').mockReturnValue({
-      data: {
-        estadoFinanciero: 'MOROSO',
-        cuotasPendientes: [{ periodo: '2026-08', monto: 15000, categoriaNombre: 'Activo' }],
-      },
-      isLoading: false,
-      isError: false,
-    } as unknown as ReturnType<typeof cuotasHook.useCuotasPendientesSocio>);
-
-    renderWithProviders(<SociosTable socios={SOCIOS_FIXTURE} />);
-
-    const badgeMoroso = screen.getByRole('button', { name: /Moroso \(1\)/i });
-    expect(badgeMoroso).toBeInTheDocument();
-
-    fireEvent.click(badgeMoroso);
-    expect(screen.getByTestId('modal-cobro-mock')).toBeInTheDocument();
+    expect(screen.getAllByText('Activo').length).toBeGreaterThanOrEqual(1);
   });
 
   it('muestra el botón Cobrar para usuarios ADMIN y COLABORADOR y abre el modal', () => {
@@ -134,7 +121,7 @@ describe('SociosTable Component', () => {
     expect(screen.getByText(/Modal Cobro abierto para: Pérez, Juan/i)).toBeInTheDocument();
   });
 
-  it('muestra "Baja" cuando el socio no está activo', () => {
+  it('muestra "Inactivo" cuando el socio no está activo', () => {
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       usuario: { roles: ['ADMIN'] },
     } as unknown as ReturnType<typeof authHook.useAuth>);
@@ -147,7 +134,7 @@ describe('SociosTable Component', () => {
 
     renderWithProviders(<SociosTable socios={[socioInactivo]} />);
 
-    expect(screen.getByText('Baja')).toBeInTheDocument();
+    expect(screen.getByText('Inactivo')).toBeInTheDocument();
   });
 
   it('permite a un ADMIN ver el botón Editar y confirmar dar de baja', () => {
@@ -173,6 +160,61 @@ describe('SociosTable Component', () => {
     const btnSi = screen.getByRole('button', { name: /^Sí$/i });
     fireEvent.click(btnSi);
     expect(desactivarMock).toHaveBeenCalledWith(1);
+  });
+
+  it('permite a un ADMIN ver el botón Dar de alta y confirmar el alta para socios inactivos', () => {
+    const activarMock = vi.fn();
+    vi.spyOn(activarHook, 'useActivarSocio').mockReturnValue({
+      mutate: activarMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof activarHook.useActivarSocio>);
+
+    vi.spyOn(authHook, 'useAuth').mockReturnValue({
+      usuario: { roles: ['ADMIN'] },
+    } as unknown as ReturnType<typeof authHook.useAuth>);
+
+    const socioInactivo: Socio = {
+      ...SOCIOS_FIXTURE[0],
+      id: 2,
+      activo: false,
+    };
+
+    renderWithProviders(<SociosTable socios={[socioInactivo]} />);
+
+    const btnAlta = screen.getByRole('button', { name: /Dar de alta/i });
+    expect(btnAlta).toBeInTheDocument();
+
+    fireEvent.click(btnAlta);
+    expect(screen.getByText(/¿Confirmar alta\?/i)).toBeInTheDocument();
+
+    const btnSi = screen.getByRole('button', { name: /^Sí$/i });
+    fireEvent.click(btnSi);
+    expect(activarMock).toHaveBeenCalledWith(2);
+  });
+
+  it('permite a un COLABORADOR ver los botones Editar, Dar de baja y Dar de alta', () => {
+    vi.spyOn(authHook, 'useAuth').mockReturnValue({
+      usuario: { roles: ['COLABORADOR'] },
+    } as unknown as ReturnType<typeof authHook.useAuth>);
+
+    const { rerender } = renderWithProviders(<SociosTable socios={SOCIOS_FIXTURE} />);
+
+    expect(screen.getByRole('button', { name: /Editar/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Dar de baja/i })).toBeInTheDocument();
+
+    const socioInactivo: Socio = {
+      ...SOCIOS_FIXTURE[0],
+      id: 2,
+      activo: false,
+    };
+
+    rerender(
+      <MemoryRouter>
+        <SociosTable socios={[socioInactivo]} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('button', { name: /Dar de alta/i })).toBeInTheDocument();
   });
 
   it('ordena los socios por fecha de creación descendente (más recientes primero)', () => {

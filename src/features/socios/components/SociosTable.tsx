@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, Coins, Pencil, UserMinus } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Coins, Pencil, UserMinus, UserPlus } from 'lucide-react';
+import { Badge, Button } from '@/components/ui';
 import { useDesactivarSocio } from '../hooks/useDesactivarSocio';
+import { useActivarSocio } from '../hooks/useActivarSocio';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import { ModalCobroCuotaSocio } from '@/features/pagos/components/ModalCobroCuotaSocio';
@@ -13,7 +14,15 @@ interface SociosTableProps {
   socios: Socio[];
 }
 
-function SocioEstadoCell({
+function SocioEstadoCell({ socio }: { socio: Socio }) {
+  return (
+    <Badge variant={socio.activo ? 'success' : 'danger'}>
+      {socio.activo ? 'Activo' : 'Inactivo'}
+    </Badge>
+  );
+}
+
+function SocioCuentaCell({
   socio,
   puedeCobrar,
   onCobrar,
@@ -22,17 +31,7 @@ function SocioEstadoCell({
   puedeCobrar: boolean;
   onCobrar: () => void;
 }) {
-  const { data, isLoading, isError } = useCuotasPendientesSocio(
-    socio.activo ? socio.id : null,
-  );
-
-  if (!socio.activo) {
-    return (
-      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
-        Baja
-      </span>
-    );
-  }
+  const { data, isLoading, isError } = useCuotasPendientesSocio(socio.id);
 
   if (isLoading) {
     return (
@@ -48,36 +47,38 @@ function SocioEstadoCell({
   }
 
   if (data.estadoFinanciero === 'AL_DIA' || data.cuotasPendientes.length === 0) {
+    return <Badge variant="success">Al día</Badge>;
+  }
+
+  const label = `Moroso (${data.cuotasPendientes.length})`;
+
+  if (puedeCobrar) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-        <CheckCircle2 size={12} className="text-emerald-600" />
-        Al día
-      </span>
+      <button
+        type="button"
+        onClick={onCobrar}
+        title="Cobrar cuotas pendientes"
+        className="cursor-pointer transition-opacity hover:opacity-80"
+      >
+        <Badge variant="warning">{label}</Badge>
+      </button>
     );
   }
 
-  return (
-    <button
-      type="button"
-      onClick={puedeCobrar ? onCobrar : undefined}
-      title={puedeCobrar ? 'Cobrar cuotas pendientes' : undefined}
-      className={`inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 transition ${
-        puedeCobrar ? 'hover:bg-amber-100 hover:border-amber-300 cursor-pointer' : ''
-      }`}
-    >
-      <AlertTriangle size={12} className="text-amber-600" />
-      Moroso ({data.cuotasPendientes.length})
-    </button>
-  );
+  return <Badge variant="warning">{label}</Badge>;
 }
 
 export function SociosTable({ socios }: SociosTableProps) {
   const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [confirmAltaId, setConfirmAltaId] = useState<number | null>(null);
   const [socioCobro, setSocioCobro] = useState<Socio | null>(null);
   const { mutate: desactivar, isPending } = useDesactivarSocio();
+  const { mutate: activar, isPending: isPendingActivar } = useActivarSocio();
   const navigate = useNavigate();
   const { usuario } = useAuth();
-  const esAdmin = usuario?.roles.includes('ADMIN');
+  const puedeGestionar = Boolean(
+    usuario?.roles.some((r) => r === 'ADMIN' || r === 'COLABORADOR'),
+  );
   const puedeCobrar = Boolean(usuario?.roles.some((r) => r === 'ADMIN' || r === 'COLABORADOR'));
 
   const sociosOrdenados = useMemo(() => {
@@ -107,6 +108,7 @@ export function SociosTable({ socios }: SociosTableProps) {
               <th className="px-5 py-3.5">Email</th>
               <th className="px-5 py-3.5">Categoría</th>
               <th className="px-5 py-3.5">Estado</th>
+              <th className="px-5 py-3.5">Estado de cuenta</th>
               <th className="px-5 py-3.5 text-right">Acciones</th>
             </tr>
           </thead>
@@ -120,7 +122,10 @@ export function SociosTable({ socios }: SociosTableProps) {
                 <td className="px-5 py-3.5 text-slate-600">{socio.email ?? '—'}</td>
                 <td className="px-5 py-3.5 text-slate-600">{socio.categoria?.nombre ?? '—'}</td>
                 <td className="px-5 py-3.5">
-                  <SocioEstadoCell
+                  <SocioEstadoCell socio={socio} />
+                </td>
+                <td className="px-5 py-3.5">
+                  <SocioCuentaCell
                     socio={socio}
                     puedeCobrar={puedeCobrar}
                     onCobrar={() => setSocioCobro(socio)}
@@ -138,7 +143,7 @@ export function SociosTable({ socios }: SociosTableProps) {
                         Cobrar
                       </Button>
                     )}
-                    {esAdmin && (
+                    {puedeGestionar && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -148,7 +153,7 @@ export function SociosTable({ socios }: SociosTableProps) {
                         Editar
                       </Button>
                     )}
-                    {socio.activo && (
+                    {puedeGestionar && socio.activo && (
                       confirmId === socio.id ? (
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs text-slate-500">¿Confirmar baja?</span>
@@ -176,11 +181,53 @@ export function SociosTable({ socios }: SociosTableProps) {
                           variant="ghost"
                           size="sm"
                           className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                          onClick={() => setConfirmId(socio.id)}
+                          onClick={() => {
+                            setConfirmId(socio.id);
+                            setConfirmAltaId(null);
+                          }}
                         >
-                            <UserMinus size={14} />
-                            Dar de baja
+                          <UserMinus size={14} />
+                          Dar de baja
+                        </Button>
+                      )
+                    )}
+
+                    {puedeGestionar && !socio.activo && (
+                      confirmAltaId === socio.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-slate-500">¿Confirmar alta?</span>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={isPendingActivar}
+                            onClick={() => {
+                              activar(socio.id);
+                              setConfirmAltaId(null);
+                            }}
+                          >
+                            Sí
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmAltaId(null)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                          onClick={() => {
+                            setConfirmAltaId(socio.id);
+                            setConfirmId(null);
+                          }}
+                        >
+                          <UserPlus size={14} />
+                          Dar de alta
+                        </Button>
                       )
                     )}
                   </div>

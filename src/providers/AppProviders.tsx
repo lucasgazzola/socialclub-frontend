@@ -15,7 +15,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <BrowserRouter>
         <AuthProvider>{children}</AuthProvider>
       </BrowserRouter>
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      {/* {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />} */}
     </QueryClientProvider>
   );
 }

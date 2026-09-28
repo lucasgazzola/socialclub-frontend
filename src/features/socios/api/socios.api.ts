@@ -49,6 +49,11 @@ export const sociosApi = {
     return data;
   },
 
+  async activate(id: number): Promise<Socio> {
+    const { data } = await apiClient.patch<Socio>(`/socios/${id}/activar`);
+    return data;
+  },
+
   /** US-42: Darme de baja como socio logueado. */
   async darseDeBaja(): Promise<Socio> {
     const { data } = await apiClient.post<Socio>('/socios/darse-de-baja');
