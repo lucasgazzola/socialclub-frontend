@@ -100,3 +100,35 @@ export interface RespuestaPagoDeportivo {
   estadoDeudaActual: EstadoDeudaDeportiva;
   cuotasPendientesRestantes: number;
 }
+
+// ── US-22 · Historial de cuotas deportivas ────────────────────────────────────
+
+export interface PagoDeportivoHistorial {
+  id: number;
+  disciplinaId: number;
+  disciplinaNombre: string;
+  periodo: string;
+  monto: number;
+  fechaPago: string;
+  metodoPago: string;
+  registradoPor: { id: number; nombre: string } | null;
+}
+
+export interface HistorialDeportivoFiltro {
+  desde?: string; // YYYY-MM-DD
+  hasta?: string; // YYYY-MM-DD
+}
+
+export interface HistorialDeportivoResponse {
+  personaId: number;
+  participanteNombre: string;
+  dni: string | null;
+  categoria: string | null;
+  categoriaId: number | null;
+  estadoDeuda: EstadoDeudaDeportiva;
+  filtro: { desde: string | null; hasta: string | null };
+  pagos: PagoDeportivoHistorial[];
+  adeudados: CuotaDeportivaPendiente[];
+  totalPagado: number;
+  totalAdeudado: number;
+}
