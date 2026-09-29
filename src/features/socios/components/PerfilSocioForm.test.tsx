@@ -4,9 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { PerfilSocioForm } from './PerfilSocioForm';
 import type { PersonaDeUsuario, UsuarioAutenticado } from '@/features/auth/types';
 
-const { mockMutateAsync, mockDarseDeBajaMutateAsync } = vi.hoisted(() => ({
+const { mockMutateAsync, mockDarseDeBajaMutateAsync, mockReactivarmeMutateAsync } = vi.hoisted(() => ({
   mockMutateAsync: vi.fn(),
   mockDarseDeBajaMutateAsync: vi.fn(),
+  mockReactivarmeMutateAsync: vi.fn(),
 }));
 
 vi.mock('../hooks/useSocios', () => ({
@@ -19,6 +20,13 @@ vi.mock('../hooks/useSocios', () => ({
 vi.mock('../hooks/useDarseDeBajaSocio', () => ({
   useDarseDeBajaSocio: () => ({
     mutateAsync: mockDarseDeBajaMutateAsync,
+    isPending: false,
+  }),
+}));
+
+vi.mock('../hooks/useReactivarmeSocio', () => ({
+  useReactivarmeSocio: () => ({
+    mutateAsync: mockReactivarmeMutateAsync,
     isPending: false,
   }),
 }));
@@ -182,5 +190,34 @@ describe('PerfilSocioForm (US-11)', () => {
     await user.click(confirmModalBtn);
 
     expect(mockDarseDeBajaMutateAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('US-43: muestra la opción de reactivar la membresía cuando la persona es ex-socio inactivo', async () => {
+    const user = userEvent.setup();
+    mockReactivarmeMutateAsync.mockResolvedValueOnce({});
+
+    const personaInactiva: PersonaDeUsuario = {
+      ...mockPersona,
+      membresias: [
+        {
+          id: 1,
+          categoriaId: 1,
+          categoria: { id: 1, nombre: 'Activo' },
+          fechaAlta: '2025-01-01',
+          activo: false,
+        },
+      ],
+    };
+
+    render(<PerfilSocioForm usuario={mockUsuario} persona={personaInactiva} />);
+
+    expect(screen.getByText(/Estado de membresía: Inactivo \(Ex-socio\)/i)).toBeInTheDocument();
+
+    const reactivarBtn = screen.getByRole('button', { name: /Reactivar mi membresía/i });
+    expect(reactivarBtn).toBeInTheDocument();
+
+    await user.click(reactivarBtn);
+
+    expect(mockReactivarmeMutateAsync).toHaveBeenCalledTimes(1);
   });
 });

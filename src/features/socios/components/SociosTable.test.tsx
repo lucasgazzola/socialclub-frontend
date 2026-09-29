@@ -5,11 +5,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SociosTable } from './SociosTable';
 import * as authHook from '@/features/auth/hooks/useAuth';
 import * as desactivarHook from '../hooks/useDesactivarSocio';
+import * as reactivarHook from '../hooks/useReactivarSocio';
 import * as cuotasHook from '@/features/pagos/hooks/useCuotasPendientesSocio';
 import type { Socio } from '../types';
 
 vi.mock('../hooks/useDesactivarSocio', () => ({
   useDesactivarSocio: vi.fn(),
+}));
+
+vi.mock('../hooks/useReactivarSocio', () => ({
+  useReactivarSocio: vi.fn(),
 }));
 
 vi.mock('@/features/pagos/hooks/useCuotasPendientesSocio', () => ({
@@ -65,6 +70,11 @@ describe('SociosTable Component', () => {
       mutate: vi.fn(),
       isPending: false,
     } as unknown as ReturnType<typeof desactivarHook.useDesactivarSocio>);
+
+    vi.spyOn(reactivarHook, 'useReactivarSocio').mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof reactivarHook.useReactivarSocio>);
 
     vi.spyOn(cuotasHook, 'useCuotasPendientesSocio').mockReturnValue({
       data: {
@@ -148,6 +158,32 @@ describe('SociosTable Component', () => {
     renderWithProviders(<SociosTable socios={[socioInactivo]} />);
 
     expect(screen.getByText('Baja')).toBeInTheDocument();
+  });
+
+  it('muestra el botón Re-asociar para socios inactivos y llama a reactivar al hacer clic', () => {
+    const reactivarMock = vi.fn();
+    vi.spyOn(reactivarHook, 'useReactivarSocio').mockReturnValue({
+      mutate: reactivarMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof reactivarHook.useReactivarSocio>);
+
+    vi.spyOn(authHook, 'useAuth').mockReturnValue({
+      usuario: { roles: ['ADMIN'] },
+    } as unknown as ReturnType<typeof authHook.useAuth>);
+
+    const socioInactivo: Socio = {
+      ...SOCIOS_FIXTURE[0],
+      id: 2,
+      activo: false,
+    };
+
+    renderWithProviders(<SociosTable socios={[socioInactivo]} />);
+
+    const btnReasociar = screen.getByRole('button', { name: /Re-asociar/i });
+    expect(btnReasociar).toBeInTheDocument();
+
+    fireEvent.click(btnReasociar);
+    expect(reactivarMock).toHaveBeenCalledWith(2);
   });
 
   it('permite a un ADMIN ver el botón Editar y confirmar dar de baja', () => {

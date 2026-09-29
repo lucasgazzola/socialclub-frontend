@@ -54,4 +54,16 @@ export const sociosApi = {
     const { data } = await apiClient.post<Socio>('/socios/darse-de-baja');
     return data;
   },
+
+  /** US-43: Reactivar membresía de un socio (Admin/Colaborador). */
+  async activate(id: number): Promise<Socio> {
+    const { data } = await apiClient.patch<Socio>(`/socios/${id}/activar`);
+    return data;
+  },
+
+  /** US-43: Reactivar mi membresía como ex-socio logueado. */
+  async reactivarme(): Promise<Socio> {
+    const { data } = await apiClient.post<Socio>('/socios/reactivarme');
+    return data;
+  },
 };

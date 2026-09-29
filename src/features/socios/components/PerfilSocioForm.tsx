@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, AlertCircle, Lock, UserX } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Lock, UserCheck, UserX } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { perfilSocioSchema, type PerfilSocioFormData } from '../schemas';
 import { useUpdatePerfilSocio } from '../hooks/useSocios';
 import { useDarseDeBajaSocio } from '../hooks/useDarseDeBajaSocio';
+import { useReactivarmeSocio } from '../hooks/useReactivarmeSocio';
 import { ModalConfirmarBajaSocio } from './ModalConfirmarBajaSocio';
 import type { PersonaDeUsuario, UsuarioAutenticado } from '@/features/auth/types';
 
@@ -21,8 +22,10 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
 
   const { mutateAsync: updatePerfil, isPending } = useUpdatePerfilSocio();
   const { mutateAsync: darseDeBaja, isPending: isBajaPending } = useDarseDeBajaSocio();
+  const { mutateAsync: reactivarme, isPending: isReactivando } = useReactivarmeSocio();
 
   const membresiaActiva = persona?.membresias?.find((m) => m.activo);
+  const esExSocio = !membresiaActiva && Boolean(persona?.membresias && persona.membresias.length > 0);
 
   const {
     register,
@@ -76,6 +79,16 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
         >
           <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
           <p className="font-medium">{mensajeError}</p>
+        </div>
+      )}
+
+      {/* Sección: Estado Inactivo para Ex-socios */}
+      {esExSocio && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+          <h3 className="mb-1 text-sm font-semibold text-amber-900">Estado de membresía: Inactivo (Ex-socio)</h3>
+          <p className="text-xs text-amber-800">
+            Tu membresía previa se encuentra dada de baja. Podés solicitar la reactivación de tu cuenta en cualquier momento para recuperar el acceso a tus beneficios.
+          </p>
         </div>
       )}
 
@@ -175,6 +188,34 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
           {isPending ? 'Guardando cambios…' : 'Guardar Cambios'}
         </Button>
       </div>
+
+      {/* Sección: Reactivar mi membresía como ex-socio */}
+      {esExSocio && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+          <div className="flex items-center gap-2 text-emerald-900 font-semibold text-sm">
+            <UserCheck size={18} className="text-emerald-600" />
+            <span>Reactivar mi membresía como socio</span>
+          </div>
+          <p className="text-xs text-emerald-800">
+            Como ex-socio podés reactivar tu membresía para volver a acceder a todos los beneficios y servicios del club.
+          </p>
+          <div>
+            <Button
+              type="button"
+              disabled={isReactivando}
+              onClick={async () => {
+                try {
+                  await reactivarme();
+                } catch {
+                  // Manejo de errores notificado por sonner en el hook
+                }
+              }}
+            >
+              {isReactivando ? 'Reactivando membresía…' : 'Reactivar mi membresía'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Sección: Darme de baja como socio — SOLO si tiene membresía activa */}
       {membresiaActiva && (
