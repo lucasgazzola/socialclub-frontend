@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/lib/api/query-client';
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
 

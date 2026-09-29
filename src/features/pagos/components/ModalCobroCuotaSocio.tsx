@@ -91,11 +91,7 @@ export function ModalCobroCuotaSocio({
     }
 
     try {
-      await registrarPagoMutation.mutateAsync({
-        periodos: selectedPeriodos,
-        metodoPago,
-        observaciones: observaciones.trim() || undefined,
-      });
+      await registrarPagoMutation.mutateAsync(validacion.data);
       onClose();
     } catch {
       // El error ya es manejado con toast.error en el hook useRegistrarPagoSocio
