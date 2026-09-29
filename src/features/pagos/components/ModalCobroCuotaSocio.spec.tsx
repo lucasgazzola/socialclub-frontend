@@ -210,4 +210,39 @@ describe('US-17 · ModalCobroCuotaSocio Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Deseleccionar todas$/i }));
     expect(btnConfirmar).toBeDisabled();
   });
+
+  it('muestra por defecto "Seleccionar método de pago" y exige seleccionar uno para confirmar el cobro', () => {
+    vi.spyOn(useCuotasPendientesHook, 'useCuotasPendientesSocio').mockReturnValue({
+      data: CUOTAS_MOCK,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useCuotasPendientesHook.useCuotasPendientesSocio>);
+
+    render(
+      <ModalCobroCuotaSocio open={true} onClose={onCloseMock} socio={SOCIO_MOCK} />,
+    );
+
+    // El select arranca en la opción placeholder vacía
+    const selectMetodo = screen.getByLabelText(/Método de pago/i) as HTMLSelectElement;
+    expect(selectMetodo.value).toBe('');
+    expect(screen.getByRole('option', { name: /Seleccionar método de pago/i })).toBeInTheDocument();
+
+    // Seleccionamos una cuota para habilitar el botón
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[0]);
+
+    // Hacemos clic en confirmar cobro sin haber elegido método de pago
+    const btnConfirmar = screen.getByRole('button', { name: /Confirmar cobro/i });
+    fireEvent.click(btnConfirmar);
+
+    // Debe mostrar el error de validación y no llamar a la mutación
+    expect(screen.getByText(/Seleccioná un método de pago válido/i)).toBeInTheDocument();
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
+
+    // Al elegir un método, el error se despeja
+    fireEvent.change(selectMetodo, { target: { value: 'EFECTIVO' } });
+    expect(screen.queryByText(/Seleccioná un método de pago válido/i)).not.toBeInTheDocument();
+  });
 });

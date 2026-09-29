@@ -41,7 +41,7 @@ export function ModalCobroCuotaSocio({
   const registrarPagoMutation = useRegistrarPagoSocio(socioId);
 
   const [selectedPeriodos, setSelectedPeriodos] = useState<string[]>([]);
-  const [metodoPago, setMetodoPago] = useState<MetodoPagoSecretaria>('EFECTIVO');
+  const [metodoPago, setMetodoPago] = useState<MetodoPagoSecretaria | ''>('');
   const [observaciones, setObservaciones] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -49,7 +49,7 @@ export function ModalCobroCuotaSocio({
   useEffect(() => {
     if (open && socio) {
       setSelectedPeriodos([]);
-      setMetodoPago('EFECTIVO');
+      setMetodoPago('');
       setObservaciones('');
       setValidationError(null);
     }
@@ -91,25 +91,23 @@ export function ModalCobroCuotaSocio({
     }
 
     try {
-      await registrarPagoMutation.mutateAsync({
-        periodos: selectedPeriodos,
-        metodoPago,
-        observaciones: observaciones.trim() || undefined,
-      });
+      await registrarPagoMutation.mutateAsync(validacion.data);
       onClose();
     } catch {
       // El error ya es manejado con toast.error en el hook useRegistrarPagoSocio
     }
   };
 
+  const handleClose = () => {
+    if (!registrarPagoMutation.isPending) {
+      onClose();
+    }
+  };
+
   return (
     <Modal
       open={open}
-      onClose={() => {
-        if (!registrarPagoMutation.isPending) {
-          onClose();
-        }
-      }}
+      onClose={handleClose}
       title="Registrar cobro de cuota social"
       description="Cobro y actualización del estado de deuda por secretaría."
       className="max-w-2xl"
@@ -268,8 +266,14 @@ export function ModalCobroCuotaSocio({
                 <Select
                   id="select-metodo-pago"
                   value={metodoPago}
-                  onChange={(e) => setMetodoPago(e.target.value as MetodoPagoSecretaria)}
+                  onChange={(e) => {
+                    setValidationError(null);
+                    setMetodoPago(e.target.value as MetodoPagoSecretaria);
+                  }}
                 >
+                  <option value="" disabled>
+                    Seleccionar método de pago
+                  </option>
                   {METODOS_PAGO_SECRETARIA.map((m) => (
                     <option key={m.value} value={m.value}>
                       {m.label}

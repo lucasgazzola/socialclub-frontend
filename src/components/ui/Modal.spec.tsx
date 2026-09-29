@@ -113,6 +113,39 @@ describe('Modal', () => {
 
     expect(cerrar).toHaveFocus();
   });
+
+  it('no roba el foco al primer control cuando el padre re-renderiza y cambia la referencia de onClose', async () => {
+    const user = userEvent.setup();
+
+    function FormHost() {
+      const [valor, setValor] = useState('');
+      return (
+        <Modal
+          open
+          title="Cobro"
+          onClose={() => {}} // inline arrow recrea referencia en cada render
+        >
+          <button type="button">Seleccionar todas</button>
+          <input
+            aria-label="Observaciones"
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+          />
+        </Modal>
+      );
+    }
+
+    render(<FormHost />);
+    const input = screen.getByLabelText('Observaciones');
+    await user.click(input);
+    expect(input).toHaveFocus();
+
+    // Escribimos varios caracteres consecutivos
+    await user.keyboard('hola');
+
+    expect(input).toHaveValue('hola');
+    expect(input).toHaveFocus();
+  });
 });
 
 describe('ConfirmDialog', () => {

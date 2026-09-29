@@ -46,13 +46,10 @@ export function AppRouter() {
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
+            <Route path="socios/:id/editar" element={<EditarSocioPage />} />
             <Route path="disciplinas" element={<DisciplinasPage />} />
             <Route path="cuotas/deportiva/cobrar" element={<RegistrarPagoDeportivoPage />} />
             <Route path="cuotas/deportiva/historial" element={<HistorialDeportivoPage />} />
-          </Route>
-
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
-            <Route path="socios/:id/editar" element={<EditarSocioPage />} />
           </Route>
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>

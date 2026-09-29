@@ -92,15 +92,14 @@ export function SociosPage() {
 
       {/* Controles de filtro y búsqueda agrupados */}
       <div className="space-y-3">
-        {/* Selector de estado estilo pestañas segmentadas (Apex) */}
-      <div>
+        <div>
         <StatusTabs<string>
           value={estado ?? 'TODOS'}
           onChange={(val) => cambiarEstado(val === 'TODOS' ? '' : val)}
           tabs={[
-            { value: 'TODOS', label: 'Todos' },
-            { value: 'ALTA', label: 'Alta' },
-            { value: 'BAJA', label: 'Baja' },
+            { value: 'TODOS', label: 'Todos', count: data?.counts?.todos },
+            { value: 'ALTA', label: 'Activos', count: data?.counts?.alta },
+            { value: 'BAJA', label: 'Inactivos', count: data?.counts?.baja },
           ]}
         />
 

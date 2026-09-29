@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { FullScreenLoader } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { RolNombre } from '@/features/auth/types';
@@ -15,14 +15,13 @@ interface ProtectedRouteProps {
  */
 export function ProtectedRoute({ rolesPermitidos }: ProtectedRouteProps) {
   const { usuario, cargando } = useAuth();
-  const location = useLocation();
 
   if (cargando) {
     return <FullScreenLoader label="Verificando sesión…" />;
   }
 
   if (!usuario) {
-    return <Navigate to={ROUTES.login} replace state={{ from: location.pathname }} />;
+    return <Navigate to={ROUTES.login} replace />;
   }
 
   if (rolesPermitidos && !rolesPermitidos.some((rol) => usuario.roles.includes(rol))) {
