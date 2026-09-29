@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, Coins, Pencil, UserMinus } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Coins, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useDesactivarSocio } from '../hooks/useDesactivarSocio';
+import { useReactivarSocio } from '../hooks/useReactivarSocio';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import { ModalCobroCuotaSocio } from '@/features/pagos/components/ModalCobroCuotaSocio';
@@ -75,6 +76,7 @@ export function SociosTable({ socios }: SociosTableProps) {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [socioCobro, setSocioCobro] = useState<Socio | null>(null);
   const { mutate: desactivar, isPending } = useDesactivarSocio();
+  const { mutate: reactivar, isPending: isReactivando } = useReactivarSocio();
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN');
@@ -146,6 +148,18 @@ export function SociosTable({ socios }: SociosTableProps) {
                       >
                         <Pencil size={14} />
                         Editar
+                      </Button>
+                    )}
+                    {!socio.activo && (esAdmin || puedeCobrar) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                        disabled={isReactivando}
+                        onClick={() => reactivar(socio.id)}
+                      >
+                        <UserCheck size={14} />
+                        Re-asociar
                       </Button>
                     )}
                     {socio.activo && (
