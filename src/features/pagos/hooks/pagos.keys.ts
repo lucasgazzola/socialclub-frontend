@@ -7,4 +7,6 @@ export const pagosKeys = {
     [...pagosKeys.all, 'socio', socioId, 'cuotas-pendientes'] as const,
   pendientesDeportivos: (personaId: number) =>
     [...pagosKeys.all, 'deportivos', personaId, 'pendientes'] as const,
+  historialDeportivo: (personaId: number, desde?: string, hasta?: string) =>
+    [...pagosKeys.all, 'deportivos', personaId, 'historial', desde ?? '', hasta ?? ''] as const,
 };

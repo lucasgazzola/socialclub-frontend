@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Coins, Pencil, UserMinus, UserPlus } from 'lucide-react';
+import { Coins, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { useDesactivarSocio } from '../hooks/useDesactivarSocio';
-import { useActivarSocio } from '../hooks/useActivarSocio';
+import { useReactivarSocio } from '../hooks/useReactivarSocio';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import { ModalCobroCuotaSocio } from '@/features/pagos/components/ModalCobroCuotaSocio';
@@ -70,10 +70,9 @@ function SocioCuentaCell({
 
 export function SociosTable({ socios }: SociosTableProps) {
   const [confirmId, setConfirmId] = useState<number | null>(null);
-  const [confirmAltaId, setConfirmAltaId] = useState<number | null>(null);
   const [socioCobro, setSocioCobro] = useState<Socio | null>(null);
   const { mutate: desactivar, isPending } = useDesactivarSocio();
-  const { mutate: activar, isPending: isPendingActivar } = useActivarSocio();
+  const { mutate: reactivar, isPending: isReactivando } = useReactivarSocio();
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const puedeGestionar = Boolean(
@@ -153,6 +152,19 @@ export function SociosTable({ socios }: SociosTableProps) {
                         Editar
                       </Button>
                     )}
+                    {puedeGestionar && !socio.activo && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label="Dar de alta (Re-asociar)"
+                        className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                        disabled={isReactivando}
+                        onClick={() => reactivar(socio.id)}
+                      >
+                        <UserCheck size={14} />
+                        Dar de alta
+                      </Button>
+                    )}
                     {puedeGestionar && socio.activo && (
                       confirmId === socio.id ? (
                         <div className="flex items-center gap-1.5">
@@ -183,7 +195,6 @@ export function SociosTable({ socios }: SociosTableProps) {
                           className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                           onClick={() => {
                             setConfirmId(socio.id);
-                            setConfirmAltaId(null);
                           }}
                         >
                           <UserMinus size={14} />
@@ -191,51 +202,12 @@ export function SociosTable({ socios }: SociosTableProps) {
                         </Button>
                       )
                     )}
-
-                    {puedeGestionar && !socio.activo && (
-                      confirmAltaId === socio.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-slate-500">¿Confirmar alta?</span>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={isPendingActivar}
-                            onClick={() => {
-                              activar(socio.id);
-                              setConfirmAltaId(null);
-                            }}
-                          >
-                            Sí
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setConfirmAltaId(null)}
-                          >
-                            No
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-                          onClick={() => {
-                            setConfirmAltaId(socio.id);
-                            setConfirmId(null);
-                          }}
-                        >
-                          <UserPlus size={14} />
-                          Dar de alta
-                        </Button>
-                      )
-                    )}
                   </div>
                 </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <ModalCobroCuotaSocio

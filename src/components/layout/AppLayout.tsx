@@ -82,6 +82,12 @@ const navSections: NavSection[] = [
         icon: CreditCard,
         roles: ['ADMIN', 'COLABORADOR'],
       },
+      {
+        to: ROUTES.historialCuotaDeportiva,
+        label: 'Historial deportivo',
+        icon: ClipboardList,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
     ],
   },
   {
@@ -105,6 +111,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.usuarios]: 'Usuarios Administrativos',
   [ROUTES.cuotas]: 'Configuración de Cuotas',
   [ROUTES.cobrarCuotaDeportiva]: 'Cobro de Cuota Deportiva',
+  [ROUTES.historialCuotaDeportiva]: 'Historial de Cuotas Deportivas',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
   [ROUTES.inscripcion]: 'Inscripción a Disciplinas',

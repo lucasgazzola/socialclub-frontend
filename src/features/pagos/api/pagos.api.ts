@@ -1,6 +1,8 @@
 import { apiClient } from '@/lib/api/client';
 import type {
   CuotasPendientesSocioResponse,
+  HistorialDeportivoFiltro,
+  HistorialDeportivoResponse,
   PagoRealizado,
   PendientesDeportivosResponse,
   RegistrarPagoDeportivoPayload,
@@ -58,6 +60,17 @@ export const pagosApi = {
     const { data } = await apiClient.post<RespuestaPagoDeportivo>(
       `/pagos-deportivos/persona/${personaId}`,
       payload,
+    );
+    return data;
+  },
+
+  async getHistorialDeportivo(
+    personaId: number,
+    filtro: HistorialDeportivoFiltro = {},
+  ): Promise<HistorialDeportivoResponse> {
+    const { data } = await apiClient.get<HistorialDeportivoResponse>(
+      `/pagos-deportivos/persona/${personaId}/historial`,
+      { params: filtro },
     );
     return data;
   },
