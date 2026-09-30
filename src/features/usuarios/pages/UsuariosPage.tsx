@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react';
-import { UserPlus } from 'lucide-react';
-import { Button, Card, ConfirmDialog, Spinner, StatusTabs } from '@/components/ui';
+import { UserPlus, Search, Filter } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, Card, ConfirmDialog, Spinner, StatusTabs, Input, Select } from '@/components/ui';
 import { useActivateUsuario } from '../hooks/useActivateUsuario';
 import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario';
 import { useUsers } from '../hooks/useUsers';
 import { UsuariosGrid } from '../components/UsuariosGrid';
-import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto } from '../types';
+import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto, GetUsuariosParams } from '../types';
 import { UsuarioFormModal } from './components/UsuarioFormModal';
-import type { UsuarioCreateFormValues, UsuarioEditFormValues } from '../schemas/usuario.schema';
+import { usuariosFilterSchema, type UsuarioCreateFormValues, type UsuarioEditFormValues, type UsuariosFilterValues } from '../schemas/usuario.schema';
 
 type FiltroEstado = 'todos' | 'activos' | 'inactivos';
 
@@ -30,7 +32,19 @@ export function UsuariosPage() {
   /** Usuario cuyo cambio de estado está esperando confirmación (DT-04). */
   const [usuarioAConfirmar, setUsuarioAConfirmar] = useState<Usuario | null>(null);
 
-  const { data: usuarios = [], isLoading, isError, error } = useUsers();
+  const [filtrosAPI, setFiltrosAPI] = useState<GetUsuariosParams>({});
+
+  const formFiltros = useForm<UsuariosFilterValues>({
+    resolver: zodResolver(usuariosFilterSchema),
+    defaultValues: { nombre: '', rol: '' },
+  });
+
+  const onSubmitFiltros = formFiltros.handleSubmit((data) => {
+    setFiltrosAPI(data);
+    setUsuarioDestacadoId(null);
+  });
+
+  const { data: usuarios = [], isLoading, isError, error } = useUsers(filtrosAPI);
   const createUsuario = useCreateUsuario();
   const updateUsuario = useUpdateUsuario();
   const deactivateUsuario = useDeactivateUsuario();
@@ -133,7 +147,7 @@ export function UsuariosPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Usuarios administrativos</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Usuarios</h1>
           <p className="mt-1 text-sm text-slate-500">Creá y editá usuarios de gestión.</p>
         </div>
 
@@ -142,6 +156,8 @@ export function UsuariosPage() {
           Nuevo usuario
         </Button>
       </header>
+
+
 
       <UsuarioFormModal
         open={modalAbierto}
@@ -180,30 +196,61 @@ export function UsuariosPage() {
         <Card className="p-6 text-sm text-slate-500">No hay usuarios cargados todavía.</Card>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <StatusTabs<FiltroEstado>
-              value={filtroEstado}
-              onChange={cambiarFiltro}
-              tabs={[
-                { value: 'todos', label: 'Todos', count: usuarios.length },
-                { value: 'activos', label: 'Activos', count: totalActivos },
-                { value: 'inactivos', label: 'Inactivos', count: totalInactivos },
-              ]}
-            />
+          <div className="space-y-3">
+            <div>
+              <StatusTabs<FiltroEstado>
+                value={filtroEstado}
+                onChange={cambiarFiltro}
+                tabs={[
+                  { value: 'todos', label: 'Todos', count: usuarios.length },
+                  { value: 'activos', label: 'Activos', count: totalActivos },
+                  { value: 'inactivos', label: 'Inactivos', count: totalInactivos },
+                ]}
+              />
 
-            {/* Accesibilidad y compatibilidad con pruebas automatizadas */}
-            <select
-              id="filtroEstado"
-              aria-label="Filtrar por estado"
-              value={filtroEstado}
-              onChange={(e) => cambiarFiltro(e.target.value as FiltroEstado)}
-              className="sr-only"
-              tabIndex={-1}
-            >
-              <option value="todos">Todos los estados</option>
-              <option value="activos">Solo activos</option>
-              <option value="inactivos">Solo inactivos</option>
-            </select>
+              {/* Accesibilidad y compatibilidad con pruebas automatizadas */}
+              <select
+                id="filtroEstado"
+                aria-label="Filtrar por estado"
+                value={filtroEstado}
+                onChange={(e) => cambiarFiltro(e.target.value as FiltroEstado)}
+                className="sr-only"
+                tabIndex={-1}
+              >
+                <option value="todos">Todos los estados</option>
+                <option value="activos">Solo activos</option>
+                <option value="inactivos">Solo inactivos</option>
+              </select>
+            </div>
+
+            <form onSubmit={onSubmitFiltros} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="w-full sm:max-w-xs">
+                <Input
+                  {...formFiltros.register('nombre')}
+                  placeholder="Buscar por nombre o apellido..."
+                  leftIcon={<Search />}
+                />
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <Select
+                  {...formFiltros.register('rol', {
+                    onChange: () => {
+                      void onSubmitFiltros();
+                    },
+                  })}
+                  leftIcon={<Filter />}
+                  className="w-full sm:w-52"
+                >
+                  <option value="">Todos los roles</option>
+                  <option value="ADMIN">Administrador</option>
+                  <option value="COLABORADOR">Colaborador</option>
+                </Select>
+                <Button type="submit" variant="secondary" className="shrink-0">
+                  Buscar
+                </Button>
+              </div>
+            </form>
           </div>
 
           {usuariosVisibles.length === 0 ? (

@@ -134,7 +134,7 @@ export function UsuariosGrid({
                     >
                       {iniciales(usuario)}
                     </span>
-                    <span className="truncate font-semibold text-slate-900" title={nombreCompleto}>
+                    <span className="truncate text-sm font-medium text-slate-900" title={nombreCompleto}>
                       {nombreCompleto}
                     </span>
                   </div>

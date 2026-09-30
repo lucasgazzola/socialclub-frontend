@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api/client';
-import type { Usuario, CreateUsuarioDto, UpdateUsuarioDto } from '../types';
+import type { Usuario, CreateUsuarioDto, UpdateUsuarioDto, GetUsuariosParams } from '../types';
 
 export const usuariosApi = {
   async create(payload: CreateUsuarioDto): Promise<Usuario> {
@@ -9,8 +9,8 @@ export const usuariosApi = {
 
   // El backend devuelve activos e inactivos en una sola respuesta; el filtro
   // por estado se aplica en la pantalla.
-  async list(): Promise<Usuario[]> {
-    const { data } = await apiClient.get<Usuario[]>('/usuarios');
+  async list(params?: GetUsuariosParams): Promise<Usuario[]> {
+    const { data } = await apiClient.get<Usuario[]>('/usuarios', { params });
     return data;
   },
 

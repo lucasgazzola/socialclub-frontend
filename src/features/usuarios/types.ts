@@ -36,3 +36,8 @@ export interface UpdateUsuarioDto {
     roles?: string[];
     activo?: boolean;
 }
+
+export interface GetUsuariosParams {
+    nombre?: string;
+    rol?: string;
+}
