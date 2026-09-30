@@ -108,7 +108,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.socios]: 'Socios del Club',
   [ROUTES.eventos]: 'Eventos y Actividades',
   [ROUTES.validarAcceso]: 'Control de Acceso QR',
-  [ROUTES.usuarios]: 'Usuarios Administrativos',
+  [ROUTES.usuarios]: 'Usuarios',
   [ROUTES.cuotas]: 'Configuración de Cuotas',
   [ROUTES.cobrarCuotaDeportiva]: 'Cobro de Cuota Deportiva',
   [ROUTES.historialCuotaDeportiva]: 'Historial de Cuotas Deportivas',

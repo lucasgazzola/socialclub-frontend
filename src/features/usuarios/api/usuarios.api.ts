@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
-import type { Usuario, CreateUsuarioDto, UpdateUsuarioDto } from '../types';
+import type { Paginated } from '@/types/api';
+import type { Usuario, CreateUsuarioDto, UpdateUsuarioDto, GetUsuariosParams } from '../types';
 
 export const usuariosApi = {
   async create(payload: CreateUsuarioDto): Promise<Usuario> {
@@ -7,10 +8,16 @@ export const usuariosApi = {
     return data;
   },
 
-  // El backend devuelve activos e inactivos en una sola respuesta; el filtro
-  // por estado se aplica en la pantalla.
-  async list(): Promise<Usuario[]> {
-    const { data } = await apiClient.get<Usuario[]>('/usuarios');
+  async list(params?: GetUsuariosParams): Promise<Paginated<Usuario>> {
+    const { data } = await apiClient.get<Paginated<Usuario>>('/usuarios', {
+      params: {
+        busqueda: params?.busqueda?.trim() || undefined,
+        rolId: params?.rolId || undefined,
+        estado: params?.estado && params.estado !== 'todos' ? params.estado : undefined,
+        pagina: params?.pagina,
+        porPagina: params?.porPagina,
+      },
+    });
     return data;
   },
 

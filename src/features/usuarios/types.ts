@@ -36,3 +36,11 @@ export interface UpdateUsuarioDto {
     roles?: string[];
     activo?: boolean;
 }
+
+export interface GetUsuariosParams {
+    busqueda?: string;
+    rolId?: number;
+    estado?: 'todos' | 'activos' | 'inactivos';
+    pagina?: number;
+    porPagina?: number;
+}
