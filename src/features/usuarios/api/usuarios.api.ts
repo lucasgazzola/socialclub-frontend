@@ -13,6 +13,7 @@ export const usuariosApi = {
       params: {
         busqueda: params?.busqueda?.trim() || undefined,
         rolId: params?.rolId || undefined,
+        estado: params?.estado && params.estado !== 'todos' ? params.estado : undefined,
         pagina: params?.pagina,
         porPagina: params?.porPagina,
       },

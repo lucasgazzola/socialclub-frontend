@@ -40,6 +40,7 @@ export interface UpdateUsuarioDto {
 export interface GetUsuariosParams {
     busqueda?: string;
     rolId?: number;
+    estado?: 'todos' | 'activos' | 'inactivos';
     pagina?: number;
     porPagina?: number;
 }

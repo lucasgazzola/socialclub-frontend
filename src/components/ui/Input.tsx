@@ -33,7 +33,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             className={cn(
-              'flex h-9.5 w-full rounded-lg border bg-white px-3 py-1.5 text-sm text-slate-900 shadow-[0_1px_2px_0_rgba(0,0,0,0.02)] transition-all',
+              'flex h-9.5 w-full rounded-lg border bg-white px-3 py-1.5 text-sm text-slate-900 shadow-[0_1px_2px_0_rgba(0,0,0,0.02)] transition-colors',
               'placeholder:text-slate-400 focus:outline-none focus:ring-2',
               leftIcon && 'pl-9',
               error
