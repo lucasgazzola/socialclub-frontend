@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { UserPlus, Search, Filter } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,14 +41,20 @@ export function UsuariosPage() {
     defaultValues: { busqueda: '', rolId: '' },
   });
 
-  const onSubmitFiltros = formFiltros.handleSubmit((data) => {
-    setPagina(1);
-    setFiltrosAPI({
-      busqueda: data.busqueda?.trim() || undefined,
-      rolId: data.rolId ? Number(data.rolId) : undefined,
-    });
-    setUsuarioDestacadoId(null);
-  });
+  const textoBusqueda = formFiltros.watch('busqueda') ?? '';
+  const rolSeleccionado = formFiltros.watch('rolId') ?? '';
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPagina(1);
+      setFiltrosAPI({
+        busqueda: textoBusqueda.trim() || undefined,
+        rolId: rolSeleccionado ? Number(rolSeleccionado) : undefined,
+      });
+      setUsuarioDestacadoId(null);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [textoBusqueda, rolSeleccionado]);
 
   const { data, isLoading, isError, error, isFetching } = useUsers({
     busqueda: filtrosAPI.busqueda,
@@ -246,7 +252,7 @@ export function UsuariosPage() {
               </select>
             </div>
 
-            <form onSubmit={onSubmitFiltros} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="w-full sm:max-w-xs">
                 <Input
                   {...formFiltros.register('busqueda')}
@@ -257,11 +263,7 @@ export function UsuariosPage() {
 
               <div className="flex items-center gap-2.5">
                 <Select
-                  {...formFiltros.register('rolId', {
-                    onChange: () => {
-                      void onSubmitFiltros();
-                    },
-                  })}
+                  {...formFiltros.register('rolId')}
                   leftIcon={<Filter />}
                   className="w-full sm:w-52"
                 >
@@ -269,11 +271,8 @@ export function UsuariosPage() {
                   <option value="1">Administrador</option>
                   <option value="2">Colaborador</option>
                 </Select>
-                <Button type="submit" variant="secondary" className="shrink-0">
-                  Buscar
-                </Button>
               </div>
-            </form>
+            </div>
           </div>
 
           {usuariosVisibles.length === 0 ? (
