@@ -38,6 +38,8 @@ export interface UpdateUsuarioDto {
 }
 
 export interface GetUsuariosParams {
-    nombre?: string;
-    rol?: string;
+    busqueda?: string;
+    rolId?: number;
+    pagina?: number;
+    porPagina?: number;
 }

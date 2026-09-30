@@ -24,8 +24,8 @@ export type UsuarioEditFormValues = z.infer<typeof usuarioEditSchema>;
 export type UsuarioFormValues = UsuarioCreateFormValues;
 
 export const usuariosFilterSchema = z.object({
-  nombre: z.string().optional(),
-  rol: z.string().optional(),
+  busqueda: z.string().optional(),
+  rolId: z.string().optional(),
 });
 
 export type UsuariosFilterValues = z.infer<typeof usuariosFilterSchema>;

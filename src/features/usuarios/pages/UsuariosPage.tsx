@@ -32,19 +32,30 @@ export function UsuariosPage() {
   /** Usuario cuyo cambio de estado está esperando confirmación (DT-04). */
   const [usuarioAConfirmar, setUsuarioAConfirmar] = useState<Usuario | null>(null);
 
+  const POR_PAGINA = 10;
+  const [pagina, setPagina] = useState(1);
   const [filtrosAPI, setFiltrosAPI] = useState<GetUsuariosParams>({});
 
   const formFiltros = useForm<UsuariosFilterValues>({
     resolver: zodResolver(usuariosFilterSchema),
-    defaultValues: { nombre: '', rol: '' },
+    defaultValues: { busqueda: '', rolId: '' },
   });
 
   const onSubmitFiltros = formFiltros.handleSubmit((data) => {
-    setFiltrosAPI(data);
+    setPagina(1);
+    setFiltrosAPI({
+      busqueda: data.busqueda?.trim() || undefined,
+      rolId: data.rolId ? Number(data.rolId) : undefined,
+    });
     setUsuarioDestacadoId(null);
   });
 
-  const { data: usuarios = [], isLoading, isError, error } = useUsers(filtrosAPI);
+  const { data, isLoading, isError, error, isFetching } = useUsers({
+    busqueda: filtrosAPI.busqueda,
+    rolId: filtrosAPI.rolId,
+    pagina,
+    porPagina: POR_PAGINA,
+  });
   const createUsuario = useCreateUsuario();
   const updateUsuario = useUpdateUsuario();
   const deactivateUsuario = useDeactivateUsuario();
@@ -52,8 +63,20 @@ export function UsuariosPage() {
 
   const cambioDeEstadoEnCurso = deactivateUsuario.isPending || activateUsuario.isPending;
 
+  const usuarios: Usuario[] = Array.isArray(data) ? data : (data?.items ?? []);
+  const totalPaginas = data && !Array.isArray(data) && data.porPagina ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
+  const totalUsuarios = data && !Array.isArray(data) ? data.total : usuarios.length;
+  const hayResultados = usuarios.length > 0;
+
   const totalActivos = usuarios.filter((usuario) => usuario.activo).length;
   const totalInactivos = usuarios.length - totalActivos;
+  const counts = data && !Array.isArray(data) && data.counts
+    ? data.counts
+    : {
+        todos: usuarios.length,
+        activos: totalActivos,
+        inactivos: totalInactivos,
+      };
 
   const usuariosVisibles = useMemo(() => {
     const filtrados = usuarios.filter((usuario) => {
@@ -202,9 +225,9 @@ export function UsuariosPage() {
                 value={filtroEstado}
                 onChange={cambiarFiltro}
                 tabs={[
-                  { value: 'todos', label: 'Todos', count: usuarios.length },
-                  { value: 'activos', label: 'Activos', count: totalActivos },
-                  { value: 'inactivos', label: 'Inactivos', count: totalInactivos },
+                  { value: 'todos', label: 'Todos', count: counts.todos },
+                  { value: 'activos', label: 'Activos', count: counts.activos },
+                  { value: 'inactivos', label: 'Inactivos', count: counts.inactivos },
                 ]}
               />
 
@@ -226,15 +249,15 @@ export function UsuariosPage() {
             <form onSubmit={onSubmitFiltros} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="w-full sm:max-w-xs">
                 <Input
-                  {...formFiltros.register('nombre')}
-                  placeholder="Buscar por nombre o apellido..."
+                  {...formFiltros.register('busqueda')}
+                  placeholder="Buscar por nombre, apellido o DNI..."
                   leftIcon={<Search />}
                 />
               </div>
 
               <div className="flex items-center gap-2.5">
                 <Select
-                  {...formFiltros.register('rol', {
+                  {...formFiltros.register('rolId', {
                     onChange: () => {
                       void onSubmitFiltros();
                     },
@@ -243,8 +266,8 @@ export function UsuariosPage() {
                   className="w-full sm:w-52"
                 >
                   <option value="">Todos los roles</option>
-                  <option value="ADMIN">Administrador</option>
-                  <option value="COLABORADOR">Colaborador</option>
+                  <option value="1">Administrador</option>
+                  <option value="2">Colaborador</option>
                 </Select>
                 <Button type="submit" variant="secondary" className="shrink-0">
                   Buscar
@@ -258,13 +281,44 @@ export function UsuariosPage() {
               Ningún usuario coincide con el filtro seleccionado.
             </Card>
           ) : (
-            <UsuariosGrid
-              usuarios={usuariosVisibles}
-              usuarioDestacadoId={usuarioDestacadoId}
-              accionesDeshabilitadas={cambioDeEstadoEnCurso}
-              onEditar={abrirEdicion}
-              onCambiarEstado={setUsuarioAConfirmar}
-            />
+            <>
+              <UsuariosGrid
+                usuarios={usuariosVisibles}
+                usuarioDestacadoId={usuarioDestacadoId}
+                accionesDeshabilitadas={cambioDeEstadoEnCurso}
+                onEditar={abrirEdicion}
+                onCambiarEstado={setUsuarioAConfirmar}
+              />
+
+              {hayResultados && (
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <span>
+                    {totalUsuarios} usuario(s){isFetching ? ' · actualizando…' : ''}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={pagina <= 1}
+                      onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                    >
+                      Anterior
+                    </Button>
+                    <span>
+                      Página {pagina} de {totalPaginas}
+                    </span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={pagina >= totalPaginas}
+                      onClick={() => setPagina((p) => p + 1)}
+                    >
+                      Siguiente
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
