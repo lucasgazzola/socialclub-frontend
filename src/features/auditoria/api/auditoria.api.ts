@@ -10,7 +10,9 @@ export const auditoriaApi = {
         entidad: query.entidad || undefined,
         responsableId: query.responsableId || undefined,
         fechaDesde: query.fechaDesde || undefined,
-        fechaHasta: query.fechaHasta || undefined,
+        fechaHasta: query.fechaHasta
+          ? (query.fechaHasta.includes('T') ? query.fechaHasta : `${query.fechaHasta}T23:59:59.999Z`)
+          : undefined,
         pagina: query.pagina,
         porPagina: query.porPagina,
       },

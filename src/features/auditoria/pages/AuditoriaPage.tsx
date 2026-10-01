@@ -1,56 +1,63 @@
 import { useState } from 'react';
-import { Filter } from 'lucide-react';
-import { Button, Select, Spinner } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import { useAuditoria } from '../hooks/useAuditoria';
 import { AuditoriaTable } from '../components/AuditoriaTable';
-import { ACCIONES_AUDITORIA } from '../constants';
+import { AuditoriaFilters } from '../components/AuditoriaFilters';
+import type { AuditoriaFiltrosFormValues } from '../schemas/auditoria-filtros.schema';
 import type { AccionAuditoria } from '../constants';
 
 const POR_PAGINA = 20;
 
 export function AuditoriaPage() {
-  const [accion, setAccion] = useState<AccionAuditoria | undefined>(undefined);
+  const [filtros, setFiltros] = useState<AuditoriaFiltrosFormValues>({});
   const [pagina, setPagina] = useState(1);
 
   const { data, isLoading, isError, error, isFetching } = useAuditoria({
-    accion,
+    accion: (filtros.accion as AccionAuditoria) || undefined,
+    entidad: filtros.entidad?.trim() || undefined,
+    fechaDesde: filtros.fechaDesde || undefined,
+    fechaHasta: filtros.fechaHasta || undefined,
     pagina,
     porPagina: POR_PAGINA,
   });
 
-  const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
-  const hayResultados = (data?.items.length ?? 0) > 0;
+  const total = data?.total ?? 0;
+  const porPagina = data?.porPagina ?? POR_PAGINA;
+  const totalPaginas = Math.max(1, Math.ceil(total / porPagina));
+  const hayResultados = (data?.items?.length ?? 0) > 0;
+  const desdeRegistro = total === 0 ? 0 : (pagina - 1) * porPagina + 1;
+  const hastaRegistro = Math.min(pagina * porPagina, total);
+
+  function handleFiltrar(nuevosFiltros: AuditoriaFiltrosFormValues) {
+    setPagina(1);
+    setFiltros(nuevosFiltros);
+  }
+
+  function handleLimpiar() {
+    setPagina(1);
+    setFiltros({});
+  }
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Auditoría</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Registro inalterable de todas las operaciones del sistema.
-          </p>
-        </div>
-
-        <Select
-          id="accion"
-          value={accion ?? ''}
-          onChange={(e) => {
-            setPagina(1);
-            setAccion(e.target.value ? (e.target.value as AccionAuditoria) : undefined);
-          }}
-          leftIcon={<Filter />}
-          className="w-full sm:w-56"
-        >
-          <option value="">Todas las acciones</option>
-          {ACCIONES_AUDITORIA.map((a) => (
-            <option key={a.value} value={a.value}>
-              {a.label}
-            </option>
-          ))}
-        </Select>
+      {/* Encabezado según ESTANDARES_UI_UX.md */}
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Auditoría</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Registro inalterable de todas las operaciones del sistema.
+        </p>
       </header>
 
-      {isLoading ? (
+      {/* Componente de Filtros con React Hook Form + Zod */}
+      <AuditoriaFilters
+        onFiltrar={handleFiltrar}
+        onLimpiar={handleLimpiar}
+        filtrosActivos={filtros}
+        deshabilitado={isLoading && !data}
+      />
+
+      {/* Estado de carga inicial */}
+      {isLoading && !data ? (
         <div className="flex justify-center py-12">
           <Spinner className="h-6 w-6" />
         </div>
@@ -60,29 +67,32 @@ export function AuditoriaPage() {
         </div>
       ) : (
         <>
-          <AuditoriaTable registros={data?.items ?? []} />
+          {/* Tabla de auditoría */}
+          <AuditoriaTable registros={data?.items ?? []} isFetching={isFetching} />
 
+          {/* Paginación conectada con el total real del backend */}
           {hayResultados && (
-            <div className="flex items-center justify-between text-sm text-slate-500">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-slate-500">
               <span>
-                {data?.total ?? 0} registro(s){isFetching ? ' · actualizando…' : ''}
+                Mostrando {desdeRegistro} - {hastaRegistro} de {total} registros
+                {isFetching ? ' · actualizando…' : ''}
               </span>
               <div className="flex items-center gap-2">
                 <Button
                   variant="secondary"
                   size="sm"
-                  disabled={pagina <= 1}
+                  disabled={pagina <= 1 || isFetching}
                   onClick={() => setPagina((p) => Math.max(1, p - 1))}
                 >
                   Anterior
                 </Button>
-                <span>
+                <span className="text-xs font-medium text-slate-700">
                   Página {pagina} de {totalPaginas}
                 </span>
                 <Button
                   variant="secondary"
                   size="sm"
-                  disabled={pagina >= totalPaginas}
+                  disabled={pagina >= totalPaginas || isFetching}
                   onClick={() => setPagina((p) => p + 1)}
                 >
                   Siguiente
