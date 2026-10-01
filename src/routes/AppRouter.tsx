@@ -27,6 +27,7 @@ import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
 import { RegistrarPagoDeportivoPage } from '@/features/pagos/pages/RegistrarPagoDeportivoPage';
 import { HistorialDeportivoPage } from '@/features/pagos/pages/HistorialDeportivoPage';
 import { DisciplinasPage } from '@/features/disciplinas/pages/DisciplinasPage';
+import { CategoriasDisciplinaPage } from '@/features/disciplinas/pages/CategoriasDisciplinaPage';
 import { ROUTES } from './paths';
 
 export function AppRouter() {
@@ -50,6 +51,7 @@ export function AppRouter() {
             <Route path="socios" element={<SociosPage />} />
             <Route path="socios/:id/editar" element={<EditarSocioPage />} />
             <Route path="disciplinas" element={<DisciplinasPage />} />
+            <Route path="disciplinas/:id/categorias" element={<CategoriasDisciplinaPage />} />
             <Route path="cuotas/deportiva/cobrar" element={<RegistrarPagoDeportivoPage />} />
             <Route path="cuotas/deportiva/historial" element={<HistorialDeportivoPage />} />
           </Route>
