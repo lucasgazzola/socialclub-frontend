@@ -4,10 +4,15 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventosPage } from './EventosPage';
 import { useCrearEvento, useEventos } from '../hooks/useEventos';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 vi.mock('../hooks/useEventos', () => ({
   useEventos: vi.fn(),
   useCrearEvento: vi.fn(),
+}));
+
+vi.mock('@/features/auth/hooks/useAuth', () => ({
+  useAuth: vi.fn(),
 }));
 
 const crearMutateAsync = vi.fn();
@@ -24,6 +29,9 @@ describe('EventosPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     crearMutateAsync.mockResolvedValue(undefined);
+    vi.mocked(useAuth).mockReturnValue({
+      usuario: { roles: ['ADMIN'] },
+    } as never);
 
     vi.mocked(useEventos).mockReturnValue({
       data: [
@@ -46,13 +54,22 @@ describe('EventosPage', () => {
     } as never);
   });
 
-  it('muestra la acción de generar entradas y la conecta con la ruta del evento', () => {
+  it('muestra la acción de comprar entradas y la conecta con la ruta del evento', () => {
     renderPage();
 
     // El nombre accesible sale del texto del botón: si se renombra la acción,
     // este caso falla y hay que actualizarlo acá.
-    const link = screen.getByRole('link', { name: /generar entradas/i });
+    const link = screen.getByRole('link', { name: /comprar entradas/i });
     expect(link).toHaveAttribute('href', '/eventos/12/entradas');
+  });
+
+  it('oculta Nuevo evento para un usuario autenticado sin rol administrativo', () => {
+    vi.mocked(useAuth).mockReturnValue({ usuario: { roles: [] } } as never);
+
+    renderPage();
+
+    expect(screen.queryByRole('button', { name: /nuevo evento/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /comprar entradas/i })).toBeInTheDocument();
   });
 
   it('abre el alta de evento en un modal en lugar de navegar (DT-14)', async () => {

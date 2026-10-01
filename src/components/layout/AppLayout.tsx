@@ -18,6 +18,7 @@ import {
   ChevronRight,
   ChevronDown,
   Dumbbell,
+  Ticket,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ClubLogo } from '@/components/ui';
@@ -54,6 +55,7 @@ const navSections: NavSection[] = [
       { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
       { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
       { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, roles: ['SOCIO', 'ADMIN', 'COLABORADOR'] },
+      { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
       {
         to: ROUTES.participantes,
         label: 'Participantes',
@@ -73,7 +75,7 @@ const navSections: NavSection[] = [
   {
     title: 'Operaciones',
     items: [
-      { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
+      { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays },
       { to: ROUTES.validarAcceso, label: 'Validar QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
       { to: ROUTES.cuotas, label: 'Cuotas', icon: Coins, roles: ['ADMIN'] },
       {
@@ -104,6 +106,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.perfil]: 'Mi Perfil',
   [ROUTES.cambiarContrasena]: 'Cambiar Contraseña',
   [ROUTES.misCuotas]: 'Mis Cuotas',
+  [ROUTES.misEntradas]: 'Mis Entradas',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',
   [ROUTES.eventos]: 'Eventos y Actividades',

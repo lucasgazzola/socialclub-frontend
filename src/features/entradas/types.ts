@@ -8,6 +8,10 @@ export interface Evento {
   entradasVendidas: number;
   creadoEn: string;
   actualizadoEn: string;
+  estado?: 'BORRADOR' | 'PUBLICADO' | 'CANCELADO' | 'FINALIZADO';
+  precio?: number | string;
+  inicioVenta?: string;
+  finVenta?: string;
 }
 
 export interface Entrada {
@@ -26,6 +30,24 @@ export interface CrearEntradasResult {
   entradas: Entrada[];
 }
 
+export interface ComprarEntradasPayload {
+  eventoId: number;
+  cantidad: number;
+  titular: string;
+  numeroTarjeta: string;
+  vencimiento: string;
+  cvc: string;
+}
+
+export interface CompraEntradasResult {
+  id: number;
+  eventoId: number;
+  eventoNombre: string;
+  cantidad: number;
+  montoTotal: number | string;
+  entradas: Entrada[];
+}
+
 export interface ValidarEntradaDto {
   token: string;
 }
@@ -37,4 +59,4 @@ export interface ValidarAccesoResponse {
     eventoId: number;
     eventoNombre: string;
   };
-}
+}
