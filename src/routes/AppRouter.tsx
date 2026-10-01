@@ -14,6 +14,7 @@ import { CuotasHubPage } from '@/features/cuotas/pages/CuotasHubPage';
 import { CuotaSocialPage } from '@/features/cuota-social/pages/CuotaSocialPage';
 import { EditarCuotaSocialPage } from '@/features/cuota-social/pages/EditarCuotaSocialPage';
 import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
+import { MisEntradasPage } from '@/features/entradas/pages/MisEntradasPage';
 import { ValidarAccesoPage } from '@/features/entradas/pages/ValidarAccesoPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
@@ -43,6 +44,7 @@ export function AppRouter() {
           <Route path={ROUTES.perfil} element={<PerfilSocioPage />} />
           <Route path={ROUTES.cambiarContrasena} element={<CambiarContrasenaPage />} />
           <Route path={ROUTES.misCuotas} element={<MisCuotasPage />} />
+          <Route path={ROUTES.misEntradas} element={<MisEntradasPage />} />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
@@ -60,10 +62,14 @@ export function AppRouter() {
             <Route path="cuotas/social/:id/editar" element={<EditarCuotaSocialPage />} />
           </Route>
 
-          {/* Eventos y entradas: ADMIN y COLABORADOR */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
+          {/* Consulta y compra: cualquier usuario autenticado */}
+          <Route>
             <Route path="eventos" element={<EventosPage />} />
             <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
+          </Route>
+
+          {/* Control operativo: ADMIN y COLABORADOR */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="eventos/:eventoId/validar" element={<ValidarAccesoPage />} />
             <Route path="entradas/validar" element={<ValidarAccesoPage />} />
           </Route>

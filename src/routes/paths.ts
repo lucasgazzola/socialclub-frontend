@@ -28,6 +28,7 @@ export const ROUTES = {
   perfil: '/perfil',
   cambiarContrasena: '/perfil/cambiar-contrasena',
   misCuotas: '/mis-cuotas',
+  misEntradas: '/mis-entradas',
   cobrarCuotaDeportiva: '/cuotas/deportiva/cobrar',
   historialCuotaDeportiva: '/cuotas/deportiva/historial',
 } as const;

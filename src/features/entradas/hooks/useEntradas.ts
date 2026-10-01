@@ -8,6 +8,7 @@ import { entradasApi } from '../api/entradas.api';
 export const entradasKeys = {
   all: ['entradas'] as const,
   porEvento: (eventoId: number) => [...entradasKeys.all, 'por-evento', eventoId] as const,
+  propias: () => [...entradasKeys.all, 'propias'] as const,
 };
 
 /**
@@ -37,6 +38,25 @@ export function useEntradasPorEvento(eventoId: number) {
     queryKey: entradasKeys.porEvento(eventoId),
     queryFn: () => entradasApi.listarEntradasPorEvento(eventoId),
     enabled: !!eventoId,
+  });
+}
+
+export function useComprarEntradas() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: entradasApi.comprarEntradas,
+    onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: ['eventos'] });
+      void qc.invalidateQueries({ queryKey: entradasKeys.propias() });
+      void qc.invalidateQueries({ queryKey: ['eventos', data.eventoId] });
+    },
+  });
+}
+
+export function useMisEntradas() {
+  return useQuery({
+    queryKey: entradasKeys.propias(),
+    queryFn: entradasApi.listarMisEntradas,
   });
 }
 
