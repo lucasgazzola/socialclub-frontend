@@ -1,5 +1,7 @@
-import { Check, Edit2, RotateCcw, X } from 'lucide-react';
+import { Check, Edit2, Layers, RotateCcw, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
+import { ROUTES } from '@/routes/paths';
 import { GENERO_DISCIPLINA_LABELS, type Disciplina } from '../types';
 
 interface DisciplinasTableProps {
@@ -23,7 +25,7 @@ export function DisciplinasTable({ disciplinas, puedeMutar, accionesDeshabilitad
               <th className="px-5 py-3 font-semibold">Edad</th>
               <th className="px-5 py-3 font-semibold">Documentación</th>
               <th className="px-5 py-3 font-semibold">Estado</th>
-              {puedeMutar && <th className="px-5 py-3 text-right font-semibold">Acciones</th>}
+              <th className="px-5 py-3 text-right font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -45,9 +47,15 @@ export function DisciplinasTable({ disciplinas, puedeMutar, accionesDeshabilitad
                   <td className="px-5 py-4">
                     <Badge variant={disciplina.activo ? 'success' : 'secondary'}>{disciplina.activo ? 'Activa' : 'Inactiva'}</Badge>
                   </td>
-                  {puedeMutar && (
-                    <td className="px-5 py-4">
-                      <div className="flex justify-end gap-1.5">
+                  <td className="px-5 py-4">
+                    <div className="flex justify-end gap-1.5">
+                      <Link
+                        to={ROUTES.categoriasDisciplina(disciplina.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      >
+                        <Layers size={14} /> Categorías ({disciplina.categorias.length})
+                      </Link>
+                      {puedeMutar && (<>
                         <Button type="button" variant="ghost" size="sm" disabled={accionesDeshabilitadas} onClick={() => onEditar(disciplina)} className="text-slate-600 hover:bg-slate-100 hover:text-slate-900">
                           <Edit2 size={14} /> Editar
                         </Button>
@@ -62,9 +70,9 @@ export function DisciplinasTable({ disciplinas, puedeMutar, accionesDeshabilitad
                           {disciplina.activo ? <X size={14} /> : <RotateCcw size={14} />}
                           {disciplina.activo ? 'Desactivar' : 'Reactivar'}
                         </Button>
-                      </div>
-                    </td>
-                  )}
+                      </>)}
+                    </div>
+                  </td>
                 </tr>
               );
             })}

@@ -11,6 +11,7 @@ export const ROUTES = {
   sociosEditar: '/socios/:id/editar',
   cuotas: '/cuotas',
   disciplinas: '/disciplinas',
+  categoriasDisciplina: (disciplinaId: number) => `/disciplinas/${disciplinaId}/categorias`,
   cuotaDeportiva: '/cuotas/deportiva',
   cuotaSocial: '/cuotas/social',
   cuotaSocialEditar: (id: number) => `/cuotas/social/${id}/editar`,
