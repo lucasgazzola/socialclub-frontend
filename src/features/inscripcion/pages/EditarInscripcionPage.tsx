@@ -162,7 +162,7 @@ export function EditarInscripcionPage() {
               Editar inscripción seleccionada
             </p>
           </div>
-          <DatosNuevoParticipanteForm register={register} errors={errors} />
+          <DatosNuevoParticipanteForm register={register} control={control} errors={errors} />
 
           {cargandoDisciplinas ? (
             <div className="flex items-center gap-2 text-sm text-slate-500">

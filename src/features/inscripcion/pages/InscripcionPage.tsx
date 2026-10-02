@@ -150,7 +150,7 @@ export function InscripcionPage() {
                   Volver a buscar
                 </Button>
               </div>
-              <DatosNuevoParticipanteForm register={register} errors={errors} />
+              <DatosNuevoParticipanteForm register={register} control={control} errors={errors} />
             </div>
           )}
 
