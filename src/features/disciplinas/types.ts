@@ -208,6 +208,18 @@ export function etiquetaPlazo(dias: number): string {
   return dias === 0 ? 'Obligatorio al inscribirse' : `${dias} días para presentarlo`;
 }
 
+/**
+ * US-50: una categoría dada de baja no se ofrece para nuevas inscripciones.
+ * Si la inscripción ya estaba en una categoría inactiva, se la conserva en la
+ * lista para no perderla al editar.
+ */
+export function categoriasDisponibles(
+  disciplina: { categorias: CategoriaDisciplinaOption[] } | undefined,
+  categoriaActualId?: number | null,
+): CategoriaDisciplinaOption[] {
+  return (disciplina?.categorias ?? []).filter((c) => c.activo || c.id === categoriaActualId);
+}
+
 // ─── Filtros ──────────────────────────────────────────────────────────────────
 
 export type EstadoDisciplinaFiltro = 'ACTIVA' | 'INACTIVA';

@@ -6,6 +6,7 @@ import { useInscripcionesPorPersona } from '../hooks/useInscripciones';
 import { actualizarDatosPersona } from '../api/inscripcion.api';
 import { toast } from 'sonner';
 import { useDisciplinasActivas } from '../../disciplinas/hooks/useDisciplinasActivas';
+import { categoriasDisponibles } from '../../disciplinas/types';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { inscripcionSchema, type InscripcionFormValues } from '../schemas/inscripcion.schema';
@@ -330,7 +331,7 @@ export function EditarParticipantePage() {
                       />
                     </div>
 
-                    {(disciplinas.find((disc) => disc.id === d.disciplinaId)?.categorias.length ?? 0) > 0 && (
+                    {categoriasDisponibles(disciplinas.find((disc) => disc.id === d.disciplinaId), d.categoriaDisciplinaId).length > 0 && (
                       <div className="flex-1 min-w-0">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Categoría</label>
                         <Controller
@@ -347,13 +348,11 @@ export function EditarParticipantePage() {
                               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                             >
                               <option value="">Seleccioná una categoría</option>
-                              {disciplinas
-                                .find((disc) => disc.id === d.disciplinaId)
-                                ?.categorias.map((cat) => (
-                                  <option key={cat.id} value={cat.id}>
-                                    {cat.nombre}
-                                  </option>
-                                ))}
+                              {categoriasDisponibles(disciplinas.find((disc) => disc.id === d.disciplinaId), d.categoriaDisciplinaId).map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.activo ? cat.nombre : `${cat.nombre} (dada de baja)`}
+                                </option>
+                              ))}
                             </select>
                           )}
                         />
