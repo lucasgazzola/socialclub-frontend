@@ -1,13 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Card, Spinner, Button, DateInput, Input } from '@/components/ui';
+import { Card, Spinner, Button, DateInput, Input, Select } from '@/components/ui';
 import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
 import { ROUTES } from '@/routes/paths';
 import { useInscripcionesPorPersona } from '../hooks/useInscripciones';
 import { actualizarDatosPersona } from '../api/inscripcion.api';
 import { toast } from 'sonner';
 import { useDisciplinasActivas } from '../../disciplinas/hooks/useDisciplinasActivas';
-import { categoriasDisponibles } from '../../disciplinas/types';
+import { GENERO_DISCIPLINA_LABELS, categoriasDisponibles, type GeneroDisciplina } from '../../disciplinas/types';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { inscripcionSchema, type InscripcionFormValues } from '../schemas/inscripcion.schema';
@@ -69,6 +69,7 @@ export function EditarParticipantePage() {
         apellido: primera.persona.apellido,
         dni: primera.persona.dni,
         fechaNacimiento: primera.persona.fechaNacimiento ? primera.persona.fechaNacimiento.split('T')[0] : '',
+        genero: primera.persona.genero ?? undefined,
         email: primera.persona.email ?? '',
         telefono: primera.persona.telefono ?? '',
         disciplinaId: 0,
@@ -149,6 +150,7 @@ export function EditarParticipantePage() {
           apellido: data.apellido,
           dni: data.dni,
           fechaNacimiento: data.fechaNacimiento || undefined,
+          genero: data.genero,
           email: data.email || undefined,
           telefono: data.telefono || undefined,
         });
@@ -156,7 +158,7 @@ export function EditarParticipantePage() {
         toast.error(error instanceof Error ? error.message : 'No se pudo guardar el participante');
         return;
       }
-      navigate('/inscripcion', { state: { mensaje: 'Participante actualizado correctamente.' } });
+      navigate(ROUTES.participantes, { state: { mensaje: 'Participante actualizado correctamente.' } });
       return;
     }
 
@@ -179,7 +181,7 @@ export function EditarParticipantePage() {
       }
     }
 
-    navigate('/inscripcion', { state: { mensaje: 'Participante actualizado correctamente.' } });
+    navigate(ROUTES.participantes, { state: { mensaje: 'Participante actualizado correctamente.' } });
   };
 
   if (loadingInscripciones) {
@@ -286,6 +288,21 @@ export function EditarParticipantePage() {
                 />
               )}
             />
+          </div>
+
+          <div className="max-w-xs">
+            <label htmlFor="genero" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+              Género
+            </label>
+            {/* DT-39: lo usan las restricciones de género de disciplinas y categorías. */}
+            <Select id="genero" {...register('genero', { setValueAs: (v: string) => (v ? (v as GeneroDisciplina) : undefined) })}>
+              <option value="">Sin especificar</option>
+              {(Object.keys(GENERO_DISCIPLINA_LABELS) as GeneroDisciplina[]).map((g) => (
+                <option key={g} value={g}>
+                  {GENERO_DISCIPLINA_LABELS[g]}
+                </option>
+              ))}
+            </Select>
           </div>
 
           <div className="border-t border-slate-200 pt-6">

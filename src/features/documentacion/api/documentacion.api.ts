@@ -1,17 +1,23 @@
 import { apiClient } from '@/lib/api/client';
-import type { CrearDocumentacionPayload, Documentacion } from '../types';
+import type { CrearDocumentacionPayload, Documentacion, EstadoDocumentalPersona } from '../types';
 
 export const documentacionApi = {
   async crear(payload: CrearDocumentacionPayload, archivo?: File | null): Promise<Documentacion> {
     // Se envía como multipart para poder adjuntar el archivo opcional (PDF/imagen).
     const form = new FormData();
-    form.append('tipo', payload.tipo);
+    form.append('tipoDocumento', payload.tipoDocumento);
     form.append('fechaVencimiento', payload.fechaVencimiento);
     form.append('personaId', String(payload.personaId));
     if (archivo) form.append('archivo', archivo);
     const { data } = await apiClient.post<Documentacion>('/documentacion', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return data;
+  },
+
+  /** US-25: exigido vs. presentado, por cada inscripción activa. */
+  async estadoPorPersona(personaId: number): Promise<EstadoDocumentalPersona> {
+    const { data } = await apiClient.get<EstadoDocumentalPersona>(`/documentacion/persona/${personaId}/estado`);
     return data;
   },
 

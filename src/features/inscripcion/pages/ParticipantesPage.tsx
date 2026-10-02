@@ -5,7 +5,7 @@ import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/
 import { AuthContext } from '@/features/auth/context/auth-context';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
-import type { EstadoInscripcionFiltro, ParticipanteConDisciplinas } from '../types';
+import type { EstadoInscripcionFiltro, ParticipanteConDisciplinas, ParticipanteEncontrado } from '../types';
 import { useInscripciones } from '../hooks/useInscripciones';
 import { ParticipantesTable } from '../components/ParticipantesTable';
 import { InscripcionForm } from '../components/InscripcionForm';
@@ -34,8 +34,30 @@ export function ParticipantesPage() {
   const inscripcionAbierta = Boolean(puedeInscribir) && searchParams.get('nueva') === '1';
   const [conDocumentacion, setConDocumentacion] = useState<ParticipanteConDisciplinas | null>(null);
 
-  const abrirInscripcion = () => setSearchParams({ nueva: '1' });
-  const cerrarInscripcion = () => setSearchParams({});
+  const [aInscribir, setAInscribir] = useState<ParticipanteEncontrado | null>(null);
+  const abrirInscripcion = () => {
+    setAInscribir(null);
+    setSearchParams({ nueva: '1' });
+  };
+  const cerrarInscripcion = () => {
+    setAInscribir(null);
+    setSearchParams({});
+  };
+  const inscribirExistente = (p: ParticipanteConDisciplinas) => {
+    setAInscribir({ ...p.persona, genero: p.persona.genero ?? null, inscripciones: [] });
+    setSearchParams({ nueva: '1' });
+  };
+  // TASK-31: después de inscribir, se puede pasar directo a su documentación.
+  const verDocumentacionDe = (persona: { id: number; nombre: string; apellido: string; dni: string }) => {
+    cerrarInscripcion();
+    setConDocumentacion({
+      personaId: persona.id,
+      persona: { ...persona, fechaNacimiento: null, email: null, telefono: null, activo: true },
+      disciplinas: [],
+      cantidadDisciplinas: 0,
+      estado: 'INSCRIPTO',
+    });
+  };
 
   const { disciplinas } = useDisciplinasActivas();
 
@@ -93,12 +115,20 @@ export function ParticipantesPage() {
 
       <Modal
         open={inscripcionAbierta}
-        title="Nueva inscripción"
-        description="Buscá al participante por DNI o registrá uno nuevo, y asignalo a una disciplina."
+        title={aInscribir ? `Inscribir a ${aInscribir.apellido}, ${aInscribir.nombre}` : 'Nueva inscripción'}
+        description={
+          aInscribir
+            ? 'Elegí la disciplina y la categoría.'
+            : 'Cargá los datos del participante y elegí la disciplina. Si el DNI ya está registrado, se usan sus datos.'
+        }
         onClose={cerrarInscripcion}
         className="max-w-3xl"
       >
-        <InscripcionForm />
+        <InscripcionForm
+          key={aInscribir?.id ?? 'nuevo'}
+          participante={aInscribir}
+          onCargarDocumentacion={verDocumentacionDe}
+        />
       </Modal>
 
       <Modal
@@ -189,6 +219,7 @@ export function ParticipantesPage() {
           <ParticipantesTable
             participantes={data?.items ?? []}
             onVerDocumentacion={puedeInscribir ? setConDocumentacion : undefined}
+            onInscribir={puedeInscribir ? inscribirExistente : undefined}
           />
 
           {hayResultados && (

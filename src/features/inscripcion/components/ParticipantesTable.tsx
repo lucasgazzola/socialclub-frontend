@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, ChevronUp, FileText, Pencil, UserMinus } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, FileText, Pencil, UserMinus, UserPlus } from 'lucide-react';
 import { Badge, Button, ConfirmDialog } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
+import { isoADisplay } from '@/lib/utils/fecha';
 import { useActivarParticipante } from '../hooks/useActivarParticipante';
 import { useDarDeBajaParticipante } from '../hooks/useDarDeBajaParticipante';
+import { EstadoHabilitacionBadge } from '@/features/documentacion/components/EstadoBadges';
 import type { ParticipanteConDisciplinas } from '../types';
 
 interface ParticipantesTableProps {
   participantes: ParticipanteConDisciplinas[];
   /** DT-11: abre la documentación del participante (solo si se puede gestionar). */
   onVerDocumentacion?: (participante: ParticipanteConDisciplinas) => void;
+  /** TASK-31: inscribir a este participante en otra disciplina. */
+  onInscribir?: (participante: ParticipanteConDisciplinas) => void;
 }
 
 /** Etiqueta del estado de una inscripción puntual del participante. */
@@ -43,7 +47,7 @@ function BadgeParticipante({ activo }: { activo: boolean }) {
  * US-07 — Desde acá el delegado (o un admin) puede dar de baja al
  * participante: la baja alcanza a todas sus disciplinas.
  */
-export function ParticipantesTable({ participantes, onVerDocumentacion }: ParticipantesTableProps) {
+export function ParticipantesTable({ participantes, onVerDocumentacion, onInscribir }: ParticipantesTableProps) {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
@@ -118,6 +122,7 @@ export function ParticipantesTable({ participantes, onVerDocumentacion }: Partic
               <th className="px-5 py-3.5">DNI</th>
               <th className="px-5 py-3.5">Disciplinas</th>
               <th className="px-5 py-3.5">Estado</th>
+              <th className="px-5 py-3.5">Documentación</th>
               <th className="px-5 py-3.5 text-right font-medium">Acciones</th>
             </tr>
           </thead>
@@ -134,6 +139,7 @@ export function ParticipantesTable({ participantes, onVerDocumentacion }: Partic
                 onDarDeBaja={() => setParticipanteAConfirmar(participante)}
                 onReactivar={() => setParticipanteAReactivar(participante)}
                 onVerDocumentacion={onVerDocumentacion ? () => onVerDocumentacion(participante) : undefined}
+                onInscribir={onInscribir ? () => onInscribir(participante) : undefined}
                 onEditar={() =>
                   navigate(
                     ROUTES.participantesEditar.replace(':id', String(participante.personaId)),
@@ -203,6 +209,7 @@ interface ParticipanteRowProps {
   onReactivar: () => void;
   onEditar: () => void;
   onVerDocumentacion?: () => void;
+  onInscribir?: () => void;
 }
 
 function ParticipanteRow({
@@ -214,6 +221,7 @@ function ParticipanteRow({
   onReactivar,
   onEditar,
   onVerDocumentacion,
+  onInscribir,
 }: ParticipanteRowProps) {
   const nombres = participante.disciplinas.map((d) => d.disciplina.nombre);
   const visibles = nombres.slice(0, 2);
@@ -233,6 +241,13 @@ function ParticipanteRow({
         <td className="px-5 py-3.5">
           <BadgeParticipante activo={participante.persona.activo} />
         </td>
+        <td className="px-5 py-3.5">
+          {participante.estadoDocumental ? (
+            <EstadoHabilitacionBadge estado={participante.estadoDocumental} />
+          ) : (
+            <span className="text-slate-400">—</span>
+          )}
+        </td>
         <td className="px-5 py-3.5 text-right">
           <div className="flex items-center justify-end gap-1.5">
             <Button
@@ -249,6 +264,17 @@ function ParticipanteRow({
               <Pencil size={14} />
               Editar
             </Button>
+            {onInscribir && participante.persona.activo && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Inscribir a ${participante.persona.apellido}, ${participante.persona.nombre} en otra disciplina`}
+                onClick={onInscribir}
+              >
+                <UserPlus size={14} />
+                Inscribir
+              </Button>
+            )}
             {onVerDocumentacion && (
               <Button
                 variant="ghost"
@@ -289,7 +315,7 @@ function ParticipanteRow({
       </tr>
       {expandido && (
         <tr className="bg-slate-50/60">
-          <td colSpan={5} className="px-4 py-3">
+          <td colSpan={6} className="px-4 py-3">
             <div className="rounded-xl border border-slate-200 bg-white">
               <table className="w-full text-left text-sm">
                 <thead className="text-xs tracking-wide text-slate-500 uppercase">
@@ -297,6 +323,7 @@ function ParticipanteRow({
                     <th className="px-4 py-2 font-medium">Disciplina</th>
                     <th className="px-4 py-2 font-medium">Categoría</th>
                     <th className="px-4 py-2 font-medium">Estado</th>
+                    <th className="px-4 py-2 font-medium">Documentación</th>
                     <th className="px-4 py-2 font-medium">Fecha de inscripción</th>
                   </tr>
                 </thead>
@@ -315,8 +342,24 @@ function ParticipanteRow({
                             texto={estadoDisciplina.texto}
                           />
                         </td>
+                        <td className="px-4 py-2">
+                          {d.estadoDocumental ? (
+                            <div>
+                              <EstadoHabilitacionBadge estado={d.estadoDocumental} />
+                              {d.motivosDocumentacion && d.motivosDocumentacion.length > 0 && (
+                                <ul className="mt-1 space-y-0.5 text-xs text-slate-500">
+                                  {d.motivosDocumentacion.map((m) => (
+                                    <li key={m}>{m}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-2 text-slate-600">
-                          {new Date(d.fechaInscripcion).toLocaleDateString('es-AR')}
+                          {isoADisplay(d.fechaInscripcion)}
                         </td>
                       </tr>
                     );

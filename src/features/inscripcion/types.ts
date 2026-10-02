@@ -12,6 +12,9 @@
  * ese acoplamiento se filtre en el contrato del backend.
  */
 
+import type { GeneroDisciplina, Restricciones } from '@/features/disciplinas/types';
+import type { EstadoDeInscripcion, EstadoDocumentalInscripcion, EstadoHabilitacion } from '@/features/documentacion/types';
+
 // ── Persona / participante ──────────────────────────────────────────
 
 export interface InscripcionResumida {
@@ -25,8 +28,11 @@ export interface ParticipanteEncontrado {
   nombre: string;
   apellido: string;
   dni: string;
+  fechaNacimiento: string | null;
+  genero: GeneroDisciplina | null;
   email: string | null;
   telefono: string | null;
+  activo?: boolean;
   inscripciones: InscripcionResumida[];
 }
 
@@ -36,6 +42,7 @@ export interface CrearInscripcionPayload {
   apellido?: string;
   dni?: string;
   fechaNacimiento?: string;
+  genero?: GeneroDisciplina;
   email?: string;
   telefono?: string;
   disciplinaId: number;
@@ -45,6 +52,14 @@ export interface CrearInscripcionPayload {
 export interface InscripcionCreada {
   persona: { id: number; nombre: string; apellido: string; dni: string };
   inscripcion: { id: number; disciplinaId: number; categoriaDisciplinaId: number | null };
+  /** TASK-31: qué documentación falta y hasta cuándo (US-05). */
+  estadoDocumental?: EstadoDocumentalInscripcion | null;
+}
+
+/** US-05: lo que se le va a exigir a una inscripción antes de confirmarla. */
+export interface RequisitosInscripcion {
+  restricciones: Restricciones;
+  documentacion: EstadoDeInscripcion;
 }
 
 export interface Inscripcion {
@@ -60,6 +75,7 @@ export interface Inscripcion {
     telefono: string | null;
     /** US-07: estado propio del participante (Inactivo = dado de baja). */
     activo: boolean;
+    genero?: GeneroDisciplina | null;
   };
   disciplinaId: number;
   disciplina: { id: number; nombre: string };
@@ -82,6 +98,9 @@ export interface DisciplinaInscripta {
   activo: boolean;
   /** Estado legible de la inscripción en esta disciplina. */
   estado: EstadoInscripcionFiltro;
+  /** TASK-31: estado documental de esta inscripción (null si está dada de baja). */
+  estadoDocumental?: EstadoHabilitacion | null;
+  motivosDocumentacion?: string[];
 }
 
 /**
@@ -101,10 +120,13 @@ export interface ParticipanteConDisciplinas {
     telefono: string | null;
     /** US-07: estado propio del participante (Inactivo = dado de baja). */
     activo: boolean;
+    genero?: GeneroDisciplina | null;
   };
   disciplinas: DisciplinaInscripta[];
   cantidadDisciplinas: number;
   estado: EstadoInscripcionFiltro;
+  /** TASK-31: el peor estado documental entre sus inscripciones activas. */
+  estadoDocumental?: EstadoHabilitacion | null;
 }
 
 /** Estado de la participación de un participante en una disciplina. */
@@ -148,6 +170,7 @@ export interface ActualizarDatosPersonaPayload {
   apellido?: string;
   dni?: string;
   fechaNacimiento?: string;
+  genero?: GeneroDisciplina;
   email?: string;
   telefono?: string;
 }
