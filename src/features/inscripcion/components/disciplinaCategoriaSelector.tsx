@@ -22,12 +22,13 @@ export function DisciplinaCategoriaSelector({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Disciplina</label>
+        <label htmlFor="disciplinaId" className="mb-1 block text-sm font-medium text-slate-700">Disciplina</label>
         <Controller
           control={control}
           name="disciplinaId"
           render={({ field }) => (
             <Select
+              id="disciplinaId"
               value={field.value ?? ''}
               onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
             >
@@ -47,12 +48,13 @@ export function DisciplinaCategoriaSelector({
 
       {tieneCategorias && (
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Categoría</label>
+          <label htmlFor="categoriaDisciplinaId" className="mb-1 block text-sm font-medium text-slate-700">Categoría</label>
           <Controller
             control={control}
             name="categoriaDisciplinaId"
             render={({ field }) => (
               <Select
+                id="categoriaDisciplinaId"
                 value={field.value ?? ''}
                 onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
               >
