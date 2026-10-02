@@ -31,7 +31,7 @@ export default defineConfig({
       ],
       // Ratchet: piso actual (solo puede subir). Objetivo DoD: 70% en componentes/hooks críticos.
       // Subir estos umbrales a medida que /casos-a-tests agregue tests.
-      thresholds: { statements: 33, branches: 33, functions: 28, lines: 33 },
+      thresholds: { statements: 67, branches: 66, functions: 57, lines: 68 },
     },
   },
 });
