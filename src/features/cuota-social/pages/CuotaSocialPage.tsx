@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, Filter, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Filter, Plus, Wallet } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
 import { CuotaSocialForm } from '../components/CuotaSocialForm';
 import { CuotaSocialTable } from '../components/CuotaSocialTable';
+import { EditarCuotaSocialModal } from '../components/EditarCuotaSocialModal';
 import { useConfigurarCuotaSocial } from '../hooks/useConfigurarCuotaSocial';
 import { useCuotaSocial } from '../hooks/useCuotaSocial';
 import type { CuotaSocialFormValues } from '../schemas';
@@ -20,6 +21,9 @@ export function CuotaSocialPage() {
   const [periodo, setPeriodo] = useState<string | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
+  // DT-20: la edición es un modal sobre el listado (?editar=<id>).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const cuotaAEditar = Number(searchParams.get('editar')) || null;
 
   const { data: categorias = [] } = useCategorias();
   const configurarCuota = useConfigurarCuotaSocial();
@@ -75,10 +79,14 @@ export function CuotaSocialPage() {
         open={modalAbierto}
         title="Nueva cuota social"
         description="Elegí la categoría y definí el monto mensual. Los cambios aplican desde el período siguiente."
+        icon={<Wallet />}
+        size="md"
         onClose={() => setModalAbierto(false)}
       >
-        <CuotaSocialForm modo="crear" categorias={categorias} onSubmit={handleCrear} />
+        <CuotaSocialForm modo="crear" categorias={categorias} onSubmit={handleCrear} onCancel={() => setModalAbierto(false)} />
       </Modal>
+
+      <EditarCuotaSocialModal cuotaId={cuotaAEditar} onClose={() => setSearchParams({})} />
 
       <div className="flex flex-wrap items-center gap-2.5">
         <Select
@@ -124,7 +132,7 @@ export function CuotaSocialPage() {
         <>
           <CuotaSocialTable
             cuotas={data?.items ?? []}
-            onEditar={(cuota) => navigate(ROUTES.cuotaSocialEditar(cuota.id))}
+            onEditar={(cuota) => setSearchParams({ editar: String(cuota.id) })}
           />
 
           {hayResultados && (

@@ -146,7 +146,7 @@ export function SociosTable({ socios }: SociosTableProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(ROUTES.sociosEditar.replace(':id', String(socio.id)))}
+                        onClick={() => navigate(ROUTES.editarSocio(socio.id))}
                       >
                         <Pencil size={14} />
                         Editar
