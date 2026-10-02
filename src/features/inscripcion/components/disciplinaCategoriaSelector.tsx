@@ -1,7 +1,7 @@
 import { Controller, type Control, type FieldErrors } from 'react-hook-form';
 import { Select } from '@/components/ui';
 import type { InscripcionFormValues } from '../schemas/inscripcion.schema';
-import type { DisciplinaOption } from '../../disciplinas/types';
+import { categoriasDisponibles, type DisciplinaOption } from '../../disciplinas/types';
 
 interface DisciplinaCategoriaSelectorProps {
   control: Control<InscripcionFormValues>;
@@ -16,7 +16,8 @@ export function DisciplinaCategoriaSelector({
   disciplinas,
   disciplinaSeleccionada,
 }: DisciplinaCategoriaSelectorProps) {
-  const tieneCategorias = (disciplinaSeleccionada?.categorias.length ?? 0) > 0;
+  const categorias = categoriasDisponibles(disciplinaSeleccionada);
+  const tieneCategorias = categorias.length > 0;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -56,7 +57,7 @@ export function DisciplinaCategoriaSelector({
                 onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
               >
                 <option value="">Seleccioná una categoría</option>
-                {disciplinaSeleccionada?.categorias.map((c) => (
+                {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nombre}
                   </option>

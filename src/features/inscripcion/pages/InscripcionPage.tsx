@@ -7,6 +7,7 @@ import { inscripcionSchema, type InscripcionFormValues } from '../schemas/inscri
 import { useBuscarParticipante } from '../hooks/useBuscarParticipante';
 import { useCrearInscripcion } from '../hooks/useCrearInscripcion';
 import { useDisciplinasActivas } from '../../disciplinas/hooks/useDisciplinasActivas';
+import { categoriasDisponibles } from '../../disciplinas/types';
 import { BuscarParticipanteDni } from '../components/buscarParticipanteDni';
 import { ParticipanteSeleccionado } from '../components/participanteSeleccionado';
 import { DatosNuevoParticipanteForm } from '../components/datosNuevoParticipanteForm';
@@ -80,7 +81,7 @@ export function InscripcionPage() {
     // La categoría es obligatoria solo si la disciplina elegida tiene
     // categorías configuradas — depende de datos cargados en runtime, así
     // que se valida acá y no en el schema estático.
-    if ((disciplinaSeleccionada?.categorias.length ?? 0) > 0 && !data.categoriaDisciplinaId) {
+    if (categoriasDisponibles(disciplinaSeleccionada).length > 0 && !data.categoriaDisciplinaId) {
       setError('categoriaDisciplinaId', {
         message: 'Debe seleccionar una categoría para esta disciplina',
       });
