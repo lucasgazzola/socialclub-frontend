@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { ROUTES } from '@/routes/paths';
 import { useMisCuotas } from '../hooks/useMisCuotas';
 import { useRegistrarPago } from '../hooks/useRegistrarPago';
 import { useHistorialPagos } from '../hooks/useHistorialPagos';
@@ -10,13 +13,26 @@ import { Coins, History, CreditCard } from 'lucide-react';
 import type { MockPagoFormData } from '../schemas/pago.schema';
 
 export function MisCuotasPage() {
-  const { data: resumen, isLoading: isLoadingCuotas, isError, error } = useMisCuotas();
-  const { data: historial, isLoading: isLoadingHistorial } = useHistorialPagos();
+  const { usuario } = useAuth();
+  const esOFueSocio = Boolean(
+    usuario?.persona?.membresias && usuario.persona.membresias.length > 0,
+  );
+
+  const { data: resumen, isLoading: isLoadingCuotas, isError, error } = useMisCuotas({
+    enabled: esOFueSocio,
+  });
+  const { data: historial, isLoading: isLoadingHistorial } = useHistorialPagos({
+    enabled: esOFueSocio,
+  });
   const registrarPagoMutation = useRegistrarPago();
 
   const [selectedPeriodos, setSelectedPeriodos] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'pendientes' | 'historial'>('pendientes');
+
+  if (!esOFueSocio) {
+    return <Navigate to={ROUTES.dashboard} replace />;
+  }
 
   const cuotasPendientes = resumen?.cuotasPendientes ?? [];
 

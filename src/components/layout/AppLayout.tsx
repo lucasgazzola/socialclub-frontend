@@ -33,6 +33,8 @@ interface NavItem {
   roles?: RolNombre[];
   /** Si está activo, el ítem solo se muestra cuando el usuario NO tiene membresía activa. */
   soloSinMembresia?: boolean;
+  /** Si está activo, el ítem solo se muestra si el usuario es o fue socio (tiene o tuvo membresías). */
+  soloSocioOExSocio?: boolean;
 }
 
 interface NavSection {
@@ -53,7 +55,7 @@ const navSections: NavSection[] = [
     items: [
       { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
       { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
-      { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, roles: ['SOCIO', 'ADMIN', 'COLABORADOR'] },
+      { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
       { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
       {
         to: ROUTES.participantes,
@@ -173,6 +175,9 @@ export function AppLayout() {
   };
 
   const tieneMembresia = usuario?.persona?.membresias?.some((m) => m.activo);
+  const esOFueSocio = Boolean(
+    usuario?.persona?.membresias && usuario.persona.membresias.length > 0,
+  );
 
   // Filtrar secciones y sus ítems visibles según roles y membresía
   const seccionesVisibles = navSections
@@ -181,6 +186,7 @@ export function AppLayout() {
       items: seccion.items.filter(
         (item) =>
           (!item.soloSinMembresia || !tieneMembresia) &&
+          (!item.soloSocioOExSocio || esOFueSocio) &&
           (!item.roles || item.roles.some((rol) => usuario?.roles.includes(rol))),
       ),
     }))
