@@ -5,6 +5,7 @@ import type { CrearDocumentacionPayload } from '../types';
 export const documentacionKeys = {
   all: ['documentacion'] as const,
   porPersona: (personaId: number) => [...documentacionKeys.all, 'persona', personaId] as const,
+  estado: (personaId: number) => [...documentacionKeys.all, 'estado', personaId] as const,
 };
 
 /** Carga un documento obligatorio (US-24) e invalida la lista del participante. */
@@ -15,6 +16,9 @@ export function useCrearDocumentacion() {
       documentacionApi.crear(payload, archivo),
     onSuccess: (doc) => {
       qc.invalidateQueries({ queryKey: documentacionKeys.porPersona(doc.personaId) });
+      qc.invalidateQueries({ queryKey: documentacionKeys.estado(doc.personaId) });
+      // El listado de participantes muestra el estado documental.
+      qc.invalidateQueries({ queryKey: ['inscripciones'] });
     },
   });
 }
@@ -24,6 +28,15 @@ export function useDocumentacionPorPersona(personaId: number | null) {
   return useQuery({
     queryKey: documentacionKeys.porPersona(personaId ?? 0),
     queryFn: () => documentacionApi.listarPorPersona(personaId as number),
+    enabled: !!personaId,
+  });
+}
+
+/** US-25: estado documental del participante por inscripción. */
+export function useEstadoDocumental(personaId: number | null) {
+  return useQuery({
+    queryKey: documentacionKeys.estado(personaId ?? 0),
+    queryFn: () => documentacionApi.estadoPorPersona(personaId as number),
     enabled: !!personaId,
   });
 }

@@ -9,10 +9,11 @@ function hoyISO(): string {
 
 /**
  * Validación del formulario de documentación (US-24), alineada al backend:
- * tipo y fecha obligatorios; la fecha de vencimiento no puede ser anterior a hoy.
+ * tipo (del catálogo) y fecha obligatorios; la fecha de vencimiento no puede ser anterior a hoy.
  */
 export const documentacionSchema = z.object({
-  tipo: z.string().min(1, 'El tipo de documento es obligatorio'),
+  // Del catálogo, entre los exigidos al participante (TASK-31).
+  tipoDocumento: z.string().min(1, 'Seleccioná el tipo de documento'),
   fechaVencimiento: z
     .string()
     .min(1, 'La fecha de vencimiento es obligatoria')
