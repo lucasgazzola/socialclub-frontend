@@ -140,12 +140,12 @@ describe('US-08 · ParticipantesTable', () => {
       />,
     );
 
-    expect(screen.queryByText('Sub-15')).not.toBeInTheDocument();
+    expect(screen.queryByText('Categoría Sub-15')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Ver disciplinas de Perez, Juan/i }));
 
     expect(screen.getByText('Vóley')).toBeInTheDocument();
-    expect(screen.getByText('Sub-15')).toBeInTheDocument();
+    expect(screen.getByText('Categoría Sub-15')).toBeInTheDocument();
     expect(screen.getByText('Baja')).toBeInTheDocument();
   });
 
@@ -156,11 +156,12 @@ describe('US-08 · ParticipantesTable', () => {
     // El aria-label es estable, así que el botón se consulta siempre por él.
     const boton = screen.getByRole('button', { name: /Ver disciplinas de/i });
     await user.click(boton);
-    expect(screen.getByText('Sub-15')).toBeInTheDocument();
-    expect(screen.getByText('Ocultar')).toBeInTheDocument();
+    expect(screen.getByText('Categoría Sub-15')).toBeInTheDocument();
+    expect(boton).toHaveAttribute('aria-expanded', 'true');
 
     await user.click(screen.getByRole('button', { name: /Ver disciplinas de/i }));
-    expect(screen.queryByText('Sub-15')).not.toBeInTheDocument();
+    expect(screen.queryByText('Categoría Sub-15')).not.toBeInTheDocument();
+    expect(boton).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('muestra el estado Inactivo del participante dado de baja (US-07)', () => {
