@@ -138,14 +138,14 @@ describe('US-08 · ParticipantesPage', () => {
   });
 
   // DT-11: inscripción y documentación dentro de la pantalla de Participantes.
-  it('abre la inscripción en un modal desde "Nueva inscripción"', async () => {
+  it('abre el alta en un modal desde "Nuevo participante"', async () => {
     const user = userEvent.setup();
     renderPagina();
 
     expect(screen.queryByTestId('form-inscripcion')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Nueva inscripción/ }));
+    await user.click(screen.getByRole('button', { name: /Nuevo participante/ }));
 
-    expect(screen.getByRole('dialog', { name: 'Nueva inscripción' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Nuevo participante' })).toBeInTheDocument();
     expect(screen.getByTestId('form-inscripcion')).toBeInTheDocument();
   });
 

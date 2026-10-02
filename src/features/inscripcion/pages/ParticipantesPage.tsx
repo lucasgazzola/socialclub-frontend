@@ -111,18 +111,18 @@ export function ParticipantesPage() {
         {puedeInscribir && (
           <Button onClick={abrirInscripcion} className="self-start shadow-xs sm:self-auto">
             <Plus size={16} />
-            Nueva inscripción
+            Nuevo participante
           </Button>
         )}
       </header>
 
       <Modal
         open={inscripcionAbierta}
-        title={aInscribir ? `Inscribir a ${aInscribir.apellido}, ${aInscribir.nombre}` : 'Nueva inscripción'}
+        title={aInscribir ? `Inscribir a ${aInscribir.apellido}, ${aInscribir.nombre}` : 'Nuevo participante'}
         description={
           aInscribir
             ? 'Elegí la disciplina y la categoría.'
-            : 'Cargá los datos del participante y elegí la disciplina. Si el DNI ya está registrado, se usan sus datos.'
+            : 'Registrá al participante y la disciplina en la que se inscribe.'
         }
         onClose={cerrarInscripcion}
         icon={<UserPlus />}
