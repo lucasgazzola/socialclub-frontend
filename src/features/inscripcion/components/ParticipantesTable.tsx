@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, ChevronUp, FileText, Pencil, UserMinus, UserPlus } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, Dumbbell, FileText, Pencil, UserMinus, UserPlus } from 'lucide-react';
 import { Badge, Button, ConfirmDialog } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
@@ -229,7 +229,7 @@ function ParticipanteRow({
 
   return (
     <>
-      <tr className="transition-colors hover:bg-slate-50/70">
+      <tr className={`transition-colors ${expandido ? 'bg-brand-50/60' : 'hover:bg-slate-50/70'}`}>
         <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
           {participante.persona.apellido}, {participante.persona.nombre}
         </td>
@@ -318,8 +318,9 @@ function ParticipanteRow({
       {expandido && (
         <>
           {/* El detalle son filas de la misma tabla: cada dato queda debajo de su columna. */}
-          <tr className="border-t border-slate-200/70 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-            <td className="py-2 pl-10 pr-5">Disciplina</td>
+          {/* Bloque de disciplinas con los colores de SocialClub: azul de marca y acento naranja. */}
+          <tr className="border-t border-brand-100 bg-brand-50 text-[11px] font-semibold uppercase tracking-wider text-brand-700">
+            <td className="py-2 pl-10 pr-5 shadow-[inset_3px_0_0_var(--color-brand-500)]">Disciplina</td>
             <td className="px-5 py-2">Categoría</td>
             <td className="whitespace-nowrap px-5 py-2">Fecha de inscripción</td>
             <td className="px-5 py-2">Estado</td>
@@ -330,9 +331,27 @@ function ParticipanteRow({
             const estadoDisciplina = etiquetaEstadoDisciplina(d.activo, d.estado);
             const ultima = indice === participante.disciplinas.length - 1;
             return (
-              <tr key={d.inscripcionId} className={`bg-slate-50/80 ${ultima ? 'border-b border-slate-200/70' : ''}`}>
-                <td className="whitespace-nowrap py-2.5 pl-10 pr-5 text-slate-800">{d.disciplina.nombre}</td>
-                <td className="px-5 py-2.5 text-slate-600">{d.categoriaDisciplina?.nombre ?? '—'}</td>
+              <tr
+                key={d.inscripcionId}
+                className={`bg-brand-50/40 transition-colors hover:bg-brand-50/80 ${ultima ? 'border-b border-brand-100' : ''} ${estadoDisciplina.activo ? '' : 'opacity-70'}`}
+              >
+                <td className="whitespace-nowrap py-2.5 pl-10 pr-5 shadow-[inset_3px_0_0_var(--color-brand-500)]">
+                  <span className="inline-flex items-center gap-2 font-medium text-brand-900">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent-100 text-accent-600">
+                      <Dumbbell size={13} />
+                    </span>
+                    {d.disciplina.nombre}
+                  </span>
+                </td>
+                <td className="px-5 py-2.5">
+                  {d.categoriaDisciplina ? (
+                    <span className="inline-flex whitespace-nowrap rounded-md bg-brand-100/70 px-2 py-0.5 text-xs font-medium text-brand-700">
+                      {d.categoriaDisciplina.nombre}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
                 <td className="px-5 py-2.5 text-slate-600">{isoADisplay(d.fechaInscripcion)}</td>
                 <td className="px-5 py-2.5">
                   <BadgeEstado activo={estadoDisciplina.activo} texto={estadoDisciplina.texto} />
