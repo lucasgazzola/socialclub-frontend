@@ -16,6 +16,8 @@ export default defineConfig({
     setupFiles: ['./src/setupTests.ts'],
     include: ['src/**/*.spec.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
     css: true,
+    // Un proceso por núcleo saturaba la máquina (3,1 GB de RAM); con el 25 %: 1,1 GB.
+    maxWorkers: '25%',
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'json-summary', 'html'],

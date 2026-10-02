@@ -33,6 +33,8 @@ interface NavItem {
   roles?: RolNombre[];
   /** Si está activo, el ítem solo se muestra cuando el usuario NO tiene membresía activa. */
   soloSinMembresia?: boolean;
+  /** Roles para los que el ítem no se muestra. */
+  ocultarParaRoles?: RolNombre[];
   /** Si está activo, el ítem solo se muestra si el usuario es o fue socio (tiene o tuvo membresías). */
   soloSocioOExSocio?: boolean;
 }
@@ -54,7 +56,14 @@ const navSections: NavSection[] = [
     title: 'Gestión Social',
     items: [
       { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
-      { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
+      // US-09: autoservicio del usuario. La secretaría da de alta socios desde Socios (US-12).
+      {
+        to: ROUTES.hacermeSocio,
+        label: 'Hacerme socio',
+        icon: UserPlus,
+        soloSinMembresia: true,
+        ocultarParaRoles: ['ADMIN', 'COLABORADOR', 'DELEGADO'],
+      },
       { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
       { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
       {
@@ -186,6 +195,7 @@ export function AppLayout() {
       items: seccion.items.filter(
         (item) =>
           (!item.soloSinMembresia || !tieneMembresia) &&
+          !item.ocultarParaRoles?.some((rol) => usuario?.roles.includes(rol)) &&
           (!item.soloSocioOExSocio || esOFueSocio) &&
           (!item.roles || item.roles.some((rol) => usuario?.roles.includes(rol))),
       ),
