@@ -19,10 +19,8 @@ import { ValidarAccesoPage } from '@/features/entradas/pages/ValidarAccesoPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
-import { InscripcionPage } from '@/features/inscripcion/pages/InscripcionPage';
 import { EditarParticipantePage } from '@/features/inscripcion/pages/EditarParticipantePage';
 import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPage';
-import { CargarDocumentacionPage } from '@/features/documentacion/pages/CargarDocumentacionPage';
 import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
 import { RegistrarPagoDeportivoPage } from '@/features/pagos/pages/RegistrarPagoDeportivoPage';
 import { HistorialDeportivoPage } from '@/features/pagos/pages/HistorialDeportivoPage';
@@ -90,8 +88,9 @@ export function AppRouter() {
 
           {/* Inscripción: ADMIN y DELEGADO (alineado con los guards del backend) */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'DELEGADO']} />}>
-            <Route path="inscripcion" element={<InscripcionPage />} />
-            <Route path="documentacion" element={<CargarDocumentacionPage />} />
+            {/* DT-11: inscripción y documentación viven dentro de Participantes. */}
+            <Route path="inscripcion" element={<Navigate to={ROUTES.nuevaInscripcion} replace />} />
+            <Route path="documentacion" element={<Navigate to={ROUTES.participantes} replace />} />
             <Route path="participante/:id/editar" element={<EditarParticipantePage />} />
           </Route>
         </Route>

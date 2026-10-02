@@ -24,6 +24,8 @@ export const ROUTES = {
   validarAcceso: '/entradas/validar',
   validarAccesoEvento: (eventoId: number) => `/eventos/${eventoId}/validar`,
   participantes: '/participantes',
+  /** DT-11: abre el alta de inscripción dentro de Participantes. */
+  nuevaInscripcion: '/participantes?nueva=1',
   participantesEditar: '/participante/:id/editar',
   documentacion: '/documentacion',
   perfil: '/perfil',

@@ -37,10 +37,10 @@ const modulos = [
     tag: 'Trazabilidad',
   },
   {
-    titulo: 'Inscripción',
-    descripcion: 'Gestión de las inscripciones de participantes a una o varias disciplinas.',
+    titulo: 'Participantes',
+    descripcion: 'Inscripciones de participantes a una o varias disciplinas y su documentación.',
     icon: UserPlus,
-    ruta: ROUTES.inscripcion,
+    ruta: ROUTES.participantes,
     tag: 'Disciplinas 2026',
   },
 ];

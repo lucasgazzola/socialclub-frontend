@@ -1,12 +1,14 @@
 import { useContext, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Filter, Plus, Search } from 'lucide-react';
-import { Button, Input, Select, Spinner, StatusTabs } from '@/components/ui';
+import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/ui';
 import { AuthContext } from '@/features/auth/context/auth-context';
-import { ROUTES } from '@/routes/paths';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
-import type { EstadoInscripcionFiltro } from '../types';
+import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
+import type { EstadoInscripcionFiltro, ParticipanteConDisciplinas } from '../types';
 import { useInscripciones } from '../hooks/useInscripciones';
 import { ParticipantesTable } from '../components/ParticipantesTable';
+import { InscripcionForm } from '../components/InscripcionForm';
 
 const POR_PAGINA = 10;
 
@@ -15,6 +17,10 @@ const POR_PAGINA = 10;
  *
  * Lista a los participantes de todas las disciplinas y permite combinar la
  * búsqueda por nombre/apellido/DNI con filtros de disciplina y estado.
+ *
+ * DT-11 — Es la pantalla única del participante: desde acá se inscribe
+ * (US-05, modal) y se gestiona su documentación (US-24, modal). Las rutas
+ * viejas /inscripcion y /documentacion redirigen acá.
  */
 export function ParticipantesPage() {
   const auth = useContext(AuthContext);
@@ -24,6 +30,12 @@ export function ParticipantesPage() {
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
   const [estado, setEstado] = useState<EstadoInscripcionFiltro | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const inscripcionAbierta = Boolean(puedeInscribir) && searchParams.get('nueva') === '1';
+  const [conDocumentacion, setConDocumentacion] = useState<ParticipanteConDisciplinas | null>(null);
+
+  const abrirInscripcion = () => setSearchParams({ nueva: '1' });
+  const cerrarInscripcion = () => setSearchParams({});
 
   const { disciplinas } = useDisciplinasActivas();
 
@@ -68,15 +80,36 @@ export function ParticipantesPage() {
         </div>
 
         {puedeInscribir && (
-          <a
-            href={ROUTES.inscripcion}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-500 transition-colors self-start sm:self-auto"
-          >
+          <Button onClick={abrirInscripcion} className="self-start shadow-xs sm:self-auto">
             <Plus size={16} />
             Nueva inscripción
-          </a>
+          </Button>
         )}
       </header>
+
+      <Modal
+        open={inscripcionAbierta}
+        title="Nueva inscripción"
+        description="Buscá al participante por DNI o registrá uno nuevo, y asignalo a una disciplina."
+        onClose={cerrarInscripcion}
+        className="max-w-3xl"
+      >
+        <InscripcionForm />
+      </Modal>
+
+      <Modal
+        open={conDocumentacion !== null}
+        title={
+          conDocumentacion
+            ? `Documentación de ${conDocumentacion.persona.apellido}, ${conDocumentacion.persona.nombre}`
+            : 'Documentación'
+        }
+        description={conDocumentacion ? `DNI ${conDocumentacion.persona.dni}` : undefined}
+        onClose={() => setConDocumentacion(null)}
+        className="max-w-2xl"
+      >
+        {conDocumentacion && <DocumentacionParticipante persona={conDocumentacion.persona} />}
+      </Modal>
 
       {/* Controles de filtro y búsqueda agrupados */}
       <div className="space-y-3">
@@ -149,7 +182,10 @@ export function ParticipantesPage() {
         </div>
       ) : (
         <>
-          <ParticipantesTable participantes={data?.items ?? []} />
+          <ParticipantesTable
+            participantes={data?.items ?? []}
+            onVerDocumentacion={puedeInscribir ? setConDocumentacion : undefined}
+          />
 
           {hayResultados && (
             <div className="flex items-center justify-between text-sm text-slate-500">
