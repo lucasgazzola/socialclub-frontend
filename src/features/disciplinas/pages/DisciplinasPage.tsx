@@ -92,7 +92,8 @@ export function DisciplinasPage() {
         title={disciplinaSeleccionada ? 'Editar disciplina' : 'Nueva disciplina'}
         description="Completá los datos de la actividad y sus requisitos."
         onClose={() => { if (!guardando) { setModalAbierto(false); setDisciplinaSeleccionada(null); } }}
-        className="max-w-3xl"
+        icon={<Dumbbell />}
+        size="lg"
       >
         <DisciplinaForm disciplina={disciplinaSeleccionada} guardando={guardando} onSubmit={guardar} onCancel={() => { setModalAbierto(false); setDisciplinaSeleccionada(null); }} />
       </Modal>

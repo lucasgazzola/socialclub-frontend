@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, ModalActions } from '@/components/ui';
 import { categoriaSchema, type CategoriaFormValues } from '../schemas/categoria.schema';
 import { RequerimientosDocEditor } from './RequerimientosDocEditor';
 import {
@@ -133,10 +133,10 @@ export function CategoriaForm({ categoria, requerimientosDisciplina, restriccion
         )}
       </fieldset>
 
-      <div className="flex justify-start gap-3">
-        <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : categoria ? 'Guardar cambios' : 'Crear categoría'}</Button>
+      <ModalActions>
         <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
-      </div>
+        <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : categoria ? 'Guardar cambios' : 'Crear categoría'}</Button>
+      </ModalActions>
     </form>
   );
 }

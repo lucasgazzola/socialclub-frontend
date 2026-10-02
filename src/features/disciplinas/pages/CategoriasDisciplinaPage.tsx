@@ -97,7 +97,7 @@ export function CategoriasDisciplinaPage() {
         <Card className="border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">La disciplina está inactiva: no se pueden agregar categorías.</Card>
       )}
 
-      <Modal open={modalAbierto} title={seleccionada ? 'Editar categoría' : 'Nueva categoría'} description={disciplina ? `Disciplina: ${disciplina.nombre}` : undefined} onClose={cerrar} className="max-w-2xl">
+      <Modal open={modalAbierto} title={seleccionada ? 'Editar categoría' : 'Nueva categoría'} description={disciplina ? `Disciplina: ${disciplina.nombre}` : undefined} onClose={cerrar} icon={<Layers />} size="lg">
         <CategoriaForm categoria={seleccionada} requerimientosDisciplina={requerimientosDisciplina} restriccionesDisciplina={restriccionesDisciplina} guardando={guardando} onSubmit={guardar} onCancel={cerrar} />
       </Modal>
 

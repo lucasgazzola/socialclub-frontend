@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, ModalActions } from '@/components/ui';
 import { disciplinaSchema, type DisciplinaFormValues } from '../schemas/disciplina.schema';
 import { RequerimientosDocEditor } from './RequerimientosDocEditor';
 import type { Disciplina } from '../types';
@@ -128,10 +128,10 @@ export function DisciplinaForm({ disciplina, guardando = false, onSubmit, onCanc
         )}
       </fieldset>
 
-      <div className="flex justify-start gap-3">
-        <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : disciplina ? 'Guardar cambios' : 'Crear disciplina'}</Button>
+      <ModalActions>
         <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
-      </div>
+        <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : disciplina ? 'Guardar cambios' : 'Crear disciplina'}</Button>
+      </ModalActions>
     </form>
   );
 }

@@ -110,7 +110,8 @@ export function ModalCobroCuotaSocio({
       onClose={handleClose}
       title="Registrar cobro de cuota social"
       description="Cobro y actualización del estado de deuda por secretaría."
-      className="max-w-2xl"
+      size="lg"
+      icon={<Coins />}
     >
       <div className="space-y-6">
         {/* Ficha rápida del socio */}
@@ -325,7 +326,7 @@ export function ModalCobroCuotaSocio({
 
               <div className="flex items-center gap-2">
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   onClick={onClose}
                   disabled={registrarPagoMutation.isPending}
                 >

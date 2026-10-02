@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Ticket } from 'lucide-react';
+import { CalendarPlus, Plus, Ticket } from 'lucide-react';
 import { Button, Modal, Spinner } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { EventoForm } from '../components/EventoForm';
@@ -38,9 +38,11 @@ export function EventosPage() {
         open={modalAbierto}
         title="Nuevo evento"
         description="Completá los datos para crear un nuevo evento."
+        icon={<CalendarPlus />}
+        size="lg"
         onClose={() => setModalAbierto(false)}
       >
-        <EventoForm onSubmit={handleCrear} submitLabel="Crear evento" />
+        <EventoForm onSubmit={handleCrear} submitLabel="Crear evento" onCancel={() => setModalAbierto(false)} />
       </Modal>
 
       {isLoading ? (

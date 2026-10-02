@@ -54,6 +54,7 @@ vi.mock('@/components/ui', async () => ({
   Button: ({ children, ...props }: { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props}>{children}</button>
   ),
+  ModalActions: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
 }));
 
 const navigateMock = vi.fn();
