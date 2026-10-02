@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, FileText, Pencil, UserMinus, UserPlus } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, FileText, Pencil, UserMinus, UserPlus } from 'lucide-react';
 import { Badge, Button, ConfirmDialog } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
@@ -227,28 +227,11 @@ function ParticipanteRow({
   const visibles = nombres.slice(0, 2);
   const restantes = nombres.length - visibles.length;
 
-  const nombreCompleto = `${participante.persona.apellido}, ${participante.persona.nombre}`;
-  const panelId = `disciplinas-${participante.personaId}`;
-
   return (
     <>
-      <tr className={`transition-colors ${expandido ? 'bg-slate-50/80' : 'hover:bg-slate-50/70'}`}>
+      <tr className="transition-colors hover:bg-slate-50/70">
         <td className="px-5 py-3.5 font-medium text-slate-900">
-          <div className="flex items-center gap-2">
-            {/* Desplegar al lado del nombre: las acciones quedan siempre en el mismo lugar. */}
-            <button
-              type="button"
-              aria-expanded={expandido}
-              aria-controls={panelId}
-              aria-label={`Ver disciplinas de ${nombreCompleto}`}
-              title={expandido ? 'Ocultar disciplinas' : 'Ver disciplinas'}
-              onClick={onToggle}
-              className="-ml-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-            >
-              <ChevronDown size={16} className={`transition-transform duration-200 ${expandido ? 'rotate-180 text-brand-600' : ''}`} />
-            </button>
-            <span>{nombreCompleto}</span>
-          </div>
+          {participante.persona.apellido}, {participante.persona.nombre}
         </td>
         <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{participante.persona.dni}</td>
         <td className="px-5 py-3.5 text-slate-600">
@@ -267,6 +250,16 @@ function ParticipanteRow({
         </td>
         <td className="px-5 py-3.5 text-right">
           <div className="flex items-center justify-end gap-1.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-expanded={expandido}
+              aria-label={`Ver disciplinas de ${participante.persona.apellido}, ${participante.persona.nombre}`}
+              onClick={onToggle}
+            >
+              {expandido ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              {expandido ? 'Ocultar' : 'Ver disciplinas'}
+            </Button>
             <Button variant="ghost" size="sm" onClick={onEditar}>
               <Pencil size={14} />
               Editar
@@ -275,7 +268,7 @@ function ParticipanteRow({
               <Button
                 variant="ghost"
                 size="sm"
-                aria-label={`Inscribir a ${nombreCompleto} en otra disciplina`}
+                aria-label={`Inscribir a ${participante.persona.apellido}, ${participante.persona.nombre} en otra disciplina`}
                 onClick={onInscribir}
               >
                 <UserPlus size={14} />
@@ -283,7 +276,12 @@ function ParticipanteRow({
               </Button>
             )}
             {onVerDocumentacion && (
-              <Button variant="ghost" size="sm" aria-label={`Documentación de ${nombreCompleto}`} onClick={onVerDocumentacion}>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Documentación de ${participante.persona.apellido}, ${participante.persona.nombre}`}
+                onClick={onVerDocumentacion}
+              >
                 <FileText size={14} />
                 Documentación
               </Button>
@@ -293,7 +291,7 @@ function ParticipanteRow({
                 variant="ghost"
                 size="sm"
                 className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                aria-label={`Dar de baja a ${nombreCompleto}`}
+                aria-label={`Dar de baja a ${participante.persona.apellido}, ${participante.persona.nombre}`}
                 onClick={onDarDeBaja}
               >
                 <UserMinus size={14} />
@@ -305,7 +303,7 @@ function ParticipanteRow({
                 variant="ghost"
                 size="sm"
                 className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-                aria-label={`Reactivar a ${nombreCompleto}`}
+                aria-label={`Reactivar a ${participante.persona.apellido}, ${participante.persona.nombre}`}
                 onClick={onReactivar}
               >
                 <CheckCircle2 size={14} />
@@ -316,59 +314,59 @@ function ParticipanteRow({
         </td>
       </tr>
       {expandido && (
-        <tr id={panelId} className="bg-slate-50/80">
-          <td colSpan={6} className="px-5 pb-4 pt-0">
-            {participante.disciplinas.length === 0 ? (
-              <p className="pl-8 text-sm text-slate-500">No tiene disciplinas.</p>
-            ) : (
-              // Una tarjeta por disciplina: no comparte columnas con la tabla, así que no hay nada que desalinear.
-              <ul className="grid gap-3 pl-8 sm:grid-cols-2 xl:grid-cols-3">
-                {participante.disciplinas.map((d) => {
-                  const estadoDisciplina = etiquetaEstadoDisciplina(d.activo, d.estado);
-                  return (
-                    <li
-                      key={d.inscripcionId}
-                      className={`rounded-xl border bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.03)] ${
-                        estadoDisciplina.activo ? 'border-slate-200/80' : 'border-slate-200/60 opacity-75'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-slate-900">{d.disciplina.nombre}</p>
-                          <p className="text-xs text-slate-500">
-                            {d.categoriaDisciplina ? `Categoría ${d.categoriaDisciplina.nombre}` : 'Sin categoría'}
-                          </p>
-                        </div>
-                        <BadgeEstado activo={estadoDisciplina.activo} texto={estadoDisciplina.texto} />
-                      </div>
-                      <dl className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs">
-                        <div className="flex items-center justify-between gap-3">
-                          <dt className="text-slate-500">Documentación</dt>
-                          <dd>
-                            {d.estadoDocumental ? (
+        <tr className="bg-slate-50/60">
+          <td colSpan={6} className="px-4 py-3">
+            <div className="rounded-xl border border-slate-200 bg-white">
+              <table className="w-full text-left text-sm">
+                <thead className="text-xs tracking-wide text-slate-500 uppercase">
+                  <tr>
+                    <th className="px-4 py-2 font-medium">Disciplina</th>
+                    <th className="px-4 py-2 font-medium">Categoría</th>
+                    <th className="px-4 py-2 font-medium">Estado</th>
+                    <th className="px-4 py-2 font-medium">Documentación</th>
+                    <th className="px-4 py-2 font-medium">Fecha de inscripción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {participante.disciplinas.map((d) => {
+                    const estadoDisciplina = etiquetaEstadoDisciplina(d.activo, d.estado);
+                    return (
+                      <tr key={d.inscripcionId}>
+                        <td className="px-4 py-2 text-slate-800">{d.disciplina.nombre}</td>
+                        <td className="px-4 py-2 text-slate-600">
+                          {d.categoriaDisciplina?.nombre ?? '—'}
+                        </td>
+                        <td className="px-4 py-2">
+                          <BadgeEstado
+                            activo={estadoDisciplina.activo}
+                            texto={estadoDisciplina.texto}
+                          />
+                        </td>
+                        <td className="px-4 py-2">
+                          {d.estadoDocumental ? (
+                            <div>
                               <EstadoHabilitacionBadge estado={d.estadoDocumental} />
-                            ) : (
-                              <span className="text-slate-400">—</span>
-                            )}
-                          </dd>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                          <dt className="text-slate-500">Inscripción</dt>
-                          <dd className="text-slate-700">{isoADisplay(d.fechaInscripcion)}</dd>
-                        </div>
-                      </dl>
-                      {d.motivosDocumentacion && d.motivosDocumentacion.length > 0 && (
-                        <ul className="mt-3 space-y-1 rounded-lg bg-amber-50/70 px-3 py-2 text-xs text-amber-800">
-                          {d.motivosDocumentacion.map((m) => (
-                            <li key={m}>{m}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+                              {d.motivosDocumentacion && d.motivosDocumentacion.length > 0 && (
+                                <ul className="mt-1 space-y-0.5 text-xs text-slate-500">
+                                  {d.motivosDocumentacion.map((m) => (
+                                    <li key={m}>{m}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-slate-600">
+                          {isoADisplay(d.fechaInscripcion)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </td>
         </tr>
       )}
