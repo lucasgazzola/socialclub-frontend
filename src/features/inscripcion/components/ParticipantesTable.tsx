@@ -118,7 +118,7 @@ export function ParticipantesTable({ participantes, onVerDocumentacion, onInscri
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
-              <th className="px-5 py-3.5">Apellido y nombre</th>
+              <th className="whitespace-nowrap px-5 py-3.5">Apellido y nombre</th>
               <th className="px-5 py-3.5">DNI</th>
               <th className="px-5 py-3.5">Disciplinas</th>
               <th className="px-5 py-3.5">Estado</th>
@@ -230,7 +230,7 @@ function ParticipanteRow({
   return (
     <>
       <tr className="transition-colors hover:bg-slate-50/70">
-        <td className="px-5 py-3.5 font-medium text-slate-900">
+        <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
           {participante.persona.apellido}, {participante.persona.nombre}
         </td>
         <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{participante.persona.dni}</td>
@@ -256,6 +256,8 @@ function ParticipanteRow({
               aria-expanded={expandido}
               aria-label={`Ver disciplinas de ${participante.persona.apellido}, ${participante.persona.nombre}`}
               onClick={onToggle}
+              // Ancho fijo: al pasar a "Ocultar" no corre el resto de las acciones.
+              className="min-w-33 justify-start whitespace-nowrap"
             >
               {expandido ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               {expandido ? 'Ocultar' : 'Ver disciplinas'}
@@ -314,61 +316,49 @@ function ParticipanteRow({
         </td>
       </tr>
       {expandido && (
-        <tr className="bg-slate-50/60">
-          <td colSpan={6} className="px-4 py-3">
-            <div className="rounded-xl border border-slate-200 bg-white">
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs tracking-wide text-slate-500 uppercase">
-                  <tr>
-                    <th className="px-4 py-2 font-medium">Disciplina</th>
-                    <th className="px-4 py-2 font-medium">Categoría</th>
-                    <th className="px-4 py-2 font-medium">Estado</th>
-                    <th className="px-4 py-2 font-medium">Documentación</th>
-                    <th className="px-4 py-2 font-medium">Fecha de inscripción</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {participante.disciplinas.map((d) => {
-                    const estadoDisciplina = etiquetaEstadoDisciplina(d.activo, d.estado);
-                    return (
-                      <tr key={d.inscripcionId}>
-                        <td className="px-4 py-2 text-slate-800">{d.disciplina.nombre}</td>
-                        <td className="px-4 py-2 text-slate-600">
-                          {d.categoriaDisciplina?.nombre ?? '—'}
-                        </td>
-                        <td className="px-4 py-2">
-                          <BadgeEstado
-                            activo={estadoDisciplina.activo}
-                            texto={estadoDisciplina.texto}
-                          />
-                        </td>
-                        <td className="px-4 py-2">
-                          {d.estadoDocumental ? (
-                            <div>
-                              <EstadoHabilitacionBadge estado={d.estadoDocumental} />
-                              {d.motivosDocumentacion && d.motivosDocumentacion.length > 0 && (
-                                <ul className="mt-1 space-y-0.5 text-xs text-slate-500">
-                                  {d.motivosDocumentacion.map((m) => (
-                                    <li key={m}>{m}</li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-slate-400">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-slate-600">
-                          {isoADisplay(d.fechaInscripcion)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </td>
-        </tr>
+        <>
+          {/* El detalle son filas de la misma tabla: cada dato queda debajo de su columna. */}
+          <tr className="border-t border-slate-200/70 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <td className="py-2 pl-10 pr-5">Disciplina</td>
+            <td className="px-5 py-2">Categoría</td>
+            <td className="whitespace-nowrap px-5 py-2">Fecha de inscripción</td>
+            <td className="px-5 py-2">Estado</td>
+            <td className="px-5 py-2">Documentación</td>
+            <td className="px-5 py-2">Observaciones</td>
+          </tr>
+          {participante.disciplinas.map((d, indice) => {
+            const estadoDisciplina = etiquetaEstadoDisciplina(d.activo, d.estado);
+            const ultima = indice === participante.disciplinas.length - 1;
+            return (
+              <tr key={d.inscripcionId} className={`bg-slate-50/80 ${ultima ? 'border-b border-slate-200/70' : ''}`}>
+                <td className="whitespace-nowrap py-2.5 pl-10 pr-5 text-slate-800">{d.disciplina.nombre}</td>
+                <td className="px-5 py-2.5 text-slate-600">{d.categoriaDisciplina?.nombre ?? '—'}</td>
+                <td className="px-5 py-2.5 text-slate-600">{isoADisplay(d.fechaInscripcion)}</td>
+                <td className="px-5 py-2.5">
+                  <BadgeEstado activo={estadoDisciplina.activo} texto={estadoDisciplina.texto} />
+                </td>
+                <td className="px-5 py-2.5">
+                  {d.estadoDocumental ? (
+                    <EstadoHabilitacionBadge estado={d.estadoDocumental} />
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
+                <td className="px-5 py-2.5 text-xs text-slate-500">
+                  {d.motivosDocumentacion && d.motivosDocumentacion.length > 0 ? (
+                    <ul className="space-y-0.5">
+                      {d.motivosDocumentacion.map((m) => (
+                        <li key={m}>{m}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </>
       )}
     </>
   );
