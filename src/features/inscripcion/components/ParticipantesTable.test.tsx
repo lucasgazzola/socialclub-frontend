@@ -321,4 +321,22 @@ describe('US-08 · ParticipantesTable', () => {
       expect(screen.queryByRole('button', { name: /Reactivar a/i })).not.toBeInTheDocument();
     });
   });
+
+  it('muestra la fecha de baja de una disciplina dada de baja', async () => {
+    const user = userEvent.setup();
+    render(
+      <ParticipantesTable
+        participantes={[
+          participante({
+            disciplinas: [disciplina({ activo: false, estado: 'BAJA', fechaBaja: '2026-09-15T13:00:00.000Z' })],
+          }),
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Ver disciplinas de/i }));
+
+    expect(screen.getByText('el 15/09/2026')).toBeInTheDocument();
+  });
 });
+

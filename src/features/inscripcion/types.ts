@@ -95,6 +95,8 @@ export interface DisciplinaInscripta {
   categoriaDisciplinaId: number | null;
   categoriaDisciplina: { id: number; nombre: string } | null;
   fechaInscripcion: string;
+  /** Cuándo se dio de baja (null mientras está inscripto). */
+  fechaBaja?: string | null;
   activo: boolean;
   /** Estado legible de la inscripción en esta disciplina. */
   estado: EstadoInscripcionFiltro;
