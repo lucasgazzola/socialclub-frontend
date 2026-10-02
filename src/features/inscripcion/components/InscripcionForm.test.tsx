@@ -11,7 +11,7 @@ const enviarMock = vi.fn();
 const buscarMock = vi.fn();
 const limpiarMock = vi.fn();
 // Como el hook real (useCallback), las funciones son estables entre renders.
-const busquedaMock = { buscar: buscarMock, limpiar: limpiarMock, cargando: false };
+const busquedaMock = { buscar: buscarMock, limpiar: limpiarMock, cargando: false, noEncontrado: false };
 
 vi.mock('../hooks/useCrearInscripcion', () => ({
   useCrearInscripcion: () => ({ enviar: enviarMock, enviando: false, error: null }),
@@ -89,7 +89,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.selectOptions(screen.getByLabelText('Género'), 'FEMENINO');
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
     await user.selectOptions(screen.getByLabelText('Categoría'), '7');
-    await user.click(screen.getByRole('button', { name: /Confirmar inscripción/ }));
+    await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
 
     await waitFor(() => {
       expect(enviarMock).toHaveBeenCalledWith(
@@ -141,7 +141,8 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
 
     await user.type(screen.getByLabelText('DNI'), '50111222');
 
-    expect(await screen.findByText(/DNI ya registrado: Gómez, Lola/)).toBeInTheDocument();
+    expect(await screen.findByText(/se lo inscribe en otra disciplina con sus datos/)).toBeInTheDocument();
+    expect(screen.getByText('Gómez, Lola')).toBeInTheDocument();
     // Solo se busca el DNI completo, no el prefijo de 7 dígitos mientras se tipea.
     expect(buscarMock).toHaveBeenCalledTimes(1);
     expect(buscarMock).toHaveBeenCalledWith('50111222');
@@ -154,7 +155,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     expect(screen.getByLabelText('Género')).toBeEnabled();
 
     await user.selectOptions(screen.getByLabelText('Disciplina'), '2');
-    await user.click(screen.getByRole('button', { name: /Confirmar inscripción/ }));
+    await user.click(screen.getByRole('button', { name: 'Inscribir' }));
 
     await waitFor(() => {
       expect(enviarMock).toHaveBeenCalledWith(expect.objectContaining({ personaId: 20, disciplinaId: 2 }));
@@ -169,7 +170,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.type(screen.getByLabelText('Nombre'), 'Lola');
     await user.type(screen.getByLabelText('Apellido'), 'Gómez');
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
-    await user.click(screen.getByRole('button', { name: /Confirmar inscripción/ }));
+    await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
 
     expect(await screen.findByText('Debe seleccionar una categoría para esta disciplina')).toBeInTheDocument();
     expect(enviarMock).not.toHaveBeenCalled();
@@ -194,7 +195,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     expect(screen.getByText('Gómez, Lola · DNI 50111222')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
     await user.selectOptions(screen.getByLabelText('Categoría'), '7');
-    await user.click(screen.getByRole('button', { name: /Confirmar inscripción/ }));
+    await user.click(screen.getByRole('button', { name: 'Inscribir' }));
 
     expect(await screen.findByText('Lola Gómez quedó inscripto correctamente.')).toBeInTheDocument();
     expect(screen.getByText('Pendiente de documentación')).toBeInTheDocument();
@@ -202,5 +203,51 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
 
     await user.click(screen.getByRole('button', { name: /Cargar documentación/ }));
     expect(onCargarDocumentacion).toHaveBeenCalledWith(creada.persona);
+  });
+
+  it('avisa que un DNI que no existe registra a un participante nuevo', async () => {
+    const user = userEvent.setup();
+    busquedaMock.noEncontrado = true;
+    renderForm(<InscripcionForm />);
+
+    await user.type(screen.getByLabelText('DNI'), '47123456');
+
+    expect(await screen.findByText('DNI nuevo: se va a registrar un participante nuevo.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Registrar participante' })).toBeInTheDocument();
+    busquedaMock.noEncontrado = false;
+  });
+
+  it('"Usar otro DNI" descarta a la persona encontrada', async () => {
+    const user = userEvent.setup();
+    buscarMock.mockImplementation(async (dni: string) => ({
+      participante:
+        dni === '50111222'
+          ? { id: 20, dni, nombre: 'Lola', apellido: 'Gómez', fechaNacimiento: null, genero: null, email: null, telefono: null, inscripciones: [] }
+          : null,
+    }));
+    renderForm(<InscripcionForm />);
+
+    await user.type(screen.getByLabelText('DNI'), '50111222');
+    await user.click(await screen.findByRole('button', { name: 'Usar otro DNI' }));
+
+    expect(screen.queryByText(/se lo inscribe en otra disciplina/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('DNI')).toHaveValue('');
+    expect(screen.getByLabelText('Nombre')).toBeEnabled();
+  });
+
+  it('muestra el email repetido una sola vez, en el campo email', async () => {
+    const user = userEvent.setup();
+    enviarMock.mockRejectedValue(new Error('El email ya está registrado por otra persona'));
+    renderForm(<InscripcionForm />);
+
+    await user.type(screen.getByLabelText('DNI'), '47123456');
+    await user.type(screen.getByLabelText('Nombre'), 'Nuevo');
+    await user.type(screen.getByLabelText('Apellido'), 'Prueba');
+    await user.type(screen.getByLabelText('Email'), 'admin@socialclub.local');
+    await user.selectOptions(screen.getByLabelText('Disciplina'), '2');
+    await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
+
+    expect(await screen.findAllByText('El email ya está registrado por otra persona')).toHaveLength(1);
+    expect(screen.getByLabelText('Email')).toHaveClass('border-rose-400');
   });
 });

@@ -104,9 +104,24 @@ function HistorialDeportivo({ data }: { data: HistorialDeportivoResponse }) {
               <tbody>
                 {data.adeudados.map((cuota) => (
                   <tr key={`${cuota.disciplinaId}-${cuota.periodo}`} className="border-b border-slate-100">
-                    <td className="py-2 pr-4">{cuota.disciplinaNombre}</td>
-                    <td className="py-2 pr-4">{cuota.periodo}</td>
-                    <td className="py-2 font-medium text-amber-700">{formatMonto(cuota.monto)}</td>
+                    <td className="py-2 pr-4">
+                      {cuota.disciplinaNombre}
+                      {cuota.categoriaNombre && <span className="ml-1 text-xs text-slate-500">· {cuota.categoriaNombre}</span>}
+                      {cuota.inscripcionActiva === false && <span className="ml-1 text-xs text-slate-400">(dada de baja)</span>}
+                    </td>
+                    <td className="py-2 pr-4">{cuota.periodo.split('-').reverse().join('/')}</td>
+                    <td className="py-2 font-medium text-amber-700">
+                      {cuota.monto === null ? (
+                        <span className="text-xs text-slate-500">Sin tarifa</span>
+                      ) : (
+                        <>
+                          {formatMonto(cuota.monto)}
+                          {(cuota.descuentoSocioPorcentaje ?? 0) > 0 && (
+                            <span className="ml-2 text-xs font-normal text-accent-700">socio −{cuota.descuentoSocioPorcentaje} %</span>
+                          )}
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

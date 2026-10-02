@@ -66,14 +66,26 @@ export type EstadoDeudaDeportiva = 'AL_DIA' | 'MOROSO';
 export interface CuotaDeportivaPendiente {
   disciplinaId: number;
   disciplinaNombre: string;
+  categoriaNombre?: string | null;
   periodo: string; // "YYYY-MM"
-  monto: number;
+  /** null = sin tarifa configurada para ese mes (no se puede cobrar). TASK-33. */
+  monto: number | null;
+  /** Tarifa sin descuento. */
+  montoTarifa?: number | null;
+  /** Descuento de socio aplicado ese mes (0 si no era socio). */
+  descuentoSocioPorcentaje?: number;
+  esSocio?: boolean;
+  sinTarifa?: boolean;
+  /** false si es deuda de una disciplina ya dada de baja. */
+  inscripcionActiva?: boolean;
 }
 
 export interface PendientesDeportivosResponse {
   personaId: number;
   participanteNombre: string;
   dni: string | null;
+  /** TASK-33: si hoy es socio (le corresponde el descuento). */
+  esSocio?: boolean;
   categoria: string | null;
   categoriaId: number | null;
   estadoDeuda: EstadoDeudaDeportiva;

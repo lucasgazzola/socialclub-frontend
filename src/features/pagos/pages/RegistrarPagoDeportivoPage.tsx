@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card } from '@/components/ui';
+import { Badge, Button, Card } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
 import { BuscarParticipanteDni } from '@/features/inscripcion/components/buscarParticipanteDni';
@@ -52,9 +52,11 @@ function DisciplinaCobroCard({
     );
 
   const total = useMemo(
-    () => cuotas.filter((c) => seleccionados.includes(c.periodo)).reduce((s, c) => s + c.monto, 0),
+    () => cuotas.filter((c) => seleccionados.includes(c.periodo)).reduce((s, c) => s + (c.monto ?? 0), 0),
     [cuotas, seleccionados],
   );
+  const categoria = cuotas[0]?.categoriaNombre;
+  const dadaDeBaja = cuotas[0]?.inscripcionActiva === false;
 
   const onRegistrar = async () => {
     if (seleccionados.length === 0) return;
@@ -71,23 +73,49 @@ function DisciplinaCobroCard({
   return (
     <Card className="space-y-4 p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-slate-900">{disciplinaNombre}</h3>
-        <span className="text-xs text-slate-500">{cuotas.length} período(s) pendiente(s)</span>
+        <h3 className="flex flex-wrap items-center gap-2 text-base font-semibold text-slate-900">
+          {disciplinaNombre}
+          {categoria && (
+            <span className="rounded-md bg-brand-100/70 px-2 py-0.5 text-xs font-medium text-brand-700">{categoria}</span>
+          )}
+          {dadaDeBaja && <Badge variant="secondary">Dada de baja</Badge>}
+        </h3>
+        <span className="text-xs text-slate-500">
+          {cuotas.filter((c) => c.monto !== null).length} período(s) pendiente(s)
+          {cuotas.some((c) => c.monto === null) && ` · ${cuotas.filter((c) => c.monto === null).length} sin tarifa`}
+        </span>
       </div>
 
       <ul className="divide-y divide-slate-100">
         {cuotas.map((cuota) => (
-          <li key={cuota.periodo} className="flex items-center justify-between py-2">
-            <label className="flex items-center gap-3 text-sm text-slate-700">
+          <li key={cuota.periodo} className="flex items-center justify-between gap-3 py-2">
+            <label className={`flex items-center gap-3 text-sm ${cuota.monto === null ? 'text-slate-400' : 'text-slate-700'}`}>
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-slate-300"
                 checked={seleccionados.includes(cuota.periodo)}
+                disabled={cuota.monto === null}
                 onChange={() => toggle(cuota.periodo)}
               />
-              {cuota.periodo}
+              {cuota.periodo.split('-').reverse().join('/')}
             </label>
-            <span className="text-sm font-medium text-slate-900">{formatMonto(cuota.monto)}</span>
+            {cuota.monto === null ? (
+              <span className="text-xs font-medium text-amber-700" title="No hay una tarifa configurada para este mes">
+                Sin tarifa
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 text-sm">
+                {(cuota.descuentoSocioPorcentaje ?? 0) > 0 && (
+                  <>
+                    <span className="rounded-md bg-accent-50 px-1.5 py-0.5 text-xs font-medium text-accent-700">
+                      Socio −{cuota.descuentoSocioPorcentaje} %
+                    </span>
+                    <span className="text-xs text-slate-400 line-through">{formatMonto(cuota.montoTarifa ?? cuota.monto)}</span>
+                  </>
+                )}
+                <span className="font-medium text-slate-900">{formatMonto(cuota.monto)}</span>
+              </span>
+            )}
           </li>
         ))}
       </ul>
@@ -155,7 +183,8 @@ function CuotasPendientesDeportivas({
         <div>
           <p className="text-lg font-semibold text-slate-900">{data.participanteNombre}</p>
           <p className="text-sm text-slate-500">
-            DNI {data.dni ?? '—'} · Categoría {data.categoria ?? 'sin categoría'}
+            DNI {data.dni ?? '—'} ·{' '}
+            {data.esSocio ? `Socio (${data.categoria ?? 'sin categoría'})` : 'No es socio'}
           </p>
         </div>
         <div className="text-right">
@@ -167,7 +196,7 @@ function CuotasPendientesDeportivas({
         </div>
       </Card>
 
-      {data.estadoDeuda === 'AL_DIA' ? (
+      {data.cuotasPendientes.length === 0 ? (
         <Card className="p-6 text-center text-sm text-slate-600">
           El participante está al día con sus cuotas deportivas.
         </Card>

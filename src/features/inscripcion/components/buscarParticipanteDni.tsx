@@ -75,7 +75,7 @@ export function BuscarParticipanteDni({
 
       <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
         <span className="text-sm text-slate-600">
-          '¿No encontraste al participante?'
+          ¿No encontraste al participante?
         </span>
         <Button type="button" variant="secondary" size="sm" onClick={onRegistrarNuevo}>
           <UserPlus size={14} />

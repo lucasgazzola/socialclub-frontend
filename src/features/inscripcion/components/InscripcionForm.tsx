@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, FileText, UserCheck } from 'lucide-react';
+import { CheckCircle2, FileText, UserCheck, UserPlus } from 'lucide-react';
 import { Button, DateInput, Input, ModalActions, Select, Spinner } from '@/components/ui';
 import { isoADisplay } from '@/lib/utils/fecha';
 import {
@@ -23,6 +23,17 @@ import { DisciplinaCategoriaSelector } from './disciplinaCategoriaSelector';
 import type { CrearInscripcionPayload, InscripcionCreada, ParticipanteEncontrado } from '../types';
 
 const DNI_COMPLETO = /^\d{7,8}$/;
+
+const FORMULARIO_VACIO: Partial<InscripcionFormValues> = {
+  personaId: undefined,
+  dni: '',
+  nombre: '',
+  apellido: '',
+  fechaNacimiento: '',
+  genero: undefined,
+  email: '',
+  telefono: '',
+};
 
 /** Fecha ISO (o timestamp) → "aaaa-mm-dd" para el formulario. */
 const soloFecha = (valor: string | null | undefined) => (valor ? valor.slice(0, 10) : undefined);
@@ -52,7 +63,9 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
   const [existente, setExistente] = useState<ParticipanteEncontrado | null>(participante ?? null);
   const busqueda = useBuscarParticipante();
   const { disciplinas, cargando: cargandoDisciplinas } = useDisciplinasActivas();
-  const { enviar, enviando, error: errorEnvio } = useCrearInscripcion();
+  // El error se muestra una sola vez, en el formulario (no también como toast).
+  const { enviar, enviando } = useCrearInscripcion({ toastDeError: false });
+  const [errorEnvio, setErrorEnvio] = useState<string | null>(null);
 
   const {
     register,
@@ -131,12 +144,26 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
       fechaNacimiento: data.fechaNacimiento || undefined,
       email: data.email || undefined,
     };
-    const creada = await enviar(payload).catch(() => null);
+    setErrorEnvio(null);
+    const creada = await enviar(payload).catch((error: unknown) => {
+      const mensaje = error instanceof Error ? error.message : 'No se pudo registrar la inscripción';
+      // Si el error es de un campo, se marca en ese campo; si no, se muestra abajo.
+      if (/email/i.test(mensaje)) setError('email', { message: mensaje });
+      else if (/DNI/.test(mensaje)) setError('dni', { message: mensaje });
+      else setErrorEnvio(mensaje);
+      return null;
+    });
     if (creada) {
       setResultado(creada);
       onInscripto?.(creada);
     }
   };
+
+  function usarOtroDni() {
+    setExistente(null);
+    limpiar();
+    reset({ ...FORMULARIO_VACIO, disciplinaId: watch('disciplinaId'), categoriaDisciplinaId: watch('categoriaDisciplinaId') });
+  }
 
   function nuevaInscripcion() {
     setResultado(null);
@@ -194,23 +221,45 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
       <fieldset className="space-y-4">
-        <legend className="mb-1 text-sm font-semibold text-slate-800">Participante</legend>
-        {existente && (
+        <legend className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <Paso n={1} /> Datos del participante
+        </legend>
+        {participante ? (
           <p className="flex items-center gap-2 rounded-lg border border-brand-200/70 bg-brand-50 px-3 py-2 text-sm text-brand-800">
             <UserCheck size={16} className="shrink-0" />
-            {participante
-              ? `${existente.apellido}, ${existente.nombre} · DNI ${existente.dni}`
-              : `DNI ya registrado: ${existente.apellido}, ${existente.nombre}. Se inscribe con sus datos.`}
+            {participante.apellido}, {participante.nombre} · DNI {participante.dni}
           </p>
+        ) : (
+          <div className="sm:max-w-xs">
+            <Input id="dni" label="DNI" inputMode="numeric" placeholder="Sin puntos" error={errors.dni?.message} {...register('dni')} />
+            {!errors.dni && (
+              <p className="mt-1.5 flex min-h-5 items-center gap-1.5 text-xs" aria-live="polite">
+                {busqueda.cargando ? (
+                  <span className="flex items-center gap-1.5 text-slate-500">
+                    <Spinner className="h-3.5 w-3.5" /> Buscando DNI…
+                  </span>
+                ) : existente ? null : dni && DNI_COMPLETO.test(dni) && busqueda.noEncontrado ? (
+                  <span className="flex items-center gap-1.5 text-emerald-700">
+                    <UserPlus size={14} /> DNI nuevo: se va a registrar un participante nuevo.
+                  </span>
+                ) : (
+                  <span className="text-slate-500">Si ya está registrado, se completan sus datos.</span>
+                )}
+              </p>
+            )}
+          </div>
         )}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input id="dni" label="DNI" inputMode="numeric" disabled={!!participante} error={errors.dni?.message} {...register('dni')} />
-          {busqueda.cargando && (
-            <span className="flex items-center gap-2 self-end pb-2 text-xs text-slate-500">
-              <Spinner className="h-3.5 w-3.5" /> Buscando DNI…
+        {existente && !participante && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-200/70 bg-brand-50 px-3 py-2 text-sm text-brand-800">
+            <span className="flex items-center gap-2">
+              <UserCheck size={16} className="shrink-0" />
+              Este DNI es de <strong>{existente.apellido}, {existente.nombre}</strong>: se lo inscribe en otra disciplina con sus datos.
             </span>
-          )}
-        </div>
+            <Button type="button" variant="ghost" size="sm" onClick={usarOtroDni}>
+              Usar otro DNI
+            </Button>
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input id="nombre" label="Nombre" disabled={bloquearDatos} error={errors.nombre?.message} {...register('nombre')} />
           <Input id="apellido" label="Apellido" disabled={bloquearDatos} error={errors.apellido?.message} {...register('apellido')} />
@@ -254,7 +303,9 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
       </fieldset>
 
       <fieldset className="space-y-4 border-t border-slate-200 pt-6">
-        <legend className="sr-only">Disciplina</legend>
+        <legend className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <Paso n={2} /> Disciplina
+        </legend>
         {cargandoDisciplinas ? (
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <Spinner className="h-4 w-4" /> Cargando disciplinas…
@@ -304,7 +355,11 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
         )}
       </fieldset>
 
-      {errorEnvio && <p className="text-sm text-red-600">{errorEnvio}</p>}
+      {errorEnvio && (
+        <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          {errorEnvio}
+        </p>
+      )}
 
       <ModalActions>
         {onCancel && (
@@ -314,10 +369,17 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
         )}
         <Button type="submit" disabled={enviando}>
           {enviando && <Spinner className="h-4 w-4 text-white" />}
-          Confirmar inscripción
+          {existente ? 'Inscribir' : 'Registrar participante'}
         </Button>
       </ModalActions>
     </form>
+  );
+}
+
+/** Número de paso del formulario, con el chip de marca. */
+function Paso({ n }: { n: number }) {
+  return (
+    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">{n}</span>
   );
 }
 
