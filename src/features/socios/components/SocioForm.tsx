@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, DateInput, Input, Select } from '@/components/ui';
 import { socioFormSchema, type SocioFormData } from '../schemas';
 import { ROUTES } from '@/routes/paths';
 import { useCategorias } from '../hooks/useCategorias';
@@ -20,6 +20,7 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<SocioFormData>({
@@ -65,12 +66,20 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
           error={errors.dni?.message}
           {...register('dni')}
         />
-        <Input
-          id="fechaNacimiento"
-          label="Fecha de nacimiento"
-          type="date"
-          error={errors.fechaNacimiento?.message}
-          {...register('fechaNacimiento')}
+        <Controller
+          control={control}
+          name="fechaNacimiento"
+          render={({ field }) => (
+            <DateInput
+              id="fechaNacimiento"
+              label="Fecha de nacimiento"
+              error={errors.fechaNacimiento?.message}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              ref={field.ref}
+            />
+          )}
         />
         <Input
           id="email"

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Card, Spinner, Button, Input } from '@/components/ui';
+import { Card, Spinner, Button, DateInput, Input } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useInscripcionesPorPersona } from '../hooks/useInscripciones';
 import { actualizarDatosPersona } from '../api/inscripcion.api';
@@ -270,12 +270,20 @@ export function EditarParticipantePage() {
               error={typeof errors.telefono?.message === 'string' ? errors.telefono.message : undefined}
               {...register('telefono')}
             />
-            <Input
-              id="fechaNacimiento"
-              type="date"
-              label="Fecha de nacimiento"
-              error={typeof errors.fechaNacimiento?.message === 'string' ? errors.fechaNacimiento.message : undefined}
-              {...register('fechaNacimiento')}
+            <Controller
+              control={control}
+              name="fechaNacimiento"
+              render={({ field }) => (
+                <DateInput
+                  id="fechaNacimiento"
+                  label="Fecha de nacimiento"
+                  error={typeof errors.fechaNacimiento?.message === 'string' ? errors.fechaNacimiento.message : undefined}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                />
+              )}
             />
           </div>
 
