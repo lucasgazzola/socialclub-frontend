@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Card, Spinner, Button, DateInput, Input } from '@/components/ui';
+import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
 import { ROUTES } from '@/routes/paths';
 import { useInscripcionesPorPersona } from '../hooks/useInscripciones';
 import { actualizarDatosPersona } from '../api/inscripcion.api';
@@ -405,6 +406,14 @@ export function EditarParticipantePage() {
           </Button>
         </form>
       </Card>
+
+      {/* DT-11: la documentación del participante se gestiona desde el participante. */}
+      {participante && (
+        <Card className="p-6">
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Documentación</h2>
+          <DocumentacionParticipante persona={{ id: personaId, nombre: participante.nombre, apellido: participante.apellido }} />
+        </Card>
+      )}
     </div>
   );
 }

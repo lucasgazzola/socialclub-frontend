@@ -5,7 +5,6 @@ import {
   Coins,
   CreditCard,
   ClipboardList,
-  FileCheck,
   LayoutDashboard,
   LogOut,
   QrCode,
@@ -62,13 +61,6 @@ const navSections: NavSection[] = [
         icon: UserRound,
         roles: ['ADMIN', 'COLABORADOR', 'DELEGADO'],
       },
-      { to: ROUTES.inscripcion, label: 'Inscripción', icon: UserPlus, roles: ['ADMIN', 'DELEGADO'] },
-      {
-        to: ROUTES.documentacion,
-        label: 'Documentación',
-        icon: FileCheck,
-        roles: ['ADMIN', 'DELEGADO'],
-      },
       { to: ROUTES.disciplinas, label: 'Disciplinas', icon: Dumbbell, roles: ['ADMIN', 'COLABORADOR'] },
     ],
   },
@@ -117,9 +109,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.historialCuotaDeportiva]: 'Historial de Cuotas Deportivas',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
-  [ROUTES.inscripcion]: 'Inscripción a Disciplinas',
   [ROUTES.participantes]: 'Participantes de Disciplinas',
-  [ROUTES.documentacion]: 'Documentación Obligatoria',
 };
 
 /**

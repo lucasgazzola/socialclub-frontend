@@ -213,7 +213,7 @@ export function RegistrarPagoDeportivoPage() {
         cargando={busqueda.cargando}
         noEncontrado={busqueda.noEncontrado}
         error={busqueda.error}
-        onRegistrarNuevo={() => navigate(ROUTES.inscripcion)}
+        onRegistrarNuevo={() => navigate(ROUTES.nuevaInscripcion)}
       />
 
       {participante && isLoading && (

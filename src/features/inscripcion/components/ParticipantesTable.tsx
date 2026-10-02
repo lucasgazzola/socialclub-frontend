@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, ChevronUp, Pencil, UserMinus } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, FileText, Pencil, UserMinus } from 'lucide-react';
 import { Badge, Button, ConfirmDialog } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
@@ -10,6 +10,8 @@ import type { ParticipanteConDisciplinas } from '../types';
 
 interface ParticipantesTableProps {
   participantes: ParticipanteConDisciplinas[];
+  /** DT-11: abre la documentación del participante (solo si se puede gestionar). */
+  onVerDocumentacion?: (participante: ParticipanteConDisciplinas) => void;
 }
 
 /** Etiqueta del estado de una inscripción puntual del participante. */
@@ -41,7 +43,7 @@ function BadgeParticipante({ activo }: { activo: boolean }) {
  * US-07 — Desde acá el delegado (o un admin) puede dar de baja al
  * participante: la baja alcanza a todas sus disciplinas.
  */
-export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
+export function ParticipantesTable({ participantes, onVerDocumentacion }: ParticipantesTableProps) {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
@@ -131,6 +133,7 @@ export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
                 onToggle={() => toggleExpandido(participante.personaId)}
                 onDarDeBaja={() => setParticipanteAConfirmar(participante)}
                 onReactivar={() => setParticipanteAReactivar(participante)}
+                onVerDocumentacion={onVerDocumentacion ? () => onVerDocumentacion(participante) : undefined}
                 onEditar={() =>
                   navigate(
                     ROUTES.participantesEditar.replace(':id', String(participante.personaId)),
@@ -199,6 +202,7 @@ interface ParticipanteRowProps {
   onDarDeBaja: () => void;
   onReactivar: () => void;
   onEditar: () => void;
+  onVerDocumentacion?: () => void;
 }
 
 function ParticipanteRow({
@@ -209,6 +213,7 @@ function ParticipanteRow({
   onDarDeBaja,
   onReactivar,
   onEditar,
+  onVerDocumentacion,
 }: ParticipanteRowProps) {
   const nombres = participante.disciplinas.map((d) => d.disciplina.nombre);
   const visibles = nombres.slice(0, 2);
@@ -244,6 +249,17 @@ function ParticipanteRow({
               <Pencil size={14} />
               Editar
             </Button>
+            {onVerDocumentacion && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Documentación de ${participante.persona.apellido}, ${participante.persona.nombre}`}
+                onClick={onVerDocumentacion}
+              >
+                <FileText size={14} />
+                Documentación
+              </Button>
+            )}
             {puedeDarDeBaja && participante.persona.activo && (
               <Button
                 variant="ghost"

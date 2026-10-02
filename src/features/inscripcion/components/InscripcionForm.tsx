@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, UserRound } from 'lucide-react';
-import { Button, Card, Spinner } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import { inscripcionSchema, type InscripcionFormValues } from '../schemas/inscripcion.schema';
 import { useBuscarParticipante } from '../hooks/useBuscarParticipante';
 import { useCrearInscripcion } from '../hooks/useCrearInscripcion';
@@ -16,9 +16,15 @@ import type { CrearInscripcionPayload, InscripcionCreada } from '../types';
 
 type ModoParticipante = 'busqueda' | 'encontrado' | 'nuevo';
 
+interface InscripcionFormProps {
+  /** Se llama después de cada inscripción exitosa (ej. para refrescar el listado). */
+  onInscripto?: (inscripcion: InscripcionCreada) => void;
+}
+
 /**
- * Página del delegado para registrar la inscripción de un participante a
- * una disciplina. Flujo:
+ * Formulario del delegado para registrar la inscripción de un participante a
+ * una disciplina (US-05). Se usa dentro de la pantalla de Participantes
+ * (DT-11). Flujo:
  *
  * 1. Buscar por DNI.
  * 2a. Si existe → se selecciona, no se vuelven a pedir sus datos.
@@ -26,7 +32,7 @@ type ModoParticipante = 'busqueda' | 'encontrado' | 'nuevo';
  * 3. En ambos casos, se elige disciplina y (si corresponde) categoría.
  * 4. Confirmar → POST /inscripcion.
  */
-export function InscripcionPage() {
+export function InscripcionForm({ onInscripto }: InscripcionFormProps) {
   const [modo, setModo] = useState<ModoParticipante>('busqueda');
   const [resultado, setResultado] = useState<InscripcionCreada | null>(null);
 
@@ -97,6 +103,7 @@ export function InscripcionPage() {
     const creada = await enviar(payload);
     if (creada) {
       setResultado(creada);
+      onInscripto?.(creada);
       busqueda.limpiar();
       reset();
       setModo('busqueda');
@@ -104,16 +111,12 @@ export function InscripcionPage() {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Nueva inscripción</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Buscá al participante por DNI o registrá uno nuevo, y asignalo a una disciplina.
-        </p>
-      </div>
-
+    <div className="space-y-6">
       {resultado && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div
+          role="status"
+          className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
+        >
           <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
           <div>
             <p className="font-medium">
@@ -123,65 +126,63 @@ export function InscripcionPage() {
         </div>
       )}
 
-      <Card className="p-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {modo === 'busqueda' && (
-            <BuscarParticipanteDni
-              cargando={busqueda.cargando}
-              noEncontrado={busqueda.noEncontrado}
-              onBuscar={handleBuscar}
-              onRegistrarNuevo={handleRegistrarNuevo}
-            />
-          )}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {modo === 'busqueda' && (
+          <BuscarParticipanteDni
+            cargando={busqueda.cargando}
+            noEncontrado={busqueda.noEncontrado}
+            onBuscar={handleBuscar}
+            onRegistrarNuevo={handleRegistrarNuevo}
+          />
+        )}
 
-          {modo === 'encontrado' && busqueda.participante && (
-            <ParticipanteSeleccionado
-              participante={busqueda.participante}
-              onCambiar={handleCambiarParticipante}
-            />
-          )}
+        {modo === 'encontrado' && busqueda.participante && (
+          <ParticipanteSeleccionado
+            participante={busqueda.participante}
+            onCambiar={handleCambiarParticipante}
+          />
+        )}
 
-          {modo === 'nuevo' && (
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <p className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <UserRound size={16} /> Datos del participante nuevo
-                </p>
-                <Button type="button" variant="ghost" size="sm" onClick={handleCambiarParticipante}>
-                  Volver a buscar
-                </Button>
-              </div>
-              <DatosNuevoParticipanteForm register={register} control={control} errors={errors} />
-            </div>
-          )}
-
-          {modo !== 'busqueda' && (
-            <>
-              <div className="border-t border-slate-200 pt-6">
-                {cargandoDisciplinas ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <Spinner className="h-4 w-4" /> Cargando disciplinas…
-                  </div>
-                ) : (
-                  <DisciplinaCategoriaSelector
-                    control={control}
-                    errors={errors}
-                    disciplinas={disciplinas}
-                    disciplinaSeleccionada={disciplinaSeleccionada}
-                  />
-                )}
-              </div>
-
-              {errorEnvio && <p className="text-sm text-red-600">{errorEnvio}</p>}
-
-              <Button type="submit" disabled={enviando} className="w-full justify-center">
-                {enviando && <Spinner className="h-4 w-4 text-white" />}
-                Confirmar inscripción
+        {modo === 'nuevo' && (
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <UserRound size={16} /> Datos del participante nuevo
+              </p>
+              <Button type="button" variant="ghost" size="sm" onClick={handleCambiarParticipante}>
+                Volver a buscar
               </Button>
-            </>
-          )}
-        </form>
-      </Card>
+            </div>
+            <DatosNuevoParticipanteForm register={register} control={control} errors={errors} />
+          </div>
+        )}
+
+        {modo !== 'busqueda' && (
+          <>
+            <div className="border-t border-slate-200 pt-6">
+              {cargandoDisciplinas ? (
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Spinner className="h-4 w-4" /> Cargando disciplinas…
+                </div>
+              ) : (
+                <DisciplinaCategoriaSelector
+                  control={control}
+                  errors={errors}
+                  disciplinas={disciplinas}
+                  disciplinaSeleccionada={disciplinaSeleccionada}
+                />
+              )}
+            </div>
+
+            {errorEnvio && <p className="text-sm text-red-600">{errorEnvio}</p>}
+
+            <Button type="submit" disabled={enviando} className="w-full justify-center">
+              {enviando && <Spinner className="h-4 w-4 text-white" />}
+              Confirmar inscripción
+            </Button>
+          </>
+        )}
+      </form>
     </div>
   );
 }
