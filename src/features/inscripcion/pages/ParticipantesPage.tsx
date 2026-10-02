@@ -39,14 +39,18 @@ export function ParticipantesPage() {
 
   const { disciplinas } = useDisciplinasActivas();
 
-  // Debounce de la búsqueda: evita pegarle a la API en cada tecla.
+  // Debounce de la búsqueda: evita pegarle a la API en cada tecla. Solo vuelve
+  // a la página 1 si la búsqueda cambió (si no, pisaba un "Siguiente" hecho
+  // en los primeros 300 ms).
   useEffect(() => {
+    const nueva = textoInput.trim();
+    if (nueva === busqueda) return;
     const timer = setTimeout(() => {
       setPagina(1);
-      setBusqueda(textoInput.trim());
+      setBusqueda(nueva);
     }, 300);
     return () => clearTimeout(timer);
-  }, [textoInput]);
+  }, [textoInput, busqueda]);
 
   const { data, isLoading, isError, error, isFetching } = useInscripciones({
     busqueda: busqueda || undefined,
