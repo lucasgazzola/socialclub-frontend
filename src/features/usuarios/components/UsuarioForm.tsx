@@ -6,7 +6,7 @@ function hasPasswordFieldError(
   return 'password' in errors;
 }
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, ModalActions } from '@/components/ui';
 import {
   usuarioCreateSchema,
   usuarioEditSchema,
@@ -19,6 +19,8 @@ interface UsuarioFormProps {
   modo: 'crear' | 'editar';
   usuarioInicial?: Usuario | null;
   onSubmit: (values: UsuarioCreateFormValues | UsuarioEditFormValues) => Promise<void>;
+  /** Cancelar dentro del modal (DT-20). */
+  onCancel?: () => void;
   mostrarPasswordField?: boolean;
 }
 
@@ -27,6 +29,7 @@ export function UsuarioForm({
   usuarioInicial,
   onSubmit,
   mostrarPasswordField = true,
+  onCancel,
 }: UsuarioFormProps) {
   const schema = modo === 'crear' ? usuarioCreateSchema : usuarioEditSchema;
   const defaultValues = usuarioInicial
@@ -136,9 +139,16 @@ export function UsuarioForm({
         {rolesError && <p className="text-sm text-red-600">{rolesError}</p>}
       </fieldset>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Guardando...' : modo === 'crear' ? 'Crear usuario' : 'Guardar cambios'}
-      </Button>
+      <ModalActions>
+        {onCancel && (
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Guardando…' : modo === 'crear' ? 'Crear usuario' : 'Guardar cambios'}
+        </Button>
+      </ModalActions>
     </form>
   );
 }

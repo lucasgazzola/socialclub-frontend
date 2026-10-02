@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfirmDialog } from './ConfirmDialog';
-import { Modal } from './Modal';
+import { Modal, ModalActions } from './Modal';
 
 describe('Modal', () => {
   it('no renderiza nada mientras open es false', () => {
@@ -192,5 +192,57 @@ describe('ConfirmDialog', () => {
     await user.keyboard('{Escape}');
 
     expect(onCancel).not.toHaveBeenCalled();
+  });
+});
+
+describe('DT-20 · estándar de modales', () => {
+  it('aplica los anchos estándar según el tamaño (por defecto, lg)', () => {
+    const { rerender } = render(<Modal open title="Prueba" onClose={() => {}} />);
+    expect(screen.getByRole('dialog')).toHaveClass('sm:max-w-2xl');
+
+    rerender(<Modal open size="sm" title="Prueba" onClose={() => {}} />);
+    expect(screen.getByRole('dialog')).toHaveClass('sm:max-w-md');
+
+    rerender(<Modal open size="xl" title="Prueba" onClose={() => {}} />);
+    expect(screen.getByRole('dialog')).toHaveClass('sm:max-w-4xl');
+  });
+
+  it('muestra el ícono del encabezado con el tono indicado, oculto para lectores de pantalla', () => {
+    render(<Modal open title="Dar de baja" tone="danger" icon={<svg data-testid="icono" />} onClose={() => {}} />);
+
+    const chip = screen.getByTestId('icono').parentElement;
+    expect(chip).toHaveAttribute('aria-hidden', 'true');
+    expect(chip).toHaveClass('bg-rose-50');
+  });
+
+  it('muestra las acciones del pie', () => {
+    render(
+      <Modal open title="Prueba" onClose={() => {}} footer={<button type="button">Guardar</button>}>
+        Contenido
+      </Modal>,
+    );
+
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Guardar' }).closest('footer')).not.toBeNull();
+  });
+
+  it('ModalActions agrupa las acciones de un formulario en el pie fijo', () => {
+    render(
+      <ModalActions>
+        <button type="button">Cancelar</button>
+        <button type="submit">Guardar</button>
+      </ModalActions>,
+    );
+
+    const pie = screen.getByRole('button', { name: 'Guardar' }).parentElement;
+    expect(pie).toHaveClass('sticky');
+    expect(pie).toHaveClass('sm:justify-end');
+  });
+
+  it('ConfirmDialog usa el tamaño chico y el ícono según la variante', () => {
+    render(<ConfirmDialog open variant="danger" title="Dar de baja" onConfirm={() => {}} onCancel={() => {}} />);
+
+    const dialogo = screen.getByRole('dialog', { name: 'Dar de baja' });
+    expect(dialogo).toHaveClass('sm:max-w-md');
+    expect(dialogo.querySelector('[aria-hidden="true"]')).toHaveClass('bg-rose-50');
   });
 });

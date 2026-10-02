@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, ModalActions } from '@/components/ui';
 import { mockPagoSchema, type MockPagoFormData } from '../schemas/pago.schema';
 import { Lock, ShieldCheck } from 'lucide-react';
 import type { CuotaPendiente } from '../types';
@@ -58,7 +58,9 @@ export function MockPasarelaPagoModal({
   return (
     <Modal
       open={isOpen}
-      onClose={onClose}
+      onClose={isLoading ? () => {} : onClose}
+      size="md"
+      icon={<Lock />}
       title="Pasarela de Pago (Simulación)"
       description="Ingresá los datos de tu tarjeta para procesar el pago de las cuotas seleccionadas."
     >
@@ -128,8 +130,8 @@ export function MockPasarelaPagoModal({
         </div>
 
         {/* Botones */}
-        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isLoading}>
+        <ModalActions>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
             Cancelar
           </Button>
 
@@ -137,7 +139,7 @@ export function MockPasarelaPagoModal({
             <Lock size={16} />
             Confirmar y Pagar ${total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
           </Button>
-        </div>
+        </ModalActions>
       </form>
     </Modal>
   );

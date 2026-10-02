@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, ModalActions, Select } from '@/components/ui';
 import { cuotaFormSchema, type CuotaFormInput, type CuotaFormValues } from '../schemas';
 import type { CategoriaSocio, ConfiguracionCuotaDeportiva, Disciplina } from '../types';
 
@@ -10,6 +10,8 @@ interface CuotaFormProps {
   disciplinas: Disciplina[];
   categorias: CategoriaSocio[];
   onSubmit: (values: CuotaFormValues) => Promise<void>;
+  /** Cancelar dentro del modal (DT-20). */
+  onCancel?: () => void;
 }
 
 /** Próximo mes en formato "YYYY-MM" (los cambios aplican desde el período siguiente). */
@@ -32,6 +34,7 @@ export function CuotaForm({
   disciplinas,
   categorias,
   onSubmit,
+  onCancel,
 }: CuotaFormProps) {
   const defaultValues = configuracionInicial
     ? {
@@ -119,13 +122,16 @@ export function CuotaForm({
         </p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting
-          ? 'Guardando...'
-          : esEdicion
-            ? 'Guardar cambios'
-            : 'Configurar cuota'}
-      </Button>
+      <ModalActions>
+        {onCancel && (
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Guardando…' : esEdicion ? 'Guardar cambios' : 'Configurar cuota'}
+        </Button>
+      </ModalActions>
     </form>
   );
 }

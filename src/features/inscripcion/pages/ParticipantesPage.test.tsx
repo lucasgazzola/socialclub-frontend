@@ -40,6 +40,11 @@ vi.mock('../components/ParticipantesTable', () => ({
   ),
 }));
 
+vi.mock('../components/EditarParticipanteModal', () => ({
+  EditarParticipanteModal: ({ personaId }: { personaId: number | null }) =>
+    personaId === null ? null : <div data-testid="editar-participante">{personaId}</div>,
+}));
+
 vi.mock('../components/InscripcionForm', () => ({
   InscripcionForm: () => <div data-testid="form-inscripcion" />,
 }));
@@ -158,5 +163,17 @@ describe('US-08 · ParticipantesPage', () => {
 
     expect(screen.getByRole('dialog', { name: 'Documentación de Pérez, Juan' })).toBeInTheDocument();
     expect(screen.getByTestId('documentacion')).toHaveTextContent('10');
+  });
+
+  it('DT-20: abre la edición del participante en un modal (?editar=<id>)', () => {
+    renderPagina('/participantes?editar=10');
+
+    expect(screen.getByTestId('editar-participante')).toHaveTextContent('10');
+  });
+
+  it('DT-20: sin ?editar no hay modal de edición', () => {
+    renderPagina();
+
+    expect(screen.queryByTestId('editar-participante')).not.toBeInTheDocument();
   });
 });

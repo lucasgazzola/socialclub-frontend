@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, ShieldCheck } from 'lucide-react';
-import { Button, Input, Modal } from '@/components/ui';
+import { Button, Input, Modal, ModalActions } from '@/components/ui';
 import { mockPagoSchema, type MockPagoFormData } from '@/features/pagos/schemas/pago.schema';
 
 interface Props {
@@ -37,7 +37,9 @@ export function MockPasarelaEntradasModal({
   return (
     <Modal
       open={isOpen}
-      onClose={onClose}
+      onClose={isLoading ? () => {} : onClose}
+      size="md"
+      icon={<Lock />}
       title="Pasarela de pago (simulación)"
       description="Ingresá los datos de tu tarjeta. No se realizarán cargos reales."
     >
@@ -94,15 +96,15 @@ export function MockPasarelaEntradasModal({
           <ShieldCheck size={16} className="shrink-0 text-emerald-600" />
           <span>Simulador seguro sandbox.</span>
         </div>
-        <div className="flex justify-end gap-3 border-t border-slate-200 pt-4">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isLoading}>
+        <ModalActions>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
             Cancelar
           </Button>
           <Button type="submit" disabled={isLoading}>
             <Lock size={16} />
             {isLoading ? 'Procesando…' : `Confirmar y pagar $${formatoImporte}`}
           </Button>
-        </div>
+        </ModalActions>
       </form>
     </Modal>
   );

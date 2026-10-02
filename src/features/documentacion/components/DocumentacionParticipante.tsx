@@ -191,9 +191,11 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                 className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-slate-200"
               />
             </div>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Cargando…' : 'Cargar documento'}
-            </Button>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Cargando…' : 'Cargar documento'}
+              </Button>
+            </div>
           </form>
         </section>
       )}

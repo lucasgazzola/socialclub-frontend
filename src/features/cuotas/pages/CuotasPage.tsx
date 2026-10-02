@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Filter, Plus } from 'lucide-react';
+import { Filter, Pencil, Plus, Wallet } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
 import { CuotaForm } from '../components/CuotaForm';
@@ -108,6 +108,8 @@ export function CuotasPage() {
             ? 'Actualizá el monto de la configuración existente.'
             : 'Elegí disciplina, categoría y el monto mensual.'
         }
+        icon={modoFormulario === 'editar' ? <Pencil /> : <Wallet />}
+        size="md"
         onClose={cerrarFormulario}
       >
         {modoFormulario && (
@@ -118,6 +120,7 @@ export function CuotasPage() {
             disciplinas={disciplinas}
             categorias={categorias}
             onSubmit={handleSubmit}
+            onCancel={cerrarFormulario}
           />
         )}
       </Modal>

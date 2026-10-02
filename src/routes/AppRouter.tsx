@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { RedirigirAEdicion } from './RedirigirAEdicion';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
@@ -6,20 +7,17 @@ import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { HacermeSocioPage } from '@/features/socios/pages/HacermeSocioPage';
 import { PerfilSocioPage } from '@/features/socios/pages/PerfilSocioPage';
 import { CambiarContrasenaPage } from '@/features/auth/pages/CambiarContrasenaPage';
-import { EditarSocioPage } from '@/features/socios/pages/EditarSocioPage';
 import { SociosPage } from '@/features/socios/pages/SociosPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { CuotasPage } from '@/features/cuotas/pages/CuotasPage';
 import { CuotasHubPage } from '@/features/cuotas/pages/CuotasHubPage';
 import { CuotaSocialPage } from '@/features/cuota-social/pages/CuotaSocialPage';
-import { EditarCuotaSocialPage } from '@/features/cuota-social/pages/EditarCuotaSocialPage';
 import { ComprarEntradasPage } from '@/features/entradas/pages/ComprarEntradasPage';
 import { MisEntradasPage } from '@/features/entradas/pages/MisEntradasPage';
 import { ValidarAccesoPage } from '@/features/entradas/pages/ValidarAccesoPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
 import { ProtectedRoute } from './ProtectedRoute';
-import { EditarParticipantePage } from '@/features/inscripcion/pages/EditarParticipantePage';
 import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPage';
 import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
 import { RegistrarPagoDeportivoPage } from '@/features/pagos/pages/RegistrarPagoDeportivoPage';
@@ -47,7 +45,7 @@ export function AppRouter() {
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
-            <Route path="socios/:id/editar" element={<EditarSocioPage />} />
+            <Route path="socios/:id/editar" element={<RedirigirAEdicion a={ROUTES.editarSocio} />} />
             <Route path="disciplinas" element={<DisciplinasPage />} />
             <Route path="disciplinas/:id/categorias" element={<CategoriasDisciplinaPage />} />
             <Route path="cuotas/deportiva/cobrar" element={<RegistrarPagoDeportivoPage />} />
@@ -59,7 +57,7 @@ export function AppRouter() {
             <Route path="cuotas" element={<CuotasHubPage />} />
             <Route path="cuotas/deportiva" element={<CuotasPage />} />
             <Route path="cuotas/social" element={<CuotaSocialPage />} />
-            <Route path="cuotas/social/:id/editar" element={<EditarCuotaSocialPage />} />
+            <Route path="cuotas/social/:id/editar" element={<RedirigirAEdicion a={ROUTES.editarCuotaSocial} />} />
           </Route>
 
           {/* Consulta y compra: cualquier usuario autenticado */}
@@ -91,7 +89,7 @@ export function AppRouter() {
             {/* DT-11: inscripción y documentación viven dentro de Participantes. */}
             <Route path="inscripcion" element={<Navigate to={ROUTES.nuevaInscripcion} replace />} />
             <Route path="documentacion" element={<Navigate to={ROUTES.participantes} replace />} />
-            <Route path="participante/:id/editar" element={<EditarParticipantePage />} />
+            <Route path="participante/:id/editar" element={<RedirigirAEdicion a={ROUTES.editarParticipante} />} />
           </Route>
         </Route>
       </Route>

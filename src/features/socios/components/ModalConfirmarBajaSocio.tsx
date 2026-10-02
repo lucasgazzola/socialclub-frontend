@@ -18,8 +18,25 @@ export function ModalConfirmarBajaSocio({
   isPending = false,
 }: ModalConfirmarBajaSocioProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Confirmar baja como socio">
-      <div className="space-y-4 pt-2">
+    <Modal
+      open={open}
+      onClose={isPending ? () => {} : onClose}
+      title="Confirmar baja como socio"
+      size="sm"
+      icon={<AlertTriangle />}
+      tone="danger"
+      footer={
+        <>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
+            Cancelar
+          </Button>
+          <Button type="button" variant="danger" onClick={() => void onConfirm()} disabled={isPending}>
+            {isPending ? 'Procesando baja…' : 'Sí, confirmar baja'}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
           <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
           <div className="text-sm space-y-1">
@@ -40,20 +57,6 @@ export function ModalConfirmarBajaSocio({
             Mantendrás tu usuario activo y podrás solicitar re-asociarte en cualquier momento.
           </li>
         </ul>
-
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            onClick={() => void onConfirm()}
-            disabled={isPending}
-          >
-            {isPending ? 'Procesando baja…' : 'Sí, confirmar baja'}
-          </Button>
-        </div>
       </div>
     </Modal>
   );

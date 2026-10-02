@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, Plus, Search } from 'lucide-react';
+import { FileText, Filter, Plus, Search, UserPlus } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/ui';
 import { AuthContext } from '@/features/auth/context/auth-context';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
@@ -9,6 +9,7 @@ import type { EstadoInscripcionFiltro, ParticipanteConDisciplinas, ParticipanteE
 import { useInscripciones } from '../hooks/useInscripciones';
 import { ParticipantesTable } from '../components/ParticipantesTable';
 import { InscripcionForm } from '../components/InscripcionForm';
+import { EditarParticipanteModal } from '../components/EditarParticipanteModal';
 
 const POR_PAGINA = 10;
 
@@ -35,6 +36,8 @@ export function ParticipantesPage() {
   const [conDocumentacion, setConDocumentacion] = useState<ParticipanteConDisciplinas | null>(null);
 
   const [aInscribir, setAInscribir] = useState<ParticipanteEncontrado | null>(null);
+  // DT-20: la edición es un modal sobre el listado (?editar=<id>).
+  const participanteAEditar = Number(searchParams.get('editar')) || null;
   const abrirInscripcion = () => {
     setAInscribir(null);
     setSearchParams({ nueva: '1' });
@@ -122,14 +125,18 @@ export function ParticipantesPage() {
             : 'Cargá los datos del participante y elegí la disciplina. Si el DNI ya está registrado, se usan sus datos.'
         }
         onClose={cerrarInscripcion}
-        className="max-w-3xl"
+        icon={<UserPlus />}
+        size="lg"
       >
         <InscripcionForm
           key={aInscribir?.id ?? 'nuevo'}
           participante={aInscribir}
+          onCancel={cerrarInscripcion}
           onCargarDocumentacion={verDocumentacionDe}
         />
       </Modal>
+
+      <EditarParticipanteModal personaId={participanteAEditar} onClose={() => setSearchParams({})} />
 
       <Modal
         open={conDocumentacion !== null}
@@ -140,7 +147,8 @@ export function ParticipantesPage() {
         }
         description={conDocumentacion ? `DNI ${conDocumentacion.persona.dni}` : undefined}
         onClose={() => setConDocumentacion(null)}
-        className="max-w-2xl"
+        icon={<FileText />}
+        size="lg"
       >
         {conDocumentacion && <DocumentacionParticipante persona={conDocumentacion.persona} />}
       </Modal>

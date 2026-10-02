@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, FileText, UserCheck } from 'lucide-react';
-import { Button, DateInput, Input, Select, Spinner } from '@/components/ui';
+import { Button, DateInput, Input, ModalActions, Select, Spinner } from '@/components/ui';
 import { isoADisplay } from '@/lib/utils/fecha';
 import {
   GENERO_DISCIPLINA_LABELS,
@@ -32,6 +32,8 @@ interface InscripcionFormProps {
   participante?: ParticipanteEncontrado | null;
   /** Se llama después de cada inscripción exitosa. */
   onInscripto?: (inscripcion: InscripcionCreada) => void;
+  /** Cancelar dentro del modal (DT-20). */
+  onCancel?: () => void;
   /** Abre la documentación del participante recién inscripto. */
   onCargarDocumentacion?: (persona: InscripcionCreada['persona']) => void;
 }
@@ -45,7 +47,7 @@ interface InscripcionFormProps {
  * muestran las restricciones y la documentación exigida; al confirmar, qué
  * falta presentar y hasta cuándo.
  */
-export function InscripcionForm({ participante, onInscripto, onCargarDocumentacion }: InscripcionFormProps) {
+export function InscripcionForm({ participante, onInscripto, onCancel, onCargarDocumentacion }: InscripcionFormProps) {
   const [resultado, setResultado] = useState<InscripcionCreada | null>(null);
   const [existente, setExistente] = useState<ParticipanteEncontrado | null>(participante ?? null);
   const busqueda = useBuscarParticipante();
@@ -173,16 +175,16 @@ export function InscripcionForm({ participante, onInscripto, onCargarDocumentaci
             )}
           </div>
         )}
-        <div className="flex flex-wrap gap-2">
+        <ModalActions>
+          <Button type="button" variant="secondary" onClick={nuevaInscripcion}>
+            Nueva inscripción
+          </Button>
           {onCargarDocumentacion && estado && estado.documentos.length > 0 && (
             <Button type="button" onClick={() => onCargarDocumentacion(resultado.persona)}>
               <FileText size={16} /> Cargar documentación
             </Button>
           )}
-          <Button type="button" variant="secondary" onClick={nuevaInscripcion}>
-            Nueva inscripción
-          </Button>
-        </div>
+        </ModalActions>
       </div>
     );
   }
@@ -304,10 +306,17 @@ export function InscripcionForm({ participante, onInscripto, onCargarDocumentaci
 
       {errorEnvio && <p className="text-sm text-red-600">{errorEnvio}</p>}
 
-      <Button type="submit" disabled={enviando} className="w-full justify-center">
-        {enviando && <Spinner className="h-4 w-4 text-white" />}
-        Confirmar inscripción
-      </Button>
+      <ModalActions>
+        {onCancel && (
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={enviando}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" disabled={enviando}>
+          {enviando && <Spinner className="h-4 w-4 text-white" />}
+          Confirmar inscripción
+        </Button>
+      </ModalActions>
     </form>
   );
 }

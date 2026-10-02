@@ -142,7 +142,7 @@ export function ParticipantesTable({ participantes, onVerDocumentacion, onInscri
                 onInscribir={onInscribir ? () => onInscribir(participante) : undefined}
                 onEditar={() =>
                   navigate(
-                    ROUTES.participantesEditar.replace(':id', String(participante.personaId)),
+                    ROUTES.editarParticipante(participante.personaId),
                   )
                 }
               />

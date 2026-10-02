@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { Button, DateInput, Input, Select } from '@/components/ui';
+import { Button, DateInput, Input, ModalActions, Select } from '@/components/ui';
 import { socioFormSchema, type SocioFormData } from '../schemas';
 import { ROUTES } from '@/routes/paths';
 import { useCategorias } from '../hooks/useCategorias';
@@ -11,9 +11,11 @@ interface SocioFormProps {
   defaultValues?: SocioFormData;
   onSubmit: (data: SocioFormData) => Promise<void>;
   submitLabel: string;
+  /** Cancelar dentro del modal (DT-20). */
+  onCancel?: () => void;
 }
 
-export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormProps) {
+export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: SocioFormProps) {
   const navigate = useNavigate();
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
   const { data: categorias, isLoading: cargandoCategorias } = useCategorias();
@@ -125,14 +127,14 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{errorServidor}</p>
       )}
 
-      <div className="flex items-center gap-3 pt-2">
+      <ModalActions>
+        <Button type="button" variant="secondary" onClick={onCancel ?? (() => navigate(ROUTES.socios))}>
+          Cancelar
+        </Button>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Guardando…' : submitLabel}
         </Button>
-        <Button type="button" variant="secondary" onClick={() => navigate(ROUTES.socios)}>
-          Cancelar
-        </Button>
-      </div>
+      </ModalActions>
     </form>
   );
 }
