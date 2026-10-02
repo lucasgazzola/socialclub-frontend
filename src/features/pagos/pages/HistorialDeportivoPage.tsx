@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui';
+import { Card, DateInput } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
 import { BuscarParticipanteDni } from '@/features/inscripcion/components/buscarParticipanteDni';
@@ -157,26 +157,8 @@ export function HistorialDeportivoPage() {
 
       {participante && (
         <Card className="flex flex-wrap items-end gap-4 p-5">
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-600">Desde</span>
-            <input
-              type="date"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              value={desde}
-              max={hasta || undefined}
-              onChange={(e) => setDesde(e.target.value)}
-            />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-600">Hasta</span>
-            <input
-              type="date"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              value={hasta}
-              min={desde || undefined}
-              onChange={(e) => setHasta(e.target.value)}
-            />
-          </label>
+          <DateInput label="Desde" value={desde} max={hasta || undefined} onChange={setDesde} containerClassName="w-44" />
+          <DateInput label="Hasta" value={hasta} min={desde || undefined} onChange={setHasta} containerClassName="w-44" />
           {(desde || hasta) && (
             <button
               type="button"

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Button, Card, Input } from '@/components/ui';
+import { Button, Card, DateInput, Input } from '@/components/ui';
 import { env } from '@/config/env';
 import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
@@ -32,6 +32,7 @@ export function CargarDocumentacionPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
@@ -94,13 +95,21 @@ export function CargarDocumentacionPage() {
                 error={errors.tipo?.message}
                 {...register('tipo')}
               />
-              <Input
-                id="fechaVencimiento"
-                type="date"
-                label="Fecha de vencimiento"
-                min={hoyISO()}
-                error={errors.fechaVencimiento?.message}
-                {...register('fechaVencimiento')}
+              <Controller
+                control={control}
+                name="fechaVencimiento"
+                render={({ field }) => (
+                  <DateInput
+                    id="fechaVencimiento"
+                    label="Fecha de vencimiento"
+                      min={hoyISO()}
+                    error={errors.fechaVencimiento?.message}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                  />
+                )}
               />
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">
