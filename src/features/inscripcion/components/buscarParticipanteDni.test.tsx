@@ -1,39 +1,86 @@
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
 import { BuscarParticipanteDni } from './buscarParticipanteDni';
 
-vi.mock('@/components/ui', () => ({
-  Input: ({ label, ...props }: { label?: string } & React.ComponentProps<'input'>) => (
-    <div>
-      <label>{label}</label>
-      <input {...props} />
-    </div>
-  ),
-  Button: ({ children, ...props }: React.ComponentProps<'button'>) => <button {...props}>{children}</button>,
-  Spinner: ({ className }: { className?: string }) => <span className={className} aria-label="spinner" />,
-}));
-
 describe('BuscarParticipanteDni', () => {
-  it('muestra un aviso de No hay resultados y mantiene el flujo en búsqueda cuando no encuentra coincidencias', async () => {
+  it('permite escribir DNI y buscar con botón o con tecla Enter', async () => {
     const user = userEvent.setup();
-    const onBuscar = vi.fn();
-    const onRegistrarNuevo = vi.fn();
+    const mockOnBuscar = vi.fn();
+    const mockOnRegistrarNuevo = vi.fn();
 
     render(
       <BuscarParticipanteDni
         cargando={false}
-        noEncontrado={true}
-        onBuscar={onBuscar}
-        onRegistrarNuevo={onRegistrarNuevo}
+        noEncontrado={false}
+        onBuscar={mockOnBuscar}
+        onRegistrarNuevo={mockOnRegistrarNuevo}
       />,
     );
 
-    expect(screen.getAllByText(/No hay resultados/i).length).toBeGreaterThan(0);
-    const boton = screen.getByRole('button', { name: /Inscribir nuevo participante/i });
-    expect(boton).toBeInTheDocument();
+    const input = screen.getByLabelText(/Buscar participante por DNI/i);
+    const searchBtn = screen.getByRole('button', { name: /Buscar/i });
 
-    await user.click(boton);
-    expect(onRegistrarNuevo).toHaveBeenCalledTimes(1);
+    expect(searchBtn).toBeDisabled();
+
+    await user.type(input, '12345678');
+    expect(searchBtn).not.toBeDisabled();
+
+    await user.click(searchBtn);
+    expect(mockOnBuscar).toHaveBeenCalledWith('12345678');
+
+    await user.type(input, '{Enter}');
+    expect(mockOnBuscar).toHaveBeenCalledTimes(2);
+  });
+
+  it('muestra spinner cuando está cargando y deshabilita botón', () => {
+    render(
+      <BuscarParticipanteDni
+        cargando={true}
+        noEncontrado={false}
+        onBuscar={vi.fn()}
+        onRegistrarNuevo={vi.fn()}
+      />,
+    );
+
+    const searchBtn = screen.getByRole('button', { name: /Buscar/i });
+    expect(searchBtn).toBeDisabled();
+    expect(searchBtn.querySelector('.animate-spin')).toBeInTheDocument();
+  });
+
+  it('muestra advertencia cuando no se encuentra el participante', () => {
+    render(
+      <BuscarParticipanteDni
+        cargando={false}
+        noEncontrado={true}
+        onBuscar={vi.fn()}
+        onRegistrarNuevo={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('No hay resultados para ese DNI.')).toBeInTheDocument();
+  });
+
+  it('muestra error cuando ocurre un fallo y permite clickear inscribir nuevo', async () => {
+    const user = userEvent.setup();
+    const mockOnRegistrarNuevo = vi.fn();
+
+    render(
+      <BuscarParticipanteDni
+        cargando={false}
+        noEncontrado={false}
+        error="Error de conexión"
+        onBuscar={vi.fn()}
+        onRegistrarNuevo={mockOnRegistrarNuevo}
+      />,
+    );
+
+    expect(screen.getByText('Error de conexión')).toBeInTheDocument();
+
+    const inscribirBtn = screen.getByRole('button', {
+      name: /Inscribir nuevo participante/i,
+    });
+    await user.click(inscribirBtn);
+    expect(mockOnRegistrarNuevo).toHaveBeenCalled();
   });
 });

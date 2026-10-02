@@ -93,7 +93,7 @@ export function DisciplinaForm({ disciplina, guardando = false, onSubmit, onCanc
           min={0}
           placeholder="sin mínimo"
           error={errors.edadMinima?.message}
-          {...register('edadMinima', { setValueAs: (value) => value === '' ? null : Number(value) })}
+          {...register('edadMinima', { setValueAs: (value) => (value === '' || value === null || value === undefined ? null : Number(value)) })}
         />
         <Input
           label="Edad máxima"
@@ -101,7 +101,7 @@ export function DisciplinaForm({ disciplina, guardando = false, onSubmit, onCanc
           min={0}
           placeholder="sin máximo"
           error={errors.edadMaxima?.message}
-          {...register('edadMaxima', { setValueAs: (value) => value === '' ? null : Number(value) })}
+          {...register('edadMaxima', { setValueAs: (value) => (value === '' || value === null || value === undefined ? null : Number(value)) })}
         />
         <p className="text-xs text-slate-500 sm:col-span-2">Edad que el participante cumple en el año (por año de nacimiento). Cada categoría puede afinar este rango.</p>
       </div>
