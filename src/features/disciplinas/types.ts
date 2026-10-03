@@ -117,6 +117,109 @@ export interface DisciplinaOption {
   categorias: CategoriaDisciplinaOption[];
 }
 
+// ─── Categorías de disciplina (US-48 a US-51) ────────────────────────────────
+
+export interface RequerimientoDocVigente extends RequerimientoDoc {
+  /** Desde cuándo rige el requisito (base del plazo para los ya inscriptos). */
+  creadoEn: string;
+}
+
+/**
+ * Restricciones de inscripción. La edad es la que se cumple en el año
+ * calendario (por año de nacimiento). En una categoría, null = hereda de la disciplina.
+ */
+export interface Restricciones {
+  genero: GeneroDisciplina | null;
+  edadMinima: number | null;
+  edadMaxima: number | null;
+}
+
+/** Categoría con su documentación ADICIONAL y sus restricciones propias. */
+export interface CategoriaDisciplinaDetalle extends Restricciones {
+  id: number;
+  disciplinaId: number;
+  nombre: string;
+  activo: boolean;
+  creadoEn: string;
+  requerimientosDoc: RequerimientoDocVigente[];
+  _count: { inscripciones: number };
+}
+
+/** Listado de categorías junto con los requisitos de su disciplina. */
+export interface CategoriasDeDisciplina {
+  disciplina: Restricciones & {
+    id: number;
+    nombre: string;
+    activo: boolean;
+    solicitaDocumentacion: boolean;
+    requerimientosDoc: RequerimientoDocVigente[];
+  };
+  items: CategoriaDisciplinaDetalle[];
+}
+
+export interface CategoriasQuery {
+  busqueda?: string;
+  estado?: EstadoDisciplinaFiltro;
+}
+
+export interface RequerimientoDocPayload {
+  tipoDocumento: TipoDocumentacionDisciplina;
+  plazoDiasTolerancia: number;
+}
+
+export interface CategoriaPayload extends Restricciones {
+  nombre: string;
+  requerimientosDocumentacion: RequerimientoDocPayload[];
+}
+
+export function etiquetaTipoDocumento(tipo: TipoDocumentacionDisciplina): string {
+  return TIPOS_DOCUMENTACION_DISCIPLINA.find((opcion) => opcion.value === tipo)?.label ?? tipo;
+}
+
+/** Restricción que rige: la de la categoría si la define, si no la de la disciplina. */
+export function restriccionesEfectivas(disciplina: Restricciones, categoria?: Restricciones | null): Restricciones {
+  return {
+    genero: categoria?.genero ?? disciplina.genero,
+    edadMinima: categoria?.edadMinima ?? disciplina.edadMinima,
+    edadMaxima: categoria?.edadMaxima ?? disciplina.edadMaxima,
+  };
+}
+
+export function describirEdad({ edadMinima, edadMaxima }: Restricciones): string {
+  if (edadMinima !== null && edadMaxima !== null) return edadMinima === edadMaxima ? `${edadMinima} años` : `${edadMinima} a ${edadMaxima} años`;
+  if (edadMinima !== null) return `Desde ${edadMinima} años`;
+  if (edadMaxima !== null) return `Hasta ${edadMaxima} años`;
+  return 'Sin límite de edad';
+}
+
+/** Años de nacimiento que abarca el rango en la temporada indicada (ej. "Nacidos 2011–2013"). */
+export function describirAniosNacimiento({ edadMinima, edadMaxima }: Restricciones, anio = new Date().getFullYear()): string | null {
+  if (edadMinima !== null && edadMaxima !== null) {
+    const desde = anio - edadMaxima;
+    const hasta = anio - edadMinima;
+    return desde === hasta ? `Nacidos en ${desde}` : `Nacidos ${desde}–${hasta}`;
+  }
+  if (edadMinima !== null) return `Nacidos hasta ${anio - edadMinima}`;
+  if (edadMaxima !== null) return `Nacidos desde ${anio - edadMaxima}`;
+  return null;
+}
+
+export function etiquetaPlazo(dias: number): string {
+  return dias === 0 ? 'Obligatorio al inscribirse' : `${dias} días para presentarlo`;
+}
+
+/**
+ * US-50: una categoría dada de baja no se ofrece para nuevas inscripciones.
+ * Si la inscripción ya estaba en una categoría inactiva, se la conserva en la
+ * lista para no perderla al editar.
+ */
+export function categoriasDisponibles(
+  disciplina: { categorias: CategoriaDisciplinaOption[] } | undefined,
+  categoriaActualId?: number | null,
+): CategoriaDisciplinaOption[] {
+  return (disciplina?.categorias ?? []).filter((c) => c.activo || c.id === categoriaActualId);
+}
+
 // ─── Filtros ──────────────────────────────────────────────────────────────────
 
 export type EstadoDisciplinaFiltro = 'ACTIVA' | 'INACTIVA';

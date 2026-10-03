@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, ModalActions, Select } from '@/components/ui';
 import { cuotaSocialFormSchema, type CuotaSocialFormInput, type CuotaSocialFormValues } from '../schemas';
 import type { CategoriaSocio, ConfiguracionCuotaSocial } from '../types';
 
@@ -9,6 +9,8 @@ interface CuotaSocialFormProps {
   configuracionInicial?: ConfiguracionCuotaSocial | null;
   categorias: CategoriaSocio[];
   onSubmit: (values: CuotaSocialFormValues) => Promise<void>;
+  /** Cancelar dentro del modal (DT-20). */
+  onCancel?: () => void;
 }
 
 function proximoPeriodo(): string {
@@ -28,6 +30,7 @@ export function CuotaSocialForm({
   configuracionInicial,
   categorias,
   onSubmit,
+  onCancel,
 }: CuotaSocialFormProps) {
   const defaultValues = configuracionInicial
     ? {
@@ -95,9 +98,16 @@ export function CuotaSocialForm({
         </p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Configurar cuota social'}
-      </Button>
+      <ModalActions>
+        {onCancel && (
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Guardando…' : esEdicion ? 'Guardar cambios' : 'Configurar cuota social'}
+        </Button>
+      </ModalActions>
     </form>
   );
 }

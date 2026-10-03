@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui';
+import { Card, DateInput } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
 import { BuscarParticipanteDni } from '@/features/inscripcion/components/buscarParticipanteDni';
@@ -104,9 +104,24 @@ function HistorialDeportivo({ data }: { data: HistorialDeportivoResponse }) {
               <tbody>
                 {data.adeudados.map((cuota) => (
                   <tr key={`${cuota.disciplinaId}-${cuota.periodo}`} className="border-b border-slate-100">
-                    <td className="py-2 pr-4">{cuota.disciplinaNombre}</td>
-                    <td className="py-2 pr-4">{cuota.periodo}</td>
-                    <td className="py-2 font-medium text-amber-700">{formatMonto(cuota.monto)}</td>
+                    <td className="py-2 pr-4">
+                      {cuota.disciplinaNombre}
+                      {cuota.categoriaNombre && <span className="ml-1 text-xs text-slate-500">· {cuota.categoriaNombre}</span>}
+                      {cuota.inscripcionActiva === false && <span className="ml-1 text-xs text-slate-400">(dada de baja)</span>}
+                    </td>
+                    <td className="py-2 pr-4">{cuota.periodo.split('-').reverse().join('/')}</td>
+                    <td className="py-2 font-medium text-amber-700">
+                      {cuota.monto === null ? (
+                        <span className="text-xs text-slate-500">Sin tarifa</span>
+                      ) : (
+                        <>
+                          {formatMonto(cuota.monto)}
+                          {(cuota.descuentoSocioPorcentaje ?? 0) > 0 && (
+                            <span className="ml-2 text-xs font-normal text-accent-700">socio −{cuota.descuentoSocioPorcentaje} %</span>
+                          )}
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -152,31 +167,13 @@ export function HistorialDeportivoPage() {
         cargando={busqueda.cargando}
         noEncontrado={busqueda.noEncontrado}
         error={busqueda.error}
-        onRegistrarNuevo={() => navigate(ROUTES.inscripcion)}
+        onRegistrarNuevo={() => navigate(ROUTES.nuevaInscripcion)}
       />
 
       {participante && (
         <Card className="flex flex-wrap items-end gap-4 p-5">
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-600">Desde</span>
-            <input
-              type="date"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              value={desde}
-              max={hasta || undefined}
-              onChange={(e) => setDesde(e.target.value)}
-            />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-600">Hasta</span>
-            <input
-              type="date"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              value={hasta}
-              min={desde || undefined}
-              onChange={(e) => setHasta(e.target.value)}
-            />
-          </label>
+          <DateInput label="Desde" value={desde} max={hasta || undefined} onChange={setDesde} containerClassName="w-44" />
+          <DateInput label="Hasta" value={hasta} min={desde || undefined} onChange={setHasta} containerClassName="w-44" />
           {(desde || hasta) && (
             <button
               type="button"

@@ -1,5 +1,5 @@
 import { BadgeCheck, BadgeAlertIcon, UserPlus, Edit3 } from 'lucide-react';
-import { Button, Modal } from '@/components/ui';
+import { Modal } from '@/components/ui';
 import { UsuarioForm } from '../../components/UsuarioForm';
 import type { Usuario } from '../../types';
 import type {
@@ -32,19 +32,15 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
   return (
     <Modal
       open={abierto}
-      title={
-        <div className="flex items-center gap-2">
-          {esEdicion ? <Edit3 size={18} /> : <UserPlus size={18} />}
-          <span>{esEdicion ? 'Editar usuario' : 'Nuevo usuario'}</span>
-        </div>
-      }
+      title={esEdicion ? 'Editar usuario' : 'Nuevo usuario'}
+      icon={esEdicion ? <Edit3 /> : <UserPlus />}
       description={
         esEdicion
           ? 'Actualizá los datos básicos y los roles desde este panel.'
           : 'Completá los datos básicos y asigná los roles correspondientes.'
       }
       onClose={onClose}
-      className="max-w-3xl"
+      size="lg"
     >
       <div className="space-y-6">
         {esEdicion && usuario ? (
@@ -68,18 +64,9 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
           usuarioInicial={esEdicion ? usuario : null}
           mostrarPasswordField={!esEdicion}
           onSubmit={handleSubmit}
+          onCancel={onClose}
         />
 
-        <div className="border-t border-slate-200 pt-4">
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={onClose} 
-            className="w-full border-2"
-          >
-            Cancelar
-          </Button>
-        </div>
       </div>
     </Modal>
   );

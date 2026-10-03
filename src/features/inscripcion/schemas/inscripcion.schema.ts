@@ -10,6 +10,7 @@ export const inscripcionSchema = z
     apellido: z.string().trim().optional(),
     dni: z.string().trim().optional().refine((valor) => !valor || DNI_REGEX.test(valor), { message: 'El DNI debe tener entre 7 y 8 dígitos numéricos', }),
     fechaNacimiento: z.string().optional(),
+    genero: z.enum(['FEMENINO', 'MASCULINO', 'NO_BINARIO_NO_ESPECIFICADO']).optional(),
     email: z.string().trim().optional().refine((valor) => !valor || z.string().email().safeParse(valor).success, { message: 'El email no tiene un formato válido',}),
     telefono: z.string().trim().optional(),
     disciplinaId: z.number({ error: 'Debe seleccionar una disciplina',}),

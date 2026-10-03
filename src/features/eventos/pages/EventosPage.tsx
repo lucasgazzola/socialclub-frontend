@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Ticket } from 'lucide-react';
+import { CalendarPlus, Plus, Ticket } from 'lucide-react';
 import { Button, Modal, Spinner } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { EventoForm } from '../components/EventoForm';
 import { useCrearEvento, useEventos } from '../hooks/useEventos';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function EventosPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const { data: eventos, isLoading, isError } = useEventos();
   const crearEvento = useCrearEvento();
+  const { usuario } = useAuth();
+  const puedeCrearEvento = usuario?.roles.includes('ADMIN') ?? false;
 
   async function handleCrear(data: Parameters<typeof crearEvento.mutateAsync>[0]) {
     await crearEvento.mutateAsync(data);
@@ -23,19 +26,23 @@ export function EventosPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Eventos</h1>
           <p className="mt-1 text-sm text-slate-500">Gestioná los eventos del club.</p>
         </div>
-        <Button onClick={() => setModalAbierto(true)} className="self-start shadow-xs sm:self-auto">
-          <Plus size={16} />
-          Nuevo evento
-        </Button>
+        {puedeCrearEvento && (
+          <Button onClick={() => setModalAbierto(true)} className="self-start shadow-xs sm:self-auto">
+            <Plus size={16} />
+            Nuevo evento
+          </Button>
+        )}
       </header>
 
       <Modal
         open={modalAbierto}
         title="Nuevo evento"
         description="Completá los datos para crear un nuevo evento."
+        icon={<CalendarPlus />}
+        size="lg"
         onClose={() => setModalAbierto(false)}
       >
-        <EventoForm onSubmit={handleCrear} submitLabel="Crear evento" />
+        <EventoForm onSubmit={handleCrear} submitLabel="Crear evento" onCancel={() => setModalAbierto(false)} />
       </Modal>
 
       {isLoading ? (
@@ -73,7 +80,7 @@ export function EventosPage() {
                         disabled={evento.entradasDisponibles <= 0}
                       >
                         <Ticket size={14} className="mr-1.5" />
-                        Generar entradas
+                        Comprar entradas
                       </Button>
                     </Link>
                   </td>

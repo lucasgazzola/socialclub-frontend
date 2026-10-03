@@ -16,6 +16,8 @@ export default defineConfig({
     setupFiles: ['./src/setupTests.ts'],
     include: ['src/**/*.spec.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
     css: true,
+    // Un proceso por núcleo saturaba la máquina (3,1 GB de RAM); con el 25 %: 1,1 GB.
+    maxWorkers: '25%',
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'json-summary', 'html'],
@@ -29,7 +31,7 @@ export default defineConfig({
       ],
       // Ratchet: piso actual (solo puede subir). Objetivo DoD: 70% en componentes/hooks críticos.
       // Subir estos umbrales a medida que /casos-a-tests agregue tests.
-      thresholds: { statements: 28, branches: 27, functions: 24, lines: 28 },
+      thresholds: { statements: 67, branches: 66, functions: 57, lines: 68 },
     },
   },
 });

@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Filter, Plus } from 'lucide-react';
+import { Filter, Pencil, Plus, Wallet } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
-import { useCategorias } from '@/features/socios/hooks/useCategorias';
 import { CuotaForm } from '../components/CuotaForm';
 import { CuotasTable } from '../components/CuotasTable';
 import { useActualizarCuota } from '../hooks/useActualizarCuota';
@@ -23,17 +22,17 @@ export function CuotasPage() {
   const [cuotaEditando, setCuotaEditando] = useState<ConfiguracionCuotaDeportiva | null>(null);
 
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
-  const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
+  const [categoriaDisciplinaId, setCategoriaDisciplinaId] = useState<number | undefined>(undefined);
   const [periodoInput, setPeriodoInput] = useState('');
   const [periodo, setPeriodo] = useState<string | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
 
   const { data: disciplinas = [], isLoading: cargandoDisciplinas } = useDisciplinas();
-  const { data: categorias = [] } = useCategorias();
+  const categorias = disciplinas.find((d) => d.id === disciplinaId)?.categorias ?? [];
 
   const { data, isLoading, isError, error, isFetching } = useCuotas({
     disciplinaId,
-    categoriaId,
+    categoriaDisciplinaId,
     periodoAplicacion: periodo || undefined,
     pagina,
     porPagina: POR_PAGINA,
@@ -70,13 +69,14 @@ export function CuotasPage() {
     if (modoFormulario === 'editar' && cuotaEditando) {
       await actualizarCuota.mutateAsync({
         id: cuotaEditando.id,
-        payload: { monto: values.monto },
+        payload: { monto: values.monto, descuentoSocioPorcentaje: values.descuentoSocioPorcentaje },
       });
     } else {
       await configurarCuota.mutateAsync({
         disciplinaId: values.disciplinaId,
-        categoriaId: values.categoriaId,
+        ...(values.categoriaDisciplinaId ? { categoriaDisciplinaId: values.categoriaDisciplinaId } : {}),
         monto: values.monto,
+        descuentoSocioPorcentaje: values.descuentoSocioPorcentaje,
         ...(values.periodoAplicacion ? { periodoAplicacion: values.periodoAplicacion } : {}),
       });
     }
@@ -89,25 +89,27 @@ export function CuotasPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Cuotas deportivas</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Configurá el monto mensual de la cuota por disciplina y categoría. Los cambios aplican
-            desde el período siguiente.
+            Tarifa mensual por disciplina, con tarifa propia opcional por categoría y descuento para
+            socios. Los cambios rigen desde el mes siguiente.
           </p>
         </div>
 
         <Button onClick={abrirCreacion}>
           <Plus size={16} />
-          Configurar cuota
+          Configurar tarifa
         </Button>
       </header>
 
       <Modal
         open={formularioVisible}
-        title={modoFormulario === 'editar' ? 'Editar cuota deportiva' : 'Nueva cuota deportiva'}
+        title={modoFormulario === 'editar' ? 'Editar tarifa' : 'Nueva tarifa de cuota deportiva'}
         description={
           modoFormulario === 'editar'
-            ? 'Actualizá el monto de la configuración existente.'
-            : 'Elegí disciplina, categoría y el monto mensual.'
+            ? 'Actualizá el monto o el descuento para socios.'
+            : 'Elegí la disciplina (y si querés una categoría), el monto mensual y el descuento para socios.'
         }
+        icon={modoFormulario === 'editar' ? <Pencil /> : <Wallet />}
+        size="md"
         onClose={cerrarFormulario}
       >
         {modoFormulario && (
@@ -116,8 +118,8 @@ export function CuotasPage() {
             modo={modoFormulario}
             configuracionInicial={cuotaEditando}
             disciplinas={disciplinas}
-            categorias={categorias}
             onSubmit={handleSubmit}
+            onCancel={cerrarFormulario}
           />
         )}
       </Modal>
@@ -129,6 +131,7 @@ export function CuotasPage() {
           onChange={(e) => {
             setPagina(1);
             setDisciplinaId(e.target.value ? Number(e.target.value) : undefined);
+            setCategoriaDisciplinaId(undefined);
           }}
           leftIcon={<Filter />}
           className="min-w-[180px]"
@@ -143,10 +146,11 @@ export function CuotasPage() {
 
         <Select
           id="filtroCategoria"
-          value={categoriaId ?? ''}
+          value={categoriaDisciplinaId ?? ''}
+          disabled={!disciplinaId}
           onChange={(e) => {
             setPagina(1);
-            setCategoriaId(e.target.value ? Number(e.target.value) : undefined);
+            setCategoriaDisciplinaId(e.target.value ? Number(e.target.value) : undefined);
           }}
           leftIcon={<Filter />}
           className="min-w-[160px]"
@@ -165,7 +169,8 @@ export function CuotasPage() {
           placeholder="2026-09"
           value={periodoInput}
           onChange={(e) => setPeriodoInput(e.target.value)}
-          className="min-w-[160px]"
+          aria-label="Filtrar por período"
+          containerClassName="w-48"
         />
         <Button variant="secondary" onClick={aplicarPeriodo}>
           Filtrar

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Filter, Plus, Search } from 'lucide-react';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import { Filter, Plus, Search, UserPlus } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { EstadoSocioFiltro } from '../types';
@@ -8,6 +8,7 @@ import { useCategorias } from '../hooks/useCategorias';
 import { useSocios } from '../hooks/useSocios';
 import { SocioForm } from '../components/SocioForm';
 import { SociosTable } from '../components/SociosTable';
+import { EditarSocioModal } from '../components/EditarSocioModal';
 import { useCrearSocio } from '../hooks/useSocios';
 
 const POR_PAGINA = 10;
@@ -24,6 +25,9 @@ export function SociosPage() {
   const [pagina, setPagina] = useState(1);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  // DT-20: la edición es un modal sobre el listado (?editar=<id>).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const socioAEditar = Number(searchParams.get('editar')) || null;
 
   const mensajeState = (location.state as { mensaje?: string } | null)?.mensaje;
 
@@ -153,10 +157,14 @@ export function SociosPage() {
         open={modalAbierto}
         title="Nuevo socio"
         description="Completá los datos para registrar un nuevo socio."
+        icon={<UserPlus />}
+        size="lg"
         onClose={() => setModalAbierto(false)}
       >
-        <SocioForm onSubmit={handleCrear} submitLabel="Crear socio" />
+        <SocioForm onSubmit={handleCrear} onCancel={() => setModalAbierto(false)} submitLabel="Crear socio" />
       </Modal>
+
+      <EditarSocioModal socioId={socioAEditar} onClose={() => setSearchParams({})} />
 
       {mensaje && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">

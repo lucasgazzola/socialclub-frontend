@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ParticipantesPage } from './ParticipantesPage';
 import { useInscripciones } from '../hooks/useInscripciones';
@@ -18,10 +19,49 @@ vi.mock('@/features/disciplinas/hooks/useDisciplinasActivas', () => ({
 }));
 
 vi.mock('../components/ParticipantesTable', () => ({
-  ParticipantesTable: ({ participantes }: { participantes: unknown[] }) => (
-    <div data-testid="filas">{participantes.length}</div>
+  ParticipantesTable: ({
+    participantes,
+    onVerDocumentacion,
+  }: {
+    participantes: unknown[];
+    onVerDocumentacion?: (p: unknown) => void;
+  }) => (
+    <div>
+      <div data-testid="filas">{participantes.length}</div>
+      {onVerDocumentacion && (
+        <button
+          type="button"
+          onClick={() => onVerDocumentacion({ persona: { id: 10, nombre: 'Juan', apellido: 'Pérez', dni: '30111222' } })}
+        >
+          Documentación de prueba
+        </button>
+      )}
+    </div>
   ),
 }));
+
+vi.mock('../components/EditarParticipanteModal', () => ({
+  EditarParticipanteModal: ({ personaId }: { personaId: number | null }) =>
+    personaId === null ? null : <div data-testid="editar-participante">{personaId}</div>,
+}));
+
+vi.mock('../components/InscripcionForm', () => ({
+  InscripcionForm: () => <div data-testid="form-inscripcion" />,
+}));
+
+vi.mock('@/features/documentacion/components/DocumentacionParticipante', () => ({
+  DocumentacionParticipante: ({ persona }: { persona: { id: number } }) => (
+    <div data-testid="documentacion">{persona.id}</div>
+  ),
+}));
+
+function renderPagina(ruta = '/participantes') {
+  return render(
+    <MemoryRouter initialEntries={[ruta]}>
+      <ParticipantesPage />
+    </MemoryRouter>,
+  );
+}
 
 const useInscripcionesMock = useInscripciones as unknown as ReturnType<typeof vi.fn>;
 
@@ -44,7 +84,7 @@ describe('US-08 · ParticipantesPage', () => {
 
   it('busca por nombre o apellido y combina los filtros de disciplina y estado', async () => {
     const user = userEvent.setup();
-    render(<ParticipantesPage />);
+    renderPagina();
 
     await user.type(screen.getByPlaceholderText(/Buscar por nombre/i), 'perez');
 
@@ -66,7 +106,7 @@ describe('US-08 · ParticipantesPage', () => {
 
   it('muestra la lista vacía cuando no hay coincidencias', () => {
     useInscripcionesMock.mockReturnValue(respuesta([], 0));
-    render(<ParticipantesPage />);
+    renderPagina();
 
     expect(screen.getByTestId('filas')).toHaveTextContent('0');
   });
@@ -74,7 +114,7 @@ describe('US-08 · ParticipantesPage', () => {
   it('pagina los resultados combinando los filtros vigentes', async () => {
     const user = userEvent.setup();
     useInscripcionesMock.mockReturnValue(respuesta([{}, {}], 15));
-    render(<ParticipantesPage />);
+    renderPagina();
 
     expect(screen.getByText(/15 participante/)).toBeInTheDocument();
     expect(screen.getByText(/Página 1 de 2/)).toBeInTheDocument();
@@ -84,5 +124,56 @@ describe('US-08 · ParticipantesPage', () => {
     await waitFor(() => {
       expect(useInscripcionesMock).toHaveBeenLastCalledWith(expect.objectContaining({ pagina: 2 }));
     });
+  });
+
+  it('no vuelve a la página 1 cuando vence el debounce sin que cambie la búsqueda', async () => {
+    const user = userEvent.setup();
+    useInscripcionesMock.mockReturnValue(respuesta([{}, {}], 15));
+    renderPagina();
+
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }));
+    await new Promise((resolver) => setTimeout(resolver, 400));
+
+    expect(useInscripcionesMock).toHaveBeenLastCalledWith(expect.objectContaining({ pagina: 2 }));
+  });
+
+  // DT-11: inscripción y documentación dentro de la pantalla de Participantes.
+  it('abre el alta en un modal desde "Nuevo participante"', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+
+    expect(screen.queryByTestId('form-inscripcion')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Nuevo participante/ }));
+
+    expect(screen.getByRole('dialog', { name: 'Nuevo participante' })).toBeInTheDocument();
+    expect(screen.getByTestId('form-inscripcion')).toBeInTheDocument();
+  });
+
+  it('abre la inscripción al llegar desde la ruta vieja (/participantes?nueva=1)', () => {
+    renderPagina('/participantes?nueva=1');
+
+    expect(screen.getByTestId('form-inscripcion')).toBeInTheDocument();
+  });
+
+  it('abre la documentación del participante en un modal', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+
+    await user.click(screen.getByRole('button', { name: 'Documentación de prueba' }));
+
+    expect(screen.getByRole('dialog', { name: 'Documentación de Pérez, Juan' })).toBeInTheDocument();
+    expect(screen.getByTestId('documentacion')).toHaveTextContent('10');
+  });
+
+  it('DT-20: abre la edición del participante en un modal (?editar=<id>)', () => {
+    renderPagina('/participantes?editar=10');
+
+    expect(screen.getByTestId('editar-participante')).toHaveTextContent('10');
+  });
+
+  it('DT-20: sin ?editar no hay modal de edición', () => {
+    renderPagina();
+
+    expect(screen.queryByTestId('editar-participante')).not.toBeInTheDocument();
   });
 });

@@ -1,50 +1,48 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, ModalActions, Select } from '@/components/ui';
 import { cuotaFormSchema, type CuotaFormInput, type CuotaFormValues } from '../schemas';
-import type { CategoriaSocio, ConfiguracionCuotaDeportiva, Disciplina } from '../types';
+import type { ConfiguracionCuotaDeportiva, Disciplina } from '../types';
 
 interface CuotaFormProps {
   modo: 'crear' | 'editar';
   configuracionInicial?: ConfiguracionCuotaDeportiva | null;
   disciplinas: Disciplina[];
-  categorias: CategoriaSocio[];
   onSubmit: (values: CuotaFormValues) => Promise<void>;
+  /** Cancelar dentro del modal (DT-20). */
+  onCancel?: () => void;
 }
 
-/** Próximo mes en formato "YYYY-MM" (los cambios aplican desde el período siguiente). */
-function proximoPeriodo(): string {
+const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+
+/** Mes actual en formato "YYYY-MM" (la primera tarifa puede regir desde este mes). */
+function periodoActual(): string {
   const ahora = new Date();
-  const total = ahora.getFullYear() * 12 + ahora.getMonth() + 2;
-  const anio = Math.floor((total - 1) / 12);
-  const mes = ((total - 1) % 12) + 1;
-  return `${anio}-${String(mes).padStart(2, '0')}`;
+  return `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
 }
 
 /**
- * Formulario de cuota deportiva. En edición los selectores y el período quedan
- * bloqueados porque la combinación disciplina-categoría-período es la clave de
- * la configuración (solo se edita el monto).
+ * US-20 · TASK-33 — Tarifa mensual de la cuota deportiva: de la disciplina
+ * (base) o de una de sus categorías, con descuento opcional para socios. En
+ * edición, disciplina, categoría y período quedan fijos (son la clave).
  */
-export function CuotaForm({
-  modo,
-  configuracionInicial,
-  disciplinas,
-  categorias,
-  onSubmit,
-}: CuotaFormProps) {
+export function CuotaForm({ modo, configuracionInicial, disciplinas, onSubmit, onCancel }: CuotaFormProps) {
   const defaultValues = configuracionInicial
     ? {
         disciplinaId: configuracionInicial.disciplinaId,
-        categoriaId: configuracionInicial.categoriaId,
+        categoriaDisciplinaId: configuracionInicial.categoriaDisciplinaId ?? '',
         monto: configuracionInicial.monto,
+        descuentoSocioPorcentaje: configuracionInicial.descuentoSocioPorcentaje,
         periodoAplicacion: configuracionInicial.periodoAplicacion,
       }
-    : { disciplinaId: '', categoriaId: '', monto: '', periodoAplicacion: '' };
+    : { disciplinaId: '', categoriaDisciplinaId: '', monto: '', descuentoSocioPorcentaje: 0, periodoAplicacion: '' };
 
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CuotaFormInput, unknown, CuotaFormValues>({
     resolver: zodResolver(cuotaFormSchema),
@@ -52,6 +50,15 @@ export function CuotaForm({
   });
 
   const esEdicion = modo === 'editar';
+  const disciplinaId = Number(watch('disciplinaId')) || null;
+  const categorias = (disciplinas.find((d) => d.id === disciplinaId)?.categorias ?? []).filter((c) => c.activo);
+  const monto = Number(watch('monto')) || 0;
+  const descuento = Number(watch('descuentoSocioPorcentaje')) || 0;
+
+  // Al cambiar de disciplina, la categoría elegida deja de valer.
+  useEffect(() => {
+    if (!esEdicion) setValue('categoriaDisciplinaId', '');
+  }, [disciplinaId, esEdicion, setValue]);
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -68,64 +75,89 @@ export function CuotaForm({
               </option>
             ))}
           </Select>
-          {errors.disciplinaId && (
-            <p className="mt-1 text-xs text-red-600">{errors.disciplinaId.message}</p>
-          )}
+          {errors.disciplinaId && <p className="mt-1 text-xs text-red-600">{errors.disciplinaId.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="categoriaId" className="mb-1 block text-sm font-medium text-slate-700">
+          <label htmlFor="categoriaDisciplinaId" className="mb-1 block text-sm font-medium text-slate-700">
             Categoría
           </label>
-          <Select id="categoriaId" disabled={esEdicion} {...register('categoriaId')}>
-            <option value="">Seleccioná una categoría</option>
-            {categorias.map((categoria) => (
-              <option key={categoria.id} value={categoria.id}>
-                {categoria.nombre}
-              </option>
-            ))}
+          <Select id="categoriaDisciplinaId" disabled={esEdicion || !disciplinaId} {...register('categoriaDisciplinaId')}>
+            <option value="">Toda la disciplina (tarifa base)</option>
+            {esEdicion && configuracionInicial?.categoriaDisciplina && (
+              <option value={configuracionInicial.categoriaDisciplina.id}>{configuracionInicial.categoriaDisciplina.nombre}</option>
+            )}
+            {!esEdicion &&
+              categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id}>
+                  {categoria.nombre}
+                </option>
+              ))}
           </Select>
-          {errors.categoriaId && (
-            <p className="mt-1 text-xs text-red-600">{errors.categoriaId.message}</p>
-          )}
+          <p className="mt-1 text-xs text-slate-500">La tarifa de una categoría reemplaza a la de la disciplina.</p>
         </div>
       </div>
 
-      <Input
-        id="monto"
-        type="number"
-        min={0.01}
-        step="any"
-        inputMode="decimal"
-        label="Monto mensual ($)"
-        placeholder="0.00"
-        error={errors.monto?.message as string | undefined}
-        {...register('monto')}
-      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input
+          id="monto"
+          type="number"
+          min={0.01}
+          step="any"
+          inputMode="decimal"
+          label="Monto mensual ($)"
+          placeholder="0.00"
+          error={errors.monto?.message as string | undefined}
+          {...register('monto')}
+        />
+        <Input
+          id="descuentoSocioPorcentaje"
+          type="number"
+          min={0}
+          max={100}
+          step={1}
+          inputMode="numeric"
+          label="Descuento para socios (%)"
+          placeholder="0"
+          error={errors.descuentoSocioPorcentaje?.message as string | undefined}
+          {...register('descuentoSocioPorcentaje')}
+        />
+      </div>
+
+      {monto > 0 && descuento > 0 && (
+        <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+          Un socio paga <strong>{formatoMoneda.format(Math.round(monto * (100 - descuento)) / 100)}</strong> por mes;
+          quien no es socio, {formatoMoneda.format(monto)}.
+        </p>
+      )}
 
       <Input
         id="periodoAplicacion"
         type="month"
-        min={proximoPeriodo()}
-        label="Período de aplicación"
+        min={periodoActual()}
+        label="Rige desde"
         disabled={esEdicion}
         error={errors.periodoAplicacion?.message as string | undefined}
         {...register('periodoAplicacion')}
       />
 
-      {modo === 'crear' && (
+      {!esEdicion && (
         <p className="text-xs text-slate-500">
-          Si no se indica un período, el monto se aplica desde el período siguiente al actual.
+          Los cambios rigen desde el mes siguiente. Si es la primera tarifa de la disciplina o categoría, puede regir
+          desde este mes. Si no se indica, se usa el primer mes posible.
         </p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting
-          ? 'Guardando...'
-          : esEdicion
-            ? 'Guardar cambios'
-            : 'Configurar cuota'}
-      </Button>
+      <ModalActions>
+        {onCancel && (
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Guardando…' : esEdicion ? 'Guardar cambios' : 'Configurar tarifa'}
+        </Button>
+      </ModalActions>
     </form>
   );
 }

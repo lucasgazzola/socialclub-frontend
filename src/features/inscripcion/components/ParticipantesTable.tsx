@@ -1,15 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, ChevronUp, Pencil, UserMinus } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, Dumbbell, FileText, Pencil, UserMinus, UserPlus } from 'lucide-react';
 import { Badge, Button, ConfirmDialog } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
+import { isoADisplay } from '@/lib/utils/fecha';
 import { useActivarParticipante } from '../hooks/useActivarParticipante';
 import { useDarDeBajaParticipante } from '../hooks/useDarDeBajaParticipante';
+import { EstadoHabilitacionBadge } from '@/features/documentacion/components/EstadoBadges';
 import type { ParticipanteConDisciplinas } from '../types';
 
 interface ParticipantesTableProps {
   participantes: ParticipanteConDisciplinas[];
+  /** DT-11: abre la documentación del participante (solo si se puede gestionar). */
+  onVerDocumentacion?: (participante: ParticipanteConDisciplinas) => void;
+  /** TASK-31: inscribir a este participante en otra disciplina. */
+  onInscribir?: (participante: ParticipanteConDisciplinas) => void;
 }
 
 /** Etiqueta del estado de una inscripción puntual del participante. */
@@ -41,7 +47,7 @@ function BadgeParticipante({ activo }: { activo: boolean }) {
  * US-07 — Desde acá el delegado (o un admin) puede dar de baja al
  * participante: la baja alcanza a todas sus disciplinas.
  */
-export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
+export function ParticipantesTable({ participantes, onVerDocumentacion, onInscribir }: ParticipantesTableProps) {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
@@ -112,10 +118,11 @@ export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
-              <th className="px-5 py-3.5">Apellido y nombre</th>
+              <th className="whitespace-nowrap px-5 py-3.5">Apellido y nombre</th>
               <th className="px-5 py-3.5">DNI</th>
               <th className="px-5 py-3.5">Disciplinas</th>
               <th className="px-5 py-3.5">Estado</th>
+              <th className="px-5 py-3.5">Documentación</th>
               <th className="px-5 py-3.5 text-right font-medium">Acciones</th>
             </tr>
           </thead>
@@ -131,9 +138,11 @@ export function ParticipantesTable({ participantes }: ParticipantesTableProps) {
                 onToggle={() => toggleExpandido(participante.personaId)}
                 onDarDeBaja={() => setParticipanteAConfirmar(participante)}
                 onReactivar={() => setParticipanteAReactivar(participante)}
+                onVerDocumentacion={onVerDocumentacion ? () => onVerDocumentacion(participante) : undefined}
+                onInscribir={onInscribir ? () => onInscribir(participante) : undefined}
                 onEditar={() =>
                   navigate(
-                    ROUTES.participantesEditar.replace(':id', String(participante.personaId)),
+                    ROUTES.editarParticipante(participante.personaId),
                   )
                 }
               />
@@ -199,6 +208,8 @@ interface ParticipanteRowProps {
   onDarDeBaja: () => void;
   onReactivar: () => void;
   onEditar: () => void;
+  onVerDocumentacion?: () => void;
+  onInscribir?: () => void;
 }
 
 function ParticipanteRow({
@@ -209,6 +220,8 @@ function ParticipanteRow({
   onDarDeBaja,
   onReactivar,
   onEditar,
+  onVerDocumentacion,
+  onInscribir,
 }: ParticipanteRowProps) {
   const nombres = participante.disciplinas.map((d) => d.disciplina.nombre);
   const visibles = nombres.slice(0, 2);
@@ -216,8 +229,8 @@ function ParticipanteRow({
 
   return (
     <>
-      <tr className="transition-colors hover:bg-slate-50/70">
-        <td className="px-5 py-3.5 font-medium text-slate-900">
+      <tr className={`transition-colors ${expandido ? 'bg-brand-50/60' : 'hover:bg-slate-50/70'}`}>
+        <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
           {participante.persona.apellido}, {participante.persona.nombre}
         </td>
         <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{participante.persona.dni}</td>
@@ -228,6 +241,13 @@ function ParticipanteRow({
         <td className="px-5 py-3.5">
           <BadgeParticipante activo={participante.persona.activo} />
         </td>
+        <td className="px-5 py-3.5">
+          {participante.estadoDocumental ? (
+            <EstadoHabilitacionBadge estado={participante.estadoDocumental} />
+          ) : (
+            <span className="text-slate-400">—</span>
+          )}
+        </td>
         <td className="px-5 py-3.5 text-right">
           <div className="flex items-center justify-end gap-1.5">
             <Button
@@ -236,6 +256,8 @@ function ParticipanteRow({
               aria-expanded={expandido}
               aria-label={`Ver disciplinas de ${participante.persona.apellido}, ${participante.persona.nombre}`}
               onClick={onToggle}
+              // Ancho fijo: al pasar a "Ocultar" no corre el resto de las acciones.
+              className="min-w-33 justify-start whitespace-nowrap"
             >
               {expandido ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               {expandido ? 'Ocultar' : 'Ver disciplinas'}
@@ -244,6 +266,28 @@ function ParticipanteRow({
               <Pencil size={14} />
               Editar
             </Button>
+            {onInscribir && participante.persona.activo && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Inscribir a ${participante.persona.apellido}, ${participante.persona.nombre} en otra disciplina`}
+                onClick={onInscribir}
+              >
+                <UserPlus size={14} />
+                Inscribir
+              </Button>
+            )}
+            {onVerDocumentacion && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Documentación de ${participante.persona.apellido}, ${participante.persona.nombre}`}
+                onClick={onVerDocumentacion}
+              >
+                <FileText size={14} />
+                Documentación
+              </Button>
+            )}
             {puedeDarDeBaja && participante.persona.activo && (
               <Button
                 variant="ghost"
@@ -272,44 +316,71 @@ function ParticipanteRow({
         </td>
       </tr>
       {expandido && (
-        <tr className="bg-slate-50/60">
-          <td colSpan={5} className="px-4 py-3">
-            <div className="rounded-xl border border-slate-200 bg-white">
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs tracking-wide text-slate-500 uppercase">
-                  <tr>
-                    <th className="px-4 py-2 font-medium">Disciplina</th>
-                    <th className="px-4 py-2 font-medium">Categoría</th>
-                    <th className="px-4 py-2 font-medium">Estado</th>
-                    <th className="px-4 py-2 font-medium">Fecha de inscripción</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {participante.disciplinas.map((d) => {
-                    const estadoDisciplina = etiquetaEstadoDisciplina(d.activo, d.estado);
-                    return (
-                      <tr key={d.inscripcionId}>
-                        <td className="px-4 py-2 text-slate-800">{d.disciplina.nombre}</td>
-                        <td className="px-4 py-2 text-slate-600">
-                          {d.categoriaDisciplina?.nombre ?? '—'}
-                        </td>
-                        <td className="px-4 py-2">
-                          <BadgeEstado
-                            activo={estadoDisciplina.activo}
-                            texto={estadoDisciplina.texto}
-                          />
-                        </td>
-                        <td className="px-4 py-2 text-slate-600">
-                          {new Date(d.fechaInscripcion).toLocaleDateString('es-AR')}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </td>
-        </tr>
+        <>
+          {/* El detalle son filas de la misma tabla: cada dato queda debajo de su columna. */}
+          {/* Bloque de disciplinas con los colores de SocialClub: azul de marca y acento naranja. */}
+          <tr className="border-t border-brand-100 bg-brand-50 text-[11px] font-semibold uppercase tracking-wider text-brand-700">
+            <td className="py-2 pl-10 pr-5 shadow-[inset_3px_0_0_var(--color-brand-500)]">Disciplina</td>
+            <td className="px-5 py-2">Categoría</td>
+            <td className="whitespace-nowrap px-5 py-2">Fecha de inscripción</td>
+            <td className="px-5 py-2">Estado</td>
+            <td className="px-5 py-2">Documentación</td>
+            <td className="px-5 py-2">Observaciones</td>
+          </tr>
+          {participante.disciplinas.map((d, indice) => {
+            const estadoDisciplina = etiquetaEstadoDisciplina(d.activo, d.estado);
+            const ultima = indice === participante.disciplinas.length - 1;
+            return (
+              <tr
+                key={d.inscripcionId}
+                className={`bg-brand-50/40 transition-colors hover:bg-brand-50/80 ${ultima ? 'border-b border-brand-100' : ''} ${estadoDisciplina.activo ? '' : 'opacity-70'}`}
+              >
+                <td className="whitespace-nowrap py-2.5 pl-10 pr-5 shadow-[inset_3px_0_0_var(--color-brand-500)]">
+                  <span className="inline-flex items-center gap-2 font-medium text-brand-900">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent-100 text-accent-600">
+                      <Dumbbell size={13} />
+                    </span>
+                    {d.disciplina.nombre}
+                  </span>
+                </td>
+                <td className="px-5 py-2.5">
+                  {d.categoriaDisciplina ? (
+                    <span className="inline-flex whitespace-nowrap rounded-md bg-brand-100/70 px-2 py-0.5 text-xs font-medium text-brand-700">
+                      {d.categoriaDisciplina.nombre}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
+                <td className="px-5 py-2.5 text-slate-600">{isoADisplay(d.fechaInscripcion)}</td>
+                <td className="whitespace-nowrap px-5 py-2.5">
+                  <BadgeEstado activo={estadoDisciplina.activo} texto={estadoDisciplina.texto} />
+                  {!estadoDisciplina.activo && d.fechaBaja && (
+                    <span className="ml-2 text-xs text-slate-500">el {isoADisplay(d.fechaBaja)}</span>
+                  )}
+                </td>
+                <td className="px-5 py-2.5">
+                  {d.estadoDocumental ? (
+                    <EstadoHabilitacionBadge estado={d.estadoDocumental} />
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
+                <td className="px-5 py-2.5 text-xs text-slate-500">
+                  {d.motivosDocumentacion && d.motivosDocumentacion.length > 0 ? (
+                    <ul className="space-y-0.5">
+                      {d.motivosDocumentacion.map((m) => (
+                        <li key={m}>{m}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </>
       )}
     </>
   );

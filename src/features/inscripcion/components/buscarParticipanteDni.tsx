@@ -14,7 +14,7 @@ interface BuscarParticipanteDniProps {
  * Barra de búsqueda de participante por DNI, primer paso del flujo.
  *
  * OJO: este componente se renderiza DENTRO del <form> principal de
- * InscripcionPage (el que agrupa disciplina/categoría/confirmar), así que
+ * InscripcionForm (el que agrupa disciplina/categoría/confirmar), así que
  * NO puede tener su propio <form> anidado — HTML no lo permite y React
  * tira error de hidratación. Por eso "buscar" se dispara con un botón
  * type="button" + Enter capturado a mano en el input, nunca con un submit
@@ -75,7 +75,7 @@ export function BuscarParticipanteDni({
 
       <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
         <span className="text-sm text-slate-600">
-          '¿No encontraste al participante?'
+          ¿No encontraste al participante?
         </span>
         <Button type="button" variant="secondary" size="sm" onClick={onRegistrarNuevo}>
           <UserPlus size={14} />

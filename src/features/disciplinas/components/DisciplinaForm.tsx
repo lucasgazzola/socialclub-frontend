@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, ModalActions } from '@/components/ui';
 import { disciplinaSchema, type DisciplinaFormValues } from '../schemas/disciplina.schema';
-import { TIPOS_DOCUMENTACION_DISCIPLINA, type Disciplina, type TipoDocumentacionDisciplina } from '../types';
+import { RequerimientosDocEditor } from './RequerimientosDocEditor';
+import type { Disciplina } from '../types';
 
 interface DisciplinaFormProps {
   disciplina?: Disciplina | null;
@@ -25,8 +24,6 @@ const valoresIniciales: DisciplinaFormValues = {
 };
 
 export function DisciplinaForm({ disciplina, guardando = false, onSubmit, onCancel }: DisciplinaFormProps) {
-  const [tipoNuevo, setTipoNuevo] = useState<TipoDocumentacionDisciplina | ''>('');
-  const [plazoNuevo, setPlazoNuevo] = useState('0');
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<DisciplinaFormValues>({
     resolver: zodResolver(disciplinaSchema),
     defaultValues: disciplina
@@ -47,21 +44,6 @@ export function DisciplinaForm({ disciplina, guardando = false, onSubmit, onCanc
   });
   const solicitaDocumentacion = watch('solicitaDocumentacion');
   const requerimientosDocumentacion = watch('requerimientosDocumentacion');
-
-  function agregarTipo() {
-    if (tipoNuevo && !requerimientosDocumentacion.some((requisito) => requisito.tipoDocumento === tipoNuevo)) {
-      setValue('requerimientosDocumentacion', [
-        ...requerimientosDocumentacion,
-        { tipoDocumento: tipoNuevo, plazoDiasTolerancia: Number(plazoNuevo) || 0 },
-      ], { shouldValidate: true });
-      setTipoNuevo('');
-      setPlazoNuevo('0');
-    }
-  }
-
-  function quitarTipo(tipo: TipoDocumentacionDisciplina) {
-    setValue('requerimientosDocumentacion', requerimientosDocumentacion.filter((actual) => actual.tipoDocumento !== tipo), { shouldValidate: true });
-  }
 
   return (
     <form className="max-w-2xl space-y-6" onSubmit={(evento) => void handleSubmit(onSubmit)(evento)}>
@@ -111,7 +93,7 @@ export function DisciplinaForm({ disciplina, guardando = false, onSubmit, onCanc
           min={0}
           placeholder="sin mínimo"
           error={errors.edadMinima?.message}
-          {...register('edadMinima', { setValueAs: (value) => value === '' ? null : Number(value) })}
+          {...register('edadMinima', { setValueAs: (value) => (value === '' || value === null || value === undefined ? null : Number(value)) })}
         />
         <Input
           label="Edad máxima"
@@ -119,8 +101,9 @@ export function DisciplinaForm({ disciplina, guardando = false, onSubmit, onCanc
           min={0}
           placeholder="sin máximo"
           error={errors.edadMaxima?.message}
-          {...register('edadMaxima', { setValueAs: (value) => value === '' ? null : Number(value) })}
+          {...register('edadMaxima', { setValueAs: (value) => (value === '' || value === null || value === undefined ? null : Number(value)) })}
         />
+        <p className="text-xs text-slate-500 sm:col-span-2">Edad que el participante cumple en el año (por año de nacimiento). Cada categoría puede afinar este rango.</p>
       </div>
 
       <fieldset className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
@@ -134,49 +117,21 @@ export function DisciplinaForm({ disciplina, guardando = false, onSubmit, onCanc
 
         {solicitaDocumentacion && (
           <div className="space-y-4 border-t border-slate-200 pt-4">
-            <div>
-              <label htmlFor="tipo-documentacion" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                Documentación requerida y plazo individual
-              </label>
-              <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_10rem_auto]">
-                <Select id="tipo-documentacion" value={tipoNuevo} onChange={(evento) => setTipoNuevo(evento.target.value as TipoDocumentacionDisciplina | '')}>
-                  <option value="">Seleccionar tipo</option>
-                  {TIPOS_DOCUMENTACION_DISCIPLINA.filter((opcion) => !requerimientosDocumentacion.some((requisito) => requisito.tipoDocumento === opcion.value)).map((opcion) => (
-                    <option key={opcion.value} value={opcion.value}>{opcion.label}</option>
-                  ))}
-                </Select>
-                <Input
-                  aria-label="Plazo de tolerancia del documento"
-                  type="number"
-                  min={0}
-                  value={plazoNuevo}
-                  onChange={(evento) => setPlazoNuevo(evento.target.value)}
-                  placeholder="0 = inmediato"
-                />
-                <Button type="button" variant="secondary" size="icon" aria-label="Agregar tipo" onClick={agregarTipo}>
-                  <Plus size={16} />
-                </Button>
-              </div>
-              {errors.requerimientosDocumentacion && <p className="mt-1 text-xs font-medium text-rose-600">{errors.requerimientosDocumentacion.message}</p>}
-              <div className="mt-3 space-y-2">
-                {requerimientosDocumentacion.map((requisito) => (
-                  <div key={requisito.tipoDocumento} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-                    <span className="font-medium text-slate-700">{TIPOS_DOCUMENTACION_DISCIPLINA.find((opcion) => opcion.value === requisito.tipoDocumento)?.label}</span>
-                    <span className="flex items-center gap-3 text-xs text-slate-500">{requisito.plazoDiasTolerancia === 0 ? 'Obligatorio al inscribirse' : `${requisito.plazoDiasTolerancia} días de tolerancia`}
-                      <button type="button" aria-label={`Quitar ${requisito.tipoDocumento}`} onClick={() => quitarTipo(requisito.tipoDocumento)} className="rounded-full p-1 text-rose-600 hover:bg-rose-50"><X size={14} /></button>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <RequerimientosDocEditor
+              id="tipo-documentacion"
+              label="Documentación requerida y plazo individual"
+              value={requerimientosDocumentacion}
+              onChange={(requerimientos) => setValue('requerimientosDocumentacion', requerimientos, { shouldValidate: true })}
+              error={errors.requerimientosDocumentacion?.message}
+            />
           </div>
         )}
       </fieldset>
 
-      <div className="flex justify-start gap-3">
-        <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : disciplina ? 'Guardar cambios' : 'Crear disciplina'}</Button>
+      <ModalActions>
         <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
-      </div>
+        <Button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : disciplina ? 'Guardar cambios' : 'Crear disciplina'}</Button>
+      </ModalActions>
     </form>
   );
 }

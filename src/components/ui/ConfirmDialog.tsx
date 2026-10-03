@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { AlertTriangle, CheckCircle2, HelpCircle } from 'lucide-react';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { Spinner } from './Spinner';
@@ -19,6 +20,12 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
 }
+
+const ICONOS = {
+  primary: <HelpCircle />,
+  danger: <AlertTriangle />,
+  success: <CheckCircle2 />,
+} as const;
 
 /**
  * Diálogo de confirmación del design system, para reemplazar `window.confirm`
@@ -44,9 +51,11 @@ export function ConfirmDialog({
       title={title}
       description={description}
       onClose={loading ? () => {} : onCancel}
-      className="max-w-md"
+      size="sm"
+      icon={ICONOS[variant]}
+      tone={variant === 'primary' ? 'brand' : variant}
       footer={
-        <div className="flex justify-end gap-2">
+        <>
           <Button type="button" variant="secondary" disabled={loading} onClick={onCancel}>
             {cancelLabel}
           </Button>
@@ -54,7 +63,7 @@ export function ConfirmDialog({
             {loading && <Spinner className="h-4 w-4" />}
             {confirmLabel}
           </Button>
-        </div>
+        </>
       }
     >
       {children ?? null}

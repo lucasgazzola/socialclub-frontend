@@ -1,12 +1,15 @@
 import { useContext, useEffect, useState } from 'react';
-import { Filter, Plus, Search } from 'lucide-react';
-import { Button, Input, Select, Spinner, StatusTabs } from '@/components/ui';
+import { useSearchParams } from 'react-router-dom';
+import { FileText, Filter, Plus, Search, UserPlus } from 'lucide-react';
+import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/ui';
 import { AuthContext } from '@/features/auth/context/auth-context';
-import { ROUTES } from '@/routes/paths';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
-import type { EstadoInscripcionFiltro } from '../types';
+import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
+import type { EstadoInscripcionFiltro, ParticipanteConDisciplinas, ParticipanteEncontrado } from '../types';
 import { useInscripciones } from '../hooks/useInscripciones';
 import { ParticipantesTable } from '../components/ParticipantesTable';
+import { InscripcionForm } from '../components/InscripcionForm';
+import { EditarParticipanteModal } from '../components/EditarParticipanteModal';
 
 const POR_PAGINA = 10;
 
@@ -15,6 +18,10 @@ const POR_PAGINA = 10;
  *
  * Lista a los participantes de todas las disciplinas y permite combinar la
  * búsqueda por nombre/apellido/DNI con filtros de disciplina y estado.
+ *
+ * DT-11 — Es la pantalla única del participante: desde acá se inscribe
+ * (US-05, modal) y se gestiona su documentación (US-24, modal). Las rutas
+ * viejas /inscripcion y /documentacion redirigen acá.
  */
 export function ParticipantesPage() {
   const auth = useContext(AuthContext);
@@ -24,17 +31,51 @@ export function ParticipantesPage() {
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
   const [estado, setEstado] = useState<EstadoInscripcionFiltro | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const inscripcionAbierta = Boolean(puedeInscribir) && searchParams.get('nueva') === '1';
+  const [conDocumentacion, setConDocumentacion] = useState<ParticipanteConDisciplinas | null>(null);
+
+  const [aInscribir, setAInscribir] = useState<ParticipanteEncontrado | null>(null);
+  // DT-20: la edición es un modal sobre el listado (?editar=<id>).
+  const participanteAEditar = Number(searchParams.get('editar')) || null;
+  const abrirInscripcion = () => {
+    setAInscribir(null);
+    setSearchParams({ nueva: '1' });
+  };
+  const cerrarInscripcion = () => {
+    setAInscribir(null);
+    setSearchParams({});
+  };
+  const inscribirExistente = (p: ParticipanteConDisciplinas) => {
+    setAInscribir({ ...p.persona, genero: p.persona.genero ?? null, inscripciones: [] });
+    setSearchParams({ nueva: '1' });
+  };
+  // TASK-31: después de inscribir, se puede pasar directo a su documentación.
+  const verDocumentacionDe = (persona: { id: number; nombre: string; apellido: string; dni: string }) => {
+    cerrarInscripcion();
+    setConDocumentacion({
+      personaId: persona.id,
+      persona: { ...persona, fechaNacimiento: null, email: null, telefono: null, activo: true },
+      disciplinas: [],
+      cantidadDisciplinas: 0,
+      estado: 'INSCRIPTO',
+    });
+  };
 
   const { disciplinas } = useDisciplinasActivas();
 
-  // Debounce de la búsqueda: evita pegarle a la API en cada tecla.
+  // Debounce de la búsqueda: evita pegarle a la API en cada tecla. Solo vuelve
+  // a la página 1 si la búsqueda cambió (si no, pisaba un "Siguiente" hecho
+  // en los primeros 300 ms).
   useEffect(() => {
+    const nueva = textoInput.trim();
+    if (nueva === busqueda) return;
     const timer = setTimeout(() => {
       setPagina(1);
-      setBusqueda(textoInput.trim());
+      setBusqueda(nueva);
     }, 300);
     return () => clearTimeout(timer);
-  }, [textoInput]);
+  }, [textoInput, busqueda]);
 
   const { data, isLoading, isError, error, isFetching } = useInscripciones({
     busqueda: busqueda || undefined,
@@ -68,15 +109,49 @@ export function ParticipantesPage() {
         </div>
 
         {puedeInscribir && (
-          <a
-            href={ROUTES.inscripcion}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-brand-700 transition-all select-none self-start sm:self-auto"
-          >
+          <Button onClick={abrirInscripcion} className="self-start shadow-xs sm:self-auto">
             <Plus size={16} />
-            Nueva inscripción
-          </a>
+            Nuevo participante
+          </Button>
         )}
       </header>
+
+      <Modal
+        open={inscripcionAbierta}
+        title={aInscribir ? `Inscribir a ${aInscribir.apellido}, ${aInscribir.nombre}` : 'Nuevo participante'}
+        description={
+          aInscribir
+            ? 'Elegí la disciplina y la categoría.'
+            : 'Registrá al participante y la disciplina en la que se inscribe.'
+        }
+        onClose={cerrarInscripcion}
+        icon={<UserPlus />}
+        size="lg"
+      >
+        <InscripcionForm
+          key={aInscribir?.id ?? 'nuevo'}
+          participante={aInscribir}
+          onCancel={cerrarInscripcion}
+          onCargarDocumentacion={verDocumentacionDe}
+        />
+      </Modal>
+
+      <EditarParticipanteModal personaId={participanteAEditar} onClose={() => setSearchParams({})} />
+
+      <Modal
+        open={conDocumentacion !== null}
+        title={
+          conDocumentacion
+            ? `Documentación de ${conDocumentacion.persona.apellido}, ${conDocumentacion.persona.nombre}`
+            : 'Documentación'
+        }
+        description={conDocumentacion ? `DNI ${conDocumentacion.persona.dni}` : undefined}
+        onClose={() => setConDocumentacion(null)}
+        icon={<FileText />}
+        size="lg"
+      >
+        {conDocumentacion && <DocumentacionParticipante persona={conDocumentacion.persona} />}
+      </Modal>
 
       {/* Controles de filtro y búsqueda agrupados */}
       <div className="space-y-3">
@@ -149,7 +224,11 @@ export function ParticipantesPage() {
         </div>
       ) : (
         <>
-          <ParticipantesTable participantes={data?.items ?? []} />
+          <ParticipantesTable
+            participantes={data?.items ?? []}
+            onVerDocumentacion={puedeInscribir ? setConDocumentacion : undefined}
+            onInscribir={puedeInscribir ? inscribirExistente : undefined}
+          />
 
           {hayResultados && (
             <div className="flex items-center justify-between text-sm text-slate-500">

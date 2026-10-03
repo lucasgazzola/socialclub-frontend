@@ -35,7 +35,9 @@ vi.mock('../hooks/useCategorias', () => ({
 }));
 
 // Mock de los componentes de UI para inputs y mensajes de error sin depender de su implementación interna.
-vi.mock('@/components/ui', () => ({
+vi.mock('@/components/ui', async () => ({
+  // DT-40: el selector de fecha real (dd/mm/aaaa) para probar lo que ve el usuario.
+  DateInput: (await vi.importActual<typeof import('@/components/ui/DateInput')>('@/components/ui/DateInput')).DateInput,
   Input: ({ id, label, error, ...props }: { id: string; label: string; error?: string } & InputHTMLAttributes<HTMLInputElement>) => (
     <div>
       <label htmlFor={id}>{label}</label>
@@ -52,6 +54,7 @@ vi.mock('@/components/ui', () => ({
   Button: ({ children, ...props }: { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props}>{children}</button>
   ),
+  ModalActions: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
 }));
 
 const navigateMock = vi.fn();
@@ -78,7 +81,8 @@ async function completarFormulario(
   await user.type(screen.getByLabelText('Apellido'), datos.apellido);
   await user.type(screen.getByLabelText('DNI'), datos.dni);
   if (datos.fechaNacimiento) {
-    await user.type(screen.getByLabelText('Fecha de nacimiento'), datos.fechaNacimiento);
+    // Se escribe como lo ve el usuario (dd/mm/aaaa); el formulario recibe ISO.
+    await user.type(screen.getByLabelText('Fecha de nacimiento'), datos.fechaNacimiento.split('-').reverse().join('/'));
   }
   await user.type(screen.getByLabelText('Email'), datos.email);
   if (datos.telefono) {

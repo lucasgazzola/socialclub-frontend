@@ -10,11 +10,22 @@ import type {
   ParticipanteConDisciplinas,
   ParticipanteEncontrado,
   PersonaActualizada,
+  RequisitosInscripcion,
 } from '../types';
 import type { Paginated } from '@/types/api';
 
 export async function buscarParticipantePorDni(dni: string): Promise<ParticipanteEncontrado> {
   const { data } = await apiClient.get<ParticipanteEncontrado>(`/personas/dni/${dni}`);
+  return data;
+}
+
+/** US-05: restricciones y documentación exigida antes de inscribir. */
+export async function obtenerRequisitos(params: {
+  disciplinaId: number;
+  categoriaDisciplinaId?: number;
+  personaId?: number;
+}): Promise<RequisitosInscripcion> {
+  const { data } = await apiClient.get<RequisitosInscripcion>('/inscripcion/requisitos', { params });
   return data;
 }
 

@@ -1,11 +1,13 @@
 export { Button } from './Button';
 export { Input } from './Input';
+export { DateInput } from './DateInput';
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
 export { Badge } from './Badge';
 export type { BadgeVariant } from './Badge';
 export { Spinner, FullScreenLoader } from './Spinner';
 export { Select } from './Select';
-export { Modal } from './Modal';
+export { Modal, ModalActions } from './Modal';
+export type { ModalSize } from './Modal';
 export { ConfirmDialog } from './ConfirmDialog';
 export { StatusTabs } from './StatusTabs';
 export type { StatusTabItem } from './StatusTabs';

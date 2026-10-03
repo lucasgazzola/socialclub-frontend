@@ -1,14 +1,16 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, ModalActions } from '@/components/ui';
 import { crearEventoSchema, type CrearEventoSchema } from '../schemas';
 
 interface Props {
   onSubmit: (data: CrearEventoSchema) => Promise<void>;
   submitLabel?: string;
+  /** Cancelar dentro del modal (DT-20). */
+  onCancel?: () => void;
 }
 
-export function EventoForm({ onSubmit, submitLabel = 'Guardar' }: Props) {
+export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Props) {
   const {
     register,
     handleSubmit,
@@ -49,9 +51,16 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar' }: Props) {
         )}
       </div>
 
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Guardando...' : submitLabel}
-      </Button>
+      <ModalActions>
+        {onCancel && (
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Guardando…' : submitLabel}
+        </Button>
+      </ModalActions>
     </form>
   );
 }

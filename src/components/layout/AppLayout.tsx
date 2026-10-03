@@ -5,7 +5,6 @@ import {
   Coins,
   CreditCard,
   ClipboardList,
-  FileCheck,
   LayoutDashboard,
   LogOut,
   QrCode,
@@ -18,6 +17,8 @@ import {
   ChevronRight,
   ChevronDown,
   Dumbbell,
+  Ticket,
+  Timer,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ClubLogo } from '@/components/ui';
@@ -33,6 +34,10 @@ interface NavItem {
   roles?: RolNombre[];
   /** Si está activo, el ítem solo se muestra cuando el usuario NO tiene membresía activa. */
   soloSinMembresia?: boolean;
+  /** Roles para los que el ítem no se muestra. */
+  ocultarParaRoles?: RolNombre[];
+  /** Si está activo, el ítem solo se muestra si el usuario es o fue socio (tiene o tuvo membresías). */
+  soloSocioOExSocio?: boolean;
 }
 
 interface NavSection {
@@ -52,20 +57,21 @@ const navSections: NavSection[] = [
     title: 'Gestión Social',
     items: [
       { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
-      { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
-      { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, roles: ['SOCIO', 'ADMIN', 'COLABORADOR'] },
+      // US-09: autoservicio del usuario. La secretaría da de alta socios desde Socios (US-12).
+      {
+        to: ROUTES.hacermeSocio,
+        label: 'Hacerme socio',
+        icon: UserPlus,
+        soloSinMembresia: true,
+        ocultarParaRoles: ['ADMIN', 'COLABORADOR', 'DELEGADO'],
+      },
+      { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
+      { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
       {
         to: ROUTES.participantes,
         label: 'Participantes',
         icon: UserRound,
         roles: ['ADMIN', 'COLABORADOR', 'DELEGADO'],
-      },
-      { to: ROUTES.inscripcion, label: 'Inscripción', icon: UserPlus, roles: ['ADMIN', 'DELEGADO'] },
-      {
-        to: ROUTES.documentacion,
-        label: 'Documentación',
-        icon: FileCheck,
-        roles: ['ADMIN', 'DELEGADO'],
       },
       { to: ROUTES.disciplinas, label: 'Disciplinas', icon: Dumbbell, roles: ['ADMIN', 'COLABORADOR'] },
     ],
@@ -73,7 +79,7 @@ const navSections: NavSection[] = [
   {
     title: 'Operaciones',
     items: [
-      { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays, roles: ['ADMIN', 'COLABORADOR'] },
+      { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays },
       { to: ROUTES.validarAcceso, label: 'Validar QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
       { to: ROUTES.cuotas, label: 'Cuotas', icon: Coins, roles: ['ADMIN'] },
       {
@@ -95,6 +101,7 @@ const navSections: NavSection[] = [
     items: [
       { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
       { to: ROUTES.auditoria, label: 'Auditoría', icon: ClipboardList, roles: ['ADMIN'] },
+      { to: ROUTES.tareas, label: 'Tareas automáticas', icon: Timer, roles: ['ADMIN'] },
     ],
   },
 ];
@@ -104,6 +111,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.perfil]: 'Mi Perfil',
   [ROUTES.cambiarContrasena]: 'Cambiar Contraseña',
   [ROUTES.misCuotas]: 'Mis Cuotas',
+  [ROUTES.misEntradas]: 'Mis Entradas',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',
   [ROUTES.eventos]: 'Eventos y Actividades',
@@ -114,9 +122,8 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.historialCuotaDeportiva]: 'Historial de Cuotas Deportivas',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
-  [ROUTES.inscripcion]: 'Inscripción a Disciplinas',
+  [ROUTES.tareas]: 'Tareas Automáticas',
   [ROUTES.participantes]: 'Participantes de Disciplinas',
-  [ROUTES.documentacion]: 'Documentación Obligatoria',
 };
 
 /**
@@ -180,6 +187,9 @@ export function AppLayout() {
   };
 
   const tieneMembresia = usuario?.persona?.membresias?.some((m) => m.activo);
+  const esOFueSocio = Boolean(
+    usuario?.persona?.membresias && usuario.persona.membresias.length > 0,
+  );
 
   // Filtrar secciones y sus ítems visibles según roles y membresía
   const seccionesVisibles = navSections
@@ -188,6 +198,8 @@ export function AppLayout() {
       items: seccion.items.filter(
         (item) =>
           (!item.soloSinMembresia || !tieneMembresia) &&
+          !item.ocultarParaRoles?.some((rol) => usuario?.roles.includes(rol)) &&
+          (!item.soloSocioOExSocio || esOFueSocio) &&
           (!item.roles || item.roles.some((rol) => usuario?.roles.includes(rol))),
       ),
     }))

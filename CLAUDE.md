@@ -56,3 +56,4 @@ npm run lint
 - Mantené los textos de UI en español; alineá los campos al contrato del backend (revisá `socialclub-backend`).
 - Verificá con `npm run typecheck` + `npm test` + `npm run build` antes de dar algo por terminado.
 - Skills del equipo en `.claude/skills/`. Documentación del proyecto en `docs/` del repo backend.
+- Despliegue: `DESPLIEGUE.md`. Operar test/main (comandos Azure/GitHub/Vercel): `socialclub-backend/docs/RUNBOOK-OPERACIONES.md`.
