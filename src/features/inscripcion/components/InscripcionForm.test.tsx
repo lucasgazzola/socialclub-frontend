@@ -29,6 +29,12 @@ vi.mock('../../disciplinas/hooks/useDisciplinasActivas', () => ({
   }),
 }));
 vi.mock('../api/inscripcion.api', () => ({ obtenerRequisitos: vi.fn() }));
+vi.mock('@/features/documentacion/api/documentacion.api', () => ({
+  documentacionApi: {
+    crear: vi.fn().mockResolvedValue({ id: 1 }),
+    estadoPorPersona: vi.fn(),
+  },
+}));
 
 const requisitosFutbol = {
   restricciones: { genero: 'FEMENINO', edadMinima: 13, edadMaxima: 15 },
@@ -62,6 +68,14 @@ const creada: InscripcionCreada = {
     motivos: ['Certificado médico de aptitud física: falta presentarlo hasta el 31/10/2026'],
     habilitadoExcepcionalmenteHasta: null,
     documentos: requisitosFutbol.documentacion.documentos as NonNullable<InscripcionCreada['estadoDocumental']>['documentos'],
+  },
+  cuotaGenerada: {
+    periodo: '2026-10',
+    monto: 15000,
+    montoTarifa: 15000,
+    descuentoSocioPorcentaje: 0,
+    esSocio: false,
+    sinTarifa: false,
   },
 };
 
@@ -249,5 +263,74 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
 
     expect(await screen.findAllByText('El email ya está registrado por otra persona')).toHaveLength(1);
     expect(screen.getByLabelText('Email')).toHaveClass('border-rose-400');
+  });
+
+  it('permite adjuntar documentación faltante en la misma operación de alta (Criterio 7)', async () => {
+    const user = userEvent.setup();
+    renderForm(<InscripcionForm />);
+
+    await user.type(screen.getByLabelText('DNI'), '50111222');
+    await user.type(screen.getByLabelText('Nombre'), 'Lola');
+    await user.type(screen.getByLabelText('Apellido'), 'Gómez');
+    await user.type(screen.getByLabelText('Fecha de nacimiento'), '03052012');
+    await user.selectOptions(screen.getByLabelText('Género'), 'FEMENINO');
+    await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
+    await user.selectOptions(screen.getByLabelText('Categoría'), '7');
+
+    const checkbox = await screen.findByRole('checkbox', { name: /Adjuntar en esta operación/ });
+    expect(checkbox).toBeInTheDocument();
+    await user.click(checkbox);
+
+    const inputVencimiento = screen.getByLabelText(/Fecha de vencimiento/);
+    expect(inputVencimiento).toBeInTheDocument();
+    await user.type(inputVencimiento, '31122026');
+
+    await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
+
+    await waitFor(() => {
+      expect(enviarMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          documentos: [
+            expect.objectContaining({
+              tipoDocumento: 'CERTIFICADO_MEDICO_APTITUD_FISICA',
+              fechaVencimiento: '2026-12-31',
+            }),
+          ],
+        }),
+      );
+    });
+  });
+
+  it('muestra la cuota deportiva generada y estado habilitada cuando se completan requisitos (Criterios 9 y 10)', async () => {
+    const user = userEvent.setup();
+    enviarMock.mockResolvedValueOnce({
+      ...creada,
+      estadoDocumental: {
+        ...creada.estadoDocumental,
+        estado: 'HABILITADO',
+        motivos: [],
+      },
+      cuotaGenerada: {
+        periodo: '2026-10',
+        monto: 12000,
+        montoTarifa: 15000,
+        descuentoSocioPorcentaje: 20,
+        esSocio: true,
+        sinTarifa: false,
+      },
+    });
+
+    renderForm(<InscripcionForm />);
+
+    await user.type(screen.getByLabelText('DNI'), '50111222');
+    await user.type(screen.getByLabelText('Nombre'), 'Lola');
+    await user.type(screen.getByLabelText('Apellido'), 'Gómez');
+    await user.selectOptions(screen.getByLabelText('Disciplina'), '2');
+    await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
+
+    expect(await screen.findByText('Toda la documentación requerida fue presentada.')).toBeInTheDocument();
+    expect(screen.getByText(/Cuota deportiva generada/)).toBeInTheDocument();
+    expect(screen.getByText('$12.000')).toBeInTheDocument();
+    expect(screen.getByText(/20% de descuento por ser socio/)).toBeInTheDocument();
   });
 });
