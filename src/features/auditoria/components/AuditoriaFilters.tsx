@@ -58,21 +58,36 @@ export function AuditoriaFilters({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-        {/* Selector de Acción */}
-        <div className="w-full lg:w-56">
-          <label
-            htmlFor="accion"
-            className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700"
-          >
+      {/* Fila principal idéntica a Usuarios, Socios y Participantes:
+          Buscador a la izquierda y Selector desplegable a la derecha */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:max-w-xs">
+          <Input
+            id="entidad"
+            aria-label="Buscar por entidad"
+            placeholder="Buscar por entidad..."
+            leftIcon={<Search />}
+            autoComplete="off"
+            disabled={deshabilitado}
+            {...register('entidad')}
+          />
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <label htmlFor="accion" className="sr-only">
             Acción
           </label>
           <Select
             id="accion"
-            {...register('accion')}
+            aria-label="Filtrar por acción"
             leftIcon={<Filter />}
-            className="w-full"
+            className="w-full sm:w-52"
             disabled={deshabilitado}
+            {...register('accion', {
+              onChange: () => {
+                void handleSubmit(onSubmit)();
+              },
+            })}
           >
             <option value="">Todas las acciones</option>
             {ACCIONES_AUDITORIA.map((a) => (
@@ -82,47 +97,45 @@ export function AuditoriaFilters({
             ))}
           </Select>
         </div>
+      </div>
 
-        {/* Búsqueda por Entidad */}
-        <div className="w-full lg:w-64">
-          <Input
-            id="entidad"
-            label="Entidad"
-            placeholder="Buscar por entidad..."
-            leftIcon={<Search />}
-            autoComplete="off"
-            disabled={deshabilitado}
-            {...register('entidad')}
-          />
-        </div>
-
-        {/* Rango de fechas: Desde */}
-        <div className="w-full sm:w-44">
-          <Input
+      {/* Fila secundaria: Rango de fechas y botones de acción */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="fechaDesde"
+            className="text-xs font-semibold uppercase tracking-wider text-slate-600"
+          >
+            Desde
+          </label>
+          <input
             id="fechaDesde"
             type="date"
-            label="Desde"
             disabled={deshabilitado}
+            className="h-9.5 rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-sm text-slate-900 shadow-[0_1px_2px_0_rgba(0,0,0,0.02)] transition-colors hover:border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-50"
             {...register('fechaDesde')}
           />
         </div>
 
-        {/* Rango de fechas: Hasta */}
-        <div className="w-full sm:w-44">
-          <Input
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="fechaHasta"
+            className="text-xs font-semibold uppercase tracking-wider text-slate-600"
+          >
+            Hasta
+          </label>
+          <input
             id="fechaHasta"
             type="date"
-            label="Hasta"
-            error={errors.fechaHasta?.message}
             disabled={deshabilitado}
+            className="h-9.5 rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-sm text-slate-900 shadow-[0_1px_2px_0_rgba(0,0,0,0.02)] transition-colors hover:border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-50"
             {...register('fechaHasta')}
           />
         </div>
 
-        {/* Acciones de filtro */}
-        <div className="flex items-center gap-2 pt-1 lg:pt-0">
-          <Button type="submit" variant="primary" size="md" disabled={deshabilitado}>
-            <Filter size={15} />
+        <div className="flex items-center gap-2">
+          <Button type="submit" variant="primary" size="sm" disabled={deshabilitado}>
+            <Filter size={14} />
             Filtrar
           </Button>
 
@@ -130,7 +143,7 @@ export function AuditoriaFilters({
             <Button
               type="button"
               variant="ghost"
-              size="md"
+              size="sm"
               onClick={handleReset}
               disabled={deshabilitado}
               className="text-slate-600 hover:text-slate-900"
@@ -140,6 +153,12 @@ export function AuditoriaFilters({
             </Button>
           )}
         </div>
+
+        {errors.fechaHasta?.message && (
+          <span className="w-full text-xs font-medium text-rose-600 sm:w-auto">
+            {errors.fechaHasta.message}
+          </span>
+        )}
       </div>
     </form>
   );

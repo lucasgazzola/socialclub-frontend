@@ -85,7 +85,7 @@ export function SociosPage() {
         {esAdmin && (
           <Button onClick={() => setModalAbierto(true)} className="self-start shadow-xs sm:self-auto">
             <Plus size={16} />
-            Nuevo Socio
+            Nuevo socio
           </Button>
         )}
       </header>
