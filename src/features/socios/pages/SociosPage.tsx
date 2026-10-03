@@ -67,20 +67,37 @@ export function SociosPage() {
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
 
-  const socios = data?.items ?? [];
-  const totalActivos = socios.filter((s) => s.activo).length;
-  const totalInactivos = socios.length - totalActivos;
-  const counts = data && data.counts
+  const [cachedCounts, setCachedCounts] = useState<{
+    todos: number;
+    activos: number;
+    inactivos: number;
+  }>({ todos: 0, activos: 0, inactivos: 0 });
+
+  useEffect(() => {
+    if (data?.counts) {
+      setCachedCounts({
+        todos: data.counts.todos ?? 0,
+        activos: data.counts.alta ?? 0,
+        inactivos: data.counts.baja ?? 0,
+      });
+    } else if (filtroEstado === 'todos' && data) {
+      const activos = (data.items ?? []).filter((s) => s.activo).length;
+      const inactivos = (data.items ?? []).length - activos;
+      setCachedCounts({
+        todos: data.total ?? (data.items ?? []).length,
+        activos,
+        inactivos,
+      });
+    }
+  }, [data, filtroEstado]);
+
+  const counts = data?.counts
     ? {
-        todos: data.counts.todos ?? data.total ?? socios.length,
-        activos: data.counts.alta ?? totalActivos,
-        inactivos: data.counts.baja ?? totalInactivos,
+        todos: data.counts.todos ?? cachedCounts.todos,
+        activos: data.counts.alta ?? cachedCounts.activos,
+        inactivos: data.counts.baja ?? cachedCounts.inactivos,
       }
-    : {
-        todos: data?.total ?? socios.length,
-        activos: totalActivos,
-        inactivos: totalInactivos,
-      };
+    : cachedCounts;
 
   const handleCrear = async (data: Parameters<typeof crearSocio.mutateAsync>[0]) => {
     await crearSocio.mutateAsync(data);

@@ -93,20 +93,37 @@ export function ParticipantesPage() {
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
 
-  const participantes = data?.items ?? [];
-  const totalInscriptos = participantes.filter((p) => p.estado === 'INSCRIPTO').length;
-  const totalBaja = participantes.length - totalInscriptos;
-  const counts = data && data.counts
+  const [cachedCounts, setCachedCounts] = useState<{
+    todos: number;
+    inscriptos: number;
+    baja: number;
+  }>({ todos: 0, inscriptos: 0, baja: 0 });
+
+  useEffect(() => {
+    if (data?.counts) {
+      setCachedCounts({
+        todos: data.counts.todos ?? 0,
+        inscriptos: data.counts.inscriptos ?? 0,
+        baja: data.counts.baja ?? 0,
+      });
+    } else if (filtroEstado === 'todos' && data) {
+      const inscriptos = (data.items ?? []).filter((p) => p.estado === 'INSCRIPTO').length;
+      const baja = (data.items ?? []).filter((p) => p.estado === 'BAJA').length;
+      setCachedCounts({
+        todos: data.total ?? (data.items ?? []).length,
+        inscriptos,
+        baja,
+      });
+    }
+  }, [data, filtroEstado]);
+
+  const counts = data?.counts
     ? {
-        todos: data.counts.todos ?? data.total ?? participantes.length,
-        inscriptos: data.counts.inscriptos ?? totalInscriptos,
-        baja: data.counts.baja ?? totalBaja,
+        todos: data.counts.todos ?? cachedCounts.todos,
+        inscriptos: data.counts.inscriptos ?? cachedCounts.inscriptos,
+        baja: data.counts.baja ?? cachedCounts.baja,
       }
-    : {
-        todos: data?.total ?? participantes.length,
-        inscriptos: totalInscriptos,
-        baja: totalBaja,
-      };
+    : cachedCounts;
 
   const cambiarDisciplina = (value: string) => {
     setPagina(1);
