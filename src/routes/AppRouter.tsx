@@ -17,6 +17,7 @@ import { MisEntradasPage } from '@/features/entradas/pages/MisEntradasPage';
 import { ValidarAccesoPage } from '@/features/entradas/pages/ValidarAccesoPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
 import { AuditoriaPage } from '@/features/auditoria/pages/AuditoriaPage';
+import { TareasPage } from '@/features/tareas/pages/TareasPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPage';
 import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
@@ -73,9 +74,10 @@ export function AppRouter() {
           </Route>
 
 
-          {/* Auditoría: solo ADMIN */}
+          {/* Auditoría y tareas automáticas: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="auditoria" element={<AuditoriaPage />} />
+            <Route path="tareas" element={<TareasPage />} />
           </Route>
 
           {/* Participantes (US-08): búsqueda y filtrado — ADMIN, COLABORADOR y DELEGADO
