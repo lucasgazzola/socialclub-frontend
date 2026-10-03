@@ -18,6 +18,7 @@ import {
   ChevronDown,
   Dumbbell,
   Ticket,
+  Timer,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ClubLogo } from '@/components/ui';
@@ -100,6 +101,7 @@ const navSections: NavSection[] = [
     items: [
       { to: ROUTES.usuarios, label: 'Usuarios', icon: ShieldCheck, roles: ['ADMIN'] },
       { to: ROUTES.auditoria, label: 'Auditoría', icon: ClipboardList, roles: ['ADMIN'] },
+      { to: ROUTES.tareas, label: 'Tareas automáticas', icon: Timer, roles: ['ADMIN'] },
     ],
   },
 ];
@@ -120,6 +122,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.historialCuotaDeportiva]: 'Historial de Cuotas Deportivas',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
+  [ROUTES.tareas]: 'Tareas Automáticas',
   [ROUTES.participantes]: 'Participantes de Disciplinas',
 };
 

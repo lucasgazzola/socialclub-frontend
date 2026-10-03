@@ -21,6 +21,8 @@ export const ROUTES = {
   comprarEntradas: (eventoId: number) => `/eventos/${eventoId}/entradas`,
   eventosAdmin: '/eventos/admin',
   auditoria: '/auditoria',
+  /** DT-22: tareas automáticas (solo ADMIN). */
+  tareas: '/tareas',
   inscripcion: '/inscripcion',
   validarAcceso: '/entradas/validar',
   validarAccesoEvento: (eventoId: number) => `/eventos/${eventoId}/validar`,
