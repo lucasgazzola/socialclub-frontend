@@ -61,12 +61,13 @@ vi.mock('../components/CuotaForm', () => ({
 }));
 
 vi.mock('../components/CuotasTable', () => ({
-  CuotasTable: ({ cuotas, onEditar }: any) => (
+  CuotasTable: ({ cuotas, onEditar, onCambiarEstado }: any) => (
     <div data-testid="cuotas-table-mock">
       {cuotas.map((c: any) => (
         <div key={c.id}>
           <span>{c.disciplinaNombre}</span>
           <button onClick={() => onEditar(c)}>Editar {c.id}</button>
+          {onCambiarEstado && <button onClick={() => onCambiarEstado(c)}>Cambiar estado {c.id}</button>}
         </div>
       ))}
     </div>
@@ -200,6 +201,89 @@ describe('CuotasPage', () => {
         id: 1,
         payload: { monto: 12000, descuentoSocioPorcentaje: 15 },
       });
+    });
+  });
+
+  describe('DT-05 · activar y desactivar una tarifa', () => {
+    const tarifa = (activo: boolean) => ({
+      id: 7,
+      disciplina: { id: 1, nombre: 'Fútbol' },
+      categoriaDisciplina: { id: 10, nombre: 'Juveniles' },
+      monto: 10000,
+      descuentoSocioPorcentaje: 10,
+      periodoAplicacion: '2026-04',
+      activo,
+    });
+    const conTarifa = (activo: boolean) =>
+      mockUseCuotas.mockReturnValue({
+        data: { items: [tarifa(activo)], total: 1, porPagina: 10 },
+        isLoading: false,
+        isError: false,
+        isFetching: false,
+      });
+
+    it('pide confirmación, explica el efecto y desactiva la tarifa activa', async () => {
+      const user = userEvent.setup();
+      conTarifa(true);
+      mockActualizarCuota.mockResolvedValue({});
+      renderWithProviders(<CuotasPage />);
+
+      await user.click(screen.getByRole('button', { name: 'Cambiar estado 7' }));
+
+      const dialogo = screen.getByRole('dialog', { name: 'Desactivar tarifa' });
+      expect(dialogo).toHaveTextContent('Fútbol · Juveniles, rige desde 04/2026.');
+      expect(dialogo).toHaveTextContent('no se usa para calcular la cuota');
+      await user.click(screen.getByRole('button', { name: 'Desactivar' }));
+
+      expect(mockActualizarCuota).toHaveBeenCalledWith({
+        id: 7,
+        payload: { activo: false },
+        mensaje: 'Tarifa desactivada',
+      });
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('activa una tarifa inactiva', async () => {
+      const user = userEvent.setup();
+      conTarifa(false);
+      mockActualizarCuota.mockResolvedValue({});
+      renderWithProviders(<CuotasPage />);
+
+      await user.click(screen.getByRole('button', { name: 'Cambiar estado 7' }));
+      expect(screen.getByRole('dialog', { name: 'Activar tarifa' })).toHaveTextContent(
+        'Vuelve a usarse para calcular la cuota',
+      );
+      await user.click(screen.getByRole('button', { name: 'Activar' }));
+
+      expect(mockActualizarCuota).toHaveBeenCalledWith({
+        id: 7,
+        payload: { activo: true },
+        mensaje: 'Tarifa activada',
+      });
+    });
+
+    it('si falla deja el diálogo abierto y no cambia nada', async () => {
+      const user = userEvent.setup();
+      conTarifa(true);
+      mockActualizarCuota.mockRejectedValue(new Error('Sin conexión'));
+      renderWithProviders(<CuotasPage />);
+
+      await user.click(screen.getByRole('button', { name: 'Cambiar estado 7' }));
+      await user.click(screen.getByRole('button', { name: 'Desactivar' }));
+
+      expect(screen.getByRole('dialog', { name: 'Desactivar tarifa' })).toBeInTheDocument();
+    });
+
+    it('cancelar no llama a la API', async () => {
+      const user = userEvent.setup();
+      conTarifa(true);
+      renderWithProviders(<CuotasPage />);
+
+      await user.click(screen.getByRole('button', { name: 'Cambiar estado 7' }));
+      await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+      expect(mockActualizarCuota).not.toHaveBeenCalled();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 });
