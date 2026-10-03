@@ -12,8 +12,10 @@ import {
   describirEdad,
   etiquetaPlazo,
   type GeneroDisciplina,
+  type TipoDocumentacionDisciplina,
 } from '../../disciplinas/types';
 import { useDisciplinasActivas } from '../../disciplinas/hooks/useDisciplinasActivas';
+import { documentacionApi } from '@/features/documentacion/api/documentacion.api';
 import { EstadoDocumentoBadge, EstadoHabilitacionBadge } from '../../documentacion/components/EstadoBadges';
 import { inscripcionSchema, type InscripcionFormValues } from '../schemas/inscripcion.schema';
 import { obtenerRequisitos } from '../api/inscripcion.api';
@@ -21,6 +23,13 @@ import { useBuscarParticipante } from '../hooks/useBuscarParticipante';
 import { useCrearInscripcion } from '../hooks/useCrearInscripcion';
 import { DisciplinaCategoriaSelector } from './disciplinaCategoriaSelector';
 import type { CrearInscripcionPayload, InscripcionCreada, ParticipanteEncontrado } from '../types';
+
+interface AdjuntoEstado {
+  fechaVencimiento: string;
+  archivo: File | null;
+  habilitado: boolean;
+  error?: string;
+}
 
 const DNI_COMPLETO = /^\d{7,8}$/;
 
@@ -55,12 +64,14 @@ interface InscripcionFormProps {
  * Formulario directo: datos del participante + disciplina y categoría. Si el
  * DNI ya está registrado, se completan sus datos y se inscribe a esa persona
  * (solo se completan los que le falten). Al elegir disciplina/categoría se
- * muestran las restricciones y la documentación exigida; al confirmar, qué
- * falta presentar y hasta cuándo.
+ * muestran las restricciones y la documentación exigida; permite adjuntar
+ * documentos faltantes en la misma operación; al confirmar, informa estado
+ * documental y cuota generada.
  */
 export function InscripcionForm({ participante, onInscripto, onCancel, onCargarDocumentacion }: InscripcionFormProps) {
   const [resultado, setResultado] = useState<InscripcionCreada | null>(null);
   const [existente, setExistente] = useState<ParticipanteEncontrado | null>(participante ?? null);
+  const [adjuntos, setAdjuntos] = useState<Record<string, AdjuntoEstado>>({});
   const busqueda = useBuscarParticipante();
   const { disciplinas, cargando: cargandoDisciplinas } = useDisciplinasActivas();
   // El error se muestra una sola vez, en el formulario (no también como toast).
@@ -87,9 +98,10 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
   const disciplinaSeleccionada = useMemo(() => disciplinas.find((d) => d.id === disciplinaId), [disciplinas, disciplinaId]);
   const exigeCategoria = categoriasDisponibles(disciplinaSeleccionada).length > 0;
 
-  // Al cambiar de disciplina, la categoría elegida deja de valer.
+  // Al cambiar de disciplina, la categoría elegida deja de valer y se resetean adjuntos.
   useEffect(() => {
     setValue('categoriaDisciplinaId', undefined);
+    setAdjuntos({});
   }, [disciplinaId, setValue]);
 
   // DNI ya registrado: se completan sus datos (sin un paso de búsqueda aparte).
@@ -138,12 +150,44 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
       setError('categoriaDisciplinaId', { message: 'Debe seleccionar una categoría para esta disciplina' });
       return;
     }
+
+    // Validar adjuntos activos
+    let hayErrorAdjuntos = false;
+    const nuevosAdjuntos = { ...adjuntos };
+    const hoyIso = new Date().toISOString().slice(0, 10);
+
+    for (const [tipo, adj] of Object.entries(adjuntos)) {
+      if (adj.habilitado) {
+        if (!adj.fechaVencimiento) {
+          nuevosAdjuntos[tipo] = { ...adj, error: 'La fecha de vencimiento es obligatoria para adjuntar el documento.' };
+          hayErrorAdjuntos = true;
+        } else if (adj.fechaVencimiento < hoyIso) {
+          nuevosAdjuntos[tipo] = { ...adj, error: 'La fecha de vencimiento no puede ser anterior a la fecha actual.' };
+          hayErrorAdjuntos = true;
+        }
+      }
+    }
+
+    if (hayErrorAdjuntos) {
+      setAdjuntos(nuevosAdjuntos);
+      return;
+    }
+
+    const docsAEnviar = Object.entries(adjuntos)
+      .filter(([_, a]) => a.habilitado && a.fechaVencimiento)
+      .map(([tipo, a]) => ({
+        tipoDocumento: tipo as TipoDocumentacionDisciplina,
+        fechaVencimiento: a.fechaVencimiento,
+      }));
+
     const payload: CrearInscripcionPayload = {
       ...data,
       personaId: existente?.id,
       fechaNacimiento: data.fechaNacimiento || undefined,
       email: data.email || undefined,
+      ...(docsAEnviar.length > 0 ? { documentos: docsAEnviar } : {}),
     };
+
     setErrorEnvio(null);
     const creada = await enviar(payload).catch((error: unknown) => {
       const mensaje = error instanceof Error ? error.message : 'No se pudo registrar la inscripción';
@@ -153,7 +197,40 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
       else setErrorEnvio(mensaje);
       return null;
     });
+
     if (creada) {
+      // Subir archivos binarios si fueron adjuntados
+      const conArchivo = Object.entries(adjuntos).filter(
+        ([_, a]) => a.habilitado && a.fechaVencimiento && a.archivo,
+      );
+      if (conArchivo.length > 0) {
+        for (const [tipo, a] of conArchivo) {
+          try {
+            await documentacionApi.crear(
+              {
+                personaId: creada.persona.id,
+                tipoDocumento: tipo as TipoDocumentacionDisciplina,
+                fechaVencimiento: a.fechaVencimiento,
+              },
+              a.archivo,
+            );
+          } catch {
+            // Error al subir archivo individual no interrumpe el alta
+          }
+        }
+        try {
+          const resumen = await documentacionApi.estadoPorPersona(creada.persona.id);
+          const actualizado = resumen.inscripciones.find(
+            (i) => i.inscripcionId === creada.inscripcion.id,
+          );
+          if (actualizado) {
+            creada.estadoDocumental = actualizado;
+          }
+        } catch {
+          // continuar con el estado devuelto por el alta
+        }
+      }
+
       setResultado(creada);
       onInscripto?.(creada);
     }
@@ -162,11 +239,13 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
   function usarOtroDni() {
     setExistente(null);
     limpiar();
+    setAdjuntos({});
     reset({ ...FORMULARIO_VACIO, disciplinaId: watch('disciplinaId'), categoriaDisciplinaId: watch('categoriaDisciplinaId') });
   }
 
   function nuevaInscripcion() {
     setResultado(null);
+    setAdjuntos({});
     if (!participante) {
       setExistente(null);
       limpiar();
@@ -176,6 +255,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
 
   if (resultado) {
     const estado = resultado.estadoDocumental;
+    const cuota = resultado.cuotaGenerada;
     return (
       <div className="space-y-4" role="status">
         <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -197,7 +277,31 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
               </ul>
             ) : (
               <p className="text-slate-600">
-                {estado.documentos.length ? 'Tiene toda la documentación exigida.' : 'La disciplina no exige documentación.'}
+                {estado.documentos.length ? 'Toda la documentación requerida fue presentada.' : 'La disciplina no exige documentación.'}
+              </p>
+            )}
+          </div>
+        )}
+        {cuota && (
+          <div className="space-y-1 rounded-lg border border-slate-200 bg-slate-50/50 p-4 text-sm">
+            <p className="font-medium text-slate-800">
+              Cuota deportiva generada (período {cuota.periodo}):
+            </p>
+            {cuota.sinTarifa ? (
+              <p className="text-slate-600">Sin tarifa configurada para este período.</p>
+            ) : (
+              <p className="text-slate-700">
+                Monto generado:{' '}
+                <strong className="text-slate-900 font-semibold">
+                  ${cuota.monto?.toLocaleString('es-AR')}
+                </strong>
+                {cuota.descuentoSocioPorcentaje > 0 && (
+                  <span className="text-xs text-emerald-700 font-medium">
+                    {' '}
+                    ({cuota.descuentoSocioPorcentaje}% de descuento por ser socio)
+                  </span>
+                )}
+                <span className="ml-2 text-xs text-amber-700 font-medium">(Pendiente de cobro)</span>
               </p>
             )}
           </div>
@@ -206,9 +310,9 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
           <Button type="button" variant="secondary" onClick={nuevaInscripcion}>
             Nueva inscripción
           </Button>
-          {onCargarDocumentacion && estado && estado.documentos.length > 0 && (
+          {onCargarDocumentacion && estado && estado.documentos.length > 0 && estado.estado !== 'HABILITADO' && (
             <Button type="button" onClick={() => onCargarDocumentacion(resultado.persona)}>
-              <FileText size={16} /> Cargar documentación
+              <FileText size={16} /> Cargar documentación pendiente
             </Button>
           )}
         </ModalActions>
@@ -332,19 +436,92 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
             ) : (
               <div>
                 <p className="mb-2 font-semibold text-slate-700">Documentación obligatoria</p>
-                <ul className="space-y-1.5">
-                  {requisitos.data.documentacion.documentos.map((doc) => (
-                    <li key={doc.tipoDocumento} className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-slate-700">
-                        {doc.etiqueta}
-                        <span className="block text-xs text-slate-500">
-                          {etiquetaPlazo(doc.plazoDiasTolerancia)}
-                          {doc.estado === 'FALTANTE' && doc.fechaLimite && ` · hasta el ${isoADisplay(doc.fechaLimite)}`}
-                        </span>
-                      </span>
-                      {existente && <EstadoDocumentoBadge estado={doc.estado} />}
-                    </li>
-                  ))}
+                <ul className="space-y-2">
+                  {requisitos.data.documentacion.documentos.map((doc) => {
+                    const esFaltante = doc.estado === 'FALTANTE' || !existente;
+                    const adjunto = adjuntos[doc.tipoDocumento];
+                    return (
+                      <li key={doc.tipoDocumento} className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-slate-700 font-medium">
+                            {doc.etiqueta}
+                            <span className="block text-xs font-normal text-slate-500">
+                              {etiquetaPlazo(doc.plazoDiasTolerancia)}
+                              {doc.estado === 'FALTANTE' && doc.fechaLimite && ` · plazo hasta el ${isoADisplay(doc.fechaLimite)}`}
+                            </span>
+                          </span>
+                          {existente && <EstadoDocumentoBadge estado={doc.estado} />}
+                        </div>
+
+                        {esFaltante && (
+                          <div className="pt-2 border-t border-slate-100">
+                            <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={adjunto?.habilitado ?? false}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setAdjuntos((prev) => ({
+                                    ...prev,
+                                    [doc.tipoDocumento]: {
+                                      fechaVencimiento: prev[doc.tipoDocumento]?.fechaVencimiento || '',
+                                      archivo: prev[doc.tipoDocumento]?.archivo || null,
+                                      habilitado: checked,
+                                    },
+                                  }));
+                                }}
+                                className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                              />
+                              Adjuntar en esta operación (opcional)
+                            </label>
+
+                            {adjunto?.habilitado && (
+                              <div className="mt-2.5 grid grid-cols-1 gap-3 sm:grid-cols-2 bg-slate-50/70 p-2.5 rounded-md border border-slate-200/80">
+                                <DateInput
+                                  id={`vencimiento-${doc.tipoDocumento}`}
+                                  label="Fecha de vencimiento *"
+                                  value={adjunto.fechaVencimiento || ''}
+                                  onChange={(iso) => {
+                                    setAdjuntos((prev) => ({
+                                      ...prev,
+                                      [doc.tipoDocumento]: {
+                                        ...prev[doc.tipoDocumento],
+                                        fechaVencimiento: iso,
+                                        error: undefined,
+                                      },
+                                    }));
+                                  }}
+                                  error={adjunto.error}
+                                  min={new Date().toISOString().slice(0, 10)}
+                                />
+                                <div>
+                                  <label className="mb-1.5 block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                                    Archivo adjunto (opcional)
+                                  </label>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                    aria-label={`Archivo para ${doc.etiqueta}`}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0] || null;
+                                      setAdjuntos((prev) => ({
+                                        ...prev,
+                                        [doc.tipoDocumento]: {
+                                          ...prev[doc.tipoDocumento],
+                                          archivo: file,
+                                        },
+                                      }));
+                                    }}
+                                    className="block w-full text-xs text-slate-500 file:mr-2.5 file:rounded-md file:border-0 file:bg-brand-50 file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
                 <p className="mt-3 text-xs text-slate-500">
                   Si falta documentación, la inscripción queda <strong>pendiente</strong> hasta presentarla dentro del plazo.
