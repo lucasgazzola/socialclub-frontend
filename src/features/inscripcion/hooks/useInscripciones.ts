@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   listarInscripciones,
   getInscripcion,
@@ -22,6 +22,7 @@ export function useInscripciones(query: InscripcionesQuery = {}) {
   return useQuery({
     queryKey: inscripcionesKeys.list({ pagina, porPagina, busqueda, disciplinaId, estado }),
     queryFn: () => listarInscripciones({ pagina, porPagina, busqueda, disciplinaId, estado }),
+    placeholderData: keepPreviousData,
   });
 }
 

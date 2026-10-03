@@ -13,6 +13,8 @@ import { useCrearSocio } from '../hooks/useSocios';
 
 const POR_PAGINA = 10;
 
+type FiltroEstadoSocio = 'todos' | 'activos' | 'inactivos';
+
 export function SociosPage() {
   const location = useLocation();
   const { usuario } = useAuth();
@@ -21,7 +23,7 @@ export function SociosPage() {
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
-  const [estado, setEstado] = useState<EstadoSocioFiltro | undefined>(undefined);
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoSocio>('todos');
   const [pagina, setPagina] = useState(1);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -51,16 +53,34 @@ export function SociosPage() {
   const { data: categorias } = useCategorias();
   const crearSocio = useCrearSocio();
 
+  const estadoQuery: EstadoSocioFiltro | undefined =
+    filtroEstado === 'activos' ? 'ALTA' : filtroEstado === 'inactivos' ? 'BAJA' : undefined;
+
   const { data, isLoading, isError, error, isFetching } = useSocios({
     busqueda: busqueda || undefined,
     categoriaId,
-    estado,
+    estado: estadoQuery,
     pagina,
     porPagina: POR_PAGINA,
   });
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
+
+  const socios = data?.items ?? [];
+  const totalActivos = socios.filter((s) => s.activo).length;
+  const totalInactivos = socios.length - totalActivos;
+  const counts = data && data.counts
+    ? {
+        todos: data.counts.todos ?? data.total ?? socios.length,
+        activos: data.counts.alta ?? totalActivos,
+        inactivos: data.counts.baja ?? totalInactivos,
+      }
+    : {
+        todos: data?.total ?? socios.length,
+        activos: totalActivos,
+        inactivos: totalInactivos,
+      };
 
   const handleCrear = async (data: Parameters<typeof crearSocio.mutateAsync>[0]) => {
     await crearSocio.mutateAsync(data);
@@ -73,10 +93,16 @@ export function SociosPage() {
     setCategoriaId(value ? Number(value) : undefined);
   };
 
-  const cambiarEstado = (value: string) => {
+  function cambiarFiltro(valor: string) {
     setPagina(1);
-    setEstado(value ? (value as EstadoSocioFiltro) : undefined);
-  };
+    if (valor === 'activos' || valor === 'ALTA') {
+      setFiltroEstado('activos');
+    } else if (valor === 'inactivos' || valor === 'BAJA') {
+      setFiltroEstado('inactivos');
+    } else {
+      setFiltroEstado('todos');
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -97,30 +123,32 @@ export function SociosPage() {
       {/* Controles de filtro y búsqueda agrupados */}
       <div className="space-y-3">
         <div>
-        <StatusTabs<string>
-          value={estado ?? 'TODOS'}
-          onChange={(val) => cambiarEstado(val === 'TODOS' ? '' : val)}
-          tabs={[
-            { value: 'TODOS', label: 'Todos', count: data?.counts?.todos },
-            { value: 'ALTA', label: 'Activos', count: data?.counts?.alta },
-            { value: 'BAJA', label: 'Inactivos', count: data?.counts?.baja },
-          ]}
-        />
+          <StatusTabs<FiltroEstadoSocio>
+            value={filtroEstado}
+            onChange={(val) => cambiarFiltro(val)}
+            tabs={[
+              { value: 'todos', label: 'Todos', count: counts.todos },
+              { value: 'activos', label: 'Activos', count: counts.activos },
+              { value: 'inactivos', label: 'Inactivos', count: counts.inactivos },
+            ]}
+          />
 
-        {/* Accesibilidad y compatibilidad con pruebas */}
-        <select
-          id="estado"
-          aria-label="Filtrar por estado"
-          value={estado ?? ''}
-          onChange={(e) => cambiarEstado(e.target.value)}
-          className="sr-only"
-          tabIndex={-1}
-        >
-          <option value="">Todos los estados</option>
-          <option value="ALTA">Alta</option>
-          <option value="BAJA">Baja</option>
-        </select>
-      </div>
+          {/* Accesibilidad y compatibilidad con pruebas automatizadas */}
+          <select
+            id="filtroEstado"
+            aria-label="Filtrar por estado"
+            value={filtroEstado === 'activos' ? 'ALTA' : filtroEstado === 'inactivos' ? 'BAJA' : 'todos'}
+            onChange={(e) => cambiarFiltro(e.target.value)}
+            className="sr-only"
+            tabIndex={-1}
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="ALTA">Solo activos</option>
+            <option value="BAJA">Solo inactivos</option>
+            <option value="activos" className="hidden">Activos</option>
+            <option value="inactivos" className="hidden">Inactivos</option>
+          </select>
+        </div>
 
       {/* Barra de búsqueda y categorías estilo Apex */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

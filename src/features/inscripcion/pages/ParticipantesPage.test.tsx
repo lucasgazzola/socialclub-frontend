@@ -176,4 +176,33 @@ describe('US-08 · ParticipantesPage', () => {
 
     expect(screen.queryByTestId('editar-participante')).not.toBeInTheDocument();
   });
+
+  it('permite filtrar por estado haciendo clic en las pestañas', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+
+    const tabInscriptos = screen.getByRole('tab', { name: /Inscriptos/i });
+    await user.click(tabInscriptos);
+
+    await waitFor(() => {
+      expect(useInscripcionesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estado: 'INSCRIPTO',
+          pagina: 1,
+        }),
+      );
+    });
+
+    const tabBaja = screen.getByRole('tab', { name: /Baja/i });
+    await user.click(tabBaja);
+
+    await waitFor(() => {
+      expect(useInscripcionesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estado: 'BAJA',
+          pagina: 1,
+        }),
+      );
+    });
+  });
 });

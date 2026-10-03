@@ -17,16 +17,6 @@ const ACCION_BADGE: Record<AccionAuditoria, string> = {
   LOGIN_FALLIDO: 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20',
 };
 
-const ACCION_LABEL: Record<AccionAuditoria, string> = {
-  CREAR: 'Crear',
-  EDITAR: 'Editar',
-  BAJA: 'Baja',
-  REACTIVAR: 'Reactivar',
-  LOGIN: 'Login',
-  LOGOUT: 'Logout',
-  LOGIN_FALLIDO: 'Login fallido',
-};
-
 export function AuditoriaTable({ registros, isFetching }: Props) {
   if (registros.length === 0) {
     return (

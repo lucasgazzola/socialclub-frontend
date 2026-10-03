@@ -25,8 +25,6 @@ export function AuditoriaPage() {
   const porPagina = data?.porPagina ?? POR_PAGINA;
   const totalPaginas = Math.max(1, Math.ceil(total / porPagina));
   const hayResultados = (data?.items?.length ?? 0) > 0;
-  const desdeRegistro = total === 0 ? 0 : (pagina - 1) * porPagina + 1;
-  const hastaRegistro = Math.min(pagina * porPagina, total);
 
   function handleFiltrar(nuevosFiltros: AuditoriaFiltrosFormValues) {
     setPagina(1);
