@@ -1,6 +1,8 @@
 # SocialClub — Infraestructura y despliegue (frontend)
 
-> Documento de referencia con **todas las decisiones de infraestructura y despliegue** del proyecto SocialClub. Cubre el panorama completo (front + API + DB), con foco en el frontend. La API/DB están documentadas en detalle en `DESPLIEGUE.md` del repo `socialclub-backend`. Última actualización: 2026-08-07.
+> Documento de referencia con **todas las decisiones de infraestructura y despliegue** del proyecto SocialClub. Cubre el panorama completo (front + API + DB), con foco en el frontend. La API/DB están documentadas en detalle en `DESPLIEGUE.md` del repo `socialclub-backend`. Última actualización: 2026-10-03.
+>
+> Comandos de operación (promote `dev → test`, `gh`, Azure, curl): **`socialclub-backend/docs/RUNBOOK-OPERACIONES.md`**.
 
 ---
 
@@ -110,9 +112,11 @@ Si cambia el dominio del front (o se agrega uno propio), hay que actualizar `COR
 npm install && npm run dev            # http://localhost:5173 (usa VITE_API_URL o el default local)
 npm run typecheck && npm run lint && npm run build
 
-# Desplegar a TEST / MAIN: push a la rama correspondiente (deploy automático en Vercel)
-git push origin dev:test
-git push origin dev:main
+# Promover a TEST: PR con base explícita (nunca `git push origin dev:test` ni `gh pr create` sin --base)
+gh pr create --base test --head dev
+# mergear cuando CI `build` esté verde; Vercel despliega al pushear `test`
+
+# MAIN: PR a main (default peligroso: GitHub apunta a main si olvidás --base)
 
 # Cambiar la API que consume un entorno: actualizar VITE_API_URL en el proyecto
 # Vercel (Settings → Environment Variables) y volver a desplegar (rebuild).
