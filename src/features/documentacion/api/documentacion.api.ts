@@ -1,5 +1,10 @@
 import { apiClient } from '@/lib/api/client';
-import type { CrearDocumentacionPayload, Documentacion, EstadoDocumentalPersona } from '../types';
+import type {
+  AlertaDocumentacion,
+  CrearDocumentacionPayload,
+  Documentacion,
+  EstadoDocumentalPersona,
+} from '../types';
 
 export const documentacionApi = {
   async crear(payload: CrearDocumentacionPayload, archivo?: File | null): Promise<Documentacion> {
@@ -23,6 +28,12 @@ export const documentacionApi = {
 
   async listarPorPersona(personaId: number): Promise<Documentacion[]> {
     const { data } = await apiClient.get<Documentacion[]>(`/documentacion/persona/${personaId}`);
+    return data;
+  },
+
+  /** US-26: alertas de documentación de los próximos 10 días y lo ya vencido. */
+  async alertas(): Promise<AlertaDocumentacion[]> {
+    const { data } = await apiClient.get<AlertaDocumentacion[]>('/alertas/documentacion');
     return data;
   },
 };
