@@ -74,8 +74,7 @@ export function AuditoriaPage() {
           {hayResultados && (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-slate-500">
               <span>
-                Mostrando {desdeRegistro} - {hastaRegistro} de {total} registros
-                {isFetching ? ' · actualizando…' : ''}
+                {total} registro(s){isFetching ? ' · actualizando…' : ''}
               </span>
               <div className="flex items-center gap-2">
                 <Button

@@ -64,7 +64,7 @@ export function AuditoriaTable({ registros, isFetching }: Props) {
                 <span
                   className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${ACCION_BADGE[r.accion] ?? 'bg-slate-100 text-slate-600'}`}
                 >
-                  {ACCION_LABEL[r.accion] ?? r.accion}
+                  {r.accion}
                 </span>
               </td>
               <td className="px-4 py-3">{r.entidad}</td>

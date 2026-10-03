@@ -50,7 +50,7 @@ describe('US-33 · AuditoriaPage', () => {
       screen.getByText('Registro inalterable de todas las operaciones del sistema.'),
     ).toBeInTheDocument();
     expect(screen.getByText('Socio')).toBeInTheDocument();
-    expect(screen.getByText(/mostrando 1 - 20 de 45 registros/i)).toBeInTheDocument();
+    expect(screen.getByText('45 registro(s)')).toBeInTheDocument();
     expect(screen.getByText(/página 1 de 3/i)).toBeInTheDocument();
   });
 

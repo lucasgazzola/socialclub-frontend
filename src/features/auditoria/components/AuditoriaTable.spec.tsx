@@ -39,8 +39,8 @@ describe('US-33 · AuditoriaTable', () => {
   it('renderiza la lista de registros con sus columnas y badges correspondientes', () => {
     render(<AuditoriaTable registros={FIXTURE_REGISTROS} />);
 
-    expect(screen.getByText('Crear')).toBeInTheDocument();
-    expect(screen.getByText('Baja')).toBeInTheDocument();
+    expect(screen.getByText('CREAR')).toBeInTheDocument();
+    expect(screen.getByText('BAJA')).toBeInTheDocument();
     expect(screen.getByText('Socio')).toBeInTheDocument();
     expect(screen.getByText('Usuario')).toBeInTheDocument();
     expect(screen.getByText('Carlos Gómez')).toBeInTheDocument();
