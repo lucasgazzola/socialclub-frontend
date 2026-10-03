@@ -55,3 +55,27 @@ export interface EstadoDocumentalPersona {
   inscripciones: EstadoDocumentalInscripcion[];
   tiposExigidos: { tipoDocumento: TipoDocumentacionDisciplina; etiqueta: string; documentoActualId: number | null }[];
 }
+
+/** US-26: alerta de documentación por vencer, vencida o pendiente de presentación. */
+export type TipoAlertaDocumentacion =
+  | 'POR_VENCER'
+  | 'VENCIDO'
+  | 'PRESENTACION_POR_VENCER'
+  | 'PRESENTACION_VENCIDA';
+
+export interface AlertaDocumentacion {
+  clave: string;
+  tipo: TipoAlertaDocumentacion;
+  inscripcionId: number;
+  personaId: number;
+  /** "Apellido, Nombre". */
+  participante: string;
+  disciplina: string;
+  categoria: string | null;
+  tipoDocumento: TipoDocumentacionDisciplina;
+  documento: string;
+  /** Vencimiento del documento o fecha límite de presentación (ISO). */
+  fecha: string;
+  diasRestantes: number;
+  mensaje: string;
+}

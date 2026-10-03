@@ -6,6 +6,7 @@ export const documentacionKeys = {
   all: ['documentacion'] as const,
   porPersona: (personaId: number) => [...documentacionKeys.all, 'persona', personaId] as const,
   estado: (personaId: number) => [...documentacionKeys.all, 'estado', personaId] as const,
+  alertas: () => [...documentacionKeys.all, 'alertas'] as const,
 };
 
 /** Carga un documento obligatorio (US-24) e invalida la lista del participante. */
@@ -17,6 +18,7 @@ export function useCrearDocumentacion() {
     onSuccess: (doc) => {
       qc.invalidateQueries({ queryKey: documentacionKeys.porPersona(doc.personaId) });
       qc.invalidateQueries({ queryKey: documentacionKeys.estado(doc.personaId) });
+      qc.invalidateQueries({ queryKey: documentacionKeys.alertas() });
       // El listado de participantes muestra el estado documental.
       qc.invalidateQueries({ queryKey: ['inscripciones'] });
     },
@@ -38,5 +40,14 @@ export function useEstadoDocumental(personaId: number | null) {
     queryKey: documentacionKeys.estado(personaId ?? 0),
     queryFn: () => documentacionApi.estadoPorPersona(personaId as number),
     enabled: !!personaId,
+  });
+}
+
+/** US-26: alertas de documentación para el Inicio (ADMIN y DELEGADO). */
+export function useAlertasDocumentacion(enabled = true) {
+  return useQuery({
+    queryKey: documentacionKeys.alertas(),
+    queryFn: () => documentacionApi.alertas(),
+    enabled,
   });
 }

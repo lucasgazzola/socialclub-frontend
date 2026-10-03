@@ -20,9 +20,40 @@ vi.mock('@/features/auth/hooks/useAuth', () => ({
   }),
 }));
 
+const mockAlertas = vi.fn();
+vi.mock('@/features/documentacion/hooks/useDocumentacion', () => ({
+  useAlertasDocumentacion: () => mockAlertas(),
+}));
+
 describe('DashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAlertas.mockReturnValue({ data: [], isLoading: false, isError: false });
+  });
+
+  it('US-26 · el ADMIN ve las alertas de documentación en el Inicio', () => {
+    mockUsuario = { id: 1, nombre: 'Gonzalo', roles: ['ADMIN'] };
+    renderWithProviders(<DashboardPage />);
+    expect(screen.getByRole('heading', { name: 'Alertas de documentación' })).toBeInTheDocument();
+  });
+
+  it('US-26 · el COLABORADOR no ve las alertas de documentación', () => {
+    mockUsuario = { id: 3, nombre: 'Franco', roles: ['COLABORADOR'] };
+    renderWithProviders(<DashboardPage />);
+    expect(screen.queryByRole('heading', { name: 'Alertas de documentación' })).not.toBeInTheDocument();
+  });
+
+  it('US-26 · el DELEGADO ve sus alertas al iniciar sesión y puede ir a participantes', async () => {
+    const user = userEvent.setup();
+    mockUsuario = { id: 4, nombre: 'Diego', roles: ['DELEGADO'] };
+    renderWithProviders(<DashboardPage />);
+
+    expect(screen.getByText('Hola, Diego')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Alertas de documentación' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Hacerme socio/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Ver participantes/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/participantes');
   });
 
   it('renderiza panel de administración para usuario ADMIN y permite navegar a módulos', async () => {
