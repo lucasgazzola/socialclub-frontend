@@ -1,13 +1,10 @@
 import { useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Button, DateInput, Select, Spinner } from '@/components/ui';
+import { Button, DateInput, Spinner } from '@/components/ui';
 import { env } from '@/config/env';
 import { isoADisplay } from '@/lib/utils/fecha';
 import type { TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
 import { useCrearDocumentacion, useDocumentacionPorPersona, useEstadoDocumental } from '../hooks/useDocumentacion';
-import { documentacionSchema, type DocumentacionFormValues } from '../schemas/documentacion.schema';
 import type { EstadoDeDocumento } from '../types';
 import { EstadoDocumentoBadge, EstadoHabilitacionBadge } from './EstadoBadges';
 
@@ -42,41 +39,70 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
   const { data: historial } = useDocumentacionPorPersona(persona.id);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
+  const [docSeleccionado, setDocSeleccionado] = useState<{
+    tipoDocumento: TipoDocumentacionDisciplina;
+    etiqueta: string;
+  } | null>(null);
+  const [fechaVencimiento, setFechaVencimiento] = useState('');
+  const [errorFecha, setErrorFecha] = useState<string | null>(null);
+  const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
   const formularioRef = useRef<HTMLFormElement>(null);
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<DocumentacionFormValues>({
-    resolver: zodResolver(documentacionSchema),
-    defaultValues: { tipoDocumento: '', fechaVencimiento: '' },
-  });
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!docSeleccionado) return;
 
-  const onSubmit = handleSubmit(async (values) => {
+    if (!fechaVencimiento) {
+      setErrorFecha('La fecha de vencimiento es obligatoria');
+      return;
+    }
+    if (fechaVencimiento < hoyISO()) {
+      setErrorFecha('La fecha de vencimiento no puede ser anterior a la fecha actual');
+      return;
+    }
+    if (!archivo) {
+      setErrorArchivo('El archivo es obligatorio');
+      return;
+    }
+
     try {
       await crear.mutateAsync({
         payload: {
-          tipoDocumento: values.tipoDocumento as TipoDocumentacionDisciplina,
-          fechaVencimiento: values.fechaVencimiento,
+          tipoDocumento: docSeleccionado.tipoDocumento,
+          fechaVencimiento,
           personaId: persona.id,
         },
         archivo,
       });
       toast.success('Documentación cargada correctamente');
-      reset({ tipoDocumento: '', fechaVencimiento: '' });
+      setDocSeleccionado(null);
+      setFechaVencimiento('');
+      setErrorFecha(null);
       setArchivo(null);
       setFileKey((k) => k + 1);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo cargar la documentación');
     }
-  });
+  };
 
-  function elegirParaCargar(tipo: TipoDocumentacionDisciplina) {
-    setValue('tipoDocumento', tipo, { shouldValidate: true });
-    formularioRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  function elegirParaCargar(tipo: TipoDocumentacionDisciplina, etiqueta: string) {
+    setDocSeleccionado({ tipoDocumento: tipo, etiqueta });
+    setFechaVencimiento('');
+    setErrorFecha(null);
+    setErrorArchivo(null);
+    setArchivo(null);
+    setFileKey((k) => k + 1);
+    setTimeout(() => {
+      formularioRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }
+
+  function cancelarCarga() {
+    setDocSeleccionado(null);
+    setFechaVencimiento('');
+    setErrorFecha(null);
+    setErrorArchivo(null);
+    setArchivo(null);
   }
 
   if (isLoading || !estado) {
@@ -86,8 +112,6 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
       </div>
     );
   }
-
-  const exigeAlgo = estado.tiposExigidos.length > 0;
 
   return (
     <div className="space-y-6">
@@ -122,7 +146,12 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                     <span className="flex items-center gap-2">
                       <EstadoDocumentoBadge estado={doc.estado} />
                       {puedeCargar && doc.estado !== 'VIGENTE' && (
-                        <Button type="button" variant="ghost" size="sm" onClick={() => elegirParaCargar(doc.tipoDocumento)}>
+                        <Button
+                          type="button"
+                          variant={docSeleccionado?.tipoDocumento === doc.tipoDocumento ? 'secondary' : 'ghost'}
+                          size="sm"
+                          onClick={() => elegirParaCargar(doc.tipoDocumento, doc.etiqueta)}
+                        >
                           {doc.estado === 'FALTANTE' ? 'Cargar' : 'Renovar'}
                         </Button>
                       )}
@@ -135,65 +164,59 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
         ))
       )}
 
-      {puedeCargar && exigeAlgo && (
+      {puedeCargar && docSeleccionado && (
         <section aria-labelledby={`doc-nueva-${persona.id}`} className="border-t border-slate-200 pt-5">
-          <h3 id={`doc-nueva-${persona.id}`} className="mb-3 text-sm font-semibold text-slate-800">
-            Cargar documento
-          </h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 id={`doc-nueva-${persona.id}`} className="text-sm font-semibold text-slate-800">
+              Cargar documentación
+            </h3>
+            <Button type="button" variant="ghost" size="sm" onClick={cancelarCarga}>
+              Cancelar
+            </Button>
+          </div>
           <form ref={formularioRef} className="space-y-4" onSubmit={onSubmit} noValidate>
-            <div>
-              <label htmlFor={`tipoDocumento-${persona.id}`} className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                Tipo de documento
-              </label>
-              <Controller
-                control={control}
-                name="tipoDocumento"
-                render={({ field }) => (
-                  <Select id={`tipoDocumento-${persona.id}`} value={field.value} onChange={field.onChange} onBlur={field.onBlur}>
-                    <option value="">Seleccioná el tipo</option>
-                    {estado.tiposExigidos.map((t) => (
-                      <option key={t.tipoDocumento} value={t.tipoDocumento}>
-                        {t.etiqueta}
-                        {t.documentoActualId ? ' (renovación)' : ''}
-                      </option>
-                    ))}
-                  </Select>
-                )}
-              />
-              {errors.tipoDocumento && <p className="mt-1 text-xs font-medium text-rose-600">{errors.tipoDocumento.message}</p>}
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+              <strong className="text-slate-900">{docSeleccionado.etiqueta}</strong>
             </div>
-            <Controller
-              control={control}
-              name="fechaVencimiento"
-              render={({ field }) => (
-                <DateInput
-                  id={`fechaVencimiento-${persona.id}`}
-                  label="Fecha de vencimiento"
-                  min={hoyISO()}
-                  error={errors.fechaVencimiento?.message}
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  ref={field.ref}
-                />
-              )}
-            />
+
+            <div>
+              <DateInput
+                id={`fechaVencimiento-${persona.id}`}
+                label="Fecha de vencimiento *"
+                min={hoyISO()}
+                error={errorFecha ?? undefined}
+                value={fechaVencimiento}
+                onChange={(v) => {
+                  setFechaVencimiento(v);
+                  if (errorFecha) setErrorFecha(null);
+                }}
+              />
+            </div>
+
             <div>
               <label htmlFor={`archivo-${persona.id}`} className="mb-1 block text-sm font-medium text-slate-700">
-                Archivo (PDF o imagen, opcional)
+                Archivo (PDF o imagen) *
               </label>
               <input
                 id={`archivo-${persona.id}`}
                 key={fileKey}
                 type="file"
                 accept="application/pdf,image/*"
-                onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  setArchivo(e.target.files?.[0] ?? null);
+                  if (errorArchivo) setErrorArchivo(null);
+                }}
                 className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-slate-200"
               />
+              {errorArchivo && <p className="mt-1 text-xs text-red-600">{errorArchivo}</p>}
             </div>
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Cargando…' : 'Cargar documento'}
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={cancelarCarga}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={crear.isPending}>
+                {crear.isPending ? 'Cargando…' : 'Cargar documentación'}
               </Button>
             </div>
           </form>
