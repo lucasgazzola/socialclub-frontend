@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ImagePlus, X } from 'lucide-react';
-import { Button, Input, Select, ModalActions } from '@/components/ui';
+import { Button, DateTimeInput, Input, Select, ModalActions } from '@/components/ui';
 import { crearEventoSchema, type CrearEventoSchema } from '../schemas';
 import type { z } from 'zod';
 
@@ -23,27 +23,10 @@ interface Props {
 /** Opciones de descuento: 0%, 5%, 10%, …, 100% */
 const OPCIONES_DESCUENTO = Array.from({ length: 21 }, (_, i) => i * 5);
 
-/** Calcula el min para datetime-local (ahora - 5 min, para no romper el default "now") */
-function calcularMinDatetime() {
-  const ahora = new Date();
-  ahora.setMinutes(ahora.getMinutes() - 5); // margen de 5 minutos
-  // Format: YYYY-MM-DDTHH:mm
-  return ahora.toISOString().slice(0, 16);
-}
-
-/** Calcula el max datetime-local (ahora + 3 años) */
-function calcularMaxDatetime() {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() + 3);
-  return d.toISOString().slice(0, 16);
-}
-
 export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const minDatetime = calcularMinDatetime();
-  const maxDatetime = calcularMaxDatetime();
 
   const {
     register,
@@ -287,12 +270,19 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
           <label htmlFor="fechaEvento" className="mb-1 block text-sm font-medium text-slate-700">
             Fecha de inicio del evento *
           </label>
-          <Input
-            id="fechaEvento"
-            type="datetime-local"
-            min={minDatetime}
-            max={maxDatetime}
-            {...register('fechaEvento')}
+          <Controller
+            control={control}
+            name="fechaEvento"
+            render={({ field }) => (
+              <DateTimeInput
+                id="fechaEvento"
+                etiquetaHora="Hora de inicio del evento"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                invalid={!!errors.fechaEvento}
+              />
+            )}
           />
           {errors.fechaEvento && (
             <p className="mt-1 text-xs text-rose-600" role="alert">{errors.fechaEvento.message}</p>
@@ -303,12 +293,19 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
           <label htmlFor="fechaFin" className="mb-1 block text-sm font-medium text-slate-700">
             Fecha de fin del evento (opcional)
           </label>
-          <Input
-            id="fechaFin"
-            type="datetime-local"
-            min={minDatetime}
-            max={maxDatetime}
-            {...register('fechaFin')}
+          <Controller
+            control={control}
+            name="fechaFin"
+            render={({ field }) => (
+              <DateTimeInput
+                id="fechaFin"
+                etiquetaHora="Hora de fin del evento"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                invalid={!!errors.fechaFin}
+              />
+            )}
           />
           {errors.fechaFin && (
             <p className="mt-1 text-xs text-rose-600" role="alert">{errors.fechaFin.message}</p>
@@ -323,12 +320,19 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
             <label htmlFor="inicioVenta" className="mb-1 block text-sm font-medium text-slate-700">
               Inicio de venta de entradas (opcional)
             </label>
-            <Input
-              id="inicioVenta"
-              type="datetime-local"
-              min={minDatetime}
-              max={maxDatetime}
-              {...register('inicioVenta')}
+            <Controller
+              control={control}
+              name="inicioVenta"
+              render={({ field }) => (
+                <DateTimeInput
+                  id="inicioVenta"
+                  etiquetaHora="Hora de inicio de venta"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={!!errors.inicioVenta}
+                />
+              )}
             />
             {errors.inicioVenta && (
               <p className="mt-1 text-xs text-rose-600" role="alert">{errors.inicioVenta.message}</p>
@@ -339,12 +343,19 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
             <label htmlFor="finVenta" className="mb-1 block text-sm font-medium text-slate-700">
               Fin de venta de entradas (opcional)
             </label>
-            <Input
-              id="finVenta"
-              type="datetime-local"
-              min={minDatetime}
-              max={maxDatetime}
-              {...register('finVenta')}
+            <Controller
+              control={control}
+              name="finVenta"
+              render={({ field }) => (
+                <DateTimeInput
+                  id="finVenta"
+                  etiquetaHora="Hora de fin de venta"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={!!errors.finVenta}
+                />
+              )}
             />
             {errors.finVenta && (
               <p className="mt-1 text-xs text-rose-600" role="alert">{errors.finVenta.message}</p>

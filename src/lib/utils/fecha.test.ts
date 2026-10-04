@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { displayAIso, enmascararFecha, isoADisplay } from './fecha';
+import { displayAIso, enmascararFecha, isoADisplay, localAInstante } from './fecha';
 
 describe('DT-40 · utilidades de fecha dd/mm/aaaa', () => {
   it('convierte ISO a dd/mm/aaaa', () => {
@@ -29,5 +29,18 @@ describe('DT-40 · utilidades de fecha dd/mm/aaaa', () => {
     expect(enmascararFecha('01/10/2026')).toBe('01/10/2026');
     expect(enmascararFecha('011020261234')).toBe('01/10/2026');
     expect(enmascararFecha('ab01')).toBe('01');
+  });
+});
+
+describe('DT-40 · fecha y hora locales hacia la API', () => {
+  it('convierte "aaaa-mm-ddThh:mm" local en un instante ISO con zona', () => {
+    expect(localAInstante('2027-01-15T18:00')).toBe(new Date(2027, 0, 15, 18, 0).toISOString());
+  });
+
+  it('deja igual lo que no es fecha y hora local', () => {
+    expect(localAInstante('2027-01-15T21:00:00.000Z')).toBe('2027-01-15T21:00:00.000Z');
+    expect(localAInstante('')).toBe('');
+    expect(localAInstante(null)).toBeNull();
+    expect(localAInstante(undefined)).toBeUndefined();
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DURACION_POR_DEFECTO_HORAS,
   getEstadoVisual,
   puedeComprar,
   formatPrecio,
@@ -65,6 +66,15 @@ describe('features/eventos/helpers', () => {
       expect(res.key).toBe('EN_CURSO');
       expect(res.label).toBe('En curso');
       expect(res.opacidadChipEntradasReducida).toBe(false);
+    });
+
+    it('sin fechaFin, el evento dura 12 horas como en el backend (DT-33)', () => {
+      const sinFin = { ...baseEvento, fechaFin: null };
+      // 15:00 + 11 h: todavía en curso (las entradas siguen valiendo).
+      expect(getEstadoVisual(sinFin, new Date('2026-11-16T02:00:00Z')).key).toBe('EN_CURSO');
+      // 15:00 + 13 h: terminado.
+      expect(getEstadoVisual(sinFin, new Date('2026-11-16T04:00:00Z')).key).toBe('FINALIZADO');
+      expect(DURACION_POR_DEFECTO_HORAS).toBe(12);
     });
 
     it('retorna AGOTADO si entradasDisponibles === 0 o capacidadMaxima === 0', () => {

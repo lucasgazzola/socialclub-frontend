@@ -112,7 +112,12 @@ describe('EventosPage', () => {
     const inputEntradas = within(dialogo).getByLabelText(/entradas disponibles/i);
     await user.clear(inputEntradas);
     await user.type(inputEntradas, '100');
-    await user.type(within(dialogo).getByLabelText(/fecha de inicio del evento/i), '2027-01-15T18:00');
+    // DT-40: fecha en dd/mm/aaaa y hora en hh:mm, sin depender del idioma del navegador.
+    await user.type(
+      within(dialogo).getByLabelText(/fecha de inicio del evento/i, { selector: '#fechaEvento' }),
+      '15012027',
+    );
+    await user.type(within(dialogo).getByLabelText('Hora de inicio del evento'), '1800');
     await user.click(within(dialogo).getByRole('button', { name: /crear evento/i }));
 
     await waitFor(() => {

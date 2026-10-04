@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api/client';
+import { localAInstante } from '@/lib/utils/fecha';
 import type { Evento, CrearEventoFormData, EventosPaginados } from '../types';
 
 export interface FiltrarEventosParams {
@@ -31,12 +32,23 @@ export const eventosApi = {
   },
 
   async create(formData: CrearEventoFormData): Promise<Evento> {
-    const { data } = await apiClient.post<Evento>('/eventos', formData);
+    const { data } = await apiClient.post<Evento>('/eventos', conInstantes(formData));
     return data;
   },
 
   async update(id: number, formData: Partial<CrearEventoFormData>): Promise<Evento> {
-    const { data } = await apiClient.patch<Evento>(`/eventos/${id}`, formData);
+    const { data } = await apiClient.patch<Evento>(`/eventos/${id}`, conInstantes(formData));
     return data;
   },
 };
+
+/** Las fechas del formulario (hora local) viajan como instantes ISO con zona. */
+function conInstantes<T extends Partial<CrearEventoFormData>>(datos: T): T {
+  return {
+    ...datos,
+    ...(datos.fechaEvento !== undefined ? { fechaEvento: localAInstante(datos.fechaEvento) } : {}),
+    ...(datos.fechaFin !== undefined ? { fechaFin: localAInstante(datos.fechaFin) } : {}),
+    ...(datos.inicioVenta !== undefined ? { inicioVenta: localAInstante(datos.inicioVenta) } : {}),
+    ...(datos.finVenta !== undefined ? { finVenta: localAInstante(datos.finVenta) } : {}),
+  };
+}
