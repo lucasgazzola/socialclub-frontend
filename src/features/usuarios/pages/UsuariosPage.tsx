@@ -9,7 +9,11 @@ import { useUsers } from '../hooks/useUsers';
 import { UsuariosGrid } from '../components/UsuariosGrid';
 import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto } from '../types';
 import { UsuarioFormModal } from './components/UsuarioFormModal';
-import type { UsuarioCreateFormValues, UsuarioEditFormValues } from '../schemas/usuario.schema';
+import {
+  disciplinasIdsParaApi,
+  type UsuarioCreateFormValues,
+  type UsuarioEditFormValues,
+} from '../schemas/usuario.schema';
 
 type FiltroEstado = 'todos' | 'activos' | 'inactivos';
 
@@ -119,7 +123,9 @@ export function UsuariosPage() {
   }
 
   async function handleCreate(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
-    await createUsuario.mutateAsync(values as CreateUsuarioDto);
+    const datos = values as UsuarioCreateFormValues;
+    const payload: CreateUsuarioDto = { ...datos, disciplinasIds: disciplinasIdsParaApi(datos) };
+    await createUsuario.mutateAsync(payload);
   }
 
   async function handleUpdate(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
@@ -135,6 +141,7 @@ export function UsuariosPage() {
 
     const payload: UpdateUsuarioDto = {
       ...resto,
+      disciplinasIds: disciplinasIdsParaApi(values),
     };
 
     await updateUsuario.mutateAsync({ id: usuarioSeleccionado.id, payload });
