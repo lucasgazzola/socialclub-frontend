@@ -25,6 +25,34 @@ function renderPage() {
   );
 }
 
+/** Mock de datos paginados compatibles con EventosPaginados */
+const mockPaginado = {
+  items: [
+    {
+      id: 12,
+      nombre: 'Noche de música',
+      descripcion: 'Cierre de temporada',
+      capacidadMaxima: 100,
+      entradasDisponibles: 25,
+      entradasVendidas: 10,
+      precio: '0',
+      descuentoSocio: 0,
+      requiereEntrada: true,
+      estado: 'PUBLICADO',
+      fechaEvento: '2026-11-20T20:00:00.000Z',
+      inicioVenta: '2026-01-01T00:00:00.000Z',
+      finVenta: '2026-12-31T23:59:59.000Z',
+      lugarAcreditacion: 'Club',
+      imageUrl: 'socialclub-frontend/src/assets/favicon-blanco.png',
+      creadoEn: '2026-08-01T00:00:00.000Z',
+    },
+  ],
+  total: 1,
+  pagina: 1,
+  porPagina: 5,
+  totalPaginas: 1,
+};
+
 describe('EventosPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,16 +62,7 @@ describe('EventosPage', () => {
     } as never);
 
     vi.mocked(useEventos).mockReturnValue({
-      data: [
-        {
-          id: 12,
-          nombre: 'Noche de música',
-          descripcion: 'Cierre de temporada',
-          entradasDisponibles: 25,
-          entradasVendidas: 10,
-          creadoEn: '2026-08-01T00:00:00.000Z',
-        },
-      ],
+      data: mockPaginado,
       isLoading: false,
       isError: false,
     } as never);
@@ -57,8 +76,6 @@ describe('EventosPage', () => {
   it('muestra la acción de comprar entradas y la conecta con la ruta del evento', () => {
     renderPage();
 
-    // El nombre accesible sale del texto del botón: si se renombra la acción,
-    // este caso falla y hay que actualizarlo acá.
     const link = screen.getByRole('link', { name: /comprar entradas/i });
     expect(link).toHaveAttribute('href', '/eventos/12/entradas');
   });
@@ -92,7 +109,10 @@ describe('EventosPage', () => {
 
     const dialogo = await screen.findByRole('dialog');
     await user.type(within(dialogo).getByLabelText(/nombre del evento/i), 'Torneo de Verano');
-    await user.type(within(dialogo).getByLabelText(/entradas disponibles/i), '100');
+    const inputEntradas = within(dialogo).getByLabelText(/entradas disponibles/i);
+    await user.clear(inputEntradas);
+    await user.type(inputEntradas, '100');
+    await user.type(within(dialogo).getByLabelText(/fecha de inicio del evento/i), '2027-01-15T18:00');
     await user.click(within(dialogo).getByRole('button', { name: /crear evento/i }));
 
     await waitFor(() => {
