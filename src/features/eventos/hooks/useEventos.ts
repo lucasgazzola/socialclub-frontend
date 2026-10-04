@@ -63,7 +63,10 @@ export function useCrearEvento() {
     mutationFn: async (
       payload: CrearEventoFormData & { tempPreviewUrl?: string | null },
     ) => {
-      const { tempPreviewUrl, imagenFile, ...apiPayload } = payload;
+      const { tempPreviewUrl } = payload;
+      const apiPayload = { ...payload };
+      delete apiPayload.tempPreviewUrl;
+      delete apiPayload.imagenFile;
       const created = await eventosApi.create(apiPayload);
 
       if (tempPreviewUrl && created.id) {
