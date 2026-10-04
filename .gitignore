@@ -37,3 +37,8 @@ docs/
 jest-results.json
 vitest-results.json
 registro-ejecucion*.csv
+
+# Pruebas E2E (TASK-43): resultados, reporte HTML, videos y traces de cada corrida.
+# La evidencia que se entrega se copia a docs/pruebas/evidencias del backend.
+test-results/
+playwright-report/
