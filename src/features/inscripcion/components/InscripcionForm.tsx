@@ -200,7 +200,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
     }
 
     const docsAEnviar = Object.entries(adjuntos)
-      .filter(([_, a]) => a.habilitado && a.fechaVencimiento)
+      .filter(([, a]) => a.habilitado && a.fechaVencimiento)
       .map(([tipo, a]) => ({
         tipoDocumento: tipo as TipoDocumentacionDisciplina,
         fechaVencimiento: a.fechaVencimiento,
@@ -227,7 +227,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
     if (creada) {
       // Subir archivos binarios si fueron adjuntados
       const conArchivo = Object.entries(adjuntos).filter(
-        ([_, a]) => a.habilitado && a.fechaVencimiento && a.archivo,
+        ([, a]) => a.habilitado && a.fechaVencimiento && a.archivo,
       );
       if (conArchivo.length > 0) {
         for (const [tipo, a] of conArchivo) {
