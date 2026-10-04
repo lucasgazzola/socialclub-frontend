@@ -46,6 +46,17 @@ vi.mock('../hooks/useActivateUsuario', () => ({
   useActivateUsuario: () => ({ mutateAsync: state.activateMutateAsync, isPending: false }),
 }));
 
+vi.mock('@/features/disciplinas/hooks/useDisciplinasActivas', () => ({
+  useDisciplinasActivas: () => ({
+    disciplinas: [
+      { id: 1, nombre: 'Fútbol Mayor' },
+      { id: 4, nombre: 'Natación' },
+    ],
+    cargando: false,
+    error: null,
+  }),
+}));
+
 function buildUsuario(overrides: Partial<Usuario> = {}): Usuario {
   return {
     id: 1,
@@ -211,6 +222,66 @@ describe('UsuariosPage', () => {
         payload: expect.objectContaining({
           roles: expect.arrayContaining(['ADMIN', 'COLABORADOR']),
         }),
+      });
+    });
+  });
+
+  it('DT-42: muestra las disciplinas a cargo de un delegado en la grilla', () => {
+    state.usuarios = [
+      buildUsuario({
+        roles: [{ rol: { id: 3, nombre: 'DELEGADO' } }],
+        disciplinas: [
+          { id: 1, nombre: 'Fútbol Mayor' },
+          { id: 4, nombre: 'Natación' },
+        ],
+      }),
+    ];
+
+    render(<UsuariosPage />);
+
+    expect(screen.getByText('Fútbol Mayor, Natación')).toBeInTheDocument();
+  });
+
+  it('DT-42: al hacer delegado a un usuario envía los ids de sus disciplinas', async () => {
+    state.usuarios = [buildUsuario()];
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole('checkbox', { name: /^admin$/i }));
+    await user.click(screen.getByRole('checkbox', { name: /delegado/i }));
+    await user.click(screen.getByRole('checkbox', { name: 'Natación' }));
+    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+    await waitFor(() => {
+      expect(state.updateMutateAsync).toHaveBeenCalledWith({
+        id: 1,
+        payload: expect.objectContaining({ roles: ['DELEGADO'], disciplinasIds: [4] }),
+      });
+    });
+  });
+
+  it('DT-42: si deja de ser delegado manda la lista de disciplinas vacía', async () => {
+    state.usuarios = [
+      buildUsuario({
+        roles: [{ rol: { id: 3, nombre: 'DELEGADO' } }],
+        disciplinas: [{ id: 4, nombre: 'Natación' }],
+      }),
+    ];
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole('checkbox', { name: /colaborador/i }));
+    await user.click(screen.getByRole('checkbox', { name: /delegado/i }));
+    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+    await waitFor(() => {
+      expect(state.updateMutateAsync).toHaveBeenCalledWith({
+        id: 1,
+        payload: expect.objectContaining({ roles: ['COLABORADOR'], disciplinasIds: [] }),
       });
     });
   });
