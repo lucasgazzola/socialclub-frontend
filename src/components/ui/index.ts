@@ -1,6 +1,7 @@
 export { Button } from './Button';
 export { Input } from './Input';
 export { DateInput } from './DateInput';
+export { DateTimeInput } from './DateTimeInput';
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
 export { Badge } from './Badge';
 export type { BadgeVariant } from './Badge';
