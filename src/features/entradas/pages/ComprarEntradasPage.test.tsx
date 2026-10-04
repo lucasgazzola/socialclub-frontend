@@ -119,6 +119,28 @@ describe('ComprarEntradasPage', () => {
     expect(buyButton).toBeDisabled();
   });
 
+  it('habilita la compra de un evento publicado sin período de venta (como el backend)', () => {
+    mockUseEvento.mockReturnValue({
+      data: {
+        id: 1,
+        nombre: 'Peña sin período de venta',
+        precio: 1500,
+        entradasDisponibles: 10,
+        estado: 'PUBLICADO',
+        requiereEntrada: true,
+        inicioVenta: null,
+        finVenta: null,
+      },
+      isLoading: false,
+      isError: false,
+    });
+
+    renderWithProviders(<ComprarEntradasPage />);
+
+    expect(screen.queryByText('La venta no está habilitada para este evento.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Comprar entradas/i })).toBeEnabled();
+  });
+
   it('permite cambiar cantidad y navegar hacia atrás', async () => {
     const user = userEvent.setup();
     mockUseEvento.mockReturnValue({

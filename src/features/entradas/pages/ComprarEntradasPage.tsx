@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button, Card, Input, Spinner } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useEvento } from '@/features/eventos/hooks/useEventos';
+import { ventaAbierta } from '@/features/eventos/helpers';
 import { MockPasarelaEntradasModal } from '../components/MockPasarelaEntradasModal';
 import { QRCode } from '../components/QRCode';
 import { useComprarEntradas } from '../hooks/useEntradas';
@@ -31,7 +32,8 @@ export function ComprarEntradasPage() {
    * Si no hay evento, se asume 1.
    */
   const maxCantidad = evento?.entradasDisponibles ?? 0;
-  const ventaHabilitada = evento?.estado === 'PUBLICADO' && !!evento.inicioVenta && !!evento.finVenta && Date.now() >= Date.parse(evento.inicioVenta) && Date.now() <= Date.parse(evento.finVenta);
+  // El período de venta es opcional: sin él, la venta está abierta (como en el backend).
+  const ventaHabilitada = !!evento && ventaAbierta(evento);
 
   async function confirmarPago(data: MockPagoFormData) {
     try {
