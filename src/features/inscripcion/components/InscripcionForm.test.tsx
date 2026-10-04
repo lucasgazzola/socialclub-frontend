@@ -23,7 +23,15 @@ vi.mock('../../disciplinas/hooks/useDisciplinasActivas', () => ({
   useDisciplinasActivas: () => ({
     cargando: false,
     disciplinas: [
-      { id: 1, nombre: 'Fútbol', activo: true, categorias: [{ id: 7, nombre: 'Sub-15', activo: true }] },
+      {
+        id: 1,
+        nombre: 'Fútbol',
+        activo: true,
+        categorias: [
+          { id: 7, nombre: 'Sub-15', activo: true, genero: 'FEMENINO', edadMinima: 13, edadMaxima: 15 },
+          { id: 8, nombre: 'Veteranos', activo: true, genero: 'MASCULINO', edadMinima: 40, edadMaxima: null },
+        ],
+      },
       { id: 2, nombre: 'Ajedrez', activo: true, categorias: [] },
     ],
   }),
@@ -125,6 +133,8 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     const user = userEvent.setup();
     renderForm(<InscripcionForm />);
 
+    await user.type(screen.getByLabelText('Fecha de nacimiento'), '03052012');
+    await user.selectOptions(screen.getByLabelText('Género'), 'FEMENINO');
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
     expect(obtenerRequisitos).not.toHaveBeenCalled(); // falta la categoría
     await user.selectOptions(screen.getByLabelText('Categoría'), '7');
@@ -155,18 +165,15 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
 
     await user.type(screen.getByLabelText('DNI'), '50111222');
 
-    expect(await screen.findByText(/se lo inscribe en otra disciplina con sus datos/)).toBeInTheDocument();
-    expect(screen.getByText('Gómez, Lola')).toBeInTheDocument();
+    expect(await screen.findByText('Gómez, Lola')).toBeInTheDocument();
+    expect(screen.getByText('DNI 50111222')).toBeInTheDocument();
+    expect(screen.getByText('Fecha de nacimiento: 03/05/2012')).toBeInTheDocument();
     // Solo se busca el DNI completo, no el prefijo de 7 dígitos mientras se tipea.
     expect(buscarMock).toHaveBeenCalledTimes(1);
     expect(buscarMock).toHaveBeenCalledWith('50111222');
-    await waitFor(() => {
-      expect(screen.getByLabelText('Nombre')).toHaveValue('Lola');
-      expect(screen.getByLabelText('Fecha de nacimiento')).toHaveValue('03/05/2012');
-    });
-    expect(screen.getByLabelText('Nombre')).toBeDisabled();
-    // Lo que le falta (género) se puede completar.
-    expect(screen.getByLabelText('Género')).toBeEnabled();
+    // Para participante existente, se muestran sus datos en la barra azul y no los campos individuales
+    expect(screen.queryByLabelText('Nombre')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Apellido')).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText('Disciplina'), '2');
     await user.click(screen.getByRole('button', { name: 'Inscribir' }));
@@ -183,6 +190,8 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.type(screen.getByLabelText('DNI'), '50111222');
     await user.type(screen.getByLabelText('Nombre'), 'Lola');
     await user.type(screen.getByLabelText('Apellido'), 'Gómez');
+    await user.type(screen.getByLabelText('Fecha de nacimiento'), '03052012');
+    await user.selectOptions(screen.getByLabelText('Género'), 'FEMENINO');
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
     await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
 
@@ -206,7 +215,8 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     };
     renderForm(<InscripcionForm participante={participante} onCargarDocumentacion={onCargarDocumentacion} />);
 
-    expect(screen.getByText('Gómez, Lola · DNI 50111222')).toBeInTheDocument();
+    expect(screen.getByText('Gómez, Lola')).toBeInTheDocument();
+    expect(screen.getByText('DNI 50111222')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
     await user.selectOptions(screen.getByLabelText('Categoría'), '7');
     await user.click(screen.getByRole('button', { name: 'Inscribir' }));
@@ -242,10 +252,12 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     renderForm(<InscripcionForm />);
 
     await user.type(screen.getByLabelText('DNI'), '50111222');
+    expect(await screen.findByText('Gómez, Lola')).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: 'Usar otro DNI' }));
 
-    expect(screen.queryByText(/se lo inscribe en otra disciplina/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Gómez, Lola')).not.toBeInTheDocument();
     expect(screen.getByLabelText('DNI')).toHaveValue('');
+    expect(screen.getByLabelText('Nombre')).toBeInTheDocument();
     expect(screen.getByLabelText('Nombre')).toBeEnabled();
   });
 
@@ -277,13 +289,17 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
     await user.selectOptions(screen.getByLabelText('Categoría'), '7');
 
-    const checkbox = await screen.findByRole('checkbox', { name: /Adjuntar en esta operación/ });
-    expect(checkbox).toBeInTheDocument();
-    await user.click(checkbox);
+    const btnCargar = await screen.findByRole('button', { name: 'Cargar' });
+    expect(btnCargar).toBeInTheDocument();
+    await user.click(btnCargar);
 
     const inputVencimiento = screen.getByLabelText(/Fecha de vencimiento/);
     expect(inputVencimiento).toBeInTheDocument();
     await user.type(inputVencimiento, '31122026');
+
+    const file = new File(['contenido'], 'certificado.pdf', { type: 'application/pdf' });
+    const inputFile = screen.getByLabelText(/Archivo para Certificado médico/);
+    await user.upload(inputFile, file);
 
     await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
 
@@ -329,8 +345,28 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
 
     expect(await screen.findByText('Toda la documentación requerida fue presentada.')).toBeInTheDocument();
-    expect(screen.getByText(/Cuota deportiva generada/)).toBeInTheDocument();
+    expect(screen.getByText(/Cuota deportiva/)).toBeInTheDocument();
     expect(screen.getByText('$12.000')).toBeInTheDocument();
     expect(screen.getByText(/20% de descuento por ser socio/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Nueva inscripción' })).not.toBeInTheDocument();
+  });
+
+  it('no muestra como opción las categorías que no cumplen restricciones de edad o género', async () => {
+    const user = userEvent.setup();
+    renderForm(<InscripcionForm />);
+
+    await user.type(screen.getByLabelText('DNI'), '50111222');
+    await user.type(screen.getByLabelText('Nombre'), 'Lola');
+    await user.type(screen.getByLabelText('Apellido'), 'Gómez');
+    // Lola: 14 años (2012) y FEMENINO
+    await user.type(screen.getByLabelText('Fecha de nacimiento'), '03052012');
+    await user.selectOptions(screen.getByLabelText('Género'), 'FEMENINO');
+    await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
+
+    const selectCategoria = screen.getByLabelText('Categoría');
+    expect(within(selectCategoria).getByRole('option', { name: /Sub-15/ })).toBeInTheDocument();
+    // 'Veteranos' (MASCULINO, min 40 años) no debe aparecer
+    expect(within(selectCategoria).queryByRole('option', { name: /Veteranos/ })).not.toBeInTheDocument();
   });
 });
