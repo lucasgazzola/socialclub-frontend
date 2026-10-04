@@ -44,4 +44,12 @@ describe('US-33 · auditoriaFiltrosSchema', () => {
     expect(resDesde.success).toBe(true);
     expect(resHasta.success).toBe(true);
   });
+
+  it('permite valores válidos de período (todo, 1h, 24h, 7d, personalizado)', () => {
+    const periodos = ['todo', '1h', '24h', '7d', 'personalizado'] as const;
+    for (const periodo of periodos) {
+      const res = auditoriaFiltrosSchema.safeParse({ periodo });
+      expect(res.success).toBe(true);
+    }
+  });
 });

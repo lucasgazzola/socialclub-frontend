@@ -1,9 +1,18 @@
 import { z } from 'zod';
 
+export const periodoAuditoriaFiltroSchema = z.enum([
+  'todo',
+  '1h',
+  '24h',
+  '7d',
+  'personalizado',
+]);
+
 export const auditoriaFiltrosSchema = z
   .object({
     accion: z.string().optional(),
     entidad: z.string().optional(),
+    periodo: periodoAuditoriaFiltroSchema.optional(),
     fechaDesde: z.string().optional(),
     fechaHasta: z.string().optional(),
   })

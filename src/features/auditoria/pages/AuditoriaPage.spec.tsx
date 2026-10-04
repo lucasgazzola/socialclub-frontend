@@ -26,7 +26,7 @@ const MOCK_DATA = {
   ],
   total: 45,
   pagina: 1,
-  porPagina: 20,
+  porPagina: 10,
 };
 
 describe('US-33 · AuditoriaPage', () => {
@@ -50,8 +50,10 @@ describe('US-33 · AuditoriaPage', () => {
       screen.getByText('Registro inalterable de todas las operaciones del sistema.'),
     ).toBeInTheDocument();
     expect(screen.getByText('Socio')).toBeInTheDocument();
-    expect(screen.getByText('45 registro(s)')).toBeInTheDocument();
-    expect(screen.getByText(/página 1 de 3/i)).toBeInTheDocument();
+    expect(screen.getByText(/mostrando 1-10 de 45 resultados/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Página 1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Página 2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Página 3' })).toBeInTheDocument();
   });
 
   it('permite avanzar a la siguiente página y deshabilita botón anterior en la primera página', () => {
@@ -76,12 +78,12 @@ describe('US-33 · AuditoriaPage', () => {
     expect(auditoriaHook.useAuditoria).toHaveBeenLastCalledWith(
       expect.objectContaining({
         pagina: 2,
-        porPagina: 20,
+        porPagina: 10,
       }),
     );
   });
 
-  it('aplica filtros y reinicia la paginación a la página 1', async () => {
+  it('aplica filtros reactivamente y reinicia la paginación a la página 1', async () => {
     vi.mocked(auditoriaHook.useAuditoria).mockReturnValue({
       data: MOCK_DATA,
       isLoading: false,
@@ -97,13 +99,34 @@ describe('US-33 · AuditoriaPage', () => {
       target: { value: 'Disciplina' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /filtrar/i }));
-
     await waitFor(() => {
       expect(auditoriaHook.useAuditoria).toHaveBeenLastCalledWith(
         expect.objectContaining({
           accion: 'BAJA',
           entidad: 'Disciplina',
+          pagina: 1,
+        }),
+      );
+    });
+  });
+
+  it('aplica filtro por período rápido al seleccionar pestaña', async () => {
+    vi.mocked(auditoriaHook.useAuditoria).mockReturnValue({
+      data: MOCK_DATA,
+      isLoading: false,
+      isError: false,
+      error: null,
+      isFetching: false,
+    } as any);
+
+    render(<AuditoriaPage />);
+
+    fireEvent.click(screen.getByRole('tab', { name: /últimas 24h/i }));
+
+    await waitFor(() => {
+      expect(auditoriaHook.useAuditoria).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          periodo: '24h',
           pagina: 1,
         }),
       );
