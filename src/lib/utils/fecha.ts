@@ -41,3 +41,9 @@ export function localAInstante<T extends string | null | undefined>(valor: T): T
   const fecha = new Date(valor);
   return Number.isNaN(fecha.getTime()) ? valor : fecha.toISOString();
 }
+
+/** Máscara hh:mm (24 h): solo dígitos y los dos puntos automáticos. */
+export function enmascararHora(texto: string): string {
+  const digitos = texto.replace(/\D/g, '').slice(0, 4);
+  return digitos.length <= 2 ? digitos : `${digitos.slice(0, 2)}:${digitos.slice(2)}`;
+}
