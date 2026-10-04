@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { cn } from '@/lib/utils/cn';
+import { enmascararHora } from '@/lib/utils/fecha';
 import { DateInput } from './DateInput';
 
 interface DateTimeInputProps {
@@ -18,12 +19,6 @@ interface DateTimeInputProps {
 }
 
 const HORA = /^([01]\d|2[0-3]):([0-5]\d)$/;
-
-/** Máscara hh:mm: solo dígitos y los dos puntos automáticos. */
-export function enmascararHora(texto: string): string {
-  const digitos = texto.replace(/\D/g, '').slice(0, 4);
-  return digitos.length <= 2 ? digitos : `${digitos.slice(0, 2)}:${digitos.slice(2)}`;
-}
 
 function separar(valor: string | null | undefined) {
   const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(valor ?? '');
