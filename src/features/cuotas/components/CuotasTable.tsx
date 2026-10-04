@@ -1,4 +1,4 @@
-import { Pencil } from 'lucide-react';
+import { Pencil, Power, PowerOff } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import type { ConfiguracionCuotaDeportiva } from '../types';
 
@@ -14,10 +14,12 @@ const formatoPeriodo = (periodo: string) => periodo.split('-').reverse().join('/
 interface CuotasTableProps {
   cuotas: ConfiguracionCuotaDeportiva[];
   onEditar: (cuota: ConfiguracionCuotaDeportiva) => void;
+  /** DT-05: activar o desactivar la tarifa. Sin esta función no se muestra la acción. */
+  onCambiarEstado?: (cuota: ConfiguracionCuotaDeportiva) => void;
 }
 
 /** US-20 · TASK-33 — Tarifas de la cuota deportiva (componente "tonto"). */
-export function CuotasTable({ cuotas, onEditar }: CuotasTableProps) {
+export function CuotasTable({ cuotas, onEditar, onCambiarEstado }: CuotasTableProps) {
   if (cuotas.length === 0) {
     return (
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
@@ -68,11 +70,27 @@ export function CuotasTable({ cuotas, onEditar }: CuotasTableProps) {
                 <td className="px-5 py-3.5">
                   <Badge variant={cuota.activo ? 'success' : 'secondary'}>{cuota.activo ? 'Activa' : 'Inactiva'}</Badge>
                 </td>
-                <td className="px-5 py-3.5 text-right">
-                  <Button variant="ghost" size="sm" onClick={() => onEditar(cuota)}>
-                    <Pencil size={14} />
-                    Editar
-                  </Button>
+                <td className="px-5 py-3.5">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => onEditar(cuota)}>
+                      <Pencil size={14} />
+                      Editar
+                    </Button>
+                    {onCambiarEstado && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onCambiarEstado(cuota)}
+                        className={cuota.activo ? 'text-rose-700 hover:bg-rose-50' : 'text-emerald-700 hover:bg-emerald-50'}
+                        aria-label={`${cuota.activo ? 'Desactivar' : 'Activar'} la tarifa de ${cuota.disciplina.nombre}${
+                          cuota.categoriaDisciplina ? ` · ${cuota.categoriaDisciplina.nombre}` : ''
+                        } desde ${formatoPeriodo(cuota.periodoAplicacion)}`}
+                      >
+                        {cuota.activo ? <PowerOff size={14} /> : <Power size={14} />}
+                        {cuota.activo ? 'Desactivar' : 'Activar'}
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

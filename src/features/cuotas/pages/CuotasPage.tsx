@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Filter, Pencil, Plus, Wallet } from 'lucide-react';
-import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
+import { Button, ConfirmDialog, Input, Modal, Select, Spinner } from '@/components/ui';
 import { CuotaForm } from '../components/CuotaForm';
 import { CuotasTable } from '../components/CuotasTable';
 import { useActualizarCuota } from '../hooks/useActualizarCuota';
@@ -26,6 +26,8 @@ export function CuotasPage() {
   const [periodoInput, setPeriodoInput] = useState('');
   const [periodo, setPeriodo] = useState<string | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
+  // DT-05: tarifa a activar o desactivar (pide confirmación).
+  const [aCambiarEstado, setACambiarEstado] = useState<ConfiguracionCuotaDeportiva | null>(null);
 
   const { data: disciplinas = [], isLoading: cargandoDisciplinas } = useDisciplinas();
   const categorias = disciplinas.find((d) => d.id === disciplinaId)?.categorias ?? [];
@@ -48,6 +50,21 @@ export function CuotasPage() {
   function abrirCreacion() {
     setCuotaEditando(null);
     setModoFormulario('crear');
+  }
+
+  async function confirmarCambioDeEstado() {
+    if (!aCambiarEstado) return;
+    const activar = !aCambiarEstado.activo;
+    try {
+      await actualizarCuota.mutateAsync({
+        id: aCambiarEstado.id,
+        payload: { activo: activar },
+        mensaje: activar ? 'Tarifa activada' : 'Tarifa desactivada',
+      });
+      setACambiarEstado(null);
+    } catch {
+      // El hook ya informa el error; el diálogo queda abierto para reintentar.
+    }
   }
 
   function abrirEdicion(cuota: ConfiguracionCuotaDeportiva) {
@@ -187,7 +204,11 @@ export function CuotasPage() {
         </div>
       ) : (
         <>
-          <CuotasTable cuotas={data?.items ?? []} onEditar={abrirEdicion} />
+          <CuotasTable
+            cuotas={data?.items ?? []}
+            onEditar={abrirEdicion}
+            onCambiarEstado={setACambiarEstado}
+          />
 
           {hayResultados && (
             <div className="flex items-center justify-between text-sm text-slate-500">
@@ -220,6 +241,35 @@ export function CuotasPage() {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={aCambiarEstado !== null}
+        variant={aCambiarEstado?.activo ? 'danger' : 'primary'}
+        title={aCambiarEstado?.activo ? 'Desactivar tarifa' : 'Activar tarifa'}
+        description={
+          aCambiarEstado
+            ? `${aCambiarEstado.disciplina.nombre}${
+                aCambiarEstado.categoriaDisciplina ? ` · ${aCambiarEstado.categoriaDisciplina.nombre}` : ' · tarifa base'
+              }, rige desde ${aCambiarEstado.periodoAplicacion.split('-').reverse().join('/')}.`
+            : undefined
+        }
+        confirmLabel={aCambiarEstado?.activo ? 'Desactivar' : 'Activar'}
+        loading={actualizarCuota.isPending}
+        onConfirm={() => void confirmarCambioDeEstado()}
+        onCancel={() => setACambiarEstado(null)}
+      >
+        {aCambiarEstado?.activo ? (
+          <p className="text-sm text-slate-600">
+            Mientras esté inactiva no se usa para calcular la cuota: rige la tarifa anterior del mismo
+            alcance o, si es de una categoría, la de la disciplina. Si no hay ninguna, esos meses
+            quedan sin tarifa.
+          </p>
+        ) : (
+          <p className="text-sm text-slate-600">
+            Vuelve a usarse para calcular la cuota desde el período en que rige.
+          </p>
+        )}
+      </ConfirmDialog>
     </div>
   );
 }
