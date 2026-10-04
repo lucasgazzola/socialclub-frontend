@@ -15,6 +15,8 @@ export interface Usuario {
     creadoEn: string;
     actualizadoEn?: string;
     roles: { rol: Rol }[];
+    /** DT-42: disciplinas a cargo (solo delegados). */
+    disciplinas?: { id: number; nombre: string }[];
 }
 
 export interface CreateUsuarioDto {
@@ -24,6 +26,8 @@ export interface CreateUsuarioDto {
     nombre: string;
     apellido: string;
     roles: string[];
+    /** DT-42: disciplinas a cargo; solo para el rol DELEGADO. */
+    disciplinasIds?: number[];
 }
 
 export interface UpdateUsuarioDto {
@@ -34,6 +38,7 @@ export interface UpdateUsuarioDto {
     password?: string;
     currentPassword?: string;
     roles?: string[];
+    disciplinasIds?: number[];
     activo?: boolean;
 }
 
@@ -43,4 +48,4 @@ export interface GetUsuariosParams {
     estado?: 'todos' | 'activos' | 'inactivos';
     pagina?: number;
     porPagina?: number;
-}
+}

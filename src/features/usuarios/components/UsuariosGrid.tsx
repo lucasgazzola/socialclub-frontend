@@ -106,6 +106,12 @@ export function UsuariosGrid({
                         ))
                       )}
                     </div>
+                    {/* DT-42: disciplinas a cargo del delegado. */}
+                    {usuario.disciplinas && usuario.disciplinas.length > 0 && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {usuario.disciplinas.map((d) => d.nombre).join(', ')}
+                      </p>
+                    )}
                   </td>
                   <td className="px-5 py-3.5">
                     <Badge variant={usuario.activo ? 'success' : 'danger'}>
