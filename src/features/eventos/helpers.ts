@@ -85,6 +85,14 @@ export function puedeComprar(
 }
 
 /**
+ * Si el evento no informa `fechaFin`, dura estas horas desde su inicio. Es la
+ * misma regla que usa el backend para vencer las entradas (DT-33,
+ * `src/eventos/fin-del-evento.ts`): así la tarjeta no muestra «Finalizado»
+ * mientras las entradas todavía sirven en la puerta.
+ */
+export const DURACION_POR_DEFECTO_HORAS = 12;
+
+/**
  * Función pura que calcula el estado visual de un evento.
  */
 export function getEstadoVisual(evento: Evento, ahoraDate = new Date()): EstadoVisualConfig {
@@ -93,7 +101,9 @@ export function getEstadoVisual(evento: Evento, ahoraDate = new Date()): EstadoV
   }
 
   const fechaEventoDate = new Date(evento.fechaEvento);
-  const fechaFinDate = evento.fechaFin ? new Date(evento.fechaFin) : fechaEventoDate;
+  const fechaFinDate = evento.fechaFin
+    ? new Date(evento.fechaFin)
+    : new Date(fechaEventoDate.getTime() + DURACION_POR_DEFECTO_HORAS * 60 * 60 * 1000);
 
   if (evento.estado === 'FINALIZADO' || ahoraDate > fechaFinDate) {
     return ESTADOS_VISUALES_CONFIG.FINALIZADO;
