@@ -124,14 +124,13 @@ describe('ValidarAccesoPage', () => {
   });
 
   it('shows error banner when ticket was already used (409 Conflict)', async () => {
-    const mockConflictError = {
-      response: {
-        status: 409,
-        data: {
-          message: 'Entrada ya utilizada para el evento "Fiesta de Fin de Año". Posible intento de reingreso no autorizado.',
-        },
-      },
-    };
+    // Forma real: el interceptor de apiClient rechaza con Error + status.
+    const mockConflictError = Object.assign(
+      new Error(
+        'Entrada ya utilizada para el evento "Fiesta de Fin de Año". Posible intento de reingreso no autorizado.',
+      ),
+      { status: 409 },
+    );
     vi.mocked(entradasApi.validarEntrada).mockRejectedValueOnce(mockConflictError);
 
     renderComponent();
@@ -146,6 +145,24 @@ describe('ValidarAccesoPage', () => {
     await waitFor(() => {
       expect(screen.getByText('¡ENTRADA YA UTILIZADA!')).toBeInTheDocument();
       expect(screen.getByText('⛔ Posible intento de reingreso no autorizado.')).toBeInTheDocument();
+    });
+  });
+
+  it('DT-33: muestra ENTRADA EXPIRADA cuando el evento ya terminó (400 «expirada»)', async () => {
+    vi.mocked(entradasApi.validarEntrada).mockRejectedValueOnce(
+      Object.assign(new Error('Entrada expirada para el evento "Fiesta de Fin de Año".'), { status: 400 }),
+    );
+
+    renderComponent();
+
+    fireEvent.click(screen.getByText('Ingreso Manual / Archivo'));
+    fireEvent.change(screen.getByLabelText(/Token UUID de la Entrada/i), {
+      target: { value: '550e8400-e29b-41d4-a716-446655440000' },
+    });
+    fireEvent.click(screen.getByText('Validar Token Manualmente'));
+
+    await waitFor(() => {
+      expect(screen.getByText('¡ENTRADA EXPIRADA!')).toBeInTheDocument();
     });
   });
 
