@@ -53,17 +53,18 @@ export function ValidarAccesoPage() {
   }, [searchInput]);
 
   // Hook de eventos — refetch automático cuando cambia searchQuery
-  const { data: eventos, isLoading: isLoadingEventos } = useEventos(
+  const { data: eventosPaginados, isLoading: isLoadingEventos } = useEventos(
     searchQuery ? { search: searchQuery } : undefined
   );
+  const eventosItems = eventosPaginados?.items ?? [];
 
   // Filtro de categoría en front (mockeado, sin campo real en backend todavía)
   const eventosFiltrados = categoriaFiltro
-    ? eventos?.filter((evt) =>
+    ? eventosItems.filter((evt) =>
         evt.nombre.toLowerCase().includes(categoriaFiltro) ||
         (evt.descripcion ?? '').toLowerCase().includes(categoriaFiltro)
       )
-    : eventos;
+    : eventosItems;
 
   useEffect(() => {
     if (routeEventoId) {
@@ -107,7 +108,7 @@ export function ValidarAccesoPage() {
 
       if (selectedEventoId && Number(selectedEventoId) !== eventoEscaneadoId) {
         scanStatus = 'EVENTO_INCORRECTO';
-        const eventoSeleccionadoNombre = eventos?.find((e) => e.id === Number(selectedEventoId))?.nombre || 'evento seleccionado';
+        const eventoSeleccionadoNombre = eventosItems.find((e) => e.id === Number(selectedEventoId))?.nombre || 'evento seleccionado';
         mensajeStatus = `Entrada para "${eventoEscaneadoNombre}", pero se está controlando "${eventoSeleccionadoNombre}".`;
       }
 
@@ -138,7 +139,7 @@ export function ValidarAccesoPage() {
       }
 
       const currentEvtId = selectedEventoId ? Number(selectedEventoId) : undefined;
-      const currentEvtNombre = currentEvtId ? eventos?.find((e) => e.id === currentEvtId)?.nombre : undefined;
+      const currentEvtNombre = currentEvtId ? eventosItems.find((e) => e.id === currentEvtId)?.nombre : undefined;
 
       const item: ScanHistoryItem = {
         id: Math.random().toString(36).substring(2, 9),
@@ -160,7 +161,7 @@ export function ValidarAccesoPage() {
   };
 
   const eventoSeleccionado = selectedEventoId
-    ? eventos?.find((e) => e.id === Number(selectedEventoId))
+    ? eventosItems.find((e) => e.id === Number(selectedEventoId))
     : null;
 
   // Filtrar historial según el evento seleccionado
@@ -178,9 +179,9 @@ export function ValidarAccesoPage() {
   // Resetear página cuando cambian los filtros
   useEffect(() => { setCurrentPage(1); }, [searchQuery, categoriaFiltro]);
 
-  const totalEventos = eventosFiltrados?.length ?? 0;
+  const totalEventos = eventosFiltrados.length;
   const totalPages = Math.ceil(totalEventos / PAGE_SIZE);
-  const eventosPaginados = eventosFiltrados?.slice(
+  const eventosPaginadosLocal = eventosFiltrados.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE,
   );
@@ -250,7 +251,7 @@ export function ValidarAccesoPage() {
         ) : (
           <>
             <div className="rounded-2xl border border-slate-200 bg-white shadow-xs divide-y divide-slate-100 overflow-hidden">
-              {eventosPaginados?.map((evt) => (
+              {eventosPaginadosLocal?.map((evt) => (
                 <div
                   key={evt.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 hover:bg-slate-50/80 transition-colors gap-4 cursor-pointer"
