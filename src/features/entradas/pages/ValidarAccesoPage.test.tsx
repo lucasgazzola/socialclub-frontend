@@ -22,7 +22,17 @@ const EVENTO = {
 };
 
 vi.mock('@/features/eventos/hooks/useEventos', () => ({
-  useEventos: () => ({ data: [EVENTO], isLoading: false, isError: false }),
+  useEventos: () => ({
+    data: {
+      items: [EVENTO],
+      total: 1,
+      pagina: 1,
+      porPagina: 10,
+      totalPaginas: 1,
+    },
+    isLoading: false,
+    isError: false,
+  }),
   eventosKeys: { all: ['eventos'], list: () => ['eventos', 'list'] },
 }));
 
@@ -169,4 +179,3 @@ describe('ValidarAccesoPage', () => {
     });
   });
 });
-

@@ -1,6 +1,7 @@
 import { BadgeCheck, BadgeAlertIcon, UserPlus, Edit3 } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import { UsuarioForm } from '../../components/UsuarioForm';
+import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import type { Usuario } from '../../types';
 import type {
   UsuarioCreateFormValues,
@@ -19,6 +20,8 @@ interface UsuarioFormModalProps {
 
 export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: UsuarioFormModalProps) {
   const esEdicion = modo === 'editar';
+  // DT-42: opciones de disciplinas a cargo de un delegado.
+  const { disciplinas } = useDisciplinasActivas();
 
   async function handleSubmit(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
     await onSubmit(values);
@@ -65,6 +68,7 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
           mostrarPasswordField={!esEdicion}
           onSubmit={handleSubmit}
           onCancel={onClose}
+          disciplinas={disciplinas}
         />
 
       </div>

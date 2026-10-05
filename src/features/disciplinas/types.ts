@@ -108,12 +108,18 @@ export interface CategoriaDisciplinaOption {
   id: number;
   nombre: string;
   activo: boolean;
+  genero?: GeneroDisciplina | null;
+  edadMinima?: number | null;
+  edadMaxima?: number | null;
 }
 
 export interface DisciplinaOption {
   id: number;
   nombre: string;
   activo: boolean;
+  genero?: GeneroDisciplina | null;
+  edadMinima?: number | null;
+  edadMaxima?: number | null;
   categorias: CategoriaDisciplinaOption[];
 }
 
@@ -209,15 +215,58 @@ export function etiquetaPlazo(dias: number): string {
 }
 
 /**
+ * Verifica si un participante cumple con las restricciones efectivas de una categoría.
+ * Solo devuelve true si el participante cumple los requisitos de género y edad de la categoría.
+ */
+export function categoriaCumpleRestricciones(
+  categoria: CategoriaDisciplinaOption,
+  disciplina?: { genero?: GeneroDisciplina | null; edadMinima?: number | null; edadMaxima?: number | null } | null,
+  participante?: { fechaNacimiento?: string | null; genero?: GeneroDisciplina | null } | null,
+  anio = new Date().getFullYear(),
+): boolean {
+  const generoEfectivo = categoria.genero ?? disciplina?.genero ?? null;
+  const edadMinima = categoria.edadMinima ?? disciplina?.edadMinima ?? null;
+  const edadMaxima = categoria.edadMaxima ?? disciplina?.edadMaxima ?? null;
+
+  // 1. Requisito de género: si la categoría o disciplina restringe género
+  if (generoEfectivo) {
+    if (!participante?.genero || participante.genero !== generoEfectivo) {
+      return false;
+    }
+  }
+
+  // 2. Requisito de edad: si la categoría o disciplina restringe edad mínima o máxima
+  if (edadMinima !== null || edadMaxima !== null) {
+    if (!participante?.fechaNacimiento) {
+      return false;
+    }
+    const soloAnio = parseInt(participante.fechaNacimiento.slice(0, 4), 10);
+    if (isNaN(soloAnio)) {
+      return false;
+    }
+    const edad = anio - soloAnio;
+    if (edadMinima !== null && edad < edadMinima) return false;
+    if (edadMaxima !== null && edad > edadMaxima) return false;
+  }
+
+  return true;
+}
+
+/**
  * US-50: una categoría dada de baja no se ofrece para nuevas inscripciones.
  * Si la inscripción ya estaba en una categoría inactiva, se la conserva en la
  * lista para no perderla al editar.
+ * Además, solo aparecen las categorías cuyos requisitos son cumplidos por el participante.
  */
 export function categoriasDisponibles(
-  disciplina: { categorias: CategoriaDisciplinaOption[] } | undefined,
+  disciplina: { categorias: CategoriaDisciplinaOption[]; genero?: GeneroDisciplina | null; edadMinima?: number | null; edadMaxima?: number | null } | undefined,
   categoriaActualId?: number | null,
+  participante?: { fechaNacimiento?: string | null; genero?: GeneroDisciplina | null } | null,
 ): CategoriaDisciplinaOption[] {
-  return (disciplina?.categorias ?? []).filter((c) => c.activo || c.id === categoriaActualId);
+  const activas = (disciplina?.categorias ?? []).filter((c) => c.activo || c.id === categoriaActualId);
+  return activas.filter(
+    (c) => c.id === categoriaActualId || categoriaCumpleRestricciones(c, disciplina, participante),
+  );
 }
 
 // ─── Filtros ──────────────────────────────────────────────────────────────────

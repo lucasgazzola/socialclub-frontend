@@ -12,7 +12,7 @@
  * ese acoplamiento se filtre en el contrato del backend.
  */
 
-import type { GeneroDisciplina, Restricciones } from '@/features/disciplinas/types';
+import type { GeneroDisciplina, Restricciones, TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
 import type { EstadoDeInscripcion, EstadoDocumentalInscripcion, EstadoHabilitacion } from '@/features/documentacion/types';
 
 // ── Persona / participante ──────────────────────────────────────────
@@ -36,6 +36,22 @@ export interface ParticipanteEncontrado {
   inscripciones: InscripcionResumida[];
 }
 
+export interface DocumentoAdjuntoPayload {
+  tipoDocumento: TipoDocumentacionDisciplina;
+  fechaVencimiento: string;
+  tipo?: string;
+  archivo?: File;
+}
+
+export interface CuotaGeneradaInfo {
+  periodo: string;
+  monto: number | null;
+  montoTarifa: number | null;
+  descuentoSocioPorcentaje: number;
+  esSocio: boolean;
+  sinTarifa: boolean;
+}
+
 export interface CrearInscripcionPayload {
   personaId?: number;
   nombre?: string;
@@ -47,6 +63,11 @@ export interface CrearInscripcionPayload {
   telefono?: string;
   disciplinaId: number;
   categoriaDisciplinaId?: number;
+  documentos?: Array<{
+    tipoDocumento: TipoDocumentacionDisciplina;
+    fechaVencimiento: string;
+    tipo?: string;
+  }>;
 }
 
 export interface InscripcionCreada {
@@ -54,6 +75,8 @@ export interface InscripcionCreada {
   inscripcion: { id: number; disciplinaId: number; categoriaDisciplinaId: number | null };
   /** TASK-31: qué documentación falta y hasta cuándo (US-05). */
   estadoDocumental?: EstadoDocumentalInscripcion | null;
+  /** US-05 Criterio 10: cuota generada automáticamente para la disciplina en el período actual */
+  cuotaGenerada?: CuotaGeneradaInfo | null;
 }
 
 /** US-05: lo que se le va a exigir a una inscripción antes de confirmarla. */

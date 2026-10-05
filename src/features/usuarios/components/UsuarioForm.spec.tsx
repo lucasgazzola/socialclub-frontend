@@ -145,4 +145,80 @@ describe('UsuarioForm', () => {
       );
     });
   });
+
+  describe('DT-42: disciplinas a cargo del delegado', () => {
+    const disciplinas = [
+      { id: 1, nombre: 'Fútbol Mayor' },
+      { id: 4, nombre: 'Natación' },
+    ];
+    const delegado = {
+      id: 7,
+      dni: '30111222',
+      email: 'delegado@socialclub.local',
+      nombre: 'Diego',
+      apellido: 'Delegado',
+      activo: true,
+      creadoEn: '2026-01-15T10:00:00.000Z',
+      roles: [{ rol: { id: 3, nombre: 'DELEGADO' } }],
+      disciplinas: [{ id: 4, nombre: 'Natación' }],
+    };
+
+    it('ofrece el rol DELEGADO y solo entonces muestra las disciplinas', async () => {
+      const user = userEvent.setup();
+      render(<UsuarioForm modo="crear" onSubmit={vi.fn()} disciplinas={disciplinas} />);
+
+      expect(screen.queryByText(/disciplinas a cargo/i)).not.toBeInTheDocument();
+      await user.click(screen.getByRole('checkbox', { name: /delegado/i }));
+
+      expect(screen.getByText(/disciplinas a cargo/i)).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Fútbol Mayor' })).not.toBeChecked();
+      expect(screen.getByRole('checkbox', { name: 'Natación' })).not.toBeChecked();
+    });
+
+    it('exige al menos una disciplina para un delegado', async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn();
+      render(
+        <UsuarioForm
+          modo="editar"
+          usuarioInicial={{ ...delegado, disciplinas: [] }}
+          onSubmit={onSubmit}
+          mostrarPasswordField={false}
+          disciplinas={disciplinas}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+      expect(
+        await screen.findByText('Seleccioná al menos una disciplina a cargo del delegado'),
+      ).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('precarga las disciplinas del delegado y envía las elegidas', async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      render(
+        <UsuarioForm
+          modo="editar"
+          usuarioInicial={delegado}
+          onSubmit={onSubmit}
+          mostrarPasswordField={false}
+          disciplinas={disciplinas}
+        />,
+      );
+
+      expect(screen.getByRole('checkbox', { name: 'Natación' })).toBeChecked();
+      await user.click(screen.getByRole('checkbox', { name: 'Fútbol Mayor' }));
+      await user.click(screen.getByRole('checkbox', { name: 'Natación' }));
+      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ roles: ['DELEGADO'], disciplinasIds: ['1'] }),
+        expect.anything(),
+      );
+    });
+  });
 });
+

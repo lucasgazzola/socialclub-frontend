@@ -8,6 +8,7 @@ function hasPasswordFieldError(
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, ModalActions } from '@/components/ui';
 import {
+  ROL_DELEGADO,
   usuarioCreateSchema,
   usuarioEditSchema,
   type UsuarioCreateFormValues,
@@ -22,6 +23,8 @@ interface UsuarioFormProps {
   /** Cancelar dentro del modal (DT-20). */
   onCancel?: () => void;
   mostrarPasswordField?: boolean;
+  /** DT-42: disciplinas activas que se le pueden asignar a un delegado. */
+  disciplinas?: { id: number; nombre: string }[];
 }
 
 export function UsuarioForm({
@@ -30,6 +33,7 @@ export function UsuarioForm({
   onSubmit,
   mostrarPasswordField = true,
   onCancel,
+  disciplinas = [],
 }: UsuarioFormProps) {
   const schema = modo === 'crear' ? usuarioCreateSchema : usuarioEditSchema;
   const defaultValues = usuarioInicial
@@ -40,6 +44,7 @@ export function UsuarioForm({
         email: usuarioInicial.email ?? '',
         password: '',
         roles: usuarioInicial.roles.map((rol) => rol.rol.nombre),
+        disciplinasIds: (usuarioInicial.disciplinas ?? []).map((d) => String(d.id)),
       }
     : {
         dni: '',
@@ -47,11 +52,14 @@ export function UsuarioForm({
         apellido: '',
         email: '',
         roles: ['ADMIN'],
+        disciplinasIds: [],
       };
 
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<UsuarioCreateFormValues | UsuarioEditFormValues>({
     resolver: zodResolver(schema),
@@ -68,6 +76,18 @@ export function UsuarioForm({
 
   const rolesError =
     typeof errors.roles?.message === 'string' ? errors.roles.message : undefined;
+
+  const esDelegado = (watch('roles') ?? []).includes(ROL_DELEGADO);
+  // Se manejan a mano: con register, un único checkbox devolvería un booleano.
+  const disciplinasSeleccionadas = watch('disciplinasIds') ?? [];
+  function alternarDisciplina(id: string, marcada: boolean) {
+    const resto = disciplinasSeleccionadas.filter((d) => d !== id);
+    setValue('disciplinasIds', marcada ? [...resto, id] : resto, {
+      shouldValidate: !!errors.disciplinasIds,
+    });
+  }
+  const disciplinasError =
+    typeof errors.disciplinasIds?.message === 'string' ? errors.disciplinasIds.message : undefined;
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -136,8 +156,39 @@ export function UsuarioForm({
           COLABORADOR
         </label>
 
+        <label className="flex items-center gap-2">
+          <input type="checkbox" value={ROL_DELEGADO} {...register('roles')} />
+          DELEGADO
+        </label>
+
         {rolesError && <p className="text-sm text-red-600">{rolesError}</p>}
       </fieldset>
+
+      {esDelegado && (
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium">Disciplinas a cargo</legend>
+          <p className="text-xs text-slate-500">
+            El delegado recibe las alertas de documentación solo de estas disciplinas.
+          </p>
+          {disciplinas.length === 0 ? (
+            <p className="text-sm text-slate-500">No hay disciplinas activas para asignar.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              {disciplinas.map((disciplina) => (
+                <label key={disciplina.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={disciplinasSeleccionadas.includes(String(disciplina.id))}
+                    onChange={(e) => alternarDisciplina(String(disciplina.id), e.target.checked)}
+                  />
+                  {disciplina.nombre}
+                </label>
+              ))}
+            </div>
+          )}
+          {disciplinasError && <p className="text-sm text-red-600">{disciplinasError}</p>}
+        </fieldset>
+      )}
 
       <ModalActions>
         {onCancel && (

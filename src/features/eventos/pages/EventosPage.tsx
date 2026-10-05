@@ -1,22 +1,50 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CalendarPlus, Plus, Ticket } from 'lucide-react';
-import { Button, Modal, Spinner } from '@/components/ui';
-import { ROUTES } from '@/routes/paths';
-import { EventoForm } from '../components/EventoForm';
+import { CalendarPlus, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
+import { EventoForm, type EventoFormValues } from '../components/EventoForm';
+import { EventoCard } from '../components/EventoCard';
 import { useCrearEvento, useEventos } from '../hooks/useEventos';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import type { FiltrarEventosParams } from '../api/eventos.api';
+
+const POR_PAGINA = 5;
 
 export function EventosPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
-  const { data: eventos, isLoading, isError } = useEventos();
-  const crearEvento = useCrearEvento();
-  const { usuario } = useAuth();
-  const puedeCrearEvento = usuario?.roles.includes('ADMIN') ?? false;
+  const [pagina, setPagina] = useState(1);
+  const [search, setSearch] = useState('');
+  const [ordenar, setOrdenar] = useState<FiltrarEventosParams['ordenar']>('fecha');
+  const [incluirBorradores, setIncluirBorradores] = useState(false);
 
-  async function handleCrear(data: Parameters<typeof crearEvento.mutateAsync>[0]) {
-    await crearEvento.mutateAsync(data);
+  const { usuario } = useAuth();
+  const esAdmin = usuario?.roles.includes('ADMIN') ?? false;
+
+  const params: FiltrarEventosParams = {
+    pagina,
+    porPagina: POR_PAGINA,
+    ...(search ? { search } : {}),
+    ...(ordenar ? { ordenar } : {}),
+    ...(esAdmin && incluirBorradores ? { incluirBorradores: true } : {}),
+  };
+
+  const { data: paginado, isLoading, isError } = useEventos(params);
+  const crearEvento = useCrearEvento();
+
+  const puedeCrearEvento = esAdmin;
+  const totalPaginas = paginado?.totalPaginas ?? 1;
+  const total = paginado?.total ?? 0;
+  const eventos = paginado?.items ?? [];
+
+  async function handleCrear(values: EventoFormValues) {
+    const { tempPreviewUrl, imagenFile, ...rest } = values;
+    await crearEvento.mutateAsync({ ...rest, tempPreviewUrl, imagenFile });
     setModalAbierto(false);
+    setPagina(1);
+  }
+
+  function handleSearch(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPagina(1);
   }
 
   return (
@@ -24,16 +52,56 @@ export function EventosPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Eventos</h1>
-          <p className="mt-1 text-sm text-slate-500">Gestioná los eventos del club.</p>
+          <p className="mt-1 text-sm text-slate-500">Gestioná y explorá los eventos del club.</p>
         </div>
         {puedeCrearEvento && (
           <Button onClick={() => setModalAbierto(true)} className="self-start shadow-xs sm:self-auto">
-            <Plus size={16} />
+            <Plus size={16} aria-hidden="true" />
             Nuevo evento
           </Button>
         )}
       </header>
 
+      {/* ─── Filtros ─── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <form onSubmit={handleSearch} className="flex flex-1 items-center gap-2">
+          <Input
+            id="search-eventos"
+            placeholder="buscar por nombre o descripción…"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPagina(1); }}
+            leftIcon={<Search aria-hidden="true" />}
+            containerClassName="flex-1"
+          />
+        </form>
+
+        <Select
+          id="ordenar-eventos"
+          value={ordenar}
+          onChange={(e) => { setOrdenar(e.target.value as FiltrarEventosParams['ordenar']); setPagina(1); }}
+          className="w-auto"
+          aria-label="Ordenar eventos por"
+        >
+          <option value="fecha">Ordenar: por fecha</option>
+          <option value="nombre">Ordenar: por nombre</option>
+          <option value="reciente">Ordenar: más recientes</option>
+        </Select>
+
+        {esAdmin && (
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
+            <input
+              id="incluir-borradores"
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              checked={incluirBorradores}
+              onChange={(e) => { setIncluirBorradores(e.target.checked); setPagina(1); }}
+            />
+            Ver borradores
+          </label>
+        )}
+      </div>
+
+      {/* ─── Modal crear evento ─── */}
       <Modal
         open={modalAbierto}
         title="Nuevo evento"
@@ -45,50 +113,59 @@ export function EventosPage() {
         <EventoForm onSubmit={handleCrear} submitLabel="Crear evento" onCancel={() => setModalAbierto(false)} />
       </Modal>
 
+      {/* ─── Lista ─── */}
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <Spinner className="h-6 w-6" />
+          <Spinner className="h-6 w-6 text-blue-600" />
         </div>
       ) : isError ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          No se pudieron cargar los eventos.
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          No se pudieron cargar los eventos. Intentalo de nuevo más tarde.
+        </div>
+      ) : eventos.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
+          No hay eventos disponibles en este momento.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-5 py-3.5">Nombre</th>
-                <th className="px-5 py-3.5">Descripción</th>
-                <th className="px-5 py-3.5">Entradas disponibles</th>
-                <th className="px-5 py-3.5">Entradas vendidas</th>
-                <th className="px-5 py-3.5 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {eventos?.map((evento) => (
-                <tr key={evento.id} className="transition-colors hover:bg-slate-50/70">
-                  <td className="px-5 py-3.5 font-medium text-slate-900">{evento.nombre}</td>
-                  <td className="px-5 py-3.5 text-slate-600">{evento.descripcion ?? '—'}</td>
-                  <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{evento.entradasDisponibles}</td>
-                  <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{evento.entradasVendidas}</td>
-                  <td className="px-5 py-3.5 text-right">
-                    <Link to={ROUTES.comprarEntradas(evento.id)}>
-                      <Button
-                        size="sm"
-                        variant={evento.entradasDisponibles > 0 ? 'secondary' : 'ghost'}
-                        disabled={evento.entradasDisponibles <= 0}
-                      >
-                        <Ticket size={14} className="mr-1.5" />
-                        Comprar entradas
-                      </Button>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {eventos.map((evento) => (
+            <EventoCard key={evento.id} evento={evento} />
+          ))}
         </div>
+      )}
+
+      {/* ─── Paginación ─── */}
+      {!isLoading && !isError && totalPaginas > 1 && (
+        <nav
+          className="flex items-center justify-between border-t border-slate-200 pt-4"
+          aria-label="Paginación de eventos"
+        >
+          <p className="text-sm text-slate-500">
+            {total} evento{total !== 1 ? 's' : ''} · Página {pagina} de {totalPaginas}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+              disabled={pagina <= 1}
+              aria-label="Página anterior"
+            >
+              <ChevronLeft size={16} aria-hidden="true" />
+              Anterior
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+              disabled={pagina >= totalPaginas}
+              aria-label="Página siguiente"
+            >
+              Siguiente
+              <ChevronRight size={16} aria-hidden="true" />
+            </Button>
+          </div>
+        </nav>
       )}
     </div>
   );

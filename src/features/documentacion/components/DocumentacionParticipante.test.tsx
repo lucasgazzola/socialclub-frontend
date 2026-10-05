@@ -89,51 +89,63 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     expect(within(futbol).getByText('(de la categoría)')).toBeInTheDocument();
   });
 
-  it('solo ofrece los tipos de documento exigidos al participante', () => {
+  it('no muestra la sección de carga hasta que se presiona el botón Cargar', () => {
     render(<DocumentacionParticipante persona={persona} />);
 
-    const opciones = within(screen.getByLabelText('Tipo de documento')).getAllByRole('option').map((o) => o.textContent);
-    expect(opciones).toEqual([
-      'Seleccioná el tipo',
-      'Autorización de padres/tutores',
-      'Certificado médico de aptitud física (renovación)',
-    ]);
+    expect(screen.queryByRole('heading', { name: 'Cargar documentación' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Fecha de vencimiento/)).not.toBeInTheDocument();
   });
 
-  it('"Cargar" en un faltante preselecciona su tipo y carga el documento', async () => {
+  it('"Cargar" en un faltante muestra "Cargar documentación" con el tipo fijo y carga el documento', async () => {
     const user = userEvent.setup();
     const { texto, iso } = fechaFutura();
     render(<DocumentacionParticipante persona={persona} />);
 
     await user.click(screen.getByRole('button', { name: 'Cargar' }));
-    expect(screen.getByLabelText('Tipo de documento')).toHaveValue('AUTORIZACION_PADRES_TUTORES');
+    const seccionCarga = screen.getByRole('heading', { name: 'Cargar documentación' }).closest('section')!;
+    expect(within(seccionCarga).getByText('Autorización de padres/tutores')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Tipo de documento')).not.toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Fecha de vencimiento'), texto);
-    await user.click(screen.getByRole('button', { name: 'Cargar documento' }));
+    await user.type(screen.getByLabelText(/Fecha de vencimiento/), texto);
+    const file = new File(['contenido'], 'autorizacion.pdf', { type: 'application/pdf' });
+    const inputArchivo = screen.getByLabelText(/Archivo \(PDF o imagen\)/);
+    await user.upload(inputArchivo, file);
+    await user.click(screen.getByRole('button', { name: 'Cargar documentación' }));
 
     await waitFor(() => {
       expect(crearMock).toHaveBeenCalledWith({
         payload: { tipoDocumento: 'AUTORIZACION_PADRES_TUTORES', fechaVencimiento: iso, personaId: 10 },
-        archivo: null,
+        archivo: file,
       });
     });
   });
 
-  it('no envía sin tipo ni fecha de vencimiento', async () => {
+  it('no envía sin fecha de vencimiento ni sin archivo, y permite cancelar', async () => {
     const user = userEvent.setup();
+    const { texto } = fechaFutura();
     render(<DocumentacionParticipante persona={persona} />);
 
-    await user.click(screen.getByRole('button', { name: 'Cargar documento' }));
+    await user.click(screen.getByRole('button', { name: 'Cargar' }));
+    expect(screen.getByRole('heading', { name: 'Cargar documentación' })).toBeInTheDocument();
 
-    expect(await screen.findByText('Seleccioná el tipo de documento')).toBeInTheDocument();
-    expect(screen.getByText('La fecha de vencimiento es obligatoria')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cargar documentación' }));
+    expect(await screen.findByText('La fecha de vencimiento es obligatoria')).toBeInTheDocument();
     expect(crearMock).not.toHaveBeenCalled();
+
+    // Completar fecha pero sin archivo
+    await user.type(screen.getByLabelText(/Fecha de vencimiento/), texto);
+    await user.click(screen.getByRole('button', { name: 'Cargar documentación' }));
+    expect(await screen.findByText('El archivo es obligatorio')).toBeInTheDocument();
+    expect(crearMock).not.toHaveBeenCalled();
+
+    await user.click(screen.getAllByRole('button', { name: 'Cancelar' })[0]);
+    expect(screen.queryByRole('heading', { name: 'Cargar documentación' })).not.toBeInTheDocument();
   });
 
   it('sin permiso de carga solo muestra el estado', () => {
     render(<DocumentacionParticipante persona={persona} puedeCargar={false} />);
 
-    expect(screen.queryByRole('button', { name: 'Cargar documento' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Cargar documentación' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cargar' })).not.toBeInTheDocument();
   });
 
@@ -145,6 +157,6 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     render(<DocumentacionParticipante persona={persona} />);
 
     expect(screen.getByText('No exige documentación.')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Tipo de documento')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Cargar documentación' })).not.toBeInTheDocument();
   });
 });

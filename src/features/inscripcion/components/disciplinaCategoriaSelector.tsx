@@ -3,11 +3,14 @@ import { Select } from '@/components/ui';
 import type { InscripcionFormValues } from '../schemas/inscripcion.schema';
 import { categoriasDisponibles, type DisciplinaOption } from '../../disciplinas/types';
 
+import type { GeneroDisciplina } from '../../disciplinas/types';
+
 interface DisciplinaCategoriaSelectorProps {
   control: Control<InscripcionFormValues>;
   errors: FieldErrors<InscripcionFormValues>;
   disciplinas: DisciplinaOption[];
   disciplinaSeleccionada: DisciplinaOption | undefined;
+  participante?: { fechaNacimiento?: string | null; genero?: GeneroDisciplina | null };
 }
 
 export function DisciplinaCategoriaSelector({
@@ -15,9 +18,10 @@ export function DisciplinaCategoriaSelector({
   errors,
   disciplinas,
   disciplinaSeleccionada,
+  participante,
 }: DisciplinaCategoriaSelectorProps) {
-  const categorias = categoriasDisponibles(disciplinaSeleccionada);
-  const tieneCategorias = categorias.length > 0;
+  const categorias = categoriasDisponibles(disciplinaSeleccionada, undefined, participante);
+  const tieneCategorias = (disciplinaSeleccionada?.categorias ?? []).length > 0;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -56,9 +60,14 @@ export function DisciplinaCategoriaSelector({
               <Select
                 id="categoriaDisciplinaId"
                 value={field.value ?? ''}
+                disabled={categorias.length === 0}
                 onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
               >
-                <option value="">Seleccioná una categoría</option>
+                <option value="">
+                  {categorias.length === 0
+                    ? 'No hay categorías que cumplan edad/género'
+                    : 'Seleccioná una categoría'}
+                </option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nombre}
