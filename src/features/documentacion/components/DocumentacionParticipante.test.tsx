@@ -159,4 +159,72 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     expect(screen.getByText('No exige documentación.')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Cargar documentación' })).not.toBeInTheDocument();
   });
+
+  it('US-25 · TC-181: muestra badge "Por vencer" cuando el documento vence en los próximos 30 días', () => {
+    mockHook(useEstadoDocumental).mockReturnValue({
+      data: {
+        ...estado,
+        estado: 'HABILITADO',
+        inscripciones: [
+          {
+            ...estado.inscripciones[0],
+            estado: 'HABILITADO',
+            documentos: [
+              {
+                tipoDocumento: 'CERTIFICADO_MEDICO_APTITUD_FISICA',
+                etiqueta: 'Certificado médico de aptitud física',
+                origen: 'DISCIPLINA',
+                plazoDiasTolerancia: 30,
+                estado: 'POR_VENCER',
+                documentoId: 3,
+                fechaVencimiento: '2026-10-20T00:00:00.000Z',
+                fechaLimite: null,
+              },
+            ],
+          },
+        ],
+      },
+      isLoading: false,
+    });
+    render(<DocumentacionParticipante persona={persona} />);
+
+    expect(screen.getByText('Por vencer')).toBeInTheDocument();
+    expect(screen.getByText('Habilitado')).toBeInTheDocument();
+    expect(screen.getByText(/Vence el 20\/10\/2026/)).toBeInTheDocument();
+  });
+
+  it('US-25 · TC-183: muestra badge "Bloqueado" y documento "Vencido" ante vencimiento', () => {
+    mockHook(useEstadoDocumental).mockReturnValue({
+      data: {
+        ...estado,
+        estado: 'BLOQUEADO',
+        inscripciones: [
+          {
+            ...estado.inscripciones[0],
+            estado: 'BLOQUEADO',
+            motivos: ['Certificado médico de aptitud física: vencido el 30/09/2026'],
+            documentos: [
+              {
+                tipoDocumento: 'CERTIFICADO_MEDICO_APTITUD_FISICA',
+                etiqueta: 'Certificado médico de aptitud física',
+                origen: 'DISCIPLINA',
+                plazoDiasTolerancia: 30,
+                estado: 'VENCIDO',
+                documentoId: 3,
+                fechaVencimiento: '2026-09-30T00:00:00.000Z',
+                fechaLimite: null,
+              },
+            ],
+          },
+        ],
+      },
+      isLoading: false,
+    });
+    render(<DocumentacionParticipante persona={persona} />);
+
+    expect(screen.getByText('Bloqueado')).toBeInTheDocument();
+    expect(screen.getByText('Vencido')).toBeInTheDocument();
+    expect(screen.getByText(/Vence el 30\/09\/2026/)).toBeInTheDocument();
+  });
 });
+
