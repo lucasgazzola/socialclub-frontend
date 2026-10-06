@@ -226,5 +226,57 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     expect(screen.getByText('Vencido')).toBeInTheDocument();
     expect(screen.getByText(/Vence el 30\/09\/2026/)).toBeInTheDocument();
   });
+
+  describe('US-27 · Bloqueo de participante ante documentación vencida', () => {
+    it('US-27 · TC-188: muestra banner de bloqueo con los motivos detallados del documento vencido o faltante', () => {
+      mockHook(useEstadoDocumental).mockReturnValue({
+        data: {
+          ...estado,
+          estado: 'BLOQUEADO',
+          inscripciones: [
+            {
+              ...estado.inscripciones[0],
+              estado: 'BLOQUEADO',
+              motivos: [
+                'Certificado médico de aptitud física: vencido el 30/09/2026',
+                'Autorización de padres/tutores: no se presentó (el plazo venció el 15/09/2026)',
+              ],
+            },
+          ],
+        },
+        isLoading: false,
+      });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      const alert = screen.getByRole('alert');
+      expect(alert).toBeInTheDocument();
+      expect(within(alert).getByText('Inscripción bloqueada por documentación:')).toBeInTheDocument();
+      expect(within(alert).getByText('Certificado médico de aptitud física: vencido el 30/09/2026')).toBeInTheDocument();
+      expect(within(alert).getByText('Autorización de padres/tutores: no se presentó (el plazo venció el 15/09/2026)')).toBeInTheDocument();
+    });
+
+    it('US-27 · TC-189: no muestra banner de bloqueo cuando la inscripción está habilitada tras presentar documentación vigente', () => {
+      mockHook(useEstadoDocumental).mockReturnValue({
+        data: {
+          ...estado,
+          estado: 'HABILITADO',
+          inscripciones: [
+            {
+              ...estado.inscripciones[0],
+              estado: 'HABILITADO',
+              motivos: [],
+            },
+          ],
+        },
+        isLoading: false,
+      });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByText('Habilitado')).toBeInTheDocument();
+    });
+  });
 });
 
