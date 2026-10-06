@@ -84,7 +84,7 @@ export function MorososCuotaSocialTable({ morosos, onCobrar }: MorososCuotaSocia
                   </td>
                   <td className="px-6 py-4 font-mono text-slate-600">{socio.dni}</td>
                   <td className="px-6 py-4">
-                    <Badge variant="neutral">{socio.categoria}</Badge>
+                    <Badge variant="secondary">{socio.categoria}</Badge>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap items-center gap-1.5">
