@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, ArrowUpDown, Filter, DollarSign, Users, AlertTriangle } from 'lucide-react';
+import { Search, DollarSign, Users, AlertTriangle } from 'lucide-react';
 import { Card, Input, Select, Spinner } from '@/components/ui';
 import { useMorososCuotaSocial } from '../hooks/useMorososCuotaSocial';
 import { MorososCuotaSocialTable } from '../components/MorososCuotaSocialTable';
@@ -37,7 +37,7 @@ export function MorososCuotaSocialPage() {
     [busqueda, categoriaId, ordenarPor, orden],
   );
 
-  const { data, isLoading, isError, error, isFetching } = useMorososCuotaSocial(filtros);
+  const { data, isLoading, isError, error } = useMorososCuotaSocial(filtros);
 
   return (
     <div className="space-y-6">
