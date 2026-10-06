@@ -127,6 +127,19 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
               </h3>
               <EstadoHabilitacionBadge estado={insc.estado} />
             </div>
+            {insc.estado === 'BLOQUEADO' && insc.motivos && insc.motivos.length > 0 && (
+              <div
+                role="alert"
+                className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800"
+              >
+                <p className="font-semibold">Inscripción bloqueada por documentación:</p>
+                <ul className="mt-1 list-disc pl-4 space-y-0.5">
+                  {insc.motivos.map((motivo) => (
+                    <li key={motivo}>{motivo}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {insc.habilitadoExcepcionalmenteHasta && (
               <p className="text-xs text-amber-700">
                 Habilitado excepcionalmente hasta el {isoADisplay(insc.habilitadoExcepcionalmenteHasta)}.
