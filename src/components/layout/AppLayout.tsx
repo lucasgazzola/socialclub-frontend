@@ -94,6 +94,12 @@ const navSections: NavSection[] = [
         icon: ClipboardList,
         roles: ['ADMIN', 'COLABORADOR'],
       },
+      {
+        to: ROUTES.morososCuotaSocial,
+        label: 'Morosos cuota social',
+        icon: Coins,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
     ],
   },
   {
@@ -120,6 +126,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.cuotas]: 'Configuración de Cuotas',
   [ROUTES.cobrarCuotaDeportiva]: 'Cobro de Cuota Deportiva',
   [ROUTES.historialCuotaDeportiva]: 'Historial de Cuotas Deportivas',
+  [ROUTES.morososCuotaSocial]: 'Morosos de Cuota Social',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
   [ROUTES.tareas]: 'Tareas Automáticas',

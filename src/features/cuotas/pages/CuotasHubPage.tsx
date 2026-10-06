@@ -51,6 +51,24 @@ export function CuotasHubPage() {
             Configurá el monto por disciplina y categoría. Los cambios aplican desde el período siguiente.
           </p>
         </Card>
+
+        <Card
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate(ROUTES.morososCuotaSocial)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') navigate(ROUTES.morososCuotaSocial);
+          }}
+          className="cursor-pointer p-6 transition hover:border-brand-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2"
+        >
+          <div className="mb-3 inline-flex rounded-lg bg-amber-50 p-2 text-amber-700">
+            <Coins size={20} />
+          </div>
+          <h2 className="font-medium text-slate-900">Morosos de cuota social</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Visualizá los socios con cuotas sociales impagas, monto adeudado y gestioná la cobranza directa.
+          </p>
+        </Card>
       </div>
     </div>
   );
