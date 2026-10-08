@@ -103,7 +103,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             aria-hidden="true"
             min={min}
             max={max}
-            className="pointer-events-none absolute right-0 bottom-0 h-0 w-0 opacity-0"
+            className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
             onChange={(evento) => {
               setTexto(isoADisplay(evento.target.value));
               onChange(evento.target.value);

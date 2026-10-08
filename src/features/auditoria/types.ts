@@ -15,10 +15,13 @@ export interface RegistroAuditoria {
   };
 }
 
+export type PeriodoAuditoriaFiltro = 'todo' | '1h' | '24h' | '7d' | 'personalizado';
+
 export interface AuditoriaQuery {
   accion?: AccionAuditoria;
   entidad?: string;
   responsableId?: number;
+  periodo?: PeriodoAuditoriaFiltro;
   fechaDesde?: string;
   fechaHasta?: string;
   pagina?: number;

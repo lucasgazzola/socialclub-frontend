@@ -176,4 +176,67 @@ describe('US-08 · ParticipantesPage', () => {
 
     expect(screen.queryByTestId('editar-participante')).not.toBeInTheDocument();
   });
+
+  it('permite filtrar por estado haciendo clic en las pestañas', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+
+    const tabInscriptos = screen.getByRole('tab', { name: /Inscriptos/i });
+    await user.click(tabInscriptos);
+
+    await waitFor(() => {
+      expect(useInscripcionesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estado: 'INSCRIPTO',
+          pagina: 1,
+        }),
+      );
+    });
+
+    const tabBaja = screen.getByRole('tab', { name: /Baja/i });
+    await user.click(tabBaja);
+
+    await waitFor(() => {
+      expect(useInscripcionesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estado: 'BAJA',
+          pagina: 1,
+        }),
+      );
+    });
+  });
+
+  it('conserva los conteos de todas las pestañas al filtrar por baja', async () => {
+    const user = userEvent.setup();
+    useInscripcionesMock.mockReturnValue({
+      data: {
+        items: [
+          { personaId: 1, estado: 'INSCRIPTO' },
+          { personaId: 2, estado: 'INSCRIPTO' },
+          { personaId: 3, estado: 'BAJA' },
+        ],
+        total: 3,
+        pagina: 1,
+        porPagina: 10,
+        counts: { todos: 3, inscriptos: 2, baja: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      isFetching: false,
+    });
+
+    renderPagina();
+
+    expect(screen.getByRole('tab', { name: /^Todos/i })).toHaveTextContent('3');
+    expect(screen.getByRole('tab', { name: /^Inscriptos/i })).toHaveTextContent('2');
+    expect(screen.getByRole('tab', { name: /^Baja/i })).toHaveTextContent('1');
+
+    const tabBaja = screen.getByRole('tab', { name: /^Baja/i });
+    await user.click(tabBaja);
+
+    expect(screen.getByRole('tab', { name: /^Todos/i })).toHaveTextContent('3');
+    expect(screen.getByRole('tab', { name: /^Inscriptos/i })).toHaveTextContent('2');
+    expect(screen.getByRole('tab', { name: /^Baja/i })).toHaveTextContent('1');
+  });
 });

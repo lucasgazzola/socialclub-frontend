@@ -183,4 +183,33 @@ describe('SociosPage', () => {
 
     expect(screen.getByText('Socio registrado correctamente.')).toBeInTheDocument();
   });
+
+  it('permite filtrar por estado haciendo clic en las pestañas', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SociosPage />);
+
+    expect(screen.getByRole('tab', { name: /^Todos/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Activos/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Inactivos/i })).toBeInTheDocument();
+
+    const tabActivos = screen.getByRole('tab', { name: /^Activos/i });
+    await user.click(tabActivos);
+
+    expect(mockUseSocios).toHaveBeenCalledWith(
+      expect.objectContaining({
+        estado: 'ALTA',
+        pagina: 1,
+      }),
+    );
+
+    const tabInactivos = screen.getByRole('tab', { name: /^Inactivos/i });
+    await user.click(tabInactivos);
+
+    expect(mockUseSocios).toHaveBeenCalledWith(
+      expect.objectContaining({
+        estado: 'BAJA',
+        pagina: 1,
+      }),
+    );
+  });
 });

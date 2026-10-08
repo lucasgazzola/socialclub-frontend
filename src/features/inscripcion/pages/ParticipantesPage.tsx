@@ -23,13 +23,15 @@ const POR_PAGINA = 10;
  * (US-05, modal) y se gestiona su documentación (US-24, modal). Las rutas
  * viejas /inscripcion y /documentacion redirigen acá.
  */
+type FiltroEstadoParticipante = 'todos' | 'inscriptos' | 'baja';
+
 export function ParticipantesPage() {
   const auth = useContext(AuthContext);
   const puedeInscribir = !auth || auth.usuario?.roles.some((r) => ['ADMIN', 'DELEGADO'].includes(r));
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
-  const [estado, setEstado] = useState<EstadoInscripcionFiltro | undefined>(undefined);
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoParticipante>('todos');
   const [pagina, setPagina] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
   const inscripcionAbierta = Boolean(puedeInscribir) && searchParams.get('nueva') === '1';
@@ -77,10 +79,13 @@ export function ParticipantesPage() {
     return () => clearTimeout(timer);
   }, [textoInput, busqueda]);
 
+  const estadoQuery: EstadoInscripcionFiltro | undefined =
+    filtroEstado === 'inscriptos' ? 'INSCRIPTO' : filtroEstado === 'baja' ? 'BAJA' : undefined;
+
   const { data, isLoading, isError, error, isFetching } = useInscripciones({
     busqueda: busqueda || undefined,
     disciplinaId,
-    estado,
+    estado: estadoQuery,
     pagina,
     porPagina: POR_PAGINA,
   });
@@ -88,15 +93,53 @@ export function ParticipantesPage() {
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
 
+  const [cachedCounts, setCachedCounts] = useState<{
+    todos: number;
+    inscriptos: number;
+    baja: number;
+  }>({ todos: 0, inscriptos: 0, baja: 0 });
+
+  useEffect(() => {
+    if (data?.counts) {
+      setCachedCounts({
+        todos: data.counts.todos ?? 0,
+        inscriptos: data.counts.inscriptos ?? 0,
+        baja: data.counts.baja ?? 0,
+      });
+    } else if (filtroEstado === 'todos' && data) {
+      const inscriptos = (data.items ?? []).filter((p) => p.estado === 'INSCRIPTO').length;
+      const baja = (data.items ?? []).filter((p) => p.estado === 'BAJA').length;
+      setCachedCounts({
+        todos: data.total ?? (data.items ?? []).length,
+        inscriptos,
+        baja,
+      });
+    }
+  }, [data, filtroEstado]);
+
+  const counts = data?.counts
+    ? {
+        todos: data.counts.todos ?? cachedCounts.todos,
+        inscriptos: data.counts.inscriptos ?? cachedCounts.inscriptos,
+        baja: data.counts.baja ?? cachedCounts.baja,
+      }
+    : cachedCounts;
+
   const cambiarDisciplina = (value: string) => {
     setPagina(1);
     setDisciplinaId(value ? Number(value) : undefined);
   };
 
-  const cambiarEstado = (value: string) => {
+  function cambiarFiltro(valor: string) {
     setPagina(1);
-    setEstado(value ? (value as EstadoInscripcionFiltro) : undefined);
-  };
+    if (valor === 'inscriptos' || valor === 'INSCRIPTO') {
+      setFiltroEstado('inscriptos');
+    } else if (valor === 'baja' || valor === 'BAJA') {
+      setFiltroEstado('baja');
+    } else {
+      setFiltroEstado('todos');
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -156,31 +199,33 @@ export function ParticipantesPage() {
       {/* Controles de filtro y búsqueda agrupados */}
       <div className="space-y-3">
         {/* Selector de estado estilo pestañas segmentadas (Apex) */}
-      <div>
-        <StatusTabs<string>
-          value={estado ?? 'TODOS'}
-          onChange={(val) => cambiarEstado(val === 'TODOS' ? '' : val)}
-          tabs={[
-            { value: 'TODOS', label: 'Todos' },
-            { value: 'INSCRIPTO', label: 'Inscriptos' },
-            { value: 'BAJA', label: 'Baja' },
-          ]}
-        />
+        <div>
+          <StatusTabs<FiltroEstadoParticipante>
+            value={filtroEstado}
+            onChange={(val) => cambiarFiltro(val)}
+            tabs={[
+              { value: 'todos', label: 'Todos', count: counts.todos },
+              { value: 'inscriptos', label: 'Inscriptos', count: counts.inscriptos },
+              { value: 'baja', label: 'Baja', count: counts.baja },
+            ]}
+          />
 
-        {/* Accesibilidad y compatibilidad con pruebas */}
-        <select
-          id="estado"
-          aria-label="Filtrar por estado"
-          value={estado ?? ''}
-          onChange={(e) => cambiarEstado(e.target.value)}
-          className="sr-only"
-          tabIndex={-1}
-        >
-          <option value="">Todos los estados</option>
-          <option value="INSCRIPTO">Inscripto</option>
-          <option value="BAJA">Baja</option>
-        </select>
-      </div>
+          {/* Accesibilidad y compatibilidad con pruebas */}
+          <select
+            id="filtroEstado"
+            aria-label="Filtrar por estado"
+            value={filtroEstado === 'inscriptos' ? 'INSCRIPTO' : filtroEstado === 'baja' ? 'BAJA' : 'todos'}
+            onChange={(e) => cambiarFiltro(e.target.value)}
+            className="sr-only"
+            tabIndex={-1}
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="INSCRIPTO">Solo inscriptos</option>
+            <option value="BAJA">Solo baja</option>
+            <option value="inscriptos" className="hidden">Inscriptos</option>
+            <option value="baja" className="hidden">Baja</option>
+          </select>
+        </div>
 
       {/* Barra de búsqueda y disciplina estilo Apex */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

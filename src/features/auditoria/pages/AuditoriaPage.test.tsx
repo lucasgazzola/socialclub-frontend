@@ -66,10 +66,10 @@ describe('AuditoriaPage', () => {
 
     expect(screen.getByText('Auditoría')).toBeInTheDocument();
     expect(screen.getByText('Carlos Perez')).toBeInTheDocument();
-    expect(screen.getByText('45 registro(s)')).toBeInTheDocument();
-    expect(screen.getByText('Página 1 de 3')).toBeInTheDocument();
+    expect(screen.getByText(/mostrando 1-10 de 45 resultados/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Página 1' })).toBeInTheDocument();
 
-    const select = screen.getByRole('combobox');
+    const select = screen.getByLabelText(/acción/i);
     await user.selectOptions(select, 'CREAR');
 
     expect(mockUseAuditoria).toHaveBeenCalledWith(
