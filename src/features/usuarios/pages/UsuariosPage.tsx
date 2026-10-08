@@ -6,9 +6,20 @@ import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario';
 import { useUsers } from '../hooks/useUsers';
+import { useRoles } from '../hooks/useRoles';
 import { UsuariosGrid } from '../components/UsuariosGrid';
 import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto } from '../types';
 import { UsuarioFormModal } from './components/UsuarioFormModal';
+
+function formatearNombreRol(nombre: string): string {
+  const nombres: Record<string, string> = {
+    ADMIN: 'Administrador',
+    COLABORADOR: 'Colaborador',
+    SOCIO: 'Socio',
+    DELEGADO: 'Delegado',
+  };
+  return nombres[nombre.toUpperCase()] ?? (nombre.charAt(0).toUpperCase() + nombre.slice(1).toLowerCase());
+}
 import {
   disciplinasIdsParaApi,
   type UsuarioCreateFormValues,
@@ -58,6 +69,7 @@ export function UsuariosPage() {
     pagina,
     porPagina: POR_PAGINA,
   });
+  const { data: roles } = useRoles();
   const createUsuario = useCreateUsuario();
   const updateUsuario = useUpdateUsuario();
   const deactivateUsuario = useDeactivateUsuario();
@@ -269,8 +281,11 @@ export function UsuariosPage() {
               className="w-full sm:w-52"
             >
               <option value="">Todos los roles</option>
-              <option value="1">Administrador</option>
-              <option value="2">Colaborador</option>
+              {roles?.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {formatearNombreRol(r.nombre)}
+                </option>
+              ))}
             </Select>
           </div>
         </div>

@@ -16,6 +16,14 @@ describe('usuariosApi', () => {
     vi.clearAllMocks();
   });
 
+  it('getRoles() envía get a /usuarios/roles', async () => {
+    const rolesMock = [{ id: 1, nombre: 'ADMIN' }, { id: 2, nombre: 'COLABORADOR' }];
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: rolesMock });
+    const res = await usuariosApi.getRoles();
+    expect(apiClient.get).toHaveBeenCalledWith('/usuarios/roles');
+    expect(res).toEqual(rolesMock);
+  });
+
   it('create() envía post a /usuarios', async () => {
     vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { id: 1 } });
     const payload = { email: 'admin@club.com', password: '123' } as any;

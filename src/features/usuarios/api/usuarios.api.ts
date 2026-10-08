@@ -1,8 +1,13 @@
 import { apiClient } from '@/lib/api/client';
 import type { Paginated } from '@/types/api';
-import type { Usuario, CreateUsuarioDto, UpdateUsuarioDto, GetUsuariosParams } from '../types';
+import type { Usuario, CreateUsuarioDto, UpdateUsuarioDto, GetUsuariosParams, Rol } from '../types';
 
 export const usuariosApi = {
+  async getRoles(): Promise<Rol[]> {
+    const { data } = await apiClient.get<Rol[]>('/usuarios/roles');
+    return data;
+  },
+
   async create(payload: CreateUsuarioDto): Promise<Usuario> {
     const { data } = await apiClient.post<Usuario>('/usuarios', payload);
     return data;

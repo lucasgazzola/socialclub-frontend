@@ -46,6 +46,19 @@ vi.mock('../hooks/useActivateUsuario', () => ({
   useActivateUsuario: () => ({ mutateAsync: state.activateMutateAsync, isPending: false }),
 }));
 
+vi.mock('../hooks/useRoles', () => ({
+  useRoles: () => ({
+    data: [
+      { id: 1, nombre: 'ADMIN', descripcion: 'Administrador' },
+      { id: 2, nombre: 'COLABORADOR', descripcion: 'Colaborador' },
+      { id: 3, nombre: 'SOCIO', descripcion: 'Socio' },
+      { id: 4, nombre: 'DELEGADO', descripcion: 'Delegado' },
+    ],
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 vi.mock('@/features/disciplinas/hooks/useDisciplinasActivas', () => ({
   useDisciplinasActivas: () => ({
     disciplinas: [
@@ -434,6 +447,16 @@ describe('UsuariosPage', () => {
 
       expect(screen.getByText(/ningún usuario coincide con el filtro/i)).toBeInTheDocument();
       expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+    });
+
+    it('renderiza las opciones de roles dinámicamente según los roles disponibles', () => {
+      render(<UsuariosPage />);
+
+      expect(screen.getByRole('option', { name: 'Todos los roles' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Administrador' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Colaborador' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Socio' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Delegado' })).toBeInTheDocument();
     });
   });
 });
