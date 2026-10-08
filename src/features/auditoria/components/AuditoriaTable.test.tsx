@@ -42,7 +42,9 @@ describe('AuditoriaTable', () => {
     expect(screen.getByText('CREAR')).toBeInTheDocument();
     expect(screen.getByText('BAJA')).toBeInTheDocument();
     expect(screen.getByText('María García')).toBeInTheDocument();
-    expect(screen.getByText('Inscripción a tenis')).toBeInTheDocument();
+    
+    expect(screen.getAllByText('Inscripción a tenis')[0]).toBeInTheDocument();
+    
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
 });

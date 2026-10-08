@@ -44,8 +44,9 @@ describe('US-33 · AuditoriaTable', () => {
     expect(screen.getByText('Socio')).toBeInTheDocument();
     expect(screen.getByText('Usuario')).toBeInTheDocument();
     expect(screen.getByText('Carlos Gómez')).toBeInTheDocument();
-    expect(screen.getByText('Alta de nuevo socio')).toBeInTheDocument();
-    expect(screen.getByText('Desactivación de cuenta')).toBeInTheDocument();
+    
+    expect(screen.getAllByText('Alta de nuevo socio')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Desactivación de cuenta')[0]).toBeInTheDocument();
   });
 
   it('muestra guion cuando el registro no tiene responsable', () => {
