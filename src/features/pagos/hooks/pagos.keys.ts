@@ -9,4 +9,6 @@ export const pagosKeys = {
     [...pagosKeys.all, 'deportivos', personaId, 'pendientes'] as const,
   historialDeportivo: (personaId: number, desde?: string, hasta?: string) =>
     [...pagosKeys.all, 'deportivos', personaId, 'historial', desde ?? '', hasta ?? ''] as const,
+  morososCuotaSocial: (filtros?: import('../types').FiltrosMorososCuotaSocial) =>
+    [...pagosKeys.all, 'morosos', filtros] as const,
 };

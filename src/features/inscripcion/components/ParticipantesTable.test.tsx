@@ -338,5 +338,32 @@ describe('US-08 · ParticipantesTable', () => {
 
     expect(screen.getByText('el 15/09/2026')).toBeInTheDocument();
   });
+
+  describe('US-25 · Estado documental en listado', () => {
+    it('TC-185: muestra badge de estado documental y motivos en las disciplinas expandidas', async () => {
+      const user = userEvent.setup();
+      render(
+        <ParticipantesTable
+          participantes={[
+            participante({
+              estadoDocumental: 'BLOQUEADO',
+              disciplinas: [
+                disciplina({
+                  estadoDocumental: 'BLOQUEADO',
+                  motivosDocumentacion: ['Certificado médico vencido el 30/09/2026'],
+                }),
+              ],
+            }),
+          ]}
+        />,
+      );
+
+      expect(screen.getByText('Bloqueado')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /Ver disciplinas de/i }));
+
+      expect(screen.getByText('Certificado médico vencido el 30/09/2026')).toBeInTheDocument();
+    });
+  });
 });
 

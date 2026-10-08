@@ -37,6 +37,7 @@ export const ROUTES = {
   misEntradas: '/mis-entradas',
   cobrarCuotaDeportiva: '/cuotas/deportiva/cobrar',
   historialCuotaDeportiva: '/cuotas/deportiva/historial',
+  morososCuotaSocial: '/cuotas/social/morosos',
 } as const;
 
 

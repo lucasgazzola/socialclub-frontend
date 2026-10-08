@@ -74,4 +74,17 @@ export const pagosApi = {
     );
     return data;
   },
+
+  // ── US-19 · Morosos de cuota social ──────────────────────────────────────────
+
+  async getMorososCuotaSocial(
+    filtros: import('../types').FiltrosMorososCuotaSocial = {},
+  ): Promise<import('../types').MorososCuotaSocialResponse> {
+    const { data } = await apiClient.get<import('../types').MorososCuotaSocialResponse>(
+      '/pagos/morosos',
+      { params: filtros },
+    );
+    return data;
+  },
 };
+
