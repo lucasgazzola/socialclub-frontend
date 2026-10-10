@@ -3,6 +3,7 @@ import {
   DURACION_POR_DEFECTO_HORAS,
   getEstadoVisual,
   puedeComprar,
+  ventaAbierta,
   formatPrecio,
   formatFechaEvento,
 } from './helpers';
@@ -26,6 +27,30 @@ describe('features/eventos/helpers', () => {
     lugarAcreditacion: 'Canchas central',
     imageUrl: 'socialclub-frontend/src/assets/favicon-blanco.png',
   };
+
+  describe('ventaAbierta (período de venta opcional, como el backend)', () => {
+    const ahora = Date.parse('2026-10-04T12:00:00.000Z');
+
+    it('sin período de venta, la venta está abierta', () => {
+      expect(ventaAbierta({ ...baseEvento, inicioVenta: null, finVenta: null }, ahora)).toBe(true);
+    });
+
+    it('dentro del período, abierta; antes del inicio o después del fin, cerrada', () => {
+      expect(ventaAbierta(baseEvento, ahora)).toBe(true);
+      expect(ventaAbierta({ ...baseEvento, inicioVenta: '2026-10-05T00:00:00.000Z' }, ahora)).toBe(false);
+      expect(ventaAbierta({ ...baseEvento, finVenta: '2026-10-03T00:00:00.000Z' }, ahora)).toBe(false);
+    });
+
+    it('solo con inicio o solo con fin, respeta el límite que tenga', () => {
+      expect(ventaAbierta({ ...baseEvento, finVenta: null }, ahora)).toBe(true);
+      expect(ventaAbierta({ ...baseEvento, inicioVenta: null }, ahora)).toBe(true);
+    });
+
+    it('un evento no publicado o sin entrada no se vende', () => {
+      expect(ventaAbierta({ ...baseEvento, estado: 'BORRADOR' }, ahora)).toBe(false);
+      expect(ventaAbierta({ ...baseEvento, requiereEntrada: false }, ahora)).toBe(false);
+    });
+  });
 
   describe('puedeComprar', () => {
     it('retorna true si estado es PUBLICADO, entradasDisponibles > 0 y capacidadMaxima > 0', () => {
