@@ -7,10 +7,11 @@ import { usePendientesDeportivos, useRegistrarPagoDeportivo } from '../hooks/use
 import type { PendientesDeportivosResponse } from '../types';
 
 const registrarMock = vi.fn();
+const buscarMock = vi.hoisted(() => vi.fn());
 vi.mock('@/features/inscripcion/hooks/useBuscarParticipante', () => ({
   useBuscarParticipante: () => ({
     participante: { id: 50, nombre: 'Ana', apellido: 'Jugadora', dni: '30111222' },
-    buscar: vi.fn(),
+    buscar: buscarMock,
     limpiar: vi.fn(),
     cargando: false,
     noEncontrado: false,
@@ -61,8 +62,14 @@ const pendientes: PendientesDeportivosResponse = {
 describe('US-21 · TASK-33 · RegistrarPagoDeportivoPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (usePendientesDeportivos as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ data: pendientes, isLoading: false });
-    (useRegistrarPagoDeportivo as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ mutateAsync: registrarMock, isPending: false });
+    (usePendientesDeportivos as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: pendientes,
+      isLoading: false,
+    });
+    (useRegistrarPagoDeportivo as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      mutateAsync: registrarMock,
+      isPending: false,
+    });
   });
 
   function renderPagina() {
@@ -72,6 +79,25 @@ describe('US-21 · TASK-33 · RegistrarPagoDeportivoPage', () => {
       </MemoryRouter>,
     );
   }
+
+  it('US-23: con ?dni= (desde Morosos) arranca con el DNI cargado y lo busca', () => {
+    buscarMock.mockClear();
+    render(
+      <MemoryRouter initialEntries={['/cuotas/deportiva/cobrar?dni=30111222']}>
+        <RegistrarPagoDeportivoPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText('Buscar participante por DNI')).toHaveValue('30111222');
+    expect(buscarMock).toHaveBeenCalledWith('30111222');
+  });
+
+  it('sin ?dni= no busca nada al abrir', () => {
+    buscarMock.mockClear();
+    renderPagina();
+
+    expect(buscarMock).not.toHaveBeenCalled();
+  });
 
   it('indica si el participante es socio y muestra la categoría de la disciplina', () => {
     renderPagina();
@@ -101,10 +127,14 @@ describe('US-21 · TASK-33 · RegistrarPagoDeportivoPage', () => {
     const user = userEvent.setup();
     renderPagina();
 
-    await user.click(within(screen.getByText('09/2026').closest('li') as HTMLElement).getByRole('checkbox'));
+    await user.click(
+      within(screen.getByText('09/2026').closest('li') as HTMLElement).getByRole('checkbox'),
+    );
 
     expect(screen.getByText('Total seleccionado:').parentElement).toHaveTextContent('$ 4.000,00');
     await user.click(screen.getByRole('button', { name: 'Registrar cobro' }));
-    expect(registrarMock).toHaveBeenCalledWith(expect.objectContaining({ disciplinaId: 3, periodos: ['2026-09'] }));
+    expect(registrarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ disciplinaId: 3, periodos: ['2026-09'] }),
+    );
   });
 });
