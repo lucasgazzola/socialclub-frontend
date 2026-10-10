@@ -90,7 +90,7 @@ test(
 );
 
 test(
-  'TC-180 · Validar el acceso con una entrada válida',
+  'TC-198 · Validar el acceso con una entrada válida',
   { tag: ['@US-31'] },
   async ({ page, paso }) => {
     await paso('1. Como colaborador, abrir Validar QR y elegir el evento', async () => {
@@ -114,7 +114,7 @@ test(
   },
 );
 
-test('TC-181 · Rechazar una entrada ya utilizada', { tag: ['@US-31'] }, async ({ page, paso }) => {
+test('TC-199 · Rechazar una entrada ya utilizada', { tag: ['@US-31'] }, async ({ page, paso }) => {
   await paso('1. Como colaborador, volver a validar la misma entrada', async () => {
     await iniciarSesion(page, USUARIOS.colaborador);
     await page.goto('/entradas/validar');
