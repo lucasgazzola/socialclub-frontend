@@ -8,6 +8,8 @@ interface BuscarParticipanteDniProps {
   error?: string | null;
   onBuscar: (dni: string) => void;
   onRegistrarNuevo: () => void;
+  /** DNI con el que arranca el campo (p. ej. al venir desde Morosos, US-23). */
+  dniInicial?: string;
 }
 
 /**
@@ -27,8 +29,9 @@ export function BuscarParticipanteDni({
   error,
   onBuscar,
   onRegistrarNuevo,
+  dniInicial = '',
 }: BuscarParticipanteDniProps) {
-  const [dni, setDni] = useState('');
+  const [dni, setDni] = useState(dniInicial);
 
   const ejecutarBusqueda = () => {
     if (dni.trim()) onBuscar(dni.trim());

@@ -100,6 +100,12 @@ const navSections: NavSection[] = [
         icon: Coins,
         roles: ['ADMIN', 'COLABORADOR'],
       },
+      {
+        to: ROUTES.morososCuotaDeportiva,
+        label: 'Morosos cuota deportiva',
+        icon: Coins,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
     ],
   },
   {
@@ -127,6 +133,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.cobrarCuotaDeportiva]: 'Cobro de Cuota Deportiva',
   [ROUTES.historialCuotaDeportiva]: 'Historial de Cuotas Deportivas',
   [ROUTES.morososCuotaSocial]: 'Morosos de Cuota Social',
+  [ROUTES.morososCuotaDeportiva]: 'Morosos de Cuota Deportiva',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
   [ROUTES.tareas]: 'Tareas Automáticas',

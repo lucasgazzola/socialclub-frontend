@@ -86,5 +86,17 @@ export const pagosApi = {
     );
     return data;
   },
+
+  // ── US-23 · Morosos de cuota deportiva ──────────────────────────────────────
+
+  async getMorososCuotaDeportiva(
+    filtros: import('../types').FiltrosMorososCuotaDeportiva = {},
+  ): Promise<import('../types').MorososCuotaDeportivaResponse> {
+    const { data } = await apiClient.get<import('../types').MorososCuotaDeportivaResponse>(
+      '/pagos-deportivos/morosos',
+      { params: filtros },
+    );
+    return data;
+  },
 };
 

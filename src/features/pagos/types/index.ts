@@ -170,6 +170,53 @@ export interface MorososCuotaSocialResponse {
   items: SocioMorosoCuotaSocial[];
 }
 
+// ── US-23 · Morosos de cuota deportiva ───────────────────────────────────────
+
+export interface CuotaDeportivaVencida {
+  periodo: string;
+  /** "AAAA-MM-DD": vence el día 10 del mes. */
+  fechaVencimiento: string;
+  monto: number;
+  estado: 'VENCIDA';
+}
+
+export interface DeudaDeportivaPorDisciplina {
+  disciplinaId: number;
+  disciplinaNombre: string;
+  categoriaNombre: string | null;
+  inscripcionActiva: boolean;
+  cuotas: CuotaDeportivaVencida[];
+  cantidadPeriodos: number;
+  montoAdeudado: number;
+}
+
+export interface MorosoCuotaDeportiva {
+  personaId: number;
+  nombreCompleto: string;
+  nombre: string;
+  apellido: string;
+  dni: string;
+  email: string | null;
+  telefono: string | null;
+  disciplinas: DeudaDeportivaPorDisciplina[];
+  cantidadPeriodos: number;
+  montoTotalDeuda: number;
+}
+
+export interface MorososCuotaDeportivaResponse {
+  total: number;
+  deudaTotal: number;
+  diaVencimiento: number;
+  items: MorosoCuotaDeportiva[];
+}
+
+export interface FiltrosMorososCuotaDeportiva {
+  busqueda?: string;
+  disciplinaId?: number;
+  ordenarPor?: 'monto' | 'periodos';
+  orden?: 'asc' | 'desc';
+}
+
 export interface FiltrosMorososCuotaSocial {
   busqueda?: string;
   categoriaId?: number;
