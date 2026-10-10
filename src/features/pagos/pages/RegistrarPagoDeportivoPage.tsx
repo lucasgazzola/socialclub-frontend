@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
@@ -224,6 +224,13 @@ export function RegistrarPagoDeportivoPage() {
   const navigate = useNavigate();
   const busqueda = useBuscarParticipante();
   const participante = busqueda.participante;
+  // US-23: desde Morosos se llega con ?dni= y el participante ya buscado.
+  const [searchParams] = useSearchParams();
+  const dniInicial = searchParams.get('dni') ?? '';
+  const { buscar } = busqueda;
+  useEffect(() => {
+    if (dniInicial) void buscar(dniInicial);
+  }, [dniInicial, buscar]);
   const { data, isLoading } = usePendientesDeportivos(participante?.id ?? null);
 
   return (
@@ -243,6 +250,7 @@ export function RegistrarPagoDeportivoPage() {
         noEncontrado={busqueda.noEncontrado}
         error={busqueda.error}
         onRegistrarNuevo={() => navigate(ROUTES.nuevaInscripcion)}
+        dniInicial={dniInicial}
       />
 
       {participante && isLoading && (
