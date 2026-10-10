@@ -39,6 +39,7 @@ objetivo cumplido · código commiteado/pusheado · **tests unitarios pasando (c
 ## Testing
 - Vitest + @testing-library/react. Cubrir hooks (react-query), componentes de formulario (validación zod) y flujos clave.
 - Al implementar una US: sumar tests y cargar los casos en la matriz con el skill **`/casos-prueba`** (tipos: Unitaria, Integral, Funcional, Regresión, Aceptación, No funcional).
+- **E2E (TASK-43):** Playwright en `e2e/`, contra el sistema real (este front + la API de `../socialclub-backend` + Postgres `socialclub_e2e`). Cada test es un caso de la planilla: título `TC-XXX · …`, tag `@US-XX`, y cada paso con `paso('1. …', …)` (deja una captura). Usá `resaltar()` sobre lo que verificás. Selectores por rol y texto accesible; datos propios con `dniUnico()`/`sufijoUnico()`. Si tu cambio toca un flujo cubierto, corré `npm run e2e`.
 
 ## Comandos
 ```bash
@@ -47,6 +48,9 @@ npm test               # Vitest (usar antes de commitear)
 npm run typecheck      # tsc -b --noEmit
 npm run build          # tsc -b && vite build
 npm run lint
+npm run e2e            # Playwright: levanta API (3101) y front (5174); requiere Postgres local
+npm run e2e:reporte    # reporte HTML con capturas, video y trace
+npm run e2e:evidencia -- --registrar   # evidencia a ../socialclub-backend/docs/pruebas
 ```
 > Requiere el backend corriendo en `VITE_API_URL` (default `http://localhost:3000/api/v1`).
 

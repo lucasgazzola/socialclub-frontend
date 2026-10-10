@@ -125,9 +125,14 @@ export function ValidarAccesoPage() {
       setCurrentResult(item);
       setHistory((prev) => [item, ...prev]);
     } catch (err) {
-      // Forma del error de axios, sin recurrir a `any`.
-      const error = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
-      const statusHttp = error?.response?.status;
+      // El interceptor de `apiClient` rechaza con un Error que trae `status`
+      // (no el error de axios): se lee de ahí, con la forma de axios de respaldo.
+      const error = err as {
+        status?: number;
+        response?: { status?: number; data?: { message?: string } };
+        message?: string;
+      };
+      const statusHttp = error?.status ?? error?.response?.status;
       const errorMsg =
         error?.response?.data?.message || error?.message || 'Error al validar la entrada.';
 

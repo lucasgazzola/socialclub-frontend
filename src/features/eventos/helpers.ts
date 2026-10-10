@@ -85,6 +85,21 @@ export function puedeComprar(
 }
 
 /**
+ * Si se pueden comprar entradas ahora: lo de `puedeComprar` más el período de
+ * venta, que es opcional (Task-E8). Misma regla que `EntradasService.comprar`:
+ * sin inicio, la venta ya está abierta; sin fin, no cierra.
+ */
+export function ventaAbierta(
+  evento: Pick<Evento, 'requiereEntrada' | 'estado' | 'entradasDisponibles' | 'inicioVenta' | 'finVenta'>,
+  ahora: number = Date.now(),
+): boolean {
+  if (!puedeComprar(evento)) return false;
+  if (evento.inicioVenta && ahora < Date.parse(evento.inicioVenta)) return false;
+  if (evento.finVenta && ahora > Date.parse(evento.finVenta)) return false;
+  return true;
+}
+
+/**
  * Si el evento no informa `fechaFin`, dura estas horas desde su inicio. Es la
  * misma regla que usa el backend para vencer las entradas (DT-33,
  * `src/eventos/fin-del-evento.ts`): así la tarjeta no muestra «Finalizado»
