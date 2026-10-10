@@ -87,10 +87,12 @@ export default defineConfig({
     },
     {
       name: 'Front',
-      command: `npx vite --port ${FRONT_PORT} --strictPort`,
+      // Front compilado, como en producción: el servidor de desarrollo de Vite
+      // reoptimiza dependencias y recarga la página en medio de una prueba.
+      command: `npx vite build --outDir dist-e2e --emptyOutDir && npx vite preview --outDir dist-e2e --port ${FRONT_PORT} --strictPort`,
       url: FRONT_URL,
       reuseExistingServer: reutilizar,
-      timeout: 60_000,
+      timeout: 120_000,
       env: { VITE_API_URL: API_URL },
     },
   ],
