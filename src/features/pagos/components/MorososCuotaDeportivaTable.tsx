@@ -9,6 +9,12 @@ interface MorososCuotaDeportivaTableProps {
   onCobrar: (moroso: MorosoCuotaDeportiva) => void;
 }
 
+/**
+ * Disciplinas que se muestran en la fila; el resto se ve en el detalle. Así la
+ * fila no crece con quien debe en muchas disciplinas.
+ */
+const DISCIPLINAS_VISIBLES = 2;
+
 function formatMonto(monto: number): string {
   return monto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 }
@@ -82,33 +88,31 @@ export function MorososCuotaDeportivaTable({ morosos, onCobrar }: MorososCuotaDe
                     </td>
                     <td className="px-6 py-4 font-mono text-slate-600">{moroso.dni}</td>
                     <td className="px-6 py-4">
-                      <ul className="space-y-2">
-                        {moroso.disciplinas.map((d) => (
+                      <ul className="space-y-1">
+                        {moroso.disciplinas.slice(0, DISCIPLINAS_VISIBLES).map((d) => (
                           <li key={d.disciplinaId}>
-                            <div>
-                              <span className="font-medium text-slate-800">
-                                {d.disciplinaNombre}
-                              </span>
-                              {d.categoriaNombre && (
-                                <span className="text-xs text-slate-400">
-                                  {' '}
-                                  · {d.categoriaNombre}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                              <span>
-                                {d.cantidadPeriodos}{' '}
-                                {d.cantidadPeriodos === 1 ? 'período' : 'períodos'} ·{' '}
-                                {formatMonto(d.montoAdeudado)}
-                              </span>
-                              {!d.inscripcionActiva && (
-                                <Badge variant="secondary">Dada de baja</Badge>
-                              )}
-                            </div>
+                            <span className="font-medium text-slate-800">{d.disciplinaNombre}</span>
+                            <span className="text-xs text-slate-500">
+                              {' '}
+                              · {d.cantidadPeriodos} per. · {formatMonto(d.montoAdeudado)}
+                            </span>
                           </li>
                         ))}
                       </ul>
+                      {moroso.disciplinas.length > DISCIPLINAS_VISIBLES && !abierto && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAbiertos((prev) => ({ ...prev, [moroso.personaId]: true }))
+                          }
+                          className="text-brand-600 hover:text-brand-700 mt-1 text-xs font-semibold hover:underline"
+                        >
+                          +{moroso.disciplinas.length - DISCIPLINAS_VISIBLES}{' '}
+                          {moroso.disciplinas.length - DISCIPLINAS_VISIBLES === 1
+                            ? 'disciplina más'
+                            : 'disciplinas más'}
+                        </button>
+                      )}
                     </td>
                     <td className="px-6 py-4 tabular-nums">{moroso.cantidadPeriodos}</td>
                     <td className="px-6 py-4 text-right font-semibold text-rose-600 tabular-nums">
@@ -150,13 +154,16 @@ export function MorososCuotaDeportivaTable({ morosos, onCobrar }: MorososCuotaDe
                               aria-label={`Cuotas adeudadas de ${d.disciplinaNombre}`}
                               className="overflow-hidden rounded-lg border border-slate-200 bg-white"
                             >
-                              <h4 className="border-b border-slate-100 px-4 py-2 text-sm font-semibold text-slate-800">
+                              <h4 className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-2 text-sm font-semibold text-slate-800">
                                 {d.disciplinaNombre}
                                 {d.categoriaNombre && (
                                   <span className="font-normal text-slate-400">
                                     {' '}
                                     · {d.categoriaNombre}
                                   </span>
+                                )}
+                                {!d.inscripcionActiva && (
+                                  <Badge variant="secondary">Dada de baja</Badge>
                                 )}
                               </h4>
                               <table className="w-full text-sm">

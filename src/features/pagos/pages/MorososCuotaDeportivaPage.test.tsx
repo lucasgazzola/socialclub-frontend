@@ -101,8 +101,8 @@ describe('US-23 · MorososCuotaDeportivaPage', () => {
     expect(within(fila).getByText('30111222')).toBeInTheDocument();
     expect(within(fila).getByText('Fútbol')).toBeInTheDocument();
     expect(within(fila).getByText('Natación')).toBeInTheDocument();
-    expect(within(fila).getByText(/2 períodos/)).toBeInTheDocument();
-    expect(within(fila).getByText('Dada de baja')).toBeInTheDocument();
+    expect(within(fila).getByText(/2 per\. · \$\s?20\.000/)).toBeInTheDocument();
+    expect(within(fila).queryByText(/disciplinas? más/)).not.toBeInTheDocument();
   });
 
   it('el detalle muestra cada cuota adeudada con período, vencimiento, importe y estado, por disciplina', async () => {
@@ -120,9 +120,47 @@ describe('US-23 · MorososCuotaDeportivaPage', () => {
     expect(filas[0]).toHaveTextContent('10/08/2026');
     expect(filas[0]).toHaveTextContent('10.000');
     expect(filas[0]).toHaveTextContent('Vencida · impaga');
-    expect(
-      screen.getByRole('region', { name: 'Cuotas adeudadas de Natación' }),
-    ).toBeInTheDocument();
+    const natacion = screen.getByRole('region', { name: 'Cuotas adeudadas de Natación' });
+    expect(within(natacion).getByText('Dada de baja')).toBeInTheDocument();
+  });
+
+  it('con más de dos disciplinas muestra dos en la fila y el resto en el detalle', async () => {
+    const user = userEvent.setup();
+    const base = respuesta.items[0].disciplinas[0];
+    const nombres = ['Fútbol', 'Natación', 'Gimnasio', 'Básquet'];
+    mockHook.mockReturnValue({
+      data: {
+        ...respuesta,
+        items: [
+          {
+            ...respuesta.items[0],
+            disciplinas: nombres.map((disciplinaNombre, i) => ({
+              ...base,
+              disciplinaId: i + 1,
+              disciplinaNombre,
+            })),
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as never);
+    renderPagina();
+
+    const fila = screen.getByRole('row', { name: /Ana Gómez/ });
+    expect(within(fila).getByText('Fútbol')).toBeInTheDocument();
+    expect(within(fila).getByText('Natación')).toBeInTheDocument();
+    expect(within(fila).queryByText('Gimnasio')).not.toBeInTheDocument();
+
+    await user.click(within(fila).getByRole('button', { name: '+2 disciplinas más' }));
+
+    for (const nombre of nombres) {
+      expect(
+        screen.getByRole('region', { name: `Cuotas adeudadas de ${nombre}` }),
+      ).toBeInTheDocument();
+    }
+    expect(within(fila).queryByRole('button', { name: /disciplinas más/ })).not.toBeInTheDocument();
   });
 
   it('filtra por disciplina, busca y ordena pasando los filtros a la consulta', async () => {
