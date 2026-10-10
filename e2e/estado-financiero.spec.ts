@@ -71,6 +71,7 @@ test(
 test('TC-217 · Filtrar el reporte por disciplina', { tag: ['@US-35'] }, async ({ page, paso }) => {
   await paso('1. Elegir «Natación» en el filtro de disciplina', async () => {
     await abrirReporte(page);
+    await page.getByLabel('Trimestre').selectOption('3');
     await page.getByLabel('Filtrar por disciplina').selectOption({ label: 'Natación' });
   });
 
@@ -81,6 +82,9 @@ test('TC-217 · Filtrar el reporte por disciplina', { tag: ['@US-35'] }, async (
     const conceptos = page.getByRole('table', { name: 'Estado por concepto' });
     await expect(conceptos.getByText('Cuota social')).toHaveCount(0);
     await expect(conceptos.getByText('Cuota deportiva')).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Cuota deportiva por disciplina' })).toContainText(
+      'Natación',
+    );
     await resaltar(page.getByTestId('descripcion-reporte'), conceptos);
   });
 });
