@@ -144,3 +144,35 @@ export interface HistorialDeportivoResponse {
   totalPagado: number;
   totalAdeudado: number;
 }
+
+// ── US-19 · Morosos de cuota social ──────────────────────────────────────────
+
+export interface SocioMorosoCuotaSocial {
+  personaId: number;
+  nombreCompleto: string;
+  nombre: string;
+  apellido: string;
+  dni: string;
+  email: string | null;
+  telefono: string | null;
+  categoriaId: number;
+  categoria: string;
+  socioActivo: boolean;
+  periodosAdeudados: string[];
+  cantidadPeriodos: number;
+  montoTotalDeuda: number;
+  cuotasPendientes: CuotaPendiente[];
+}
+
+export interface MorososCuotaSocialResponse {
+  total: number;
+  deudaTotalClub: number;
+  items: SocioMorosoCuotaSocial[];
+}
+
+export interface FiltrosMorososCuotaSocial {
+  busqueda?: string;
+  categoriaId?: number;
+  ordenarPor?: 'monto' | 'periodos';
+  orden?: 'asc' | 'desc';
+}

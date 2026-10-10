@@ -94,6 +94,12 @@ const navSections: NavSection[] = [
         icon: ClipboardList,
         roles: ['ADMIN', 'COLABORADOR'],
       },
+      {
+        to: ROUTES.morososCuotaSocial,
+        label: 'Morosos cuota social',
+        icon: Coins,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
     ],
   },
   {
@@ -120,6 +126,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.cuotas]: 'Configuración de Cuotas',
   [ROUTES.cobrarCuotaDeportiva]: 'Cobro de Cuota Deportiva',
   [ROUTES.historialCuotaDeportiva]: 'Historial de Cuotas Deportivas',
+  [ROUTES.morososCuotaSocial]: 'Morosos de Cuota Social',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
   [ROUTES.tareas]: 'Tareas Automáticas',
@@ -253,7 +260,7 @@ export function AppLayout() {
               <span className="truncate text-sm font-bold tracking-tight text-white">
                 SocialClub
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-brand-300/90">
+              <span className="truncate text-[10px] font-semibold uppercase tracking-widest text-brand-300/90">
                 Panel de gestión
               </span>
             </div>
@@ -340,14 +347,6 @@ export function AppLayout() {
               >
                 {iniciales}
               </div>
-              <button
-                type="button"
-                onClick={() => void logout()}
-                title="Cerrar sesión"
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-sidebar-border hover:text-rose-400 transition-colors"
-              >
-                <LogOut size={16} strokeWidth={1.8} />
-              </button>
             </div>
           ) : (
             <div className="flex items-center justify-between rounded-xl bg-sidebar-surface/80 border border-sidebar-border p-2 transition-all">
