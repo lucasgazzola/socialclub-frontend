@@ -84,3 +84,38 @@ export function useCrearEvento() {
     },
   });
 }
+
+/** US-54 — Mutación para editar un evento existente. */
+export function useActualizarEvento() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<CrearEventoFormData> & { tempPreviewUrl?: string | null };
+    }) => {
+      const { tempPreviewUrl, ...rest } = payload;
+      delete rest.imagenFile;
+      const updated = await eventosApi.update(id, rest);
+
+      if (tempPreviewUrl && updated.id) {
+        tempImagesMap.set(updated.id, tempPreviewUrl);
+      } else if (tempPreviewUrl === null && updated.id) {
+        // Si se borró la imagen local, limpiar el mapa
+        tempImagesMap.delete(updated.id);
+      }
+
+      return updated;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: eventosKeys.all });
+      toast.success('Evento actualizado correctamente');
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar el evento');
+    },
+  });
+}

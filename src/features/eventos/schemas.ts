@@ -151,3 +151,122 @@ export const crearEventoSchema = z
   });
 
 export type CrearEventoSchema = z.infer<typeof crearEventoSchema>;
+
+/**
+ * US-54 — Schema para edición de eventos.
+ * Idéntico a crearEventoSchema pero sin validar "no en el pasado" para
+ * fechaEvento, fechaFin e inicioVenta (el evento ya existe y puede tener
+ * fechas históricas). Las relaciones entre fechas y el límite de 3 años
+ * se conservan. El backend tampoco valida pasado al editar (creando: false).
+ */
+export const actualizarEventoSchema = z
+  .object({
+    nombre: z.string().min(1, 'El nombre es obligatorio'),
+    descripcion: z.string().optional(),
+
+    requiereEntrada: z.boolean().optional().default(true),
+
+    estado: z
+      .enum(['BORRADOR', 'PUBLICADO', 'CANCELADO', 'FINALIZADO'])
+      .optional()
+      .default('PUBLICADO'),
+
+    capacidadMaxima: z
+      .number({ message: 'Debe ser un número' })
+      .int('Debe ser un entero')
+      .min(1, 'La capacidad máxima debe ser al menos 1')
+      .optional()
+      .nullable(),
+
+    entradasDisponibles: z
+      .number({ message: 'Debe ser un número' })
+      .int('Debe ser un entero')
+      .min(0, 'Las entradas disponibles no pueden ser negativas')
+      .optional()
+      .nullable(),
+
+    precio: z
+      .number({ message: 'Debe ser un número' })
+      .min(0, 'El precio no puede ser negativo')
+      .optional(),
+
+    descuentoSocio: z
+      .number({ message: 'Debe ser un número' })
+      .int()
+      .min(0)
+      .max(100)
+      .multipleOf(5, 'El descuento debe ser múltiplo de 5')
+      .optional()
+      .default(0),
+
+    fechaEvento: fechaRequerida,
+    fechaFin: fechaOpcional,
+
+    lugarAcreditacion: z.string().min(1, 'El lugar de acreditación es obligatorio'),
+
+    inicioVenta: fechaOpcional,
+    finVenta: fechaOpcional,
+  })
+  .superRefine((data, ctx) => {
+    const { maxFecha } = ahoraLimites();
+
+    // fechaEvento: solo límite de 3 años (sin restricción de pasado al editar)
+    if (data.fechaEvento) {
+      const dEvento = parseDatetimeLocal(data.fechaEvento);
+      if (dEvento && dEvento > maxFecha) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La fecha del evento supera el límite de 3 años', path: ['fechaEvento'] });
+      }
+    }
+
+    // fechaFin: solo límite de 3 años y posterior a fechaEvento
+    if (data.fechaFin) {
+      const dFin = parseDatetimeLocal(data.fechaFin);
+      const dEvento = data.fechaEvento ? parseDatetimeLocal(data.fechaEvento) : undefined;
+      if (dFin) {
+        if (dFin > maxFecha) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La fecha de fin supera el límite de 3 años', path: ['fechaFin'] });
+        }
+        if (dEvento && dFin <= dEvento) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La fecha de fin debe ser posterior a la fecha del evento', path: ['fechaFin'] });
+        }
+      }
+    }
+
+    // inicioVenta: solo límite de 3 años (sin restricción de pasado al editar)
+    if (data.inicioVenta) {
+      const dInicio = parseDatetimeLocal(data.inicioVenta);
+      if (dInicio && dInicio > maxFecha) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La fecha de inicio de venta supera el límite de 3 años', path: ['inicioVenta'] });
+      }
+    }
+
+    // finVenta: no > 3 años, >= inicioVenta, <= fechaEvento
+    if (data.finVenta) {
+      const dFin = parseDatetimeLocal(data.finVenta);
+      const dInicioV = data.inicioVenta ? parseDatetimeLocal(data.inicioVenta) : undefined;
+      const dEvento = data.fechaEvento ? parseDatetimeLocal(data.fechaEvento) : undefined;
+      if (dFin) {
+        if (dFin > maxFecha) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La fecha de fin de venta supera el límite de 3 años', path: ['finVenta'] });
+        }
+        if (dInicioV && dFin < dInicioV) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La fecha de fin de venta debe ser posterior o igual al inicio de venta', path: ['finVenta'] });
+        }
+        if (dEvento && dFin > dEvento) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La fecha de fin de venta no puede ser posterior a la fecha del evento', path: ['finVenta'] });
+        }
+      }
+    }
+
+    // descuentoSocio > 0 solo si requiereEntrada y precio > 0
+    if ((data.descuentoSocio ?? 0) > 0) {
+      if (!data.requiereEntrada) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El descuento solo aplica si se requieren entradas', path: ['descuentoSocio'] });
+      }
+      if (!data.precio || data.precio <= 0) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El descuento solo aplica si el evento tiene precio mayor a 0', path: ['descuentoSocio'] });
+      }
+    }
+  });
+
+export type ActualizarEventoSchema = z.infer<typeof actualizarEventoSchema>;

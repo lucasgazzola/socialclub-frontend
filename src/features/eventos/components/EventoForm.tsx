@@ -3,49 +3,145 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ImagePlus, X } from 'lucide-react';
 import { Button, DateTimeInput, Input, Select, ModalActions } from '@/components/ui';
-import { crearEventoSchema, type CrearEventoSchema } from '../schemas';
+import {
+  crearEventoSchema,
+  actualizarEventoSchema,
+  type CrearEventoSchema,
+  type ActualizarEventoSchema,
+} from '../schemas';
+import type { Evento } from '../types';
 import type { z } from 'zod';
 
-/** Tipo de entrada para el formulario (campos con .default() son opcionales en el form) */
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Convierte un instante ISO (ej. "2027-01-15T18:00:00.000Z") a formato
+ * datetime-local ("2027-01-15T15:00") ajustado a la zona de Buenos Aires.
+ */
+function isoADatetimeLocal(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const ba = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d);
+  // sv-SE produce "2027-01-15 15:00" → reemplazar espacio por T
+  return ba.replace(' ', 'T');
+}
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
+type ModoFormulario = 'crear' | 'editar';
+
+/** Input del formulario (pre-transform por Zod) */
 type CrearEventoInput = z.input<typeof crearEventoSchema>;
+type ActualizarEventoInput = z.input<typeof actualizarEventoSchema>;
 
 export interface EventoFormValues extends CrearEventoSchema {
   imagenFile?: File | null;
   tempPreviewUrl?: string | null;
 }
 
-interface Props {
+export interface ActualizarEventoFormValues extends ActualizarEventoSchema {
+  imagenFile?: File | null;
+  tempPreviewUrl?: string | null;
+}
+
+interface PropsCrear {
+  modo?: 'crear';
+  eventoInicial?: undefined;
   onSubmit: (data: EventoFormValues) => Promise<void>;
   submitLabel?: string;
   onCancel?: () => void;
 }
 
+interface PropsEditar {
+  modo: 'editar';
+  eventoInicial: Evento;
+  onSubmit: (data: ActualizarEventoFormValues) => Promise<void>;
+  submitLabel?: string;
+  onCancel?: () => void;
+}
+
+type Props = PropsCrear | PropsEditar;
+
+// ─── Constantes ───────────────────────────────────────────────────────────────
+
 /** Opciones de descuento: 0%, 5%, 10%, …, 100% */
 const OPCIONES_DESCUENTO = Array.from({ length: 21 }, (_, i) => i * 5);
 
-export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Props) {
+// ─── Helpers internos ─────────────────────────────────────────────────────────
+
+function buildDefaultValues(modo: ModoFormulario, evento?: Evento): CrearEventoInput | ActualizarEventoInput {
+  if (modo === 'editar' && evento) {
+    return {
+      nombre: evento.nombre,
+      descripcion: evento.descripcion ?? '',
+      requiereEntrada: evento.requiereEntrada,
+      estado: evento.estado,
+      capacidadMaxima: evento.capacidadMaxima ?? null,
+      entradasDisponibles: evento.entradasDisponibles ?? null,
+      precio: typeof evento.precio === 'string' ? parseFloat(evento.precio) : (evento.precio ?? 0),
+      descuentoSocio: evento.descuentoSocio ?? 0,
+      fechaEvento: isoADatetimeLocal(evento.fechaEvento),
+      fechaFin: isoADatetimeLocal(evento.fechaFin),
+      lugarAcreditacion: evento.lugarAcreditacion,
+      inicioVenta: isoADatetimeLocal(evento.inicioVenta),
+      finVenta: isoADatetimeLocal(evento.finVenta),
+    };
+  }
+  if (modo === 'crear') {
+    return {
+      requiereEntrada: true,
+      estado: 'PUBLICADO' as const,
+      precio: 0,
+      descuentoSocio: 0,
+      capacidadMaxima: 100,
+      entradasDisponibles: 100,
+      lugarAcreditacion: 'Club Social y Deportivo',
+      nombre: '',
+      fechaEvento: '',
+    };
+  }
+  // fallback (no debería ocurrir)
+  return { nombre: '', fechaEvento: '', lugarAcreditacion: '' };
+}
+
+// ─── Componente ───────────────────────────────────────────────────────────────
+
+export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel, modo = 'crear', eventoInicial }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  const esEdicion = modo === 'editar';
+  const entradasVendidas = eventoInicial?.entradasVendidas ?? 0;
 
+  // La imagen del servidor se usa como preview inicial en edición (estado local)
+  const imagenBackend = eventoInicial?.imageUrl ?? null;
+  const mostrarPreviewBackend =
+    esEdicion && !selectedFile && imagenBackend && !imagenBackend.includes('favicon-blanco');
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const {
     register,
     handleSubmit,
     watch,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<CrearEventoInput, unknown, CrearEventoSchema>({
-    resolver: zodResolver(crearEventoSchema),
-    defaultValues: {
-      requiereEntrada: true,
-      estado: 'PUBLICADO',
-      precio: 0,
-      descuentoSocio: 0,
-      capacidadMaxima: 100,
-      entradasDisponibles: 100,
-      lugarAcreditacion: 'Club Social y Deportivo',
-    },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } = useForm<any>({
+    resolver: zodResolver(esEdicion ? actualizarEventoSchema : crearEventoSchema),
+    defaultValues: buildDefaultValues(modo, eventoInicial),
   });
+
+  /** Extrae el mensaje de error de un campo de forma type-safe con useForm<any>. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getMsg = (field: string): string | undefined => (errors as any)[field]?.message as string | undefined;
 
   const requiereEntrada = watch('requiereEntrada');
   const precio = watch('precio');
@@ -75,8 +171,8 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
     setPreviewUrl(null);
   }
 
-  async function handleFormSubmit(data: CrearEventoSchema) {
-    await onSubmit({
+  async function handleFormSubmit(data: CrearEventoSchema | ActualizarEventoSchema) {
+    await (onSubmit as (d: typeof data & { imagenFile?: File | null; tempPreviewUrl?: string | null }) => Promise<void>)({
       ...data,
       imagenFile: selectedFile,
       tempPreviewUrl: previewUrl,
@@ -84,6 +180,7 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
   }
 
   const puedeDescuento = requiereEntrada && (precio ?? 0) > 0;
+  const imagePreviewSrc = previewUrl ?? (mostrarPreviewBackend ? imagenBackend : null);
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4" noValidate>
@@ -96,18 +193,21 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
         <p className="mb-2 text-xs text-slate-500">
           La imagen se guarda solo en memoria local para esta sesión y no se sube al servidor.
         </p>
-        {previewUrl ? (
+        {imagePreviewSrc ? (
           <div className="relative inline-block overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
-            <img src={previewUrl} alt="Vista previa" className="h-32 w-48 object-cover rounded-lg" />
-            <button
-              type="button"
-              onClick={handleRemoveImage}
-              className="absolute top-3 right-3 rounded-full bg-slate-900/70 p-1 text-white hover:bg-slate-900"
-              title="Quitar imagen"
-              aria-label="Quitar imagen"
-            >
-              <X size={14} aria-hidden="true" />
-            </button>
+            <img src={imagePreviewSrc} alt="Vista previa" className="h-32 w-48 object-cover rounded-lg" />
+            {/* Solo permitir quitar si es una imagen local elegida; la del backend es de referencia */}
+            {previewUrl && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="absolute top-3 right-3 rounded-full bg-slate-900/70 p-1 text-white hover:bg-slate-900"
+                title="Quitar imagen local"
+                aria-label="Quitar imagen local"
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            )}
           </div>
         ) : (
           <label className="flex h-24 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors">
@@ -126,7 +226,7 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
           Nombre del evento *
         </label>
         <Input id="nombre" {...register('nombre')} placeholder="Ej: Torneo de Pádel Abierto 2026" />
-        {errors.nombre && <p className="mt-1 text-xs text-rose-600" role="alert">{errors.nombre.message}</p>}
+        {getMsg('nombre') && <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('nombre')}</p>}
       </div>
 
       {/* ─── Descripción ─── */}
@@ -143,8 +243,8 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
           Lugar de acreditación *
         </label>
         <Input id="lugarAcreditacion" {...register('lugarAcreditacion')} placeholder="Ej: Salón principal" />
-        {errors.lugarAcreditacion && (
-          <p className="mt-1 text-xs text-rose-600" role="alert">{errors.lugarAcreditacion.message}</p>
+        {getMsg('lugarAcreditacion') && (
+          <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('lugarAcreditacion')}</p>
         )}
       </div>
 
@@ -159,7 +259,12 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
           <option value="CANCELADO">Cancelado</option>
           <option value="FINALIZADO">Finalizado</option>
         </Select>
-        {errors.estado && <p className="mt-1 text-xs text-rose-600" role="alert">{errors.estado.message}</p>}
+        {getMsg('estado') && <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('estado')}</p>}
+        {esEdicion && (
+          <p className="mt-1 text-xs text-slate-500">
+            Atención: el cambio a CANCELADO impide nuevas compras. No es posible volver a PUBLICADO desde CANCELADO o FINALIZADO.
+          </p>
+        )}
       </div>
 
       {/* ─── Requiere entrada ─── */}
@@ -169,11 +274,18 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
           type="checkbox"
           className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
           {...register('requiereEntrada')}
+          disabled={esEdicion && entradasVendidas > 0}
         />
         <label htmlFor="requiereEntrada" className="text-sm font-medium text-slate-700 cursor-pointer">
           El evento requiere entradas / tickets
         </label>
       </div>
+      {esEdicion && entradasVendidas > 0 && (
+        <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 ring-1 ring-amber-600/20">
+          Este evento tiene <strong>{entradasVendidas}</strong> entrada{entradasVendidas !== 1 ? 's' : ''} vendida{entradasVendidas !== 1 ? 's' : ''}.
+          La capacidad máxima no puede reducirse por debajo de ese valor y no es posible desactivar la venta de entradas.
+        </p>
+      )}
 
       {/* ─── Entradas y Capacidad (solo si requiere entrada) ─── */}
       {requiereEntrada && (
@@ -185,12 +297,12 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
             <Input
               id="capacidadMaxima"
               type="number"
-              min={1}
+              min={esEdicion && entradasVendidas > 0 ? entradasVendidas : 1}
               {...register('capacidadMaxima', { valueAsNumber: true })}
               placeholder="100"
             />
-            {errors.capacidadMaxima && (
-              <p className="mt-1 text-xs text-rose-600" role="alert">{errors.capacidadMaxima.message}</p>
+            {getMsg('capacidadMaxima') && (
+              <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('capacidadMaxima')}</p>
             )}
           </div>
 
@@ -205,8 +317,8 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
               {...register('entradasDisponibles', { valueAsNumber: true })}
               placeholder="100"
             />
-            {errors.entradasDisponibles && (
-              <p className="mt-1 text-xs text-rose-600" role="alert">{errors.entradasDisponibles.message}</p>
+            {getMsg('entradasDisponibles') && (
+              <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('entradasDisponibles')}</p>
             )}
           </div>
         </div>
@@ -226,7 +338,12 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
               {...register('precio', { valueAsNumber: true })}
               placeholder="0"
             />
-            {errors.precio && <p className="mt-1 text-xs text-rose-600" role="alert">{errors.precio.message}</p>}
+            {getMsg('precio') && <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('precio')}</p>}
+            {esEdicion && (
+              <p className="mt-1 text-xs text-slate-500">
+                El nuevo precio aplica solo a futuras compras; las transacciones anteriores no se modifican.
+              </p>
+            )}
           </div>
 
           <div>
@@ -257,8 +374,8 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
                 Disponible solo con precio mayor a $0
               </p>
             )}
-            {errors.descuentoSocio && (
-              <p className="mt-1 text-xs text-rose-600" role="alert">{errors.descuentoSocio.message}</p>
+            {getMsg('descuentoSocio') && (
+              <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('descuentoSocio')}</p>
             )}
           </div>
         </div>
@@ -284,8 +401,8 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
               />
             )}
           />
-          {errors.fechaEvento && (
-            <p className="mt-1 text-xs text-rose-600" role="alert">{errors.fechaEvento.message}</p>
+          {getMsg('fechaEvento') && (
+            <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('fechaEvento')}</p>
           )}
         </div>
 
@@ -307,8 +424,8 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
               />
             )}
           />
-          {errors.fechaFin && (
-            <p className="mt-1 text-xs text-rose-600" role="alert">{errors.fechaFin.message}</p>
+          {getMsg('fechaFin') && (
+            <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('fechaFin')}</p>
           )}
         </div>
       </div>
@@ -334,8 +451,8 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
                 />
               )}
             />
-            {errors.inicioVenta && (
-              <p className="mt-1 text-xs text-rose-600" role="alert">{errors.inicioVenta.message}</p>
+            {getMsg('inicioVenta') && (
+              <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('inicioVenta')}</p>
             )}
           </div>
 
@@ -357,8 +474,8 @@ export function EventoForm({ onSubmit, submitLabel = 'Guardar', onCancel }: Prop
                 />
               )}
             />
-            {errors.finVenta && (
-              <p className="mt-1 text-xs text-rose-600" role="alert">{errors.finVenta.message}</p>
+            {getMsg('finVenta') && (
+              <p className="mt-1 text-xs text-rose-600" role="alert">{getMsg('finVenta')}</p>
             )}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Ticket, MapPin } from 'lucide-react';
+import { Calendar, Clock, Ticket, MapPin, Pencil } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import faviconBlanco from '@/assets/favicon-blanco.png';
@@ -14,9 +14,11 @@ import {
 
 interface Props {
   evento: Evento;
+  /** Callback para editar el evento. Si no se pasa, el botón no se renderiza. */
+  onEditar?: (evento: Evento) => void;
 }
 
-export function EventoCard({ evento }: Props) {
+export function EventoCard({ evento, onEditar }: Props) {
   const estadoVisual = getEstadoVisual(evento);
   const estaHabilitadoComprar = puedeComprar(evento);
   const precioSocioTexto = formatPrecioSocio(evento.precio, evento.descuentoSocio);
@@ -129,15 +131,32 @@ export function EventoCard({ evento }: Props) {
             )}
           </div>
 
-          {/* Acción: Comprar entradas */}
-          {estaHabilitadoComprar && (
-            <Link to={ROUTES.comprarEntradas(evento.id)}>
-              <Button size="sm" className="shadow-xs shrink-0">
-                <Ticket size={13} aria-hidden="true" />
-                Comprar entradas
+          {/* Acciones */}
+          <div className="flex items-center gap-1.5">
+            {/* Acción: Editar (solo ADMIN) */}
+            {onEditar && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEditar(evento)}
+                aria-label={`Editar evento ${evento.nombre}`}
+                className="gap-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <Pencil size={14} aria-hidden="true" />
+                Editar
               </Button>
-            </Link>
-          )}
+            )}
+
+            {/* Acción: Comprar entradas */}
+            {estaHabilitadoComprar && (
+              <Link to={ROUTES.comprarEntradas(evento.id)}>
+                <Button size="sm" className="shadow-xs shrink-0">
+                  <Ticket size={13} aria-hidden="true" />
+                  Comprar entradas
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </article>
