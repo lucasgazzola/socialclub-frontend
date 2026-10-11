@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { CalendarPlus, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { CalendarPlus, ChevronLeft, ChevronRight, Plus, Search, Pencil } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
-import { EventoForm, type EventoFormValues } from '../components/EventoForm';
+import { EventoForm, type EventoFormValues, type ActualizarEventoFormValues } from '../components/EventoForm';
 import { EventoCard } from '../components/EventoCard';
-import { useCrearEvento, useEventos } from '../hooks/useEventos';
+import { useCrearEvento, useActualizarEvento, useEventos } from '../hooks/useEventos';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { FiltrarEventosParams } from '../api/eventos.api';
+import type { Evento } from '../types';
 
 const POR_PAGINA = 5;
 
 export function EventosPage() {
-  const [modalAbierto, setModalAbierto] = useState(false);
+  const [modalCrearAbierto, setModalCrearAbierto] = useState(false);
+  const [eventoEditando, setEventoEditando] = useState<Evento | null>(null);
   const [pagina, setPagina] = useState(1);
   const [search, setSearch] = useState('');
   const [ordenar, setOrdenar] = useState<FiltrarEventosParams['ordenar']>('fecha');
@@ -29,6 +31,7 @@ export function EventosPage() {
 
   const { data: paginado, isLoading, isError } = useEventos(params);
   const crearEvento = useCrearEvento();
+  const actualizarEvento = useActualizarEvento();
 
   const puedeCrearEvento = esAdmin;
   const totalPaginas = paginado?.totalPaginas ?? 1;
@@ -38,8 +41,18 @@ export function EventosPage() {
   async function handleCrear(values: EventoFormValues) {
     const { tempPreviewUrl, imagenFile, ...rest } = values;
     await crearEvento.mutateAsync({ ...rest, tempPreviewUrl, imagenFile });
-    setModalAbierto(false);
+    setModalCrearAbierto(false);
     setPagina(1);
+  }
+
+  async function handleEditar(values: ActualizarEventoFormValues) {
+    if (!eventoEditando) return;
+    const { tempPreviewUrl, imagenFile, ...rest } = values;
+    await actualizarEvento.mutateAsync({
+      id: eventoEditando.id,
+      payload: { ...rest, tempPreviewUrl, imagenFile },
+    });
+    setEventoEditando(null);
   }
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -55,7 +68,7 @@ export function EventosPage() {
           <p className="mt-1 text-sm text-slate-500">Gestioná y explorá los eventos del club.</p>
         </div>
         {puedeCrearEvento && (
-          <Button onClick={() => setModalAbierto(true)} className="self-start shadow-xs sm:self-auto">
+          <Button onClick={() => setModalCrearAbierto(true)} className="self-start shadow-xs sm:self-auto">
             <Plus size={16} aria-hidden="true" />
             Nuevo evento
           </Button>
@@ -103,14 +116,39 @@ export function EventosPage() {
 
       {/* ─── Modal crear evento ─── */}
       <Modal
-        open={modalAbierto}
+        open={modalCrearAbierto}
         title="Nuevo evento"
         description="Completá los datos para crear un nuevo evento."
         icon={<CalendarPlus />}
         size="lg"
-        onClose={() => setModalAbierto(false)}
+        onClose={() => setModalCrearAbierto(false)}
       >
-        <EventoForm onSubmit={handleCrear} submitLabel="Crear evento" onCancel={() => setModalAbierto(false)} />
+        <EventoForm
+          modo="crear"
+          onSubmit={handleCrear}
+          submitLabel="Crear evento"
+          onCancel={() => setModalCrearAbierto(false)}
+        />
+      </Modal>
+
+      {/* ─── Modal editar evento (US-54) ─── */}
+      <Modal
+        open={eventoEditando !== null}
+        title="Editar evento"
+        description="Modificá los datos del evento. Los cambios en precio aplican solo a futuras compras."
+        icon={<Pencil />}
+        size="lg"
+        onClose={() => setEventoEditando(null)}
+      >
+        {eventoEditando && (
+          <EventoForm
+            modo="editar"
+            eventoInicial={eventoEditando}
+            onSubmit={handleEditar}
+            submitLabel="Guardar cambios"
+            onCancel={() => setEventoEditando(null)}
+          />
+        )}
       </Modal>
 
       {/* ─── Lista ─── */}
@@ -129,7 +167,11 @@ export function EventosPage() {
       ) : (
         <div className="space-y-4">
           {eventos.map((evento) => (
-            <EventoCard key={evento.id} evento={evento} />
+            <EventoCard
+              key={evento.id}
+              evento={evento}
+              onEditar={esAdmin ? setEventoEditando : undefined}
+            />
           ))}
         </div>
       )}

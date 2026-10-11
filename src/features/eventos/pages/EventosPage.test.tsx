@@ -3,12 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventosPage } from './EventosPage';
-import { useCrearEvento, useEventos } from '../hooks/useEventos';
+import { useActualizarEvento, useCrearEvento, useEventos } from '../hooks/useEventos';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 vi.mock('../hooks/useEventos', () => ({
   useEventos: vi.fn(),
   useCrearEvento: vi.fn(),
+  useActualizarEvento: vi.fn(),
 }));
 
 vi.mock('@/features/auth/hooks/useAuth', () => ({
@@ -16,6 +17,7 @@ vi.mock('@/features/auth/hooks/useAuth', () => ({
 }));
 
 const crearMutateAsync = vi.fn();
+const actualizarMutateAsync = vi.fn();
 
 function renderPage() {
   return render(
@@ -69,6 +71,11 @@ describe('EventosPage', () => {
 
     vi.mocked(useCrearEvento).mockReturnValue({
       mutateAsync: crearMutateAsync,
+      isPending: false,
+    } as never);
+
+    vi.mocked(useActualizarEvento).mockReturnValue({
+      mutateAsync: actualizarMutateAsync,
       isPending: false,
     } as never);
   });
