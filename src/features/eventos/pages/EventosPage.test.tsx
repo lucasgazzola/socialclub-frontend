@@ -152,4 +152,65 @@ describe('EventosPage', () => {
     });
     expect(crearMutateAsync).not.toHaveBeenCalled();
   });
+
+  it('permite abrir el modal de detalle del evento con "Ver detalle" sin iniciar compra (US-53)', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const btnVerDetalle = screen.getByRole('button', { name: /ver detalle de noche de música/i });
+    expect(btnVerDetalle).toBeInTheDocument();
+
+    await user.click(btnVerDetalle);
+
+    const dialog = await screen.findByRole('dialog', { name: /noche de música/i });
+    expect(within(dialog).getByText(/cierre de temporada/i)).toBeInTheDocument();
+    expect(within(dialog).getByText('Gratis')).toBeInTheDocument();
+  });
+
+  it('muestra skeletons de carga mientras se obtienen los eventos (US-53)', () => {
+    vi.mocked(useEventos).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+    } as never);
+
+    renderPage();
+
+    expect(screen.getByTestId('eventos-skeleton')).toBeInTheDocument();
+  });
+
+  it('muestra el estado vacío cuando no hay eventos disponibles (US-53)', () => {
+    vi.mocked(useEventos).mockReturnValue({
+      data: { items: [], total: 0, pagina: 1, porPagina: 5, totalPaginas: 1 },
+      isLoading: false,
+      isError: false,
+    } as never);
+
+    renderPage();
+
+    expect(screen.getByTestId('eventos-vacio')).toBeInTheDocument();
+    expect(screen.getByText(/no hay eventos disponibles en este momento/i)).toBeInTheDocument();
+  });
+
+  it('conecta los filtros de búsqueda y fechas con useEventos (US-53)', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const inputSearch = screen.getByPlaceholderText(/buscar por nombre o descripción/i);
+    await user.type(inputSearch, 'Primavera');
+
+    const inputDesde = screen.getByLabelText(/desde:/i);
+    await user.type(inputDesde, '2026-11-01');
+
+    const inputHasta = screen.getByLabelText(/hasta:/i);
+    await user.type(inputHasta, '2026-11-30');
+
+    expect(useEventos).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: 'Primavera',
+        fechaDesde: '2026-11-01',
+        fechaHasta: '2026-11-30',
+      }),
+    );
+  });
 });

@@ -35,6 +35,11 @@ export function AppRouter() {
       <Route path={ROUTES.login} element={<LoginPage />} />
       <Route path={ROUTES.register} element={<RegisterPage />} />
 
+      {/* Catálogo público de eventos (US-53) */}
+      <Route element={<AppLayout />}>
+        <Route path="eventos" element={<EventosPage />} />
+      </Route>
+
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
@@ -65,9 +70,8 @@ export function AppRouter() {
             <Route path="cuotas/social/:id/editar" element={<RedirigirAEdicion a={ROUTES.editarCuotaSocial} />} />
           </Route>
 
-          {/* Consulta y compra: cualquier usuario autenticado */}
+          {/* Compra de entradas: cualquier usuario autenticado */}
           <Route>
-            <Route path="eventos" element={<EventosPage />} />
             <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
           </Route>
 

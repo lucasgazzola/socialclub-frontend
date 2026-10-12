@@ -349,7 +349,7 @@ export function AppLayout() {
           {colapsado ? (
             <div className="flex flex-col items-center gap-2">
               <div
-                title={`${usuario?.nombre} ${usuario?.apellido} (${rolPrincipal})`}
+                title={usuario ? `${usuario.nombre} ${usuario.apellido} (${rolPrincipal})` : 'Invitado'}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-brand-800 text-xs font-bold text-white shadow-xs ring-1 ring-white/10"
               >
                 {iniciales}
@@ -363,22 +363,32 @@ export function AppLayout() {
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="truncate text-xs font-semibold text-white">
-                    {usuario?.nombre} {usuario?.apellido}
+                    {usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Invitado'}
                   </span>
                   <span className="truncate text-[10px] font-medium text-brand-300/90">
-                    {rolPrincipal}
+                    {usuario ? rolPrincipal : 'Público'}
                   </span>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => void logout()}
-                title="Cerrar sesión"
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-sidebar-border hover:text-rose-400 transition-colors"
-              >
-                <LogOut size={16} strokeWidth={1.8} />
-              </button>
+              {usuario ? (
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  title="Cerrar sesión"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-sidebar-border hover:text-rose-400 transition-colors"
+                >
+                  <LogOut size={16} strokeWidth={1.8} />
+                </button>
+              ) : (
+                <NavLink
+                  to={ROUTES.login}
+                  title="Iniciar sesión"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-sidebar-border hover:text-blue-400 transition-colors"
+                >
+                  <User size={16} strokeWidth={1.8} />
+                </NavLink>
+              )}
             </div>
           )}
         </div>
@@ -403,7 +413,7 @@ export function AppLayout() {
             <div className="h-4 w-px bg-slate-200" />
 
             <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs">
-              {rolPrincipal}
+              {usuario ? rolPrincipal : 'Invitado'}
             </span>
           </div>
         </header>

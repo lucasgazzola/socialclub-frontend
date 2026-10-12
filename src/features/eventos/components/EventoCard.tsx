@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Ticket, MapPin, Pencil } from 'lucide-react';
+import { Calendar, Clock, Ticket, MapPin, Pencil, Info } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
 import { ROUTES } from '@/routes/paths';
 import faviconBlanco from '@/assets/favicon-blanco.png';
@@ -10,17 +10,21 @@ import {
   formatPrecioSocio,
   getEstadoVisual,
   puedeComprar,
+  ventaAbierta,
 } from '../helpers';
 
 interface Props {
   evento: Evento;
+  /** Callback para ver el detalle completo del evento */
+  onVerDetalle?: (evento: Evento) => void;
   /** Callback para editar el evento. Si no se pasa, el botón no se renderiza. */
   onEditar?: (evento: Evento) => void;
 }
 
-export function EventoCard({ evento, onEditar }: Props) {
+export function EventoCard({ evento, onVerDetalle, onEditar }: Props) {
   const estadoVisual = getEstadoVisual(evento);
-  const estaHabilitadoComprar = puedeComprar(evento);
+  const estaEnPeriodoVenta = ventaAbierta(evento);
+  const estaHabilitadoComprar = puedeComprar(evento) && estaEnPeriodoVenta;
   const precioSocioTexto = formatPrecioSocio(evento.precio, evento.descuentoSocio);
 
   // La imagen temporal en estado local se pierde al recargar la página (comportamiento esperado).
@@ -40,7 +44,10 @@ export function EventoCard({ evento, onEditar }: Props) {
   const fechaFinTexto = evento.fechaFin ? formatFechaEvento(evento.fechaFin) : null;
 
   return (
-    <article className="group flex flex-col sm:flex-row overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-xs transition-all duration-200 hover:shadow-md hover:border-slate-300">
+    <article
+      data-testid={`evento-card-${evento.id}`}
+      className="group flex flex-col sm:flex-row overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-xs transition-all duration-200 hover:shadow-md hover:border-slate-300"
+    >
       {/* ─── Imagen (~25% del ancho en pantallas md+) ─── */}
       <div
         className={`relative w-full sm:w-1/4 shrink-0 overflow-hidden sm:rounded-l-[20px] sm:rounded-r-none rounded-t-[20px] ${
@@ -65,7 +72,10 @@ export function EventoCard({ evento, onEditar }: Props) {
         {/* Fila superior: Título + Badge de estado */}
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <h3 className="text-base font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
+            <h3
+              data-testid={`evento-titulo-${evento.id}`}
+              className="text-base font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors leading-snug"
+            >
               {evento.nombre}
             </h3>
             <Badge className={estadoVisual.badgeClass}>
@@ -93,7 +103,7 @@ export function EventoCard({ evento, onEditar }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             {/* Chip Precio / Entradas */}
-            {evento.requiereEntrada && (
+            {evento.requiereEntrada ? (
               <div
                 className={`inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 ${
                   estadoVisual.opacidadChipEntradasReducida ? 'opacity-50' : 'opacity-100'
@@ -102,10 +112,17 @@ export function EventoCard({ evento, onEditar }: Props) {
                 <Ticket size={13} className="text-slate-500" aria-hidden="true" />
                 <span>
                   <strong className="font-semibold text-slate-900">{precioTexto}</strong>
-                  {evento.entradasDisponibles !== null && evento.entradasDisponibles !== undefined && (
-                    <span className="text-slate-500"> · {evento.entradasDisponibles} disp.</span>
-                  )}
+                  {estaEnPeriodoVenta &&
+                    evento.entradasDisponibles !== null &&
+                    evento.entradasDisponibles !== undefined && (
+                      <span className="text-slate-500"> · {evento.entradasDisponibles} disp.</span>
+                    )}
                 </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                <Ticket size={13} className="text-slate-500" aria-hidden="true" />
+                <strong className="font-semibold text-slate-900">Gratis</strong>
               </div>
             )}
 
@@ -133,6 +150,21 @@ export function EventoCard({ evento, onEditar }: Props) {
 
           {/* Acciones */}
           <div className="flex items-center gap-1.5">
+            {/* Acción: Ver detalle */}
+            {onVerDetalle && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onVerDetalle(evento)}
+                aria-label={`Ver detalle de ${evento.nombre}`}
+                data-testid={`evento-detalle-${evento.id}`}
+                className="gap-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <Info size={14} aria-hidden="true" />
+                Ver detalle
+              </Button>
+            )}
+
             {/* Acción: Editar (solo ADMIN) */}
             {onEditar && (
               <Button
@@ -140,6 +172,7 @@ export function EventoCard({ evento, onEditar }: Props) {
                 size="sm"
                 onClick={() => onEditar(evento)}
                 aria-label={`Editar evento ${evento.nombre}`}
+                data-testid={`evento-editar-${evento.id}`}
                 className="gap-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               >
                 <Pencil size={14} aria-hidden="true" />
@@ -150,7 +183,11 @@ export function EventoCard({ evento, onEditar }: Props) {
             {/* Acción: Comprar entradas */}
             {estaHabilitadoComprar && (
               <Link to={ROUTES.comprarEntradas(evento.id)}>
-                <Button size="sm" className="shadow-xs shrink-0">
+                <Button
+                  size="sm"
+                  className="shadow-xs shrink-0"
+                  data-testid={`evento-comprar-${evento.id}`}
+                >
                   <Ticket size={13} aria-hidden="true" />
                   Comprar entradas
                 </Button>
@@ -162,3 +199,4 @@ export function EventoCard({ evento, onEditar }: Props) {
     </article>
   );
 }
+

@@ -7,6 +7,8 @@ export interface FiltrarEventosParams {
   soloDisponibles?: boolean;
   incluirBorradores?: boolean;
   ordenar?: 'nombre' | 'reciente' | 'fecha';
+  fechaDesde?: string;
+  fechaHasta?: string;
   pagina?: number;
   porPagina?: number;
 }
@@ -19,6 +21,8 @@ export const eventosApi = {
         ...(params?.soloDisponibles ? { soloDisponibles: 'true' } : {}),
         ...(params?.incluirBorradores ? { incluirBorradores: 'true' } : {}),
         ...(params?.ordenar ? { ordenar: params.ordenar } : {}),
+        ...(params?.fechaDesde ? { fechaDesde: params.fechaDesde } : {}),
+        ...(params?.fechaHasta ? { fechaHasta: params.fechaHasta } : {}),
         ...(params?.pagina ? { pagina: params.pagina } : {}),
         ...(params?.porPagina ? { porPagina: params.porPagina } : {}),
       },
