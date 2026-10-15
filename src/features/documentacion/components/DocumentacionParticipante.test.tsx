@@ -10,6 +10,14 @@ vi.mock('../hooks/useDocumentacion', () => ({
   useCrearDocumentacion: vi.fn(),
   useDocumentacionPorPersona: vi.fn(),
   useEstadoDocumental: vi.fn(),
+  useHabilitarExcepcional: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+}));
+
+const mockAuth = {
+  usuario: { id: 1, email: 'admin@socialclub.com', roles: ['ADMIN'] },
+};
+vi.mock('@/features/auth/hooks/useAuth', () => ({
+  useAuth: () => mockAuth,
 }));
 
 const crearMock = vi.fn();
@@ -276,6 +284,80 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
 
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       expect(screen.getByText('Habilitado')).toBeInTheDocument();
+    });
+
+    it('US-28: el administrador visualiza el botón para habilitar excepcionalmente ante un bloqueo', () => {
+      mockAuth.usuario = { id: 1, email: 'admin@socialclub.com', roles: ['ADMIN'] };
+      mockHook(useEstadoDocumental).mockReturnValue({
+        data: {
+          ...estado,
+          estado: 'BLOQUEADO',
+          inscripciones: [
+            {
+              ...estado.inscripciones[0],
+              estado: 'BLOQUEADO',
+              motivos: ['Certificado médico de aptitud física: vencido el 30/09/2026'],
+            },
+          ],
+        },
+        isLoading: false,
+      });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      expect(
+        screen.getByRole('button', { name: /Habilitar excepcionalmente/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('US-28: un delegado NO tiene acceso al botón de habilitación excepcional', () => {
+      mockAuth.usuario = { id: 2, email: 'delegado@socialclub.com', roles: ['DELEGADO'] };
+      mockHook(useEstadoDocumental).mockReturnValue({
+        data: {
+          ...estado,
+          estado: 'BLOQUEADO',
+          inscripciones: [
+            {
+              ...estado.inscripciones[0],
+              estado: 'BLOQUEADO',
+              motivos: ['Certificado médico de aptitud física: vencido el 30/09/2026'],
+            },
+          ],
+        },
+        isLoading: false,
+      });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      expect(
+        screen.queryByRole('button', { name: /Habilitar excepcionalmente/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('US-28: al hacer clic en Habilitar excepcionalmente se abre el modal', async () => {
+      const user = userEvent.setup();
+      mockAuth.usuario = { id: 1, email: 'admin@socialclub.com', roles: ['ADMIN'] };
+      mockHook(useEstadoDocumental).mockReturnValue({
+        data: {
+          ...estado,
+          estado: 'BLOQUEADO',
+          inscripciones: [
+            {
+              ...estado.inscripciones[0],
+              estado: 'BLOQUEADO',
+              motivos: ['Certificado médico de aptitud física: vencido el 30/09/2026'],
+            },
+          ],
+        },
+        isLoading: false,
+      });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      const boton = screen.getByRole('button', { name: /Habilitar excepcionalmente/i });
+      await user.click(boton);
+
+      expect(screen.getByText('Habilitación excepcional de participación')).toBeInTheDocument();
     });
   });
 });

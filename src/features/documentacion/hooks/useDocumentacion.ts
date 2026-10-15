@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { documentacionApi } from '../api/documentacion.api';
+import { habilitarExcepcional } from '@/features/inscripcion/api/inscripcion.api';
 import type { CrearDocumentacionPayload } from '../types';
 
 export const documentacionKeys = {
@@ -49,5 +51,30 @@ export function useAlertasDocumentacion(enabled = true) {
     queryKey: documentacionKeys.alertas(),
     queryFn: () => documentacionApi.alertas(),
     enabled,
+  });
+}
+
+/** US-28: registrar la habilitación excepcional de una inscripción bloqueada. */
+export function useHabilitarExcepcional(personaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      inscripcionId,
+      payload,
+    }: {
+      inscripcionId: number;
+      payload: { motivo: string; dias: number };
+    }) => habilitarExcepcional(inscripcionId, payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: documentacionKeys.estado(personaId) });
+      void qc.invalidateQueries({ queryKey: documentacionKeys.alertas() });
+      void qc.invalidateQueries({ queryKey: ['inscripciones'] });
+      toast.success('Habilitación excepcional registrada correctamente');
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        error instanceof Error ? error.message : 'Error al registrar la habilitación excepcional',
+      );
+    },
   });
 }
