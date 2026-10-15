@@ -20,6 +20,28 @@ export interface CrearDocumentacionPayload {
   personaId: number;
 }
 
+/** US-28: payload para registrar la habilitación excepcional de una inscripción. */
+export interface CrearHabilitacionExcepcionalPayload {
+  motivo: string;
+  dias: number;
+}
+
+/** US-28: habilitación excepcional registrada por un administrador. */
+export interface HabilitacionExcepcional {
+  id: number;
+  inscripcionId: number;
+  motivo: string;
+  hasta: string;
+  responsableId: number;
+  responsable?: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    email: string;
+  };
+  creadoEn: string;
+}
+
 // ── Estado documental (US-25 · TASK-31) ──────────────────────────────
 
 export type EstadoDocumento = 'VIGENTE' | 'POR_VENCER' | 'VENCIDO' | 'FALTANTE';

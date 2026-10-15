@@ -12,6 +12,10 @@ import type {
   PersonaActualizada,
   RequisitosInscripcion,
 } from '../types';
+import type {
+  CrearHabilitacionExcepcionalPayload,
+  HabilitacionExcepcional,
+} from '@/features/documentacion/types';
 import type { Paginated } from '@/types/api';
 
 export async function buscarParticipantePorDni(dni: string): Promise<ParticipanteEncontrado> {
@@ -99,6 +103,28 @@ export async function activarParticipante(
 ): Promise<ActivacionParticipanteResultado> {
   const { data } = await apiClient.patch<ActivacionParticipanteResultado>(
     `/inscripcion/persona/${personaId}/activar`,
+  );
+  return data;
+}
+
+/** US-28: registrar la habilitación excepcional de una inscripción bloqueada. */
+export async function habilitarExcepcional(
+  inscripcionId: number,
+  payload: CrearHabilitacionExcepcionalPayload,
+): Promise<HabilitacionExcepcional> {
+  const { data } = await apiClient.post<HabilitacionExcepcional>(
+    `/inscripcion/${inscripcionId}/habilitacion-excepcional`,
+    payload,
+  );
+  return data;
+}
+
+/** US-28: listar historial de habilitaciones excepcionales de una inscripción. */
+export async function listarHabilitacionesExcepcionales(
+  inscripcionId: number,
+): Promise<HabilitacionExcepcional[]> {
+  const { data } = await apiClient.get<HabilitacionExcepcional[]>(
+    `/inscripcion/${inscripcionId}/habilitaciones-excepcionales`,
   );
   return data;
 }

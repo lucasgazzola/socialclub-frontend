@@ -4,9 +4,11 @@ import { Button, DateInput, Spinner } from '@/components/ui';
 import { env } from '@/config/env';
 import { isoADisplay } from '@/lib/utils/fecha';
 import type { TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCrearDocumentacion, useDocumentacionPorPersona, useEstadoDocumental } from '../hooks/useDocumentacion';
-import type { EstadoDeDocumento } from '../types';
+import type { EstadoDeDocumento, EstadoDocumentalInscripcion } from '../types';
 import { EstadoDocumentoBadge, EstadoHabilitacionBadge } from './EstadoBadges';
+import { ModalHabilitacionExcepcional } from './ModalHabilitacionExcepcional';
 
 /** Fecha local de hoy (YYYY-MM-DD) como mínimo del calendario. */
 function hoyISO(): string {
@@ -34,11 +36,14 @@ interface DocumentacionParticipanteProps {
  * tipo entre los exigidos. Un documento nuevo del mismo tipo renueva al anterior.
  */
 export function DocumentacionParticipante({ persona, puedeCargar = true }: DocumentacionParticipanteProps) {
+  const { usuario } = useAuth();
+  const esAdmin = usuario?.roles.includes('ADMIN') ?? false;
   const crear = useCrearDocumentacion();
   const { data: estado, isLoading } = useEstadoDocumental(persona.id);
   const { data: historial } = useDocumentacionPorPersona(persona.id);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
+  const [inscripcionAHabilitar, setInscripcionAHabilitar] = useState<EstadoDocumentalInscripcion | null>(null);
   const [docSeleccionado, setDocSeleccionado] = useState<{
     tipoDocumento: TipoDocumentacionDisciplina;
     etiqueta: string;
@@ -132,7 +137,20 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                 role="alert"
                 className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800"
               >
-                <p className="font-semibold">Inscripción bloqueada por documentación:</p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-semibold">Inscripción bloqueada por documentación:</p>
+                  {esAdmin && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-rose-300 text-rose-800 hover:bg-rose-100"
+                      onClick={() => setInscripcionAHabilitar(insc)}
+                    >
+                      Habilitar excepcionalmente
+                    </Button>
+                  )}
+                </div>
                 <ul className="mt-1 list-disc pl-4 space-y-0.5">
                   {insc.motivos.map((motivo) => (
                     <li key={motivo}>{motivo}</li>
@@ -141,9 +159,22 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
               </div>
             )}
             {insc.habilitadoExcepcionalmenteHasta && (
-              <p className="text-xs text-amber-700">
-                Habilitado excepcionalmente hasta el {isoADisplay(insc.habilitadoExcepcionalmenteHasta)}.
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-xs text-amber-800">
+                <p>
+                  Habilitado excepcionalmente hasta el {isoADisplay(insc.habilitadoExcepcionalmenteHasta)}.
+                </p>
+                {esAdmin && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="text-amber-800 hover:bg-amber-100"
+                    onClick={() => setInscripcionAHabilitar(insc)}
+                  >
+                    Extender habilitación
+                  </Button>
+                )}
+              </div>
             )}
             {insc.documentos.length === 0 ? (
               <p className="text-sm text-slate-500">No exige documentación.</p>
@@ -260,6 +291,19 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
             ))}
           </ul>
         </details>
+      )}
+
+      {inscripcionAHabilitar && (
+        <ModalHabilitacionExcepcional
+          open={!!inscripcionAHabilitar}
+          onClose={() => setInscripcionAHabilitar(null)}
+          inscripcionId={inscripcionAHabilitar.inscripcionId}
+          personaId={persona.id}
+          participanteNombre={`${persona.apellido}, ${persona.nombre}`}
+          disciplinaNombre={inscripcionAHabilitar.disciplina.nombre}
+          categoriaNombre={inscripcionAHabilitar.categoriaDisciplina?.nombre}
+          motivos={inscripcionAHabilitar.motivos}
+        />
       )}
     </div>
   );
