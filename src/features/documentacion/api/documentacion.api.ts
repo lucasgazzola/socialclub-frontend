@@ -11,7 +11,7 @@ export const documentacionApi = {
     // Se envía como multipart para poder adjuntar el archivo opcional (PDF/imagen).
     const form = new FormData();
     form.append('tipoDocumento', payload.tipoDocumento);
-    form.append('fechaVencimiento', payload.fechaVencimiento);
+    if (payload.fechaVencimiento) form.append('fechaVencimiento', payload.fechaVencimiento);
     form.append('personaId', String(payload.personaId));
     if (archivo) form.append('archivo', archivo);
     const { data } = await apiClient.post<Documentacion>('/documentacion', form, {

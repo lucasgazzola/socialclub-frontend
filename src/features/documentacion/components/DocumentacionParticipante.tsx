@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { Button, DateInput, Spinner } from '@/components/ui';
 import { env } from '@/config/env';
 import { isoADisplay } from '@/lib/utils/fecha';
-import type { TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
+import { requiereVencimiento, type TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCrearDocumentacion, useDocumentacionPorPersona, useEstadoDocumental } from '../hooks/useDocumentacion';
 import type { EstadoDeDocumento, EstadoDocumentalInscripcion } from '../types';
@@ -20,7 +20,7 @@ function detalleDocumento(doc: EstadoDeDocumento): string {
   if (doc.estado === 'FALTANTE') {
     return doc.fechaLimite ? `Presentar hasta el ${isoADisplay(doc.fechaLimite)}` : 'Sin presentar';
   }
-  return doc.fechaVencimiento ? `Vence el ${isoADisplay(doc.fechaVencimiento)}` : '';
+  return doc.fechaVencimiento ? `Vence el ${isoADisplay(doc.fechaVencimiento)}` : 'Sin vencimiento';
 }
 
 interface DocumentacionParticipanteProps {
@@ -57,11 +57,12 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
     e.preventDefault();
     if (!docSeleccionado) return;
 
-    if (!fechaVencimiento) {
+    const pideVencimiento = requiereVencimiento(docSeleccionado.tipoDocumento);
+    if (pideVencimiento && !fechaVencimiento) {
       setErrorFecha('La fecha de vencimiento es obligatoria');
       return;
     }
-    if (fechaVencimiento < hoyISO()) {
+    if (fechaVencimiento && fechaVencimiento < hoyISO()) {
       setErrorFecha('La fecha de vencimiento no puede ser anterior a la fecha actual');
       return;
     }
@@ -74,7 +75,7 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
       await crear.mutateAsync({
         payload: {
           tipoDocumento: docSeleccionado.tipoDocumento,
-          fechaVencimiento,
+          ...(fechaVencimiento ? { fechaVencimiento } : {}),
           personaId: persona.id,
         },
         archivo,
@@ -223,19 +224,21 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
               <strong className="text-slate-900">{docSeleccionado.etiqueta}</strong>
             </div>
 
-            <div>
-              <DateInput
-                id={`fechaVencimiento-${persona.id}`}
-                label="Fecha de vencimiento *"
-                min={hoyISO()}
-                error={errorFecha ?? undefined}
-                value={fechaVencimiento}
-                onChange={(v) => {
-                  setFechaVencimiento(v);
-                  if (errorFecha) setErrorFecha(null);
-                }}
-              />
-            </div>
+            {requiereVencimiento(docSeleccionado.tipoDocumento) && (
+              <div>
+                <DateInput
+                  id={`fechaVencimiento-${persona.id}`}
+                  label="Fecha de vencimiento *"
+                  min={hoyISO()}
+                  error={errorFecha ?? undefined}
+                  value={fechaVencimiento}
+                  onChange={(v) => {
+                    setFechaVencimiento(v);
+                    if (errorFecha) setErrorFecha(null);
+                  }}
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor={`archivo-${persona.id}`} className="mb-1 block text-sm font-medium text-slate-700">
@@ -286,7 +289,9 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                     </a>
                   )}
                 </span>
-                <span className="shrink-0 text-slate-500">Vence: {isoADisplay(doc.fechaVencimiento)}</span>
+                <span className="shrink-0 text-slate-500">
+                  {doc.fechaVencimiento ? `Vence: ${isoADisplay(doc.fechaVencimiento)}` : 'Sin vencimiento'}
+                </span>
               </li>
             ))}
           </ul>

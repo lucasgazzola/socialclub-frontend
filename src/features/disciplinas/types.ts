@@ -182,6 +182,11 @@ export function etiquetaTipoDocumento(tipo: TipoDocumentacionDisciplina): string
   return TIPOS_DOCUMENTACION_DISCIPLINA.find((opcion) => opcion.value === tipo)?.label ?? tipo;
 }
 
+/** DT-43: el DNI es un documento permanente de identidad y no requiere fecha de vencimiento. */
+export function requiereVencimiento(tipo: TipoDocumentacionDisciplina): boolean {
+  return tipo !== 'DNI';
+}
+
 /** Restricción que rige: la de la categoría si la define, si no la de la disciplina. */
 export function restriccionesEfectivas(disciplina: Restricciones, categoria?: Restricciones | null): Restricciones {
   return {
