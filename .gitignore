@@ -42,3 +42,4 @@ registro-ejecucion*.csv
 # La evidencia que se entrega se copia a docs/pruebas/evidencias del backend.
 test-results/
 playwright-report/
+dist-e2e/

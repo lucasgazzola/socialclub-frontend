@@ -25,6 +25,7 @@ import { RegistrarPagoDeportivoPage } from '@/features/pagos/pages/RegistrarPago
 import { HistorialDeportivoPage } from '@/features/pagos/pages/HistorialDeportivoPage';
 import { MorososCuotaSocialPage } from '@/features/pagos/pages/MorososCuotaSocialPage';
 import { MorososCuotaDeportivaPage } from '@/features/pagos/pages/MorososCuotaDeportivaPage';
+import { EstadoFinancieroPage } from '@/features/reportes/pages/EstadoFinancieroPage';
 import { DisciplinasPage } from '@/features/disciplinas/pages/DisciplinasPage';
 import { CategoriasDisciplinaPage } from '@/features/disciplinas/pages/CategoriasDisciplinaPage';
 import { ROUTES } from './paths';
@@ -60,6 +61,7 @@ export function AppRouter() {
             <Route path="cuotas/deportiva/cobrar" element={<RegistrarPagoDeportivoPage />} />
             <Route path="cuotas/deportiva/historial" element={<HistorialDeportivoPage />} />
             <Route path="cuotas/deportiva/morosos" element={<MorososCuotaDeportivaPage />} />
+            <Route path="reportes/estado-financiero" element={<EstadoFinancieroPage />} />
           </Route>
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>

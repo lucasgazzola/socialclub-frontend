@@ -39,6 +39,8 @@ export const ROUTES = {
   /** US-23: abre el cobro con el participante ya buscado. */
   cobrarCuotaDeportivaDe: (dni: string) => `/cuotas/deportiva/cobrar?dni=${encodeURIComponent(dni)}`,
   morososCuotaDeportiva: '/cuotas/deportiva/morosos',
+  /** US-35. */
+  estadoFinanciero: '/reportes/estado-financiero',
   historialCuotaDeportiva: '/cuotas/deportiva/historial',
   morososCuotaSocial: '/cuotas/social/morosos',
 } as const;
