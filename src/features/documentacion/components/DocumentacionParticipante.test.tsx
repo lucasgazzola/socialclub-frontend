@@ -360,5 +360,54 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
       expect(screen.getByText('Habilitación excepcional de participación')).toBeInTheDocument();
     });
   });
+
+  it('DT-43: permite cargar un DNI sin pedir fecha de vencimiento y muestra "Sin vencimiento"', async () => {
+    const user = userEvent.setup();
+    mockHook(useEstadoDocumental).mockReturnValue({
+      data: {
+        ...estado,
+        inscripciones: [
+          {
+            ...estado.inscripciones[0],
+            documentos: [
+              {
+                tipoDocumento: 'DNI',
+                etiqueta: 'DNI',
+                origen: 'DISCIPLINA',
+                plazoDiasTolerancia: 0,
+                estado: 'FALTANTE',
+                documentoId: null,
+                fechaVencimiento: null,
+                fechaLimite: '2026-10-15T03:00:00.000Z',
+              },
+            ],
+          },
+        ],
+      },
+      isLoading: false,
+    });
+    mockHook(useDocumentacionPorPersona).mockReturnValue({
+      data: [{ id: 9, tipo: 'DNI', tipoDocumento: 'DNI', fechaVencimiento: null, archivoNombre: 'dni.pdf' }],
+    });
+
+    render(<DocumentacionParticipante persona={persona} />);
+
+    expect(screen.getByText('Sin vencimiento')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Cargar' }));
+    expect(screen.queryByLabelText(/Fecha de vencimiento/)).not.toBeInTheDocument();
+
+    const file = new File(['contenido'], 'dni.pdf', { type: 'application/pdf' });
+    const inputArchivo = screen.getByLabelText(/Archivo \(PDF o imagen\)/);
+    await user.upload(inputArchivo, file);
+    await user.click(screen.getByRole('button', { name: 'Cargar documentación' }));
+
+    await waitFor(() => {
+      expect(crearMock).toHaveBeenCalledWith({
+        payload: { tipoDocumento: 'DNI', personaId: 10 },
+        archivo: file,
+      });
+    });
+  });
 });
 
