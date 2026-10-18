@@ -38,7 +38,7 @@ export interface ParticipanteEncontrado {
 
 export interface DocumentoAdjuntoPayload {
   tipoDocumento: TipoDocumentacionDisciplina;
-  fechaVencimiento: string;
+  fechaVencimiento?: string;
   tipo?: string;
   archivo?: File;
 }
@@ -65,7 +65,7 @@ export interface CrearInscripcionPayload {
   categoriaDisciplinaId?: number;
   documentos?: Array<{
     tipoDocumento: TipoDocumentacionDisciplina;
-    fechaVencimiento: string;
+    fechaVencimiento?: string;
     tipo?: string;
   }>;
 }

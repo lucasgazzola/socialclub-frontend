@@ -11,6 +11,7 @@ import {
   describirAniosNacimiento,
   describirEdad,
   etiquetaPlazo,
+  requiereVencimiento,
   type GeneroDisciplina,
   type TipoDocumentacionDisciplina,
 } from '../../disciplinas/types';
@@ -181,10 +182,11 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
 
     for (const [tipo, adj] of Object.entries(adjuntos)) {
       if (adj.habilitado) {
-        if (!adj.fechaVencimiento) {
+        const pideVencimiento = requiereVencimiento(tipo as TipoDocumentacionDisciplina);
+        if (pideVencimiento && !adj.fechaVencimiento) {
           nuevosAdjuntos[tipo] = { ...adj, error: 'La fecha de vencimiento es obligatoria para adjuntar el documento.' };
           hayErrorAdjuntos = true;
-        } else if (adj.fechaVencimiento < hoyIso) {
+        } else if (adj.fechaVencimiento && adj.fechaVencimiento < hoyIso) {
           nuevosAdjuntos[tipo] = { ...adj, error: 'La fecha de vencimiento no puede ser anterior a la fecha actual.' };
           hayErrorAdjuntos = true;
         } else if (!adj.archivo) {
@@ -200,10 +202,14 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
     }
 
     const docsAEnviar = Object.entries(adjuntos)
-      .filter(([, a]) => a.habilitado && a.fechaVencimiento)
+      .filter(
+        ([tipo, a]) =>
+          a.habilitado &&
+          (!requiereVencimiento(tipo as TipoDocumentacionDisciplina) || Boolean(a.fechaVencimiento)),
+      )
       .map(([tipo, a]) => ({
         tipoDocumento: tipo as TipoDocumentacionDisciplina,
-        fechaVencimiento: a.fechaVencimiento,
+        ...(a.fechaVencimiento ? { fechaVencimiento: a.fechaVencimiento } : {}),
       }));
 
     const payload: CrearInscripcionPayload = {
@@ -227,7 +233,10 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
     if (creada) {
       // Subir archivos binarios si fueron adjuntados
       const conArchivo = Object.entries(adjuntos).filter(
-        ([, a]) => a.habilitado && a.fechaVencimiento && a.archivo,
+        ([tipo, a]) =>
+          a.habilitado &&
+          (!requiereVencimiento(tipo as TipoDocumentacionDisciplina) || Boolean(a.fechaVencimiento)) &&
+          a.archivo,
       );
       if (conArchivo.length > 0) {
         for (const [tipo, a] of conArchivo) {
@@ -236,7 +245,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
               {
                 personaId: creada.persona.id,
                 tipoDocumento: tipo as TipoDocumentacionDisciplina,
-                fechaVencimiento: a.fechaVencimiento,
+                ...(a.fechaVencimiento ? { fechaVencimiento: a.fechaVencimiento } : {}),
               },
               a.archivo,
             );
@@ -526,23 +535,25 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
                     </div>
 
                     <div className="mt-2.5 grid grid-cols-1 gap-3 sm:grid-cols-2 bg-slate-50/70 p-2.5 rounded-md border border-slate-200/80">
-                      <DateInput
-                        id={`vencimiento-${doc.tipoDocumento}`}
-                        label="Fecha de vencimiento *"
-                        value={adjunto.fechaVencimiento || ''}
-                        onChange={(iso) => {
-                          setAdjuntos((prev) => ({
-                            ...prev,
-                            [doc.tipoDocumento]: {
-                              ...prev[doc.tipoDocumento],
-                              fechaVencimiento: iso,
-                              error: undefined,
-                            },
-                          }));
-                        }}
-                        error={adjunto.error}
-                        min={new Date().toISOString().slice(0, 10)}
-                      />
+                      {requiereVencimiento(doc.tipoDocumento) && (
+                        <DateInput
+                          id={`vencimiento-${doc.tipoDocumento}`}
+                          label="Fecha de vencimiento *"
+                          value={adjunto.fechaVencimiento || ''}
+                          onChange={(iso) => {
+                            setAdjuntos((prev) => ({
+                              ...prev,
+                              [doc.tipoDocumento]: {
+                                ...prev[doc.tipoDocumento],
+                                fechaVencimiento: iso,
+                                error: undefined,
+                              },
+                            }));
+                          }}
+                          error={adjunto.error}
+                          min={new Date().toISOString().slice(0, 10)}
+                        />
+                      )}
                       <div>
                         <label className="mb-1.5 block text-xs font-semibold text-slate-700 uppercase tracking-wider">
                           Archivo adjunto *
@@ -564,6 +575,9 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
                           }}
                           className="block w-full text-xs text-slate-500 file:mr-2.5 file:rounded-md file:border-0 file:bg-brand-50 file:px-2.5 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
                         />
+                        {!requiereVencimiento(doc.tipoDocumento) && adjunto.error && (
+                          <p className="mt-1 text-xs text-rose-600">{adjunto.error}</p>
+                        )}
                       </div>
                     </div>
                   </div>

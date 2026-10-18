@@ -9,15 +9,30 @@ function hoyISO(): string {
 
 /**
  * Validación del formulario de documentación (US-24), alineada al backend:
- * tipo (del catálogo) y fecha obligatorios; la fecha de vencimiento no puede ser anterior a hoy.
+ * tipo (del catálogo) obligatorio y fecha obligatoria salvo para el DNI (DT-43);
+ * si se indica fecha de vencimiento, no puede ser anterior a hoy.
  */
-export const documentacionSchema = z.object({
-  // Del catálogo, entre los exigidos al participante (TASK-31).
-  tipoDocumento: z.string().min(1, 'Seleccioná el tipo de documento'),
-  fechaVencimiento: z
-    .string()
-    .min(1, 'La fecha de vencimiento es obligatoria')
-    .refine((v) => v >= hoyISO(), 'La fecha de vencimiento no puede ser anterior a hoy'),
-});
+export const documentacionSchema = z
+  .object({
+    // Del catálogo, entre los exigidos al participante (TASK-31).
+    tipoDocumento: z.string().min(1, 'Seleccioná el tipo de documento'),
+    fechaVencimiento: z.string().optional().default(''),
+  })
+  .superRefine((val, ctx) => {
+    const fecha = val.fechaVencimiento?.trim() ?? '';
+    if (!fecha && val.tipoDocumento !== 'DNI') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['fechaVencimiento'],
+        message: 'La fecha de vencimiento es obligatoria',
+      });
+    } else if (fecha && fecha < hoyISO()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['fechaVencimiento'],
+        message: 'La fecha de vencimiento no puede ser anterior a hoy',
+      });
+    }
+  });
 
 export type DocumentacionFormValues = z.infer<typeof documentacionSchema>;

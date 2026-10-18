@@ -6,7 +6,7 @@ export interface Documentacion {
   tipo: string;
   /** Tipo del catálogo; null en documentos cargados antes del catálogo. */
   tipoDocumento: TipoDocumentacionDisciplina | null;
-  fechaVencimiento: string;
+  fechaVencimiento: string | null;
   personaId: number;
   archivoNombre?: string | null;
   mimeType?: string | null;
@@ -16,7 +16,7 @@ export interface Documentacion {
 /** Payload para cargar un documento obligatorio. */
 export interface CrearDocumentacionPayload {
   tipoDocumento: TipoDocumentacionDisciplina;
-  fechaVencimiento: string; // YYYY-MM-DD
+  fechaVencimiento?: string; // YYYY-MM-DD (opcional para DNI, DT-43)
   personaId: number;
 }
 
