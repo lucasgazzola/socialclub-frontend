@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { Button, Spinner } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
 import { useAuditoria } from '../hooks/useAuditoria';
+import { useResponsables } from '../hooks/useResponsables';
 import { AuditoriaTable } from '../components/AuditoriaTable';
 import { AuditoriaFilters } from '../components/AuditoriaFilters';
 import type { AuditoriaFiltrosFormValues } from '../schemas/auditoria-filtros.schema';
@@ -19,9 +20,12 @@ export function AuditoriaPage() {
 
   const esPersonalizado = filtros.periodo === 'personalizado';
 
+  const { data: responsables = [] } = useResponsables();
+
   const { data, isLoading, isError, error, isFetching } = useAuditoria({
     accion: (filtros.accion as AccionAuditoria) || undefined,
     entidad: filtros.entidad?.trim() || undefined,
+    responsableId: filtros.responsableId,
     periodo: filtros.periodo && filtros.periodo !== 'todo' ? filtros.periodo : undefined,
     fechaDesde: esPersonalizado ? filtros.fechaDesde || undefined : undefined,
     fechaHasta: esPersonalizado ? filtros.fechaHasta || undefined : undefined,
@@ -76,12 +80,13 @@ export function AuditoriaPage() {
         </p>
       </header>
 
-      {/* Componente de Filtros con React Hook Form + Zod */}
+      {/* Componente de Filtros */}
       <AuditoriaFilters
         onFiltrar={handleFiltrar}
         onLimpiar={handleLimpiar}
         filtrosActivos={filtros}
         deshabilitado={isLoading && !data}
+        responsables={responsables}
       />
 
       {/* Estado de carga inicial */}

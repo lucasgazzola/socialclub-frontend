@@ -63,17 +63,17 @@ export function AuditoriaTable({ registros, isFetching }: Props) {
   return (
     <>
       <div
-        className={`overflow-x-auto rounded-2xl border border-slate-200 transition-opacity duration-150 ${isFetching ? 'opacity-60' : 'opacity-100'}`}
+        className={`overflow-x-auto overflow-y-auto max-h-[600px] rounded-2xl border border-slate-200 transition-opacity duration-150 ${isFetching ? 'opacity-60' : 'opacity-100'}`}
       >
         <table className="w-full text-sm text-slate-700">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase text-slate-500 shadow-xs border-b border-slate-200">
             <tr>
-              <th className="px-4 py-3 text-left">Fecha y hora</th>
-              <th className="px-4 py-3 text-left">Acción</th>
-              <th className="px-4 py-3 text-left">Entidad</th>
-              <th className="px-4 py-3 text-left">ID</th>
-              <th className="px-4 py-3 text-left">Responsable</th>
-              <th className="px-4 py-3 text-left">Detalle</th>
+              <th className="px-4 py-3 text-left bg-slate-50">Fecha y hora</th>
+              <th className="px-4 py-3 text-left bg-slate-50">Acción</th>
+              <th className="px-4 py-3 text-left bg-slate-50">Entidad</th>
+              <th className="px-4 py-3 text-left bg-slate-50">ID</th>
+              <th className="px-4 py-3 text-left bg-slate-50">Responsable</th>
+              <th className="px-4 py-3 text-left bg-slate-50">Detalle</th>
             </tr>
           </thead>
           <tbody>

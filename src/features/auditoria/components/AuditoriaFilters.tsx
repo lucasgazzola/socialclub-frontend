@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
-import { Filter, RotateCcw, Search } from 'lucide-react';
+import { Filter, RotateCcw, Search, User } from 'lucide-react';
 import { Button, DateInput, Input, Select, StatusTabs } from '@/components/ui';
 import { ACCIONES_AUDITORIA } from '../constants';
 import type { PeriodoAuditoriaFiltro } from '../types';
 import type { AuditoriaFiltrosFormValues } from '../schemas/auditoria-filtros.schema';
+
+interface ResponsableOpcion {
+  id: number;
+  nombre: string;
+  apellido: string;
+}
 
 interface AuditoriaFiltersProps {
   onFiltrar: (filtros: AuditoriaFiltrosFormValues) => void;
   onLimpiar: () => void;
   filtrosActivos: AuditoriaFiltrosFormValues;
   deshabilitado?: boolean;
+  responsables?: ResponsableOpcion[];
 }
 
 const TABS_PERIODO: { value: PeriodoAuditoriaFiltro; label: string }[] = [
@@ -25,10 +32,12 @@ export function AuditoriaFilters({
   onLimpiar,
   filtrosActivos,
   deshabilitado = false,
+  responsables = [],
 }: AuditoriaFiltersProps) {
   const [textoEntidad, setTextoEntidad] = useState(filtrosActivos.entidad ?? '');
   const [periodo, setPeriodo] = useState<PeriodoAuditoriaFiltro>(filtrosActivos.periodo ?? 'todo');
   const [accion, setAccion] = useState(filtrosActivos.accion ?? '');
+  const [responsableId, setResponsableId] = useState<number | undefined>(filtrosActivos.responsableId);
   const [fechaDesde, setFechaDesde] = useState(filtrosActivos.fechaDesde ?? '');
   const [fechaHasta, setFechaHasta] = useState(filtrosActivos.fechaHasta ?? '');
   const [errorFecha, setErrorFecha] = useState<string | null>(null);
@@ -55,12 +64,14 @@ export function AuditoriaFilters({
     setTextoEntidad(filtrosActivos.entidad ?? '');
     setPeriodo(filtrosActivos.periodo ?? 'todo');
     setAccion(filtrosActivos.accion ?? '');
+    setResponsableId(filtrosActivos.responsableId);
     setFechaDesde(filtrosActivos.fechaDesde ?? '');
     setFechaHasta(filtrosActivos.fechaHasta ?? '');
   }, [
     filtrosActivos.entidad,
     filtrosActivos.periodo,
     filtrosActivos.accion,
+    filtrosActivos.responsableId,
     filtrosActivos.fechaDesde,
     filtrosActivos.fechaHasta,
   ]);
@@ -83,6 +94,7 @@ export function AuditoriaFilters({
   const hayFiltrosActivos =
     Boolean(filtrosActivos.accion) ||
     Boolean(filtrosActivos.entidad) ||
+    Boolean(filtrosActivos.responsableId) ||
     (Boolean(filtrosActivos.periodo) && filtrosActivos.periodo !== 'todo') ||
     Boolean(filtrosActivos.fechaDesde) ||
     Boolean(filtrosActivos.fechaHasta);
@@ -118,6 +130,15 @@ export function AuditoriaFilters({
     onFiltrar({
       ...filtrosActivos,
       accion: nuevaAccion || undefined,
+    });
+  }
+
+  function handleCambiarResponsable(nuevoResponsableIdStr: string) {
+    const nuevoId = nuevoResponsableIdStr ? Number(nuevoResponsableIdStr) : undefined;
+    setResponsableId(nuevoId);
+    onFiltrar({
+      ...filtrosActivos,
+      responsableId: nuevoId,
     });
   }
 
@@ -164,6 +185,7 @@ export function AuditoriaFilters({
     setTextoEntidad('');
     setPeriodo('todo');
     setAccion('');
+    setResponsableId(undefined);
     setFechaDesde('');
     setFechaHasta('');
     setErrorFecha(null);
@@ -267,7 +289,7 @@ export function AuditoriaFilters({
         )}
       </div>
 
-      {/* 2. Nivel inferior (Patrón US-04 oficial): Buscador a la izquierda y Selector en la esquina derecha */}
+      {/* 2. Nivel inferior: Buscador a la izquierda y Selectores de Responsable y Acción a la derecha */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="w-full sm:max-w-xs">
           <Input
@@ -282,7 +304,27 @@ export function AuditoriaFilters({
           />
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <label htmlFor="responsableId" className="sr-only">
+            Responsable
+          </label>
+          <Select
+            id="responsableId"
+            aria-label="Filtrar por responsable"
+            leftIcon={<User />}
+            className="w-full sm:w-52"
+            disabled={deshabilitado}
+            value={responsableId !== undefined ? String(responsableId) : ''}
+            onChange={(e) => handleCambiarResponsable(e.target.value)}
+          >
+            <option value="">Todos los responsables</option>
+            {responsables.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.nombre} {r.apellido}
+              </option>
+            ))}
+          </Select>
+
           <label htmlFor="accion" className="sr-only">
             Acción
           </label>
@@ -290,7 +332,7 @@ export function AuditoriaFilters({
             id="accion"
             aria-label="Filtrar por acción"
             leftIcon={<Filter />}
-            className="w-full sm:w-52"
+            className="w-full sm:w-48"
             disabled={deshabilitado}
             value={accion}
             onChange={(e) => handleCambiarAccion(e.target.value)}

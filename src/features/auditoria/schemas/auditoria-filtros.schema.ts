@@ -12,6 +12,7 @@ export const auditoriaFiltrosSchema = z
   .object({
     accion: z.string().optional(),
     entidad: z.string().optional(),
+    responsableId: z.number().positive().optional(),
     periodo: periodoAuditoriaFiltroSchema.optional(),
     fechaDesde: z.string().optional(),
     fechaHasta: z.string().optional(),
