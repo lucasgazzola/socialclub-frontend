@@ -19,6 +19,28 @@ vi.mock('qrcode', () => ({
   },
 }));
 
+const mockSave = vi.fn();
+vi.mock('jspdf', () => {
+  class MockJsPDF {
+    save = mockSave;
+    addPage = vi.fn();
+    text = vi.fn();
+    addImage = vi.fn();
+    roundedRect = vi.fn();
+    line = vi.fn();
+    setFont = vi.fn();
+    setFontSize = vi.fn();
+    setTextColor = vi.fn();
+    setDrawColor = vi.fn();
+    setFillColor = vi.fn();
+    setLineDashPattern = vi.fn();
+    splitTextToSize = vi.fn((text: string) => [text]);
+  }
+  return {
+    jsPDF: MockJsPDF,
+  };
+});
+
 describe('MisEntradasPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -60,7 +82,7 @@ describe('MisEntradasPage', () => {
     expect(screen.getByText('Todavía no tenés entradas adquiridas.')).toBeInTheDocument();
   });
 
-  it('renderiza la lista de entradas y permite descargar QR', async () => {
+  it('renderiza la lista de entradas y permite descargar QR en PNG y en PDF', async () => {
     const user = userEvent.setup();
     const mockEntradas = [
       {
@@ -97,13 +119,22 @@ describe('MisEntradasPage', () => {
     expect(screen.getByText('Evento')).toBeInTheDocument();
     expect(screen.getAllByText('token-12345678-abcd').length).toBeGreaterThan(0);
 
-    const downloadButtons = screen.getAllByRole('button', { name: /Descargar QR/i });
-    expect(downloadButtons).toHaveLength(2);
+    const downloadQrButtons = screen.getAllByRole('button', { name: /Descargar QR/i });
+    expect(downloadQrButtons).toHaveLength(2);
 
-    await user.click(downloadButtons[0]);
+    await user.click(downloadQrButtons[0]);
 
     await waitFor(() => {
       expect(clickSpy).toHaveBeenCalled();
+    });
+
+    const downloadPdfButtons = screen.getAllByRole('button', { name: /Descargar PDF/i });
+    expect(downloadPdfButtons).toHaveLength(2);
+
+    await user.click(downloadPdfButtons[0]);
+
+    await waitFor(() => {
+      expect(mockSave).toHaveBeenCalledWith('entrada-token-12.pdf');
     });
   });
 });
