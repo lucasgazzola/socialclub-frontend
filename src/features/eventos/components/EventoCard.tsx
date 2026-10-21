@@ -9,7 +9,6 @@ import {
   formatPrecio,
   formatPrecioSocio,
   getEstadoVisual,
-  puedeComprar,
   ventaAbierta,
 } from '../helpers';
 
@@ -24,7 +23,7 @@ interface Props {
 export function EventoCard({ evento, onVerDetalle, onEditar }: Props) {
   const estadoVisual = getEstadoVisual(evento);
   const estaEnPeriodoVenta = ventaAbierta(evento);
-  const estaHabilitadoComprar = puedeComprar(evento) && estaEnPeriodoVenta;
+  const estaHabilitadoComprar = estaEnPeriodoVenta;
   const precioSocioTexto = formatPrecioSocio(evento.precio, evento.descuentoSocio);
 
   // La imagen temporal en estado local se pierde al recargar la página (comportamiento esperado).

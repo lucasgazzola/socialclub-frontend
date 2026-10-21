@@ -5,6 +5,7 @@ import { EventoCard } from './EventoCard';
 import type { Evento } from '../types';
 
 describe('EventoCard', () => {
+  const ahora = Date.now();
   const eventoPublicado: Evento = {
     id: 42,
     nombre: 'Clase Abierta de Natación',
@@ -18,8 +19,8 @@ describe('EventoCard', () => {
     estado: 'PUBLICADO',
     fechaEvento: '2026-11-20T10:00:00Z',
     fechaFin: '2026-11-20T12:00:00Z',
-    inicioVenta: '2026-09-01T00:00:00Z',
-    finVenta: '2026-11-20T09:00:00Z',
+    inicioVenta: new Date(ahora - 86400000).toISOString(),
+    finVenta: new Date(ahora + 86400000).toISOString(),
     lugarAcreditacion: 'Natatorio principal',
     imageUrl: 'socialclub-frontend/src/assets/favicon-blanco.png',
   };
@@ -101,6 +102,40 @@ describe('EventoCard', () => {
       </MemoryRouter>,
     );
 
+    expect(screen.queryByRole('link', { name: /comprar entradas/i })).not.toBeInTheDocument();
+  });
+
+  it('DT-45: no muestra el botón Comprar entradas si el período de venta aún no inició', () => {
+    const eventoVentaFutura: Evento = {
+      ...eventoPublicado,
+      inicioVenta: new Date(ahora + 86400000).toISOString(),
+      finVenta: new Date(ahora + 172800000).toISOString(),
+    };
+
+    render(
+      <MemoryRouter>
+        <EventoCard evento={eventoVentaFutura} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Venta próxima')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /comprar entradas/i })).not.toBeInTheDocument();
+  });
+
+  it('DT-45: no muestra el botón Comprar entradas si el período de venta ya finalizó', () => {
+    const eventoVentaPasada: Evento = {
+      ...eventoPublicado,
+      inicioVenta: new Date(ahora - 172800000).toISOString(),
+      finVenta: new Date(ahora - 86400000).toISOString(),
+    };
+
+    render(
+      <MemoryRouter>
+        <EventoCard evento={eventoVentaPasada} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Venta cerrada')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /comprar entradas/i })).not.toBeInTheDocument();
   });
 });
