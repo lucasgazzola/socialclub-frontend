@@ -28,6 +28,7 @@ import { MorososCuotaDeportivaPage } from '@/features/pagos/pages/MorososCuotaDe
 import { EstadoFinancieroPage } from '@/features/reportes/pages/EstadoFinancieroPage';
 import { DisciplinasPage } from '@/features/disciplinas/pages/DisciplinasPage';
 import { CategoriasDisciplinaPage } from '@/features/disciplinas/pages/CategoriasDisciplinaPage';
+import { MiDocumentacionPage } from '@/features/documentacion/pages/MiDocumentacionPage';
 import { ROUTES } from './paths';
 
 export function AppRouter() {
@@ -51,6 +52,7 @@ export function AppRouter() {
           <Route path={ROUTES.cambiarContrasena} element={<CambiarContrasenaPage />} />
           <Route path={ROUTES.misCuotas} element={<MisCuotasPage />} />
           <Route path={ROUTES.misEntradas} element={<MisEntradasPage />} />
+          <Route path={ROUTES.miDocumentacion} element={<MiDocumentacionPage />} />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />

@@ -35,6 +35,8 @@ export const ROUTES = {
   cambiarContrasena: '/perfil/cambiar-contrasena',
   misCuotas: '/mis-cuotas',
   misEntradas: '/mis-entradas',
+  /** DT-28: consulta de propia documentación para socio/participante. */
+  miDocumentacion: '/mi-documentacion',
   cobrarCuotaDeportiva: '/cuotas/deportiva/cobrar',
   /** US-23: abre el cobro con el participante ya buscado. */
   cobrarCuotaDeportivaDe: (dni: string) => `/cuotas/deportiva/cobrar?dni=${encodeURIComponent(dni)}`,
@@ -44,5 +46,3 @@ export const ROUTES = {
   historialCuotaDeportiva: '/cuotas/deportiva/historial',
   morososCuotaSocial: '/cuotas/social/morosos',
 } as const;
-
-

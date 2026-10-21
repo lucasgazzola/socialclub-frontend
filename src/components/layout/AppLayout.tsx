@@ -20,6 +20,7 @@ import {
   Dumbbell,
   Ticket,
   Timer,
+  FileText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ClubLogo } from '@/components/ui';
@@ -68,6 +69,7 @@ const navSections: NavSection[] = [
       },
       { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
       { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
+      { to: ROUTES.miDocumentacion, label: 'Mi documentación', icon: FileText },
       {
         to: ROUTES.participantes,
         label: 'Participantes',
@@ -131,6 +133,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.cambiarContrasena]: 'Cambiar Contraseña',
   [ROUTES.misCuotas]: 'Mis Cuotas',
   [ROUTES.misEntradas]: 'Mis Entradas',
+  [ROUTES.miDocumentacion]: 'Mi Documentación',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',
   [ROUTES.eventos]: 'Eventos y Actividades',

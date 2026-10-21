@@ -24,7 +24,7 @@ function detalleDocumento(doc: EstadoDeDocumento): string {
 }
 
 interface DocumentacionParticipanteProps {
-  persona: { id: number; nombre: string; apellido: string };
+  persona: { id: number; nombre?: string; apellido?: string };
   /** Si es false, solo se muestra el estado (sin el alta). */
   puedeCargar?: boolean;
 }
@@ -38,8 +38,9 @@ interface DocumentacionParticipanteProps {
 export function DocumentacionParticipante({ persona, puedeCargar = true }: DocumentacionParticipanteProps) {
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN') ?? false;
+  const esSocio = (usuario?.roles.includes('SOCIO') ?? false) || usuario?.persona?.id === persona.id;
   const crear = useCrearDocumentacion();
-  const { data: estado, isLoading } = useEstadoDocumental(persona.id);
+  const { data: estado, isLoading, isError } = useEstadoDocumental(persona?.id ?? null);
   const { data: historial } = useDocumentacionPorPersona(persona.id);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
@@ -111,7 +112,7 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
     setArchivo(null);
   }
 
-  if (isLoading || !estado) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-6">
         <Spinner className="h-5 w-5" />
@@ -119,10 +120,49 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
     );
   }
 
+  if (isError || !estado) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-slate-500">
+          {esSocio ? 'No tenés documentación pendiente ni inscripciones activas.' : 'No se registran inscripciones o documentación activa para este participante.'}
+        </p>
+        {historial && historial.length > 0 && (
+          <details className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 text-xs text-slate-600">
+            <summary className="cursor-pointer font-semibold text-slate-700 select-none">
+              Historial de documentación presentada ({historial.length})
+            </summary>
+            <ul className="mt-2 divide-y divide-slate-200">
+              {historial.map((doc) => (
+                <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+                  <span>
+                    {doc.tipo}
+                    {doc.archivoNombre && (
+                      <a
+                        href={`${env.apiUrl}/documentacion/${doc.id}/archivo`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-brand-700 hover:underline"
+                      >
+                        (ver archivo)
+                      </a>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-slate-500">
+                    {doc.fechaVencimiento ? `Vence: ${isoADisplay(doc.fechaVencimiento)}` : 'Sin vencimiento'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {estado.inscripciones.length === 0 ? (
-        <p className="text-sm text-slate-500">El participante no está inscripto en ninguna disciplina activa.</p>
+        <p className="text-sm text-slate-500">{esSocio ? 'No estás inscripto en ninguna disciplina activa.' : 'El participante no está inscripto en ninguna disciplina activa.'}</p>
       ) : (
         estado.inscripciones.map((insc) => (
           <section key={insc.inscripcionId} aria-label={`Documentación para ${insc.disciplina.nombre}`} className="space-y-2">
