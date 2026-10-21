@@ -224,6 +224,9 @@ describe('ComprarEntradasPage', () => {
     expect(screen.getByText('Entrada #1')).toBeInTheDocument();
     expect(screen.getByText('Entrada #2')).toBeInTheDocument();
     expect(screen.getAllByText('token-entrada-1').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Descargar todas \(PDF\)/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Descargar PDF$/i })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: /Descargar QR/i })).toHaveLength(2);
   });
 
   it('notifica error si la mutación de compra falla', async () => {
