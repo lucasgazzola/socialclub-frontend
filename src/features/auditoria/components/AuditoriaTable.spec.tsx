@@ -28,7 +28,7 @@ const FIXTURE_REGISTROS: RegistroAuditoria[] = [
   },
 ];
 
-describe('US-33 · AuditoriaTable', () => {
+describe('US-33 / TASK-47 · AuditoriaTable', () => {
   it('muestra mensaje cuando no hay registros de auditoría', () => {
     render(<AuditoriaTable registros={[]} />);
     expect(
@@ -53,5 +53,18 @@ describe('US-33 · AuditoriaTable', () => {
     render(<AuditoriaTable registros={[FIXTURE_REGISTROS[1]]} />);
     // Columnas ID=5, responsable=—
     expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('cuenta con encabezado sticky y contenedor con scroll vertical delimitado (DT-10)', () => {
+    const { container } = render(<AuditoriaTable registros={FIXTURE_REGISTROS} />);
+
+    const wrapper = container.querySelector('.max-h-\\[600px\\]');
+    expect(wrapper).toBeInTheDocument();
+    expect(wrapper).toHaveClass('overflow-y-auto');
+
+    const thead = container.querySelector('thead');
+    expect(thead).toBeInTheDocument();
+    expect(thead).toHaveClass('sticky');
+    expect(thead).toHaveClass('top-0');
   });
 });

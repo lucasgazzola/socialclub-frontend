@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { auditoriaFiltrosSchema } from './auditoria-filtros.schema';
 
-describe('US-33 · auditoriaFiltrosSchema', () => {
+describe('US-33 / TASK-47 · auditoriaFiltrosSchema', () => {
   it('valida un objeto vacío o con campos opcionales sin error', () => {
     const res = auditoriaFiltrosSchema.safeParse({});
     expect(res.success).toBe(true);
@@ -51,5 +51,13 @@ describe('US-33 · auditoriaFiltrosSchema', () => {
       const res = auditoriaFiltrosSchema.safeParse({ periodo });
       expect(res.success).toBe(true);
     }
+  });
+
+  it('permite validar filtro por responsableId numérico positivo', () => {
+    const resValido = auditoriaFiltrosSchema.safeParse({ responsableId: 5 });
+    expect(resValido.success).toBe(true);
+
+    const resInvalido = auditoriaFiltrosSchema.safeParse({ responsableId: -1 });
+    expect(resInvalido.success).toBe(false);
   });
 });

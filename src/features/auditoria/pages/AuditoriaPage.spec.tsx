@@ -7,6 +7,15 @@ vi.mock('../hooks/useAuditoria', () => ({
   useAuditoria: vi.fn(),
 }));
 
+vi.mock('../hooks/useResponsables', () => ({
+  useResponsables: vi.fn(() => ({
+    data: [
+      { id: 2, nombre: 'Carlos', apellido: 'Gómez' },
+      { id: 3, nombre: 'Laura', apellido: 'Pérez' },
+    ],
+  })),
+}));
+
 const MOCK_DATA = {
   items: [
     {
@@ -29,7 +38,7 @@ const MOCK_DATA = {
   porPagina: 10,
 };
 
-describe('US-33 · AuditoriaPage', () => {
+describe('US-33 / TASK-47 · AuditoriaPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -104,6 +113,29 @@ describe('US-33 · AuditoriaPage', () => {
         expect.objectContaining({
           accion: 'BAJA',
           entidad: 'Disciplina',
+          pagina: 1,
+        }),
+      );
+    });
+  });
+
+  it('aplica filtro por responsable reactivamente', async () => {
+    vi.mocked(auditoriaHook.useAuditoria).mockReturnValue({
+      data: MOCK_DATA,
+      isLoading: false,
+      isError: false,
+      error: null,
+      isFetching: false,
+    } as any);
+
+    render(<AuditoriaPage />);
+
+    fireEvent.change(screen.getByLabelText(/responsable/i), { target: { value: '2' } });
+
+    await waitFor(() => {
+      expect(auditoriaHook.useAuditoria).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          responsableId: 2,
           pagina: 1,
         }),
       );
