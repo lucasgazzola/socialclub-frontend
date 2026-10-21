@@ -3,13 +3,19 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { AuditoriaFilters } from './AuditoriaFilters';
 
-describe('US-33 · AuditoriaFilters', () => {
-  it('renderiza pestañas de período (incluyendo Personalizado), selector de acción y buscador', () => {
+const MOCK_RESPONSABLES = [
+  { id: 1, nombre: 'Ana', apellido: 'Pérez' },
+  { id: 2, nombre: 'Carlos', apellido: 'Gómez' },
+];
+
+describe('US-33 / TASK-47 · AuditoriaFilters', () => {
+  it('renderiza pestañas de período (incluyendo Personalizado), selector de acción, responsable y buscador', () => {
     render(
       <AuditoriaFilters
         onFiltrar={vi.fn()}
         onLimpiar={vi.fn()}
         filtrosActivos={{ periodo: 'todo' }}
+        responsables={MOCK_RESPONSABLES}
       />,
     );
 
@@ -20,6 +26,7 @@ describe('US-33 · AuditoriaFilters', () => {
     expect(screen.getByRole('tab', { name: /personalizado/i })).toBeInTheDocument();
 
     expect(screen.getByLabelText(/acción/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/responsable/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/buscar por entidad/i)).toBeInTheDocument();
 
     // El botón manual de filtrar fue removido (filtrado reactivo)
@@ -60,6 +67,26 @@ describe('US-33 · AuditoriaFilters', () => {
     expect(handleFiltrar).toHaveBeenCalledWith(
       expect.objectContaining({
         accion: 'CREAR',
+      }),
+    );
+  });
+
+  it('llama a onFiltrar inmediatamente al seleccionar un responsable', () => {
+    const handleFiltrar = vi.fn();
+    render(
+      <AuditoriaFilters
+        onFiltrar={handleFiltrar}
+        onLimpiar={vi.fn()}
+        filtrosActivos={{ periodo: 'todo' }}
+        responsables={MOCK_RESPONSABLES}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/responsable/i), { target: { value: '2' } });
+
+    expect(handleFiltrar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        responsableId: 2,
       }),
     );
   });
