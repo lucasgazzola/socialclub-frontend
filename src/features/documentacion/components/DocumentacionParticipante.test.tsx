@@ -409,5 +409,11 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
       });
     });
   });
+  it('DT-28: no queda en spinner perpetuo si no tiene documentación o falla la consulta', () => {
+    mockHook(useEstadoDocumental).mockReturnValue({ data: null, isLoading: false, isError: false });
+    render(<DocumentacionParticipante persona={persona} />);
+    expect(
+      screen.getByText('No se registran inscripciones o documentación activa para este participante.'),
+    ).toBeInTheDocument();
+  });
 });
-
