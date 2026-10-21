@@ -1,19 +1,8 @@
-import { Download, Ticket } from 'lucide-react';
+import { Download, FileText, Ticket } from 'lucide-react';
 import { Button, Card, Spinner } from '@/components/ui';
 import { QRCode } from '../components/QRCode';
 import { useMisEntradas } from '../hooks/useEntradas';
-import type { Entrada } from '../types';
-
-function descargarQR(entrada: Entrada) {
-  void import('qrcode').then(({ default: QRCodeLib }) =>
-    QRCodeLib.toDataURL(entrada.token, { width: 300, margin: 2 }).then((url) => {
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `entrada-${entrada.token.slice(0, 8)}.png`;
-      link.click();
-    }),
-  );
-}
+import { descargarEntradaPdf, descargarQR } from '../utils/descargarEntradaPdf';
 
 export function MisEntradasPage() {
   const { data: entradas, isLoading, isError } = useMisEntradas();
@@ -23,7 +12,7 @@ export function MisEntradasPage() {
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Mis entradas</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Visualizá y descargá tus códigos QR de acceso.
+          Visualizá y descargá tus códigos QR de acceso en formato PDF o imagen.
         </p>
       </header>
       {isLoading ? (
@@ -40,9 +29,14 @@ export function MisEntradasPage() {
               <h2 className="font-semibold text-slate-900">{entrada.evento?.nombre ?? 'Evento'}</h2>
               <QRCode value={entrada.token} size={180} />
               <p className="mt-3 break-all font-mono text-xs text-slate-500">{entrada.token}</p>
-              <Button variant="secondary" size="sm" className="mt-3" onClick={() => descargarQR(entrada)}>
-                <Download size={14} /> Descargar QR
-              </Button>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Button variant="primary" size="sm" onClick={() => descargarEntradaPdf(entrada)}>
+                  <FileText size={14} /> Descargar PDF
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => descargarQR(entrada)}>
+                  <Download size={14} /> Descargar QR
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
