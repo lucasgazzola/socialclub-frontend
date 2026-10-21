@@ -9,7 +9,6 @@ import {
   formatPrecio,
   formatPrecioSocio,
   getEstadoVisual,
-  puedeComprar,
   ventaAbierta,
 } from '../helpers';
 
