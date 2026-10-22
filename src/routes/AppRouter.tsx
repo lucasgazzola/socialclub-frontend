@@ -26,6 +26,7 @@ import { HistorialDeportivoPage } from '@/features/pagos/pages/HistorialDeportiv
 import { MorososCuotaSocialPage } from '@/features/pagos/pages/MorososCuotaSocialPage';
 import { MorososCuotaDeportivaPage } from '@/features/pagos/pages/MorososCuotaDeportivaPage';
 import { EstadoFinancieroPage } from '@/features/reportes/pages/EstadoFinancieroPage';
+import { ReporteAsistenciaPage } from '@/features/reportes/pages/ReporteAsistenciaPage';
 import { DisciplinasPage } from '@/features/disciplinas/pages/DisciplinasPage';
 import { CategoriasDisciplinaPage } from '@/features/disciplinas/pages/CategoriasDisciplinaPage';
 import { MiDocumentacionPage } from '@/features/documentacion/pages/MiDocumentacionPage';
@@ -64,6 +65,7 @@ export function AppRouter() {
             <Route path="cuotas/deportiva/historial" element={<HistorialDeportivoPage />} />
             <Route path="cuotas/deportiva/morosos" element={<MorososCuotaDeportivaPage />} />
             <Route path="reportes/estado-financiero" element={<EstadoFinancieroPage />} />
+            <Route path="reportes/asistencia-eventos" element={<ReporteAsistenciaPage />} />
           </Route>
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
@@ -84,7 +86,6 @@ export function AppRouter() {
             <Route path="eventos/:eventoId/validar" element={<ValidarAccesoPage />} />
             <Route path="entradas/validar" element={<ValidarAccesoPage />} />
           </Route>
-
 
           {/* Auditoría y tareas automáticas: solo ADMIN */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
