@@ -436,7 +436,7 @@ describe('UsuariosPage', () => {
       expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
     });
 
-    it('permite ordenar por DNI de forma ascendente y descendente al hacer clic en la cabecera', async () => {
+    it('permite ciclo de ordenamiento de 3 estados (neutral -> asc -> desc -> neutral)', async () => {
       state.usuarios = [
         buildUsuario({ id: 1, nombre: 'Zack', apellido: 'Zeta', dni: '40000000' }),
         buildUsuario({ id: 2, nombre: 'Aaron', apellido: 'Alfa', dni: '20000000' }),
@@ -445,22 +445,27 @@ describe('UsuariosPage', () => {
 
       render(<UsuariosPage />);
 
-      // Inicialmente ordenado por nombre (Alfa antes que Zeta)
+      // Estado 1: Neutral (orden natural sin selección)
       let filas = screen.getAllByRole('listitem');
-      expect(filas[0]).toHaveTextContent('Aaron Alfa');
-      expect(filas[1]).toHaveTextContent('Zack Zeta');
+      expect(filas[0]).toHaveTextContent('Zack Zeta');
+      expect(filas[1]).toHaveTextContent('Aaron Alfa');
 
-      // Click en DNI -> asc (20.000.000 antes que 40.000.000)
       const botonDni = screen.getByRole('button', { name: /dni/i });
-      await user.click(botonDni);
 
+      // Estado 2: Primer clic -> ascendente (20.000.000 antes que 40.000.000)
+      await user.click(botonDni);
       filas = screen.getAllByRole('listitem');
       expect(filas[0]).toHaveTextContent('Aaron Alfa');
       expect(filas[1]).toHaveTextContent('Zack Zeta');
 
-      // Segundo click en DNI -> desc (40.000.000 antes que 20.000.000)
+      // Estado 3: Segundo clic -> descendente (40.000.000 antes que 20.000.000)
       await user.click(botonDni);
+      filas = screen.getAllByRole('listitem');
+      expect(filas[0]).toHaveTextContent('Zack Zeta');
+      expect(filas[1]).toHaveTextContent('Aaron Alfa');
 
+      // Estado 4: Tercer clic -> vuelve al estado primario neutral
+      await user.click(botonDni);
       filas = screen.getAllByRole('listitem');
       expect(filas[0]).toHaveTextContent('Zack Zeta');
       expect(filas[1]).toHaveTextContent('Aaron Alfa');

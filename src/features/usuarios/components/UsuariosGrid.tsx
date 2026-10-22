@@ -44,7 +44,7 @@ function HeaderOrdenable({
   onOrdenar,
   className,
 }: HeaderOrdenableProps) {
-  const activo = ordenarPor === campo;
+  const activo = Boolean(ordenarPor && ordenarPor === campo && orden);
 
   return (
     <th

@@ -39,8 +39,8 @@ export function UsuariosPage() {
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [rolId, setRolId] = useState<number | undefined>(undefined);
-  const [ordenarPor, setOrdenarPor] = useState<CriterioOrden>('nombre');
-  const [orden, setOrden] = useState<SentidoOrden>('asc');
+  const [ordenarPor, setOrdenarPor] = useState<CriterioOrden | undefined>(undefined);
+  const [orden, setOrden] = useState<SentidoOrden | undefined>(undefined);
 
   useEffect(() => {
     const trimmed = textoInput.trim();
@@ -86,7 +86,15 @@ export function UsuariosPage() {
 
   function handleOrdenar(campo: CriterioOrden) {
     if (ordenarPor === campo) {
-      setOrden((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        // Tercer clic: vuelve a su estado primario (con las dos flechitas)
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
     } else {
       setOrdenarPor(campo);
       setOrden('asc');
@@ -105,7 +113,8 @@ export function UsuariosPage() {
           })
         : [...usuarios];
 
-    filtrados.sort((a, b) => {
+    if (ordenarPor && orden) {
+      filtrados.sort((a, b) => {
       let comp = 0;
       switch (ordenarPor) {
         case 'dni': {
@@ -141,7 +150,8 @@ export function UsuariosPage() {
         }
       }
       return orden === 'asc' ? comp : -comp;
-    });
+      });
+    }
 
     const destacado = filtrados.find((usuario) => usuario.id === usuarioDestacadoId);
     if (!destacado) {
