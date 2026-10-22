@@ -16,6 +16,8 @@ export const usuariosApi = {
         estado: params?.estado && params.estado !== 'todos' ? params.estado : undefined,
         pagina: params?.pagina,
         porPagina: params?.porPagina,
+        ordenarPor: params?.ordenarPor,
+        orden: params?.orden,
       },
     });
     return data;

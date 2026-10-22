@@ -1,9 +1,7 @@
-import { Pencil, UserCheck, UserMinus } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
-import type { Usuario } from '../types';
-
-
+import type { CriterioOrden, SentidoOrden, Usuario } from '../types';
 
 function iniciales(usuario: Usuario): string {
   return `${usuario.nombre.charAt(0)}${usuario.apellido.charAt(0)}`.toUpperCase();
@@ -17,23 +15,91 @@ function formatearDni(dni?: string | null): string {
   return /^\d+$/.test(dni) ? Number(dni).toLocaleString('es-AR') : dni;
 }
 
+/** Formatea la fecha ISO a dd/mm/aaaa legible para Argentina */
+function formatearFecha(iso?: string | null): string {
+  if (!iso) return '—';
+  const fecha = new Date(iso);
+  if (isNaN(fecha.getTime())) return '—';
+  return fecha.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+interface HeaderOrdenableProps {
+  campo: CriterioOrden;
+  label: string;
+  ordenarPor?: CriterioOrden;
+  orden?: SentidoOrden;
+  onOrdenar?: (campo: CriterioOrden) => void;
+  className?: string;
+}
+
+function HeaderOrdenable({
+  campo,
+  label,
+  ordenarPor,
+  orden,
+  onOrdenar,
+  className,
+}: HeaderOrdenableProps) {
+  const activo = ordenarPor === campo;
+
+  return (
+    <th
+      aria-sort={activo ? (orden === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className={cn('px-5 py-3.5', className)}
+    >
+      <button
+        type="button"
+        onClick={() => onOrdenar?.(campo)}
+        title={`Ordenar por ${label}`}
+        className="group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-colors select-none focus:outline-hidden"
+      >
+        <span>{label}</span>
+        <span className="flex items-center" aria-hidden="true">
+          {activo ? (
+            orden === 'asc' ? (
+              <ArrowUp size={13} className="text-brand-600 stroke-[2.5]" />
+            ) : (
+              <ArrowDown size={13} className="text-brand-600 stroke-[2.5]" />
+            )
+          ) : (
+            <ArrowUpDown
+              size={13}
+              className="text-slate-400 opacity-60 group-hover:opacity-100 transition-opacity"
+            />
+          )}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 interface UsuariosGridProps {
   usuarios: Usuario[];
   /** Usuario cuyo estado se cambió último: se muestra primero y resaltado (DT-03). */
   usuarioDestacadoId?: number | null;
   /** Deshabilita las acciones de estado mientras hay una mutación en curso. */
   accionesDeshabilitadas?: boolean;
+  ordenarPor?: CriterioOrden;
+  orden?: SentidoOrden;
+  onOrdenar?: (campo: CriterioOrden) => void;
   onEditar: (usuario: Usuario) => void;
   onCambiarEstado: (usuario: Usuario) => void;
 }
 
 /**
- * Tabla de usuarios administrativos, siguiendo exactamente el patrón y dimensiones de SociosTable.
+ * Tabla de usuarios administrativos con soporte para ordenamiento interactivo por columnas.
  */
 export function UsuariosGrid({
   usuarios,
   usuarioDestacadoId = null,
   accionesDeshabilitadas = false,
+  ordenarPor,
+  orden,
+  onOrdenar,
   onEditar,
   onCambiarEstado,
 }: UsuariosGridProps) {
@@ -43,12 +109,51 @@ export function UsuariosGrid({
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
-              <th className="px-5 py-3.5">Usuario</th>
-              <th className="px-5 py-3.5">DNI</th>
-              <th className="px-5 py-3.5">Email</th>
-              <th className="px-5 py-3.5">Roles</th>
-              <th className="px-5 py-3.5">Estado</th>
-              <th className="px-5 py-3.5 text-right">Acciones</th>
+              <HeaderOrdenable
+                campo="nombre"
+                label="Usuario"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="dni"
+                label="DNI"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="email"
+                label="Email"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="roles"
+                label="Roles"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="estado"
+                label="Estado"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="fecha"
+                label="Alta"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <th className="px-5 py-3.5 text-right font-semibold uppercase tracking-wider text-slate-500">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody role="list">
@@ -117,6 +222,9 @@ export function UsuariosGrid({
                     <Badge variant={usuario.activo ? 'success' : 'danger'}>
                       {usuario.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
+                  </td>
+                  <td className="px-5 py-3.5 font-mono text-xs text-slate-500 tabular-nums">
+                    {formatearFecha(usuario.creadoEn)}
                   </td>
                   <td className="px-5 py-3.5 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
