@@ -11,13 +11,13 @@ export const usuariosApi = {
   async list(params?: GetUsuariosParams): Promise<Paginated<Usuario>> {
     const { data } = await apiClient.get<Paginated<Usuario>>('/usuarios', {
       params: {
+        ordenarPor: params?.ordenarPor,
+        orden: params?.orden,
         busqueda: params?.busqueda?.trim() || undefined,
         rolId: params?.rolId || undefined,
         estado: params?.estado && params.estado !== 'todos' ? params.estado : undefined,
         pagina: params?.pagina,
         porPagina: params?.porPagina,
-        ordenarPor: params?.ordenarPor,
-        orden: params?.orden,
       },
     });
     return data;
