@@ -59,6 +59,8 @@ export function UsuariosPage() {
     estado: filtroEstado,
     pagina,
     porPagina: POR_PAGINA,
+    ordenarPor,
+    orden,
   });
   const createUsuario = useCreateUsuario();
   const updateUsuario = useUpdateUsuario();
