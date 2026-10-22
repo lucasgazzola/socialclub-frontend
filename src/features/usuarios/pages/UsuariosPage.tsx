@@ -94,9 +94,8 @@ export function UsuariosPage() {
   }
 
   const usuariosVisibles = useMemo(() => {
-    // Si la data viene en array plano (ej: tests unitarios con useUsers mockeado sin backend)
     let filtrados =
-      (!data || Array.isArray(data)) && filtroEstado !== 'todos'
+      filtroEstado !== 'todos'
         ? usuarios.filter((usuario) => {
             if (filtroEstado === 'activos') return usuario.activo;
             if (filtroEstado === 'inactivos') return !usuario.activo;
@@ -104,45 +103,43 @@ export function UsuariosPage() {
           })
         : [...usuarios];
 
-    if (!data || Array.isArray(data)) {
-      filtrados = [...filtrados].sort((a, b) => {
-        let comp = 0;
-        switch (ordenarPor) {
-          case 'dni': {
-            const dniA = Number((a.dni ?? '').replace(/\D/g, '')) || 0;
-            const dniB = Number((b.dni ?? '').replace(/\D/g, '')) || 0;
-            comp = dniA - dniB;
-            break;
-          }
-          case 'email':
-            comp = (a.email ?? '').localeCompare(b.email ?? '');
-            break;
-          case 'roles': {
-            const rA = a.roles.map((r) => r.rol.nombre).sort().join(', ');
-            const rB = b.roles.map((r) => r.rol.nombre).sort().join(', ');
-            comp = rA.localeCompare(rB);
-            break;
-          }
-          case 'estado':
-            comp = Number(b.activo) - Number(a.activo);
-            break;
-          case 'fecha': {
-            const fA = a.creadoEn ? new Date(a.creadoEn).getTime() : 0;
-            const fB = b.creadoEn ? new Date(b.creadoEn).getTime() : 0;
-            comp = fA - fB;
-            break;
-          }
-          case 'nombre':
-          default: {
-            const nA = `${a.apellido} ${a.nombre}`.trim().toLowerCase();
-            const nB = `${b.apellido} ${b.nombre}`.trim().toLowerCase();
-            comp = nA.localeCompare(nB);
-            break;
-          }
+    filtrados.sort((a, b) => {
+      let comp = 0;
+      switch (ordenarPor) {
+        case 'dni': {
+          const dniA = Number(String(a.dni ?? '').replace(/\D/g, '')) || 0;
+          const dniB = Number(String(b.dni ?? '').replace(/\D/g, '')) || 0;
+          comp = dniA - dniB;
+          break;
         }
-        return orden === 'asc' ? comp : -comp;
-      });
-    }
+        case 'email':
+          comp = (a.email ?? '').localeCompare(b.email ?? '', 'es', { sensitivity: 'base' });
+          break;
+        case 'roles': {
+          const rA = a.roles.map((r) => r.rol.nombre).sort().join(', ');
+          const rB = b.roles.map((r) => r.rol.nombre).sort().join(', ');
+          comp = rA.localeCompare(rB, 'es', { sensitivity: 'base' });
+          break;
+        }
+        case 'estado':
+          comp = (b.activo ? 1 : 0) - (a.activo ? 1 : 0);
+          break;
+        case 'fecha': {
+          const fA = a.creadoEn ? new Date(a.creadoEn).getTime() : 0;
+          const fB = b.creadoEn ? new Date(b.creadoEn).getTime() : 0;
+          comp = fA - fB;
+          break;
+        }
+        case 'nombre':
+        default: {
+          const nA = `${a.nombre} ${a.apellido}`.trim().toLowerCase();
+          const nB = `${b.nombre} ${b.apellido}`.trim().toLowerCase();
+          comp = nA.localeCompare(nB, 'es', { sensitivity: 'base' });
+          break;
+        }
+      }
+      return orden === 'asc' ? comp : -comp;
+    });
 
     const destacado = filtrados.find((usuario) => usuario.id === usuarioDestacadoId);
     if (!destacado) {
@@ -150,7 +147,7 @@ export function UsuariosPage() {
     }
 
     return [destacado, ...filtrados.filter((usuario) => usuario.id !== destacado.id)];
-  }, [usuarios, filtroEstado, data, usuarioDestacadoId, ordenarPor, orden]);
+  }, [usuarios, filtroEstado, usuarioDestacadoId, ordenarPor, orden]);
 
   function cambiarFiltro(valor: FiltroEstado) {
     setPagina(1);
