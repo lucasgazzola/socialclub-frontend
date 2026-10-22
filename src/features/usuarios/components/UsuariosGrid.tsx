@@ -1,4 +1,4 @@
-import { Pencil, UserRoundCheck, UserMinus } from 'lucide-react';
+import { Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
 import type { Usuario } from '../types';
@@ -118,24 +118,29 @@ export function UsuariosGrid({
                       {usuario.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
                   </td>
-                  <td className="px-5 py-3.5 text-right">
+                  <td className="px-5 py-3.5 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
                       <Button variant="ghost" size="sm" onClick={() => onEditar(usuario)}>
-                        <Pencil size={14} />
+                        <Pencil size={14} className="shrink-0" />
                         Editar
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={
+                        className={cn(
+                          'w-[102px] justify-start',
                           usuario.activo
                             ? 'text-rose-600 hover:bg-rose-50 hover:text-rose-700'
-                            : 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700'
-                        }
+                            : 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700',
+                        )}
                         disabled={accionesDeshabilitadas}
                         onClick={() => onCambiarEstado(usuario)}
                       >
-                        {usuario.activo ? <UserMinus size={14} /> : <UserRoundCheck size={14} />}
+                        {usuario.activo ? (
+                          <UserMinus size={14} className="shrink-0" />
+                        ) : (
+                          <UserCheck size={14} className="shrink-0" />
+                        )}
                         {usuario.activo ? 'Desactivar' : 'Activar'}
                       </Button>
                     </div>
