@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   CalendarDays,
   ChartColumn,
+  BarChart3,
   Coins,
   CreditCard,
   ClipboardList,
@@ -115,6 +116,12 @@ const navSections: NavSection[] = [
         icon: ChartColumn,
         roles: ['ADMIN', 'COLABORADOR'],
       },
+      {
+        to: ROUTES.reporteAsistencia,
+        label: 'Asistencia a eventos',
+        icon: BarChart3,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
     ],
   },
   {
@@ -145,6 +152,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.morososCuotaSocial]: 'Morosos de Cuota Social',
   [ROUTES.morososCuotaDeportiva]: 'Morosos de Cuota Deportiva',
   [ROUTES.estadoFinanciero]: 'Estado Financiero',
+  [ROUTES.reporteAsistencia]: 'Reporte de Asistencia a Eventos',
   [ROUTES.disciplinas]: 'Gestión de Disciplinas',
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
   [ROUTES.tareas]: 'Tareas Automáticas',

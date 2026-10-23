@@ -42,10 +42,15 @@ export interface UpdateUsuarioDto {
     activo?: boolean;
 }
 
+export type CriterioOrden = 'nombre' | 'dni' | 'email' | 'roles' | 'estado' | 'fecha';
+export type SentidoOrden = 'asc' | 'desc';
+
 export interface GetUsuariosParams {
     busqueda?: string;
     rolId?: number;
     estado?: 'todos' | 'activos' | 'inactivos';
     pagina?: number;
     porPagina?: number;
+    ordenarPor?: CriterioOrden;
+    orden?: SentidoOrden;
 }

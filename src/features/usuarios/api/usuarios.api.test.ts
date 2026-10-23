@@ -29,9 +29,27 @@ describe('usuariosApi', () => {
     await usuariosApi.list({ busqueda: 'Admin', estado: 'activos', pagina: 1, porPagina: 10 });
     expect(apiClient.get).toHaveBeenCalledWith('/usuarios', {
       params: {
+        ordenarPor: undefined,
+        orden: undefined,
         busqueda: 'Admin',
         rolId: undefined,
         estado: 'activos',
+        pagina: 1,
+        porPagina: 10,
+      },
+    });
+  });
+
+  it('list() envía ordenarPor y orden en los params cuando se especifican', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { items: [], total: 0 } });
+    await usuariosApi.list({ ordenarPor: 'dni', orden: 'desc', pagina: 1, porPagina: 10 });
+    expect(apiClient.get).toHaveBeenCalledWith('/usuarios', {
+      params: {
+        ordenarPor: 'dni',
+        orden: 'desc',
+        busqueda: undefined,
+        rolId: undefined,
+        estado: undefined,
         pagina: 1,
         porPagina: 10,
       },

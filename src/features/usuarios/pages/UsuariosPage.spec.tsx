@@ -435,5 +435,63 @@ describe('UsuariosPage', () => {
       expect(screen.getByText(/ningún usuario coincide con el filtro/i)).toBeInTheDocument();
       expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
     });
+
+    it('permite ciclo de ordenamiento de 3 estados (neutral -> asc -> desc -> neutral)', async () => {
+      state.usuarios = [
+        buildUsuario({ id: 1, nombre: 'Zack', apellido: 'Zeta', dni: '40000000' }),
+        buildUsuario({ id: 2, nombre: 'Aaron', apellido: 'Alfa', dni: '20000000' }),
+      ];
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      // Estado 1: Neutral (orden natural sin selección)
+      let filas = screen.getAllByRole('listitem');
+      expect(filas[0]).toHaveTextContent('Zack Zeta');
+      expect(filas[1]).toHaveTextContent('Aaron Alfa');
+
+      const botonDni = screen.getByRole('button', { name: /dni/i });
+
+      // Estado 2: Primer clic -> ascendente (20.000.000 antes que 40.000.000)
+      await user.click(botonDni);
+      filas = screen.getAllByRole('listitem');
+      expect(filas[0]).toHaveTextContent('Aaron Alfa');
+      expect(filas[1]).toHaveTextContent('Zack Zeta');
+
+      // Estado 3: Segundo clic -> descendente (40.000.000 antes que 20.000.000)
+      await user.click(botonDni);
+      filas = screen.getAllByRole('listitem');
+      expect(filas[0]).toHaveTextContent('Zack Zeta');
+      expect(filas[1]).toHaveTextContent('Aaron Alfa');
+
+      // Estado 4: Tercer clic -> vuelve al estado primario neutral
+      await user.click(botonDni);
+      filas = screen.getAllByRole('listitem');
+      expect(filas[0]).toHaveTextContent('Zack Zeta');
+      expect(filas[1]).toHaveTextContent('Aaron Alfa');
+    });
+
+    it('permite ordenar por fecha de alta', async () => {
+      state.usuarios = [
+        buildUsuario({ id: 1, nombre: 'Viejo', apellido: 'Usuario', creadoEn: '2026-01-01T00:00:00.000Z' }),
+        buildUsuario({ id: 2, nombre: 'Nuevo', apellido: 'Usuario', creadoEn: '2026-10-15T00:00:00.000Z' }),
+      ];
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      const botonAlta = screen.getByRole('button', { name: /alta/i });
+      // Click en Alta -> asc (más antiguo primero)
+      await user.click(botonAlta);
+      let filas = screen.getAllByRole('listitem');
+      expect(filas[0]).toHaveTextContent('Viejo Usuario');
+      expect(filas[1]).toHaveTextContent('Nuevo Usuario');
+
+      // Click en Alta de nuevo -> desc (más reciente primero)
+      await user.click(botonAlta);
+      filas = screen.getAllByRole('listitem');
+      expect(filas[0]).toHaveTextContent('Nuevo Usuario');
+      expect(filas[1]).toHaveTextContent('Viejo Usuario');
+    });
   });
 });

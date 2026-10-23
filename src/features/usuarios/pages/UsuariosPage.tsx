@@ -7,7 +7,7 @@ import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario';
 import { useUsers } from '../hooks/useUsers';
 import { UsuariosGrid } from '../components/UsuariosGrid';
-import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto } from '../types';
+import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto, CriterioOrden, SentidoOrden } from '../types';
 import { UsuarioFormModal } from './components/UsuarioFormModal';
 import {
   disciplinasIdsParaApi,
@@ -39,6 +39,8 @@ export function UsuariosPage() {
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [rolId, setRolId] = useState<number | undefined>(undefined);
+  const [ordenarPor, setOrdenarPor] = useState<CriterioOrden | undefined>(undefined);
+  const [orden, setOrden] = useState<SentidoOrden | undefined>(undefined);
 
   useEffect(() => {
     const trimmed = textoInput.trim();
@@ -57,6 +59,8 @@ export function UsuariosPage() {
     estado: filtroEstado,
     pagina,
     porPagina: POR_PAGINA,
+    ordenarPor,
+    orden,
   });
   const createUsuario = useCreateUsuario();
   const updateUsuario = useUpdateUsuario();
@@ -80,16 +84,74 @@ export function UsuariosPage() {
         inactivos: totalInactivos,
       };
 
+  function handleOrdenar(campo: CriterioOrden) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        // Tercer clic: vuelve a su estado primario (con las dos flechitas)
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+    setUsuarioDestacadoId(null);
+  }
+
   const usuariosVisibles = useMemo(() => {
-    // Si la data viene en array plano (ej: tests unitarios con useUsers mockeado sin backend)
     const filtrados =
-      (!data || Array.isArray(data)) && filtroEstado !== 'todos'
+      filtroEstado !== 'todos'
         ? usuarios.filter((usuario) => {
             if (filtroEstado === 'activos') return usuario.activo;
             if (filtroEstado === 'inactivos') return !usuario.activo;
             return true;
           })
-        : usuarios;
+        : [...usuarios];
+
+    if (ordenarPor && orden) {
+      filtrados.sort((a, b) => {
+      let comp: number;
+      switch (ordenarPor) {
+        case 'dni': {
+          const dniA = Number(String(a.dni ?? '').replace(/\D/g, '')) || 0;
+          const dniB = Number(String(b.dni ?? '').replace(/\D/g, '')) || 0;
+          comp = dniA - dniB;
+          break;
+        }
+        case 'email':
+          comp = (a.email ?? '').localeCompare(b.email ?? '', 'es', { sensitivity: 'base' });
+          break;
+        case 'roles': {
+          const rA = a.roles.map((r) => r.rol.nombre).sort().join(', ');
+          const rB = b.roles.map((r) => r.rol.nombre).sort().join(', ');
+          comp = rA.localeCompare(rB, 'es', { sensitivity: 'base' });
+          break;
+        }
+        case 'estado':
+          comp = (b.activo ? 1 : 0) - (a.activo ? 1 : 0);
+          break;
+        case 'fecha': {
+          const fA = a.creadoEn ? new Date(a.creadoEn).getTime() : 0;
+          const fB = b.creadoEn ? new Date(b.creadoEn).getTime() : 0;
+          comp = fA - fB;
+          break;
+        }
+        case 'nombre':
+        default: {
+          const nA = `${a.nombre} ${a.apellido}`.trim().toLowerCase();
+          const nB = `${b.nombre} ${b.apellido}`.trim().toLowerCase();
+          comp = nA.localeCompare(nB, 'es', { sensitivity: 'base' });
+          break;
+        }
+      }
+      return orden === 'asc' ? comp : -comp;
+      });
+    }
 
     const destacado = filtrados.find((usuario) => usuario.id === usuarioDestacadoId);
     if (!destacado) {
@@ -97,7 +159,7 @@ export function UsuariosPage() {
     }
 
     return [destacado, ...filtrados.filter((usuario) => usuario.id !== destacado.id)];
-  }, [usuarios, filtroEstado, data, usuarioDestacadoId]);
+  }, [usuarios, filtroEstado, usuarioDestacadoId, ordenarPor, orden]);
 
   function cambiarFiltro(valor: FiltroEstado) {
     setPagina(1);
@@ -296,6 +358,9 @@ export function UsuariosPage() {
             usuarios={usuariosVisibles}
             usuarioDestacadoId={usuarioDestacadoId}
             accionesDeshabilitadas={cambioDeEstadoEnCurso}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
             onEditar={abrirEdicion}
             onCambiarEstado={setUsuarioAConfirmar}
           />

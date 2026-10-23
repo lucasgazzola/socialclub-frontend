@@ -43,6 +43,8 @@ export const ROUTES = {
   morososCuotaDeportiva: '/cuotas/deportiva/morosos',
   /** US-35. */
   estadoFinanciero: '/reportes/estado-financiero',
+  /** US-36. */
+  reporteAsistencia: '/reportes/asistencia-eventos',
   historialCuotaDeportiva: '/cuotas/deportiva/historial',
   morososCuotaSocial: '/cuotas/social/morosos',
 } as const;
