@@ -183,7 +183,7 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 pt-2 border-b border-slate-200 pb-6">
+      <div className="flex items-center gap-3 pt-2">
         <Button type="submit" disabled={isPending}>
           {isPending ? 'Guardando cambios…' : 'Guardar Cambios'}
         </Button>
