@@ -1,3 +1,4 @@
+import { jsPDF } from 'jspdf';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { exportarAsistenciaCsv, exportarAsistenciaPdf } from './exportarReporteAsistencia';
 import type { ReporteAsistenciaEventos } from '../types';
@@ -94,7 +95,7 @@ describe('US-36 · exportarReporteAsistencia', () => {
       expect(clickedLink).toBe(true);
       expect(downloadFilename).toMatch(/^reporte-asistencia-eventos-\d{4}-\d{2}-\d{2}\.csv$/);
       expect(createdBlob).not.toBeNull();
-      expect(createdBlob?.type).toBe('text/csv;charset=utf-8;');
+      expect((createdBlob as unknown as Blob)?.type).toBe('text/csv;charset=utf-8;');
 
       URL.createObjectURL = originalCreateObjectURL;
       URL.revokeObjectURL = originalRevokeObjectURL;
@@ -103,7 +104,12 @@ describe('US-36 · exportarReporteAsistencia', () => {
 
   describe('exportarAsistenciaPdf', () => {
     it('genera documento PDF en orientación horizontal A4 con membrete y totales sin lanzar excepciones', () => {
+      const saveSpy = vi.spyOn(jsPDF.prototype, 'save').mockImplementation(function (this: jsPDF) {
+        return this;
+      });
       expect(() => exportarAsistenciaPdf(reporteFixture)).not.toThrow();
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+      saveSpy.mockRestore();
     });
   });
 });

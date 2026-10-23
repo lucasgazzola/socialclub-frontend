@@ -104,7 +104,7 @@ export function UsuariosPage() {
   }
 
   const usuariosVisibles = useMemo(() => {
-    let filtrados =
+    const filtrados =
       filtroEstado !== 'todos'
         ? usuarios.filter((usuario) => {
             if (filtroEstado === 'activos') return usuario.activo;
@@ -115,7 +115,7 @@ export function UsuariosPage() {
 
     if (ordenarPor && orden) {
       filtrados.sort((a, b) => {
-      let comp = 0;
+      let comp: number;
       switch (ordenarPor) {
         case 'dni': {
           const dniA = Number(String(a.dni ?? '').replace(/\D/g, '')) || 0;
