@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Layers, Plus, Search } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Layers, Plus, Search } from 'lucide-react';
 import { Button, Card, ConfirmDialog, Input, Modal, Spinner, StatusTabs } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ROUTES } from '@/routes/paths';
 import { CategoriaForm } from '../components/CategoriaForm';
 import { CategoriasTable } from '../components/CategoriasTable';
 import {
@@ -78,9 +77,6 @@ export function CategoriasDisciplinaPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Link to={ROUTES.disciplinas} className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800">
-            <ArrowLeft size={14} /> Disciplinas
-          </Link>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Categorías{disciplina ? ` de ${disciplina.nombre}` : ''}
           </h1>

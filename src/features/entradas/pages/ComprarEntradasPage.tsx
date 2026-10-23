@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Download, FileText, Ticket } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Download, FileText, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, Input, Spinner } from '@/components/ui';
-import { ROUTES } from '@/routes/paths';
 import { useEvento } from '@/features/eventos/hooks/useEventos';
 import { ventaAbierta } from '@/features/eventos/helpers';
 import { MockPasarelaEntradasModal } from '../components/MockPasarelaEntradasModal';
@@ -16,7 +15,6 @@ import type { MockPagoFormData } from '@/features/pagos/schemas/pago.schema';
 export function ComprarEntradasPage() {
   const { eventoId } = useParams<{ eventoId: string }>();
   const id = Number(eventoId);
-  const navigate = useNavigate();
   const { data: evento, isLoading, isError, error } = useEvento(id);
   const comprar = useComprarEntradas();
 
@@ -41,14 +39,9 @@ export function ComprarEntradasPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.eventos)}>
-          <ArrowLeft size={24} />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Comprar entradas</h1>
-          <p className="mt-1 text-sm text-slate-500">{isLoading ? 'Cargando evento…' : evento?.nombre}</p>
-        </div>
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Comprar entradas</h1>
+        <p className="mt-1 text-sm text-slate-500">{isLoading ? 'Cargando evento…' : evento?.nombre}</p>
       </header>
 
       {isLoading ? (

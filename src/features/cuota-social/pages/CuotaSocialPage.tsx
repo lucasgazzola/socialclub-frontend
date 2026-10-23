@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, Filter, Plus, Wallet } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Filter, Plus, Wallet } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
 import { CuotaSocialForm } from '../components/CuotaSocialForm';
@@ -9,13 +9,10 @@ import { EditarCuotaSocialModal } from '../components/EditarCuotaSocialModal';
 import { useConfigurarCuotaSocial } from '../hooks/useConfigurarCuotaSocial';
 import { useCuotaSocial } from '../hooks/useCuotaSocial';
 import type { CuotaSocialFormValues } from '../schemas';
-import { ROUTES } from '@/routes/paths';
 
 const POR_PAGINA = 10;
 
 export function CuotaSocialPage() {
-  const navigate = useNavigate();
-
   const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
   const [periodoInput, setPeriodoInput] = useState('');
   const [periodo, setPeriodo] = useState<string | undefined>(undefined);
@@ -56,13 +53,7 @@ export function CuotaSocialPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.cuotas)}>
-              <ArrowLeft size={16} />
-              Volver a Cuotas
-            </Button>
-          </div>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Cuota social</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Cuota social</h1>
           <p className="mt-1 text-sm text-slate-500">
             Configurá el monto mensual de la cuota social por categoría. Los cambios aplican desde el
             período siguiente.

@@ -24,7 +24,7 @@ import {
   FileText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { ClubLogo } from '@/components/ui';
+import { Breadcrumbs, ClubLogo } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { RolNombre } from '@/features/auth/types';
 import { ROUTES } from '@/routes/paths';
@@ -280,103 +280,118 @@ export function AppLayout() {
             colapsado ? 'justify-center px-0' : 'px-4 gap-3',
           )}
         >
-          <ClubLogo size={colapsado ? 34 : 38} />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 border border-white/10 shadow-xs">
+            <ClubLogo size={24} className="drop-shadow-xs" />
+          </div>
+
           {!colapsado && (
             <div className="flex flex-col min-w-0">
               <span className="truncate text-sm font-bold tracking-tight text-white">
                 SocialClub
               </span>
-              <span className="truncate text-[10px] font-semibold uppercase tracking-widest text-brand-300/90">
-                Panel de gestión
+              <span className="truncate text-[10px] font-medium tracking-wide uppercase text-brand-400/90">
+                Panel de Gestión
               </span>
             </div>
           )}
         </div>
 
-        {/* Menú navegable con secciones */}
-        <nav
-          className={cn(
-            'scrollbar-fade flex-1 overflow-y-auto py-4 transition-all',
-            colapsado ? 'px-2 space-y-4' : 'px-3 space-y-5',
-          )}
-        >
-          {seccionesVisibles.map((seccion, sIndex) => {
-            const estaAbierta = seccionesAbiertas[seccion.title] !== false;
+        {/* Navegación por Secciones estilo Apex */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+          {seccionesVisibles.map((seccion) => (
+            <div key={seccion.title} className="space-y-1">
+              {!colapsado ? (
+                <button
+                  type="button"
+                  onClick={() => toggleSeccion(seccion.title)}
+                  className="flex w-full items-center justify-between px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  <span>{seccion.title}</span>
+                  <ChevronDown
+                    size={13}
+                    className={cn(
+                      'text-slate-400 transition-transform duration-200',
+                      !seccionesAbiertas[seccion.title] && '-rotate-90',
+                    )}
+                  />
+                </button>
+              ) : (
+                <div className="my-2 border-t border-sidebar-border/60" />
+              )}
 
-            return (
-              <div key={seccion.title} className="space-y-1">
-                {colapsado ? (
-                  sIndex > 0 && <div className="my-2 mx-auto w-6 border-t border-sidebar-border" />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => toggleSeccion(seccion.title)}
-                    className="group flex w-full items-center justify-between px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400/70 hover:text-white transition-colors focus:outline-none select-none bg-transparent cursor-pointer"
-                  >
-                    <span className="transition-colors group-hover:text-white">{seccion.title}</span>
-                    <ChevronDown
-                      size={11}
-                      strokeWidth={2}
-                      className={cn(
-                        'text-slate-500 transition-all duration-200 group-hover:text-white',
-                        !estaAbierta && '-rotate-90',
+              {(colapsado || seccionesAbiertas[seccion.title]) && (
+                <div className="space-y-1">
+                  {seccion.items.map(({ to, label, icon: Icon }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={to === ROUTES.dashboard}
+                      title={colapsado ? label : undefined}
+                      className={({ isActive }) =>
+                        cn(
+                          'group flex items-center rounded-lg text-sm font-medium transition-all duration-150',
+                          colapsado
+                            ? 'h-10 w-10 mx-auto justify-center'
+                            : 'h-9 px-3 gap-3',
+                          isActive
+                            ? 'bg-brand-600 text-white shadow-xs font-semibold'
+                            : 'text-slate-400 hover:bg-sidebar-surface hover:text-slate-200',
+                        )
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <Icon
+                            size={18}
+                            strokeWidth={isActive ? 2.2 : 1.8}
+                            className={cn(
+                              'shrink-0 transition-transform group-hover:scale-105',
+                              isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200',
+                            )}
+                          />
+                          {!colapsado && <span className="truncate">{label}</span>}
+                        </>
                       )}
-                    />
-                  </button>
-                )}
-
-                {(!colapsado && !estaAbierta) ? null : (
-                  <div className="space-y-0.5">
-                    {seccion.items.map(({ to, label, icon: Icon }) => (
-                      <NavLink
-                        key={to}
-                        to={to}
-                        end={to === ROUTES.dashboard}
-                        title={colapsado ? label : undefined}
-                        className={({ isActive }) =>
-                          cn(
-                            'group relative flex items-center border transition-colors duration-75 select-none',
-                            colapsado
-                              ? cn(
-                                'mx-auto h-10 w-10 justify-center rounded-xl',
-                                isActive
-                                  ? 'bg-brand-900/40 text-brand-400 border-brand-500/40'
-                                  : 'bg-transparent text-slate-300/80 border-transparent hover:bg-sidebar-border/50 hover:text-white',
-                              )
-                              : cn(
-                                'gap-3 rounded-lg px-3 py-2 text-sm font-medium',
-                                isActive
-                                  ? 'bg-brand-900/40 text-brand-300 border-brand-500/30'
-                                  : 'bg-transparent text-slate-300/80 border-transparent hover:bg-sidebar-border/50 hover:text-white',
-                              ),
-                          )
-                        }
-                      >
-                        <Icon size={18} strokeWidth={1.8} className="shrink-0" />
-                        {!colapsado && <span className="truncate flex-1">{label}</span>}
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </nav>
 
-        {/* Pie de Usuario */}
+        {/* Footer del Sidebar: Perfil de usuario y Logout */}
         <div className="border-t border-sidebar-border p-3">
           {colapsado ? (
             <div className="flex flex-col items-center gap-2">
               <div
-                title={usuario ? `${usuario.nombre} ${usuario.apellido} (${rolPrincipal})` : 'Invitado'}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-brand-800 text-xs font-bold text-white shadow-xs ring-1 ring-white/10"
+                title={usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Invitado'}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-brand-800 text-xs font-bold text-white shadow-xs ring-1 ring-white/10"
               >
                 {iniciales}
               </div>
+              {usuario ? (
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  title="Cerrar sesión"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-sidebar-border hover:text-rose-400 transition-colors"
+                >
+                  <LogOut size={16} strokeWidth={1.8} />
+                </button>
+              ) : (
+                <NavLink
+                  to={ROUTES.login}
+                  title="Iniciar sesión"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-sidebar-border hover:text-blue-400 transition-colors"
+                >
+                  <User size={16} strokeWidth={1.8} />
+                </NavLink>
+              )}
             </div>
           ) : (
-            <div className="flex items-center justify-between rounded-xl bg-sidebar-surface/80 border border-sidebar-border p-2 transition-all">
-              <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="flex items-center justify-between rounded-lg bg-sidebar-surface/70 p-2.5">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-brand-800 text-xs font-bold text-white shadow-xs ring-1 ring-white/10">
                   {iniciales}
                 </div>
@@ -437,8 +452,9 @@ export function AppLayout() {
           </div>
         </header>
 
-        {/* Contenido principal */}
+        {/* Contenido principal: Breadcrumbs al inicio del contenido estilo Apex */}
         <main className="min-w-0 flex-1 overflow-y-auto p-8">
+          <Breadcrumbs className="mb-4" />
           <Outlet />
         </main>
       </div>

@@ -141,8 +141,7 @@ describe('ComprarEntradasPage', () => {
     expect(screen.getByRole('button', { name: /Comprar entradas/i })).toBeEnabled();
   });
 
-  it('permite cambiar cantidad y navegar hacia atrás', async () => {
-    const user = userEvent.setup();
+  it('permite cambiar cantidad', async () => {
     mockUseEvento.mockReturnValue({
       data: {
         id: 1,
@@ -166,11 +165,6 @@ describe('ComprarEntradasPage', () => {
     fireEvent.change(cantidadInput, { target: { value: '3' } });
 
     expect(cantidadInput).toHaveValue(3);
-
-    // Botón volver
-    const backBtn = screen.getByRole('button', { name: '' });
-    await user.click(backBtn);
-    expect(mockNavigate).toHaveBeenCalledWith('/eventos');
   });
 
   it('abre la pasarela y confirma compra con éxito mostrando los QR generados', async () => {
@@ -257,4 +251,3 @@ describe('ComprarEntradasPage', () => {
     });
   });
 });
-

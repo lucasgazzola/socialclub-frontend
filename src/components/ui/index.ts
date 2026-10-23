@@ -16,3 +16,8 @@ export { ClubLogo } from './ClubLogo';
 
 export { HeaderOrdenable } from './HeaderOrdenable';
 export type { HeaderOrdenableProps, SentidoOrden } from './HeaderOrdenable';
+
+export { Breadcrumbs } from './Breadcrumbs';
+export type { BreadcrumbsProps } from './Breadcrumbs';
+export { resolverBreadcrumbs } from './breadcrumbs.utils';
+export type { BreadcrumbItem } from './breadcrumbs.utils';

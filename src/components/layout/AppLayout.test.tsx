@@ -45,6 +45,9 @@ describe('AppLayout', () => {
     expect(screen.getByText('Administrador Club')).toBeInTheDocument();
     expect(screen.getAllByText('ADMIN').length).toBeGreaterThan(0);
 
+    // Encabezado superior
+    expect(screen.getByRole('heading', { name: /Panel de Inicio/i })).toBeInTheDocument();
+
     // Links de admin
     expect(screen.getByRole('link', { name: /Socios/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Disciplinas/i })).toBeInTheDocument();
