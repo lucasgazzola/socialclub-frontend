@@ -180,9 +180,12 @@ export function SociosTable({ socios, ordenarPor, orden, onOrdenar }: SociosTabl
               <th className="px-5 py-3.5 text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody>
             {sociosOrdenados.map((socio) => (
-              <tr key={socio.id} className="transition-colors hover:bg-slate-50/70">
+              <tr
+                key={socio.id}
+                className="border-b border-slate-100 last:border-b-0 transition-colors hover:bg-slate-50/70"
+              >
                 <td className="px-5 py-3.5 font-medium text-slate-900">
                   {socio.apellido}, {socio.nombre}
                 </td>

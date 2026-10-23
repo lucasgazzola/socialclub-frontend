@@ -202,7 +202,7 @@ export function ParticipantesTable({ participantes, ordenarPor, orden, onOrdenar
               <th className="px-5 py-3.5 text-right font-medium">Acciones</th>
             </tr>
           </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody>
           {participantesOrdenados.map((participante) => {
             const expandido = expandidos.has(participante.personaId);
             return (
@@ -305,7 +305,7 @@ function ParticipanteRow({
 
   return (
     <>
-      <tr className={`transition-colors ${expandido ? 'bg-brand-50/60' : 'hover:bg-slate-50/70'}`}>
+      <tr className={`border-b border-slate-100 last:border-b-0 transition-colors ${expandido ? 'bg-brand-50/60' : 'hover:bg-slate-50/70'}`}>
         <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
           {participante.persona.apellido}, {participante.persona.nombre}
         </td>
