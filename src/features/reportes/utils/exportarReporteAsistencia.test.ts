@@ -1,7 +1,43 @@
-import { jsPDF } from 'jspdf';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { exportarAsistenciaCsv, exportarAsistenciaPdf } from './exportarReporteAsistencia';
 import type { ReporteAsistenciaEventos } from '../types';
+
+const mockSave = vi.fn();
+const mockAddPage = vi.fn();
+const mockText = vi.fn();
+const mockRect = vi.fn();
+const mockRoundedRect = vi.fn();
+const mockLine = vi.fn();
+const mockSetFont = vi.fn();
+const mockSetFontSize = vi.fn();
+const mockSetTextColor = vi.fn();
+const mockSetDrawColor = vi.fn();
+const mockSetFillColor = vi.fn();
+
+vi.mock('jspdf', () => {
+  class MockJsPDF {
+    save = mockSave;
+    addPage = mockAddPage;
+    text = mockText;
+    rect = mockRect;
+    roundedRect = mockRoundedRect;
+    line = mockLine;
+    setFont = mockSetFont;
+    setFontSize = mockSetFontSize;
+    setTextColor = mockSetTextColor;
+    setDrawColor = mockSetDrawColor;
+    setFillColor = mockSetFillColor;
+    internal = {
+      pageSize: {
+        getHeight: () => 210,
+        getWidth: () => 297,
+      },
+    };
+  }
+  return {
+    jsPDF: MockJsPDF,
+  };
+});
 
 const reporteFixture: ReporteAsistenciaEventos = {
   generadoEn: '2026-10-22T20:00:00.000Z',
@@ -104,12 +140,9 @@ describe('US-36 · exportarReporteAsistencia', () => {
 
   describe('exportarAsistenciaPdf', () => {
     it('genera documento PDF en orientación horizontal A4 con membrete y totales sin lanzar excepciones', () => {
-      const saveSpy = vi.spyOn(jsPDF.prototype, 'save').mockImplementation(function (this: jsPDF) {
-        return this;
-      });
       expect(() => exportarAsistenciaPdf(reporteFixture)).not.toThrow();
-      expect(saveSpy).toHaveBeenCalledTimes(1);
-      saveSpy.mockRestore();
+      expect(mockSave).toHaveBeenCalledTimes(1);
+      expect(mockSave.mock.calls[0][0]).toMatch(/^reporte-asistencia-eventos-\d{4}-\d{2}-\d{2}\.pdf$/);
     });
   });
 });
