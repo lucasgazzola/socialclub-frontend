@@ -265,4 +265,14 @@ describe('SociosTable Component', () => {
     expect(rows[1]).toHaveTextContent('Reciente');
     expect(rows[2]).toHaveTextContent('Antiguo');
   });
+
+  it('dispara onOrdenar con el campo correspondiente al hacer clic en los encabezados', () => {
+    const onOrdenar = vi.fn();
+    renderWithProviders(<SociosTable socios={SOCIOS_FIXTURE} onOrdenar={onOrdenar} />);
+    fireEvent.click(screen.getByRole('button', { name: /^Apellido y nombre$/i }));
+    expect(onOrdenar).toHaveBeenCalledWith('nombre');
+
+    fireEvent.click(screen.getByRole('button', { name: /^DNI$/i }));
+    expect(onOrdenar).toHaveBeenCalledWith('dni');
+  });
 });

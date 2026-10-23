@@ -23,6 +23,8 @@ export const auditoriaApi = {
             : undefined,
         pagina: query.pagina,
         porPagina: query.porPagina,
+        ordenarPor: query.ordenarPor || undefined,
+        orden: query.orden || undefined,
       },
     });
     return data;

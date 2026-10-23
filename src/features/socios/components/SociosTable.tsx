@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Coins, Pencil, UserCheck, UserMinus } from 'lucide-react';
-import { Badge, Button } from '@/components/ui';
+import { Badge, Button, HeaderOrdenable } from '@/components/ui';
 import { useDesactivarSocio } from '../hooks/useDesactivarSocio';
 import { useReactivarSocio } from '../hooks/useReactivarSocio';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -12,6 +12,9 @@ import type { Socio } from '../types';
 
 interface SociosTableProps {
   socios: Socio[];
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
+  onOrdenar?: (campo: string) => void;
 }
 
 function SocioEstadoCell({ socio }: { socio: Socio }) {
@@ -68,7 +71,7 @@ function SocioCuentaCell({
   return <Badge variant="warning">{label}</Badge>;
 }
 
-export function SociosTable({ socios }: SociosTableProps) {
+export function SociosTable({ socios, ordenarPor, orden, onOrdenar }: SociosTableProps) {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [socioCobro, setSocioCobro] = useState<Socio | null>(null);
   const { mutate: desactivar, isPending } = useDesactivarSocio();
@@ -81,12 +84,48 @@ export function SociosTable({ socios }: SociosTableProps) {
   const puedeCobrar = Boolean(usuario?.roles.some((r) => r === 'ADMIN' || r === 'COLABORADOR'));
 
   const sociosOrdenados = useMemo(() => {
-    return [...socios].sort((a, b) => {
-      const timeA = a.creadoEn ? new Date(a.creadoEn).getTime() : 0;
-      const timeB = b.creadoEn ? new Date(b.creadoEn).getTime() : 0;
-      return timeB - timeA;
+    if (!ordenarPor || !orden) {
+      return [...socios].sort((a, b) => {
+        const timeA = a.creadoEn ? new Date(a.creadoEn).getTime() : 0;
+        const timeB = b.creadoEn ? new Date(b.creadoEn).getTime() : 0;
+        return timeB - timeA;
+      });
+    }
+
+    const copia = [...socios];
+    copia.sort((a, b) => {
+      let comp: number;
+      switch (ordenarPor) {
+        case 'dni': {
+          const dniA = Number(String(a.dni ?? '').replace(/\D/g, '')) || 0;
+          const dniB = Number(String(b.dni ?? '').replace(/\D/g, '')) || 0;
+          comp = dniA - dniB;
+          break;
+        }
+        case 'email':
+          comp = (a.email ?? '').localeCompare(b.email ?? '', 'es', { sensitivity: 'base' });
+          break;
+        case 'categoria': {
+          const catA = a.categoria?.nombre ?? '';
+          const catB = b.categoria?.nombre ?? '';
+          comp = catA.localeCompare(catB, 'es', { sensitivity: 'base' });
+          break;
+        }
+        case 'estado':
+          comp = (b.activo ? 1 : 0) - (a.activo ? 1 : 0);
+          break;
+        case 'nombre':
+        default: {
+          const nA = `${a.apellido} ${a.nombre}`.trim().toLowerCase();
+          const nB = `${b.apellido} ${b.nombre}`.trim().toLowerCase();
+          comp = nA.localeCompare(nB, 'es', { sensitivity: 'base' });
+          break;
+        }
+      }
+      return orden === 'asc' ? comp : -comp;
     });
-  }, [socios]);
+    return copia;
+  }, [socios, ordenarPor, orden]);
 
   if (socios.length === 0) {
     return (
@@ -102,11 +141,41 @@ export function SociosTable({ socios }: SociosTableProps) {
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
-              <th className="px-5 py-3.5">Apellido y nombre</th>
-              <th className="px-5 py-3.5">DNI</th>
-              <th className="px-5 py-3.5">Email</th>
-              <th className="px-5 py-3.5">Categoría</th>
-              <th className="px-5 py-3.5">Estado</th>
+              <HeaderOrdenable
+                campo="nombre"
+                label="Apellido y nombre"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="dni"
+                label="DNI"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="email"
+                label="Email"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="categoria"
+                label="Categoría"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="estado"
+                label="Estado"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
               <th className="px-5 py-3.5">Estado de cuenta</th>
               <th className="px-5 py-3.5 text-right">Acciones</th>
             </tr>

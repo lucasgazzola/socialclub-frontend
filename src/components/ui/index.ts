@@ -13,3 +13,6 @@ export { ConfirmDialog } from './ConfirmDialog';
 export { StatusTabs } from './StatusTabs';
 export type { StatusTabItem } from './StatusTabs';
 export { ClubLogo } from './ClubLogo';
+
+export { HeaderOrdenable } from './HeaderOrdenable';
+export type { HeaderOrdenableProps, SentidoOrden } from './HeaderOrdenable';

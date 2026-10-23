@@ -33,7 +33,26 @@ export function ParticipantesPage() {
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoParticipante>('todos');
   const [pagina, setPagina] = useState(1);
+  const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
+  const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  function handleOrdenar(campo: string) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+  }
   const inscripcionAbierta = Boolean(puedeInscribir) && searchParams.get('nueva') === '1';
   const [conDocumentacion, setConDocumentacion] = useState<ParticipanteConDisciplinas | null>(null);
 
@@ -88,6 +107,8 @@ export function ParticipantesPage() {
     estado: estadoQuery,
     pagina,
     porPagina: POR_PAGINA,
+    ordenarPor,
+    orden,
   });
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
@@ -271,6 +292,9 @@ export function ParticipantesPage() {
         <>
           <ParticipantesTable
             participantes={data?.items ?? []}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
             onVerDocumentacion={puedeInscribir ? setConDocumentacion : undefined}
             onInscribir={puedeInscribir ? inscribirExistente : undefined}
           />

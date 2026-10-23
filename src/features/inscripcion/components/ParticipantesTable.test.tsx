@@ -364,6 +364,19 @@ describe('US-08 · ParticipantesTable', () => {
 
       expect(screen.getByText('Certificado médico vencido el 30/09/2026')).toBeInTheDocument();
     });
+
+    it('dispara onOrdenar con el campo correspondiente al hacer clic en los encabezados', async () => {
+      const user = userEvent.setup();
+      const onOrdenar = vi.fn();
+      render(<ParticipantesTable participantes={[participante()]} onOrdenar={onOrdenar} />);
+      const btnNombre = screen.getByRole('button', { name: /^Apellido y nombre$/i });
+      await user.click(btnNombre);
+      expect(onOrdenar).toHaveBeenCalledWith('nombre');
+
+      const btnDni = screen.getByRole('button', { name: /^DNI$/i });
+      await user.click(btnDni);
+      expect(onOrdenar).toHaveBeenCalledWith('dni');
+    });
   });
 });
 

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi } from 'vitest';
 import { AuditoriaTable } from './AuditoriaTable';
 import type { RegistroAuditoria } from '../types';
 
@@ -66,5 +67,42 @@ describe('US-33 / TASK-47 · AuditoriaTable', () => {
     expect(thead).toBeInTheDocument();
     expect(thead).toHaveClass('sticky');
     expect(thead).toHaveClass('top-0');
+  });
+
+  it('dispara onOrdenar con el campo correspondiente al hacer clic en los encabezados', async () => {
+    const user = userEvent.setup();
+    const onOrdenar = vi.fn();
+    render(<AuditoriaTable registros={FIXTURE_REGISTROS} onOrdenar={onOrdenar} />);
+
+    await user.click(screen.getByRole('button', { name: /^Fecha y hora$/i }));
+    expect(onOrdenar).toHaveBeenCalledWith('fecha');
+
+    await user.click(screen.getByRole('button', { name: /^Acción$/i }));
+    expect(onOrdenar).toHaveBeenCalledWith('accion');
+
+    await user.click(screen.getByRole('button', { name: /^Entidad$/i }));
+    expect(onOrdenar).toHaveBeenCalledWith('entidad');
+
+    await user.click(screen.getByRole('button', { name: /^ID$/i }));
+    expect(onOrdenar).toHaveBeenCalledWith('entidadId');
+
+    await user.click(screen.getByRole('button', { name: /^Responsable$/i }));
+    expect(onOrdenar).toHaveBeenCalledWith('responsable');
+  });
+
+  it('ordena en memoria cuando se especifican ordenarPor y orden', () => {
+    const { rerender } = render(
+      <AuditoriaTable registros={FIXTURE_REGISTROS} ordenarPor="accion" orden="asc" />,
+    );
+    let rows = screen.getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('BAJA');
+    expect(rows[2]).toHaveTextContent('CREAR');
+
+    rerender(
+      <AuditoriaTable registros={FIXTURE_REGISTROS} ordenarPor="accion" orden="desc" />,
+    );
+    rows = screen.getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('CREAR');
+    expect(rows[2]).toHaveTextContent('BAJA');
   });
 });

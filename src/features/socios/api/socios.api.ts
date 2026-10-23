@@ -17,6 +17,8 @@ export const sociosApi = {
         estado: query.estado || undefined,
         pagina: query.pagina,
         porPagina: query.porPagina,
+        ordenarPor: query.ordenarPor || undefined,
+        orden: query.orden || undefined,
       },
     });
     return data;

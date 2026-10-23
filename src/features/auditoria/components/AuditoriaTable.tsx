@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { HeaderOrdenable } from '@/components/ui';
 import { createPortal } from 'react-dom';
 import type { RegistroAuditoria } from '../types';
 import type { AccionAuditoria } from '../constants';
@@ -6,6 +7,9 @@ import type { AccionAuditoria } from '../constants';
 interface Props {
   registros: RegistroAuditoria[];
   isFetching?: boolean;
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
+  onOrdenar?: (campo: string) => void;
 }
 
 /** Paleta de colores semánticos por tipo de acción */
@@ -19,7 +23,45 @@ const ACCION_BADGE: Record<AccionAuditoria, string> = {
   LOGIN_FALLIDO: 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20',
 };
 
-export function AuditoriaTable({ registros, isFetching }: Props) {
+export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrdenar }: Props) {
+  const registrosOrdenados = useMemo(() => {
+    if (!ordenarPor || !orden) return registros;
+    const copia = [...registros];
+    copia.sort((a, b) => {
+      let comp: number;
+      switch (ordenarPor) {
+        case 'accion':
+          comp = (a.accion ?? '').localeCompare(b.accion ?? '', 'es', { sensitivity: 'base' });
+          break;
+        case 'entidad':
+          comp = (a.entidad ?? '').localeCompare(b.entidad ?? '', 'es', { sensitivity: 'base' });
+          break;
+        case 'id':
+        case 'entidadId': {
+          const idA = a.idEntidad ?? 0;
+          const idB = b.idEntidad ?? 0;
+          comp = idA - idB;
+          break;
+        }
+        case 'responsable': {
+          const respA = `${a.responsable?.apellido ?? ''} ${a.responsable?.nombre ?? ''}`.trim();
+          const respB = `${b.responsable?.apellido ?? ''} ${b.responsable?.nombre ?? ''}`.trim();
+          comp = respA.localeCompare(respB, 'es', { sensitivity: 'base' });
+          break;
+        }
+        case 'fecha':
+        default: {
+          const fA = a.fechaHora ? new Date(a.fechaHora).getTime() : 0;
+          const fB = b.fechaHora ? new Date(b.fechaHora).getTime() : 0;
+          comp = fA - fB;
+          break;
+        }
+      }
+      return orden === 'asc' ? comp : -comp;
+    });
+    return copia;
+  }, [registros, ordenarPor, orden]);
+
   const [tooltip, setTooltip] = useState<{ texto: string; top: number; right: number } | null>(null);
 
   // Ocultar tooltip al scrollear o redimensionar la ventana
@@ -68,16 +110,51 @@ export function AuditoriaTable({ registros, isFetching }: Props) {
         <table className="w-full text-sm text-slate-700">
           <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase text-slate-500 shadow-xs border-b border-slate-200">
             <tr>
-              <th className="px-4 py-3 text-left bg-slate-50">Fecha y hora</th>
-              <th className="px-4 py-3 text-left bg-slate-50">Acción</th>
-              <th className="px-4 py-3 text-left bg-slate-50">Entidad</th>
-              <th className="px-4 py-3 text-left bg-slate-50">ID</th>
-              <th className="px-4 py-3 text-left bg-slate-50">Responsable</th>
+              <HeaderOrdenable
+                campo="fecha"
+                label="Fecha y hora"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+                className="bg-slate-50 px-4 py-3"
+              />
+              <HeaderOrdenable
+                campo="accion"
+                label="Acción"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+                className="bg-slate-50 px-4 py-3"
+              />
+              <HeaderOrdenable
+                campo="entidad"
+                label="Entidad"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+                className="bg-slate-50 px-4 py-3"
+              />
+              <HeaderOrdenable
+                campo="entidadId"
+                label="ID"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+                className="bg-slate-50 px-4 py-3"
+              />
+              <HeaderOrdenable
+                campo="responsable"
+                label="Responsable"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+                className="bg-slate-50 px-4 py-3"
+              />
               <th className="px-4 py-3 text-left bg-slate-50">Detalle</th>
             </tr>
           </thead>
           <tbody>
-            {registros.map((r) => (
+            {registrosOrdenados.map((r) => (
               <tr
                 key={r.id}
                 className="border-b border-slate-100 last:border-b-0 transition-[background-color] duration-150 hover:bg-slate-50"

@@ -17,6 +17,25 @@ export function AuditoriaPage() {
   });
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(POR_PAGINA_DEFAULT);
+  const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
+  const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
+
+  function handleOrdenar(campo: string) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+  }
 
   const esPersonalizado = filtros.periodo === 'personalizado';
 
@@ -31,6 +50,8 @@ export function AuditoriaPage() {
     fechaHasta: esPersonalizado ? filtros.fechaHasta || undefined : undefined,
     pagina,
     porPagina,
+    ordenarPor,
+    orden,
   });
 
   const total = data?.total ?? 0;
@@ -101,7 +122,13 @@ export function AuditoriaPage() {
       ) : (
         <>
           {/* Tabla de auditoría */}
-          <AuditoriaTable registros={data?.items ?? []} isFetching={isFetching} />
+          <AuditoriaTable
+            registros={data?.items ?? []}
+            isFetching={isFetching}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
+          />
 
           {/* Barra de paginación completa con rango de resultados, selector de filas y páginas */}
           {hayResultados && (
