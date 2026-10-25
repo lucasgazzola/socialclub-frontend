@@ -22,7 +22,8 @@
     "e2e": "playwright test",
     "e2e:reporte": "playwright show-report",
     "e2e:evidencia": "node scripts/evidencia-e2e.mjs",
-    "typecheck:e2e": "tsc -p e2e/tsconfig.json"
+    "typecheck:e2e": "tsc -p e2e/tsconfig.json",
+    "ship": "node scripts/ship.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "5.4.0",
