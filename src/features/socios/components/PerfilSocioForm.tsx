@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, AlertCircle, Lock, UserCheck, UserX } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { perfilSocioSchema, type PerfilSocioFormData } from '../schemas';
 import { useUpdatePerfilSocio } from '../hooks/useSocios';
 import { useDarseDeBajaSocio } from '../hooks/useDarseDeBajaSocio';
@@ -104,7 +105,7 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
               </label>
               <Input
                 id="dni"
-                value={persona?.dni ?? '—'}
+                value={formatearDni(persona?.dni)}
                 readOnly
                 disabled
                 className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"

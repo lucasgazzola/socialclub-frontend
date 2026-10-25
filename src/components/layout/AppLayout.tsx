@@ -438,8 +438,8 @@ export function AppLayout() {
         </header>
 
         {/* Contenido principal */}
-        <main className="min-w-0 flex-1 overflow-y-auto p-8">
-          <Breadcrumbs className="mb-4" />
+        <main className="min-w-0 flex-1 overflow-y-auto px-8 py-6">
+          <Breadcrumbs className="mb-1.5" />
           <Outlet />
         </main>
       </div>

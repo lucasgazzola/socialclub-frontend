@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { UserPlus, Search, Filter } from 'lucide-react';
-import { Button, Card, ConfirmDialog, Spinner, StatusTabs, Input, Select } from '@/components/ui';
+import { Button, Card, ConfirmDialog, Spinner, StatusTabs, Input, Select, TablePagination, TableExportMenu } from '@/components/ui';
+import { usuariosApi } from '../api/usuarios.api';
+import { formatearDni } from '@/lib/utils/dni';
+import type { ExportColumn } from '@/lib/utils/exportTable';
 import { useActivateUsuario } from '../hooks/useActivateUsuario';
 import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
@@ -16,6 +19,18 @@ import {
 } from '../schemas/usuario.schema';
 
 type FiltroEstado = 'todos' | 'activos' | 'inactivos';
+
+const COLUMNAS_EXPORT_USUARIOS: ExportColumn<Usuario>[] = [
+  { header: 'Usuario', accessor: (u) => `${u.nombre} ${u.apellido}`.trim() },
+  { header: 'DNI', accessor: (u) => formatearDni(u.dni) },
+  { header: 'Email', accessor: (u) => u.email },
+  { header: 'Roles', accessor: (u) => u.roles.map((r) => r.rol.nombre).join(', ') || '—' },
+  { header: 'Estado', accessor: (u) => (u.activo ? 'Activo' : 'Inactivo') },
+  {
+    header: 'Alta',
+    accessor: (u) => (u.creadoEn ? new Date(u.creadoEn).toLocaleDateString('es-AR') : '—'),
+  },
+];
 
 export function UsuariosPage() {
   const [modoFormulario, setModoFormulario] = useState<'crear' | 'editar'>('crear');
@@ -34,7 +49,7 @@ export function UsuariosPage() {
   /** Usuario cuyo cambio de estado está esperando confirmación (DT-04). */
   const [usuarioAConfirmar, setUsuarioAConfirmar] = useState<Usuario | null>(null);
 
-  const POR_PAGINA = 10;
+  const [porPagina, setPorPagina] = useState(10);
   const [pagina, setPagina] = useState(1);
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
@@ -53,12 +68,12 @@ export function UsuariosPage() {
     return () => clearTimeout(timer);
   }, [textoInput, busqueda]);
 
-  const { data, isLoading, isError, error } = useUsers({
+  const { data, isLoading, isError, error, isFetching } = useUsers({
     busqueda: busqueda || undefined,
     rolId,
     estado: filtroEstado,
     pagina,
-    porPagina: POR_PAGINA,
+    porPagina,
     ordenarPor,
     orden,
   });
@@ -70,7 +85,6 @@ export function UsuariosPage() {
   const cambioDeEstadoEnCurso = deactivateUsuario.isPending || activateUsuario.isPending;
 
   const usuarios: Usuario[] = Array.isArray(data) ? data : (data?.items ?? []);
-  const totalPaginas = data && !Array.isArray(data) && data.porPagina ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const totalUsuarios = data && !Array.isArray(data) ? data.total : usuarios.length;
   const hayResultados = usuarios.length > 0;
 
@@ -239,7 +253,7 @@ export function UsuariosPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Usuarios</h1>
@@ -292,18 +306,20 @@ export function UsuariosPage() {
           />
 
           {/* Accesibilidad y compatibilidad con pruebas automatizadas */}
-          <select
-            id="filtroEstado"
-            aria-label="Filtrar por estado"
-            value={filtroEstado}
-            onChange={(e) => cambiarFiltro(e.target.value as FiltroEstado)}
-            className="sr-only"
-            tabIndex={-1}
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="activos">Solo activos</option>
-            <option value="inactivos">Solo inactivos</option>
-          </select>
+          <div className="relative h-0 w-0 overflow-hidden">
+            <select
+              id="filtroEstado"
+              aria-label="Filtrar por estado"
+              value={filtroEstado}
+              onChange={(e) => cambiarFiltro(e.target.value as FiltroEstado)}
+              className="sr-only"
+              tabIndex={-1}
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="activos">Solo activos</option>
+              <option value="inactivos">Solo inactivos</option>
+            </select>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -319,6 +335,25 @@ export function UsuariosPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <TableExportMenu<Usuario>
+              filename="usuarios"
+              title="Usuarios administrativos"
+              disabled={isLoading && !data}
+              columns={COLUMNAS_EXPORT_USUARIOS}
+              fetchRows={async () => {
+                const res = await usuariosApi.list({
+                  busqueda: busqueda || undefined,
+                  rolId,
+                  estado: filtroEstado,
+                  pagina: 1,
+                  porPagina: 10000,
+                  ordenarPor,
+                  orden,
+                });
+                return Array.isArray(res) ? res : (res?.items ?? []);
+              }}
+            />
+
             <Select
               id="rolId"
               value={rolId ?? ''}
@@ -353,7 +388,7 @@ export function UsuariosPage() {
             : 'No hay usuarios cargados todavía.'}
         </Card>
       ) : (
-        <>
+        <div>
           <UsuariosGrid
             usuarios={usuariosVisibles}
             usuarioDestacadoId={usuarioDestacadoId}
@@ -366,32 +401,20 @@ export function UsuariosPage() {
           />
 
           {hayResultados && (
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>{totalUsuarios} usuario(s)</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina <= 1}
-                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </Button>
-                <span>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina >= totalPaginas}
-                  onClick={() => setPagina((p) => p + 1)}
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
+            <TablePagination
+              pagina={pagina}
+              porPagina={porPagina}
+              total={totalUsuarios}
+              isFetching={isFetching}
+              onChangePagina={setPagina}
+              onChangePorPagina={(nuevo) => {
+                setPorPagina(nuevo);
+                setPagina(1);
+              }}
+              srSummary={`${totalUsuarios} usuario(s)`}
+            />
           )}
-        </>
+        </div>
       )}
     </div>
   );

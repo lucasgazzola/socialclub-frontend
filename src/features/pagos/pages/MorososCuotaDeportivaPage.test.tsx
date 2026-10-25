@@ -98,7 +98,7 @@ describe('US-23 · MorososCuotaDeportivaPage', () => {
     expect(screen.getByTestId('total-morosos')).toHaveTextContent('1');
     expect(screen.getByTestId('deuda-total')).toHaveTextContent('35.000');
     const fila = screen.getByRole('row', { name: /Ana Gómez/ });
-    expect(within(fila).getByText('30111222')).toBeInTheDocument();
+    expect(within(fila).getByText('30.111.222')).toBeInTheDocument();
     expect(within(fila).getByText('Fútbol')).toBeInTheDocument();
     expect(within(fila).getByText('Natación')).toBeInTheDocument();
     expect(within(fila).getByText(/2 per\. · \$\s?20\.000/)).toBeInTheDocument();

@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
 import { AlertCircle, ChevronDown, ChevronRight, CreditCard } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { isoADisplay } from '@/lib/utils/fecha';
 import type { MorosoCuotaDeportiva } from '../types';
 
@@ -86,7 +87,7 @@ export function MorososCuotaDeportivaTable({ morosos, onCobrar }: MorososCuotaDe
                         {moroso.email || moroso.telefono || 'Sin datos de contacto'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-slate-600">{moroso.dni}</td>
+                    <td className="px-6 py-4 font-mono text-slate-600">{formatearDni(moroso.dni)}</td>
                     <td className="px-6 py-4">
                       <ul className="space-y-1">
                         {moroso.disciplinas.slice(0, DISCIPLINAS_VISIBLES).map((d) => (

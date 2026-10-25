@@ -64,7 +64,7 @@ describe('PerfilSocioForm (US-11)', () => {
     render(<PerfilSocioForm usuario={mockUsuario} persona={mockPersona} />);
 
     const dniInput = screen.getByLabelText(/DNI/i);
-    expect(dniInput).toHaveValue('40123456');
+    expect(dniInput).toHaveValue('40.123.456');
     expect(dniInput).toBeDisabled();
     expect(dniInput).toHaveAttribute('readonly');
 

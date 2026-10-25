@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Coins, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { Badge, Button, HeaderOrdenable } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { useDesactivarSocio } from '../hooks/useDesactivarSocio';
 import { useReactivarSocio } from '../hooks/useReactivarSocio';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -189,7 +190,7 @@ export function SociosTable({ socios, ordenarPor, orden, onOrdenar }: SociosTabl
                 <td className="px-5 py-3.5 font-medium text-slate-900">
                   {socio.apellido}, {socio.nombre}
                 </td>
-                <td className="px-5 py-3.5 font-mono text-xs text-slate-600 tabular-nums">{socio.dni}</td>
+                <td className="px-5 py-3.5 font-mono text-xs text-slate-600 tabular-nums">{formatearDni(socio.dni)}</td>
                 <td className="px-5 py-3.5 text-slate-600">{socio.email ?? '—'}</td>
                 <td className="px-5 py-3.5 text-slate-600">{socio.categoria?.nombre ?? '—'}</td>
                 <td className="px-5 py-3.5">

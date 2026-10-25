@@ -161,11 +161,21 @@ export interface CategoriasDeDisciplina {
     requerimientosDoc: RequerimientoDocVigente[];
   };
   items: CategoriaDisciplinaDetalle[];
+  total?: number;
+  pagina?: number;
+  porPagina?: number;
+  conteos?: {
+    todas: number;
+    activas: number;
+    inactivas: number;
+  };
 }
 
 export interface CategoriasQuery {
   busqueda?: string;
   estado?: EstadoDisciplinaFiltro;
+  pagina?: number;
+  porPagina?: number;
 }
 
 export interface RequerimientoDocPayload {

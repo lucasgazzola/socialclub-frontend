@@ -27,7 +27,13 @@ export function HeaderOrdenable<T extends string = string>({
   return (
     <th
       aria-sort={activo ? (orden === 'asc' ? 'ascending' : 'descending') : 'none'}
-      className={cn('px-5 py-3.5', align === 'right' && 'text-right', align === 'center' && 'text-center', className)}
+      className={cn(
+        'px-5 py-3.5',
+        align === 'left' && 'text-left',
+        align === 'right' && 'text-right',
+        align === 'center' && 'text-center',
+        className,
+      )}
     >
       <button
         type="button"

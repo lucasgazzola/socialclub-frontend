@@ -59,9 +59,9 @@ describe('US-33 / TASK-47 · AuditoriaTable', () => {
   it('cuenta con encabezado sticky y contenedor con scroll vertical delimitado (DT-10)', () => {
     const { container } = render(<AuditoriaTable registros={FIXTURE_REGISTROS} />);
 
-    const wrapper = container.querySelector('.max-h-\\[600px\\]');
+    const wrapper = container.querySelector('.overflow-x-auto');
     expect(wrapper).toBeInTheDocument();
-    expect(wrapper).toHaveClass('overflow-y-auto');
+    expect(wrapper).not.toHaveClass('overflow-y-auto');
 
     const thead = container.querySelector('thead');
     expect(thead).toBeInTheDocument();

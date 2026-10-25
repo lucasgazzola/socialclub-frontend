@@ -88,7 +88,7 @@ describe('US-08 · ParticipantesTable', () => {
     );
 
     expect(screen.getByText('Perez, Juan')).toBeInTheDocument();
-    expect(screen.getByText('12345678')).toBeInTheDocument();
+    expect(screen.getByText('12.345.678')).toBeInTheDocument();
     expect(screen.getByText('Fútbol, Vóley')).toBeInTheDocument();
     expect(screen.getByText('Activo')).toBeInTheDocument();
   });

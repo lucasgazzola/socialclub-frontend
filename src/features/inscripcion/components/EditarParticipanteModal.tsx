@@ -11,6 +11,7 @@ import {
   StatusTabs,
 } from '@/components/ui';
 import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
+import { formatearDni } from '@/lib/utils/dni';
 import { ROUTES } from '@/routes/paths';
 import { useInscripcionesPorPersona } from '../hooks/useInscripciones';
 import { actualizarDatosPersona } from '../api/inscripcion.api';
@@ -300,7 +301,7 @@ function EditarParticipanteContenido({
         <strong className="text-slate-800">
           {participante.apellido}, {participante.nombre}
         </strong>{' '}
-        · DNI {participante.dni}
+        · DNI {formatearDni(participante.dni)}
       </p>
 
       {!participante.activo && (

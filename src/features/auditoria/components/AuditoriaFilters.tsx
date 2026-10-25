@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Filter, RotateCcw, Search, User } from 'lucide-react';
 import { Button, DateInput, Input, Select, StatusTabs } from '@/components/ui';
 import { ACCIONES_AUDITORIA } from '../constants';
@@ -17,6 +17,7 @@ interface AuditoriaFiltersProps {
   filtrosActivos: AuditoriaFiltrosFormValues;
   deshabilitado?: boolean;
   responsables?: ResponsableOpcion[];
+  exportAction?: ReactNode;
 }
 
 const TABS_PERIODO: { value: PeriodoAuditoriaFiltro; label: string }[] = [
@@ -33,6 +34,7 @@ export function AuditoriaFilters({
   filtrosActivos,
   deshabilitado = false,
   responsables = [],
+  exportAction,
 }: AuditoriaFiltersProps) {
   const [textoEntidad, setTextoEntidad] = useState(filtrosActivos.entidad ?? '');
   const [periodo, setPeriodo] = useState<PeriodoAuditoriaFiltro>(filtrosActivos.periodo ?? 'todo');
@@ -305,6 +307,7 @@ export function AuditoriaFilters({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          {exportAction}
           <label htmlFor="responsableId" className="sr-only">
             Responsable
           </label>

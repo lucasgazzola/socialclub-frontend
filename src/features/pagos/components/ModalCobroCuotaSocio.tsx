@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Coins, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button, Modal, Select, Spinner } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { EstadoFinancieroBadge } from './EstadoFinancieroBadge';
 import { useCuotasPendientesSocio } from '../hooks/useCuotasPendientesSocio';
 import { useRegistrarPagoSocio } from '../hooks/useRegistrarPagoSocio';
@@ -126,7 +127,7 @@ export function ModalCobroCuotaSocio({
                   {cuotasData?.socioNombre || (socio ? `${socio.apellido}, ${socio.nombre}` : 'Socio')}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  DNI: <span className="text-slate-700 font-semibold">{cuotasData?.dni || socio?.dni || '—'}</span>
+                  DNI: <span className="text-slate-700 font-semibold">{formatearDni(cuotasData?.dni || socio?.dni)}</span>
                   {cuotasData?.categoria ? (
                     <>
                       {' · '}Categoría: <span className="text-slate-700 font-semibold">{cuotasData.categoria}</span>

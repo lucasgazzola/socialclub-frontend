@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { Filter, Plus, Search, UserPlus } from 'lucide-react';
-import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/ui';
+import { Button, Input, Modal, Select, Spinner, StatusTabs, TablePagination, TableExportMenu } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import type { EstadoSocioFiltro } from '../types';
+import type { EstadoSocioFiltro, Socio } from '../types';
+import { sociosApi } from '../api/socios.api';
+import { formatearDni } from '@/lib/utils/dni';
+import type { ExportColumn } from '@/lib/utils/exportTable';
 import { useCategorias } from '../hooks/useCategorias';
 import { useSocios } from '../hooks/useSocios';
 import { SocioForm } from '../components/SocioForm';
@@ -11,9 +14,15 @@ import { SociosTable } from '../components/SociosTable';
 import { EditarSocioModal } from '../components/EditarSocioModal';
 import { useCrearSocio } from '../hooks/useSocios';
 
-const POR_PAGINA = 10;
-
 type FiltroEstadoSocio = 'todos' | 'activos' | 'inactivos';
+
+const COLUMNAS_EXPORT_SOCIOS: ExportColumn<Socio>[] = [
+  { header: 'Apellido y nombre', accessor: (s) => `${s.apellido}, ${s.nombre}` },
+  { header: 'DNI', accessor: (s) => formatearDni(s.dni) },
+  { header: 'Email', accessor: (s) => s.email ?? '—' },
+  { header: 'Categoría', accessor: (s) => s.categoria?.nombre ?? '—' },
+  { header: 'Estado', accessor: (s) => (s.activo ? 'Activo' : 'Inactivo') },
+];
 
 export function SociosPage() {
   const location = useLocation();
@@ -25,6 +34,7 @@ export function SociosPage() {
   const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoSocio>('todos');
   const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
   const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
   const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -80,12 +90,11 @@ export function SociosPage() {
     categoriaId,
     estado: estadoQuery,
     pagina,
-    porPagina: POR_PAGINA,
+    porPagina,
     ordenarPor,
     orden,
   });
 
-  const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
 
   const [cachedCounts, setCachedCounts] = useState<{
@@ -143,7 +152,7 @@ export function SociosPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Socios</h1>
@@ -172,20 +181,22 @@ export function SociosPage() {
           />
 
           {/* Accesibilidad y compatibilidad con pruebas automatizadas */}
-          <select
-            id="filtroEstado"
-            aria-label="Filtrar por estado"
-            value={filtroEstado === 'activos' ? 'ALTA' : filtroEstado === 'inactivos' ? 'BAJA' : 'todos'}
-            onChange={(e) => cambiarFiltro(e.target.value)}
-            className="sr-only"
-            tabIndex={-1}
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="ALTA">Solo activos</option>
-            <option value="BAJA">Solo inactivos</option>
-            <option value="activos" className="hidden">Activos</option>
-            <option value="inactivos" className="hidden">Inactivos</option>
-          </select>
+          <div className="relative h-0 w-0 overflow-hidden">
+            <select
+              id="filtroEstado"
+              aria-label="Filtrar por estado"
+              value={filtroEstado === 'activos' ? 'ALTA' : filtroEstado === 'inactivos' ? 'BAJA' : 'todos'}
+              onChange={(e) => cambiarFiltro(e.target.value)}
+              className="sr-only"
+              tabIndex={-1}
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="ALTA">Solo activos</option>
+              <option value="BAJA">Solo inactivos</option>
+              <option value="activos" className="hidden">Activos</option>
+              <option value="inactivos" className="hidden">Inactivos</option>
+            </select>
+          </div>
         </div>
 
       {/* Barra de búsqueda y categorías estilo Apex */}
@@ -201,6 +212,25 @@ export function SociosPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <TableExportMenu<Socio>
+            filename="socios"
+            title="Socios"
+            disabled={isLoading && !data}
+            columns={COLUMNAS_EXPORT_SOCIOS}
+            fetchRows={async () => {
+              const res = await sociosApi.list({
+                busqueda: busqueda || undefined,
+                categoriaId,
+                estado: estadoQuery,
+                pagina: 1,
+                porPagina: 10000,
+                ordenarPor,
+                orden,
+              });
+              return res?.items ?? [];
+            }}
+          />
+
           <Select
             id="categoria"
             value={categoriaId ?? ''}
@@ -247,7 +277,7 @@ export function SociosPage() {
           {error instanceof Error ? error.message : 'No se pudieron cargar los socios.'}
         </div>
       ) : (
-        <>
+        <div>
           <SociosTable
             socios={data?.items ?? []}
             ordenarPor={ordenarPor}
@@ -256,34 +286,20 @@ export function SociosPage() {
           />
 
           {hayResultados && (
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>
-                {data?.total ?? 0} socio(s){isFetching ? ' · actualizando…' : ''}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina <= 1}
-                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </Button>
-                <span>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina >= totalPaginas}
-                  onClick={() => setPagina((p) => p + 1)}
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
+            <TablePagination
+              pagina={pagina}
+              porPagina={porPagina}
+              total={data?.total ?? 0}
+              isFetching={isFetching}
+              onChangePagina={setPagina}
+              onChangePorPagina={(nuevo) => {
+                setPorPagina(nuevo);
+                setPagina(1);
+              }}
+              srSummary={`${data?.total ?? 0} socio(s)`}
+            />
           )}
-        </>
+        </div>
       )}
     </div>
   );

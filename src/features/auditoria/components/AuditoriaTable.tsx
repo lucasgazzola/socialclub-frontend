@@ -105,9 +105,9 @@ export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrd
   return (
     <>
       <div
-        className={`overflow-x-auto overflow-y-auto max-h-[600px] rounded-2xl border border-slate-200 transition-opacity duration-150 ${isFetching ? 'opacity-60' : 'opacity-100'}`}
+        className={`overflow-x-auto rounded-2xl border border-slate-200 transition-opacity duration-150 ${isFetching ? 'opacity-60' : 'opacity-100'}`}
       >
-        <table className="w-full text-sm text-slate-700">
+        <table className="w-full text-left text-sm text-slate-700">
           <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase text-slate-500 shadow-xs border-b border-slate-200">
             <tr>
               <HeaderOrdenable
@@ -116,7 +116,7 @@ export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrd
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
-                className="bg-slate-50 px-4 py-3"
+                className="bg-slate-50"
               />
               <HeaderOrdenable
                 campo="accion"
@@ -124,7 +124,7 @@ export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrd
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
-                className="bg-slate-50 px-4 py-3"
+                className="bg-slate-50"
               />
               <HeaderOrdenable
                 campo="entidad"
@@ -132,7 +132,7 @@ export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrd
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
-                className="bg-slate-50 px-4 py-3"
+                className="bg-slate-50"
               />
               <HeaderOrdenable
                 campo="entidadId"
@@ -140,7 +140,7 @@ export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrd
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
-                className="bg-slate-50 px-4 py-3"
+                className="bg-slate-50"
               />
               <HeaderOrdenable
                 campo="responsable"
@@ -148,9 +148,9 @@ export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrd
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
-                className="bg-slate-50 px-4 py-3"
+                className="bg-slate-50"
               />
-              <th className="px-4 py-3 text-left bg-slate-50">Detalle</th>
+              <th className="px-5 py-3.5 text-left bg-slate-50">Detalle</th>
             </tr>
           </thead>
           <tbody>
@@ -159,24 +159,24 @@ export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrd
                 key={r.id}
                 className="border-b border-slate-100 last:border-b-0 transition-[background-color] duration-150 hover:bg-slate-50"
               >
-                <td className="px-4 py-3 whitespace-nowrap">
+                <td className="px-5 py-3.5 whitespace-nowrap">
                   {new Date(r.fechaHora).toLocaleString('es-AR')}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-3.5">
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${ACCION_BADGE[r.accion] ?? 'bg-slate-100 text-slate-600'}`}
                   >
                     {r.accion}
                   </span>
                 </td>
-                <td className="px-4 py-3">{r.entidad}</td>
-                <td className="px-4 py-3 text-slate-400">{r.idEntidad ?? '—'}</td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-3.5">{r.entidad}</td>
+                <td className="px-5 py-3.5 text-slate-400">{r.idEntidad ?? '—'}</td>
+                <td className="px-5 py-3.5">
                   {r.responsable
                     ? `${r.responsable.nombre} ${r.responsable.apellido}`
                     : '—'}
                 </td>
-                <td className="px-4 py-3 text-slate-400 w-1/3 max-w-[150px] sm:max-w-[250px] lg:max-w-[350px]">
+                <td className="px-5 py-3.5 text-slate-400 w-1/3 max-w-[150px] sm:max-w-[250px] lg:max-w-[350px]">
                   {r.detalle ? (
                     <div className="flex items-center">
                       <span 

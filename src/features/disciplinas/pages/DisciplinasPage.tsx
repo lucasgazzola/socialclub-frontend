@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dumbbell, Plus, Search } from 'lucide-react';
-import { Button, Card, ConfirmDialog, Input, Modal, Spinner, StatusTabs } from '@/components/ui';
+import { Button, Card, ConfirmDialog, Input, Modal, Spinner, StatusTabs, TablePagination, TableExportMenu } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { DisciplinaForm } from '../components/DisciplinaForm';
 import { DisciplinasTable } from '../components/DisciplinasTable';
@@ -11,10 +11,32 @@ import {
   useDisciplinas,
   useReactivarDisciplina,
 } from '../hooks/useDisciplinas';
-import type { Disciplina } from '../types';
+import { listarDisciplinas } from '../api/disciplina.api';
+import { GENERO_DISCIPLINA_LABELS, type Disciplina } from '../types';
+import type { ExportColumn } from '@/lib/utils/exportTable';
 import type { DisciplinaFormValues } from '../schemas/disciplina.schema';
 
 type FiltroEstado = 'todas' | 'activas' | 'inactivas';
+
+const COLUMNAS_EXPORT_DISCIPLINAS: ExportColumn<Disciplina>[] = [
+  { header: 'Nombre', accessor: (d) => d.nombre },
+  { header: 'Descripción', accessor: (d) => d.descripcion || '—' },
+  { header: 'Género', accessor: (d) => (d.genero ? GENERO_DISCIPLINA_LABELS[d.genero] : 'Sin restricción') },
+  {
+    header: 'Edad',
+    accessor: (d) =>
+      d.edadMinima !== null && d.edadMinima !== undefined
+        ? `${d.edadMinima}–${d.edadMaxima ?? '∞'}`
+        : d.edadMaxima !== null && d.edadMaxima !== undefined
+          ? `hasta ${d.edadMaxima}`
+          : 'Sin límite',
+  },
+  {
+    header: 'Documentación',
+    accessor: (d) => (d.solicitaDocumentacion ? `${d.requerimientosDoc.length} tipo(s)` : 'No requiere'),
+  },
+  { header: 'Estado', accessor: (d) => (d.activo ? 'Activa' : 'Inactiva') },
+];
 
 export function DisciplinasPage() {
   const { usuario } = useAuth();
@@ -26,7 +48,7 @@ export function DisciplinasPage() {
   const [disciplinaAConfirmar, setDisciplinaAConfirmar] = useState<Disciplina | null>(null);
 
   const [pagina, setPagina] = useState(1);
-  const porPagina = 10;
+  const [porPagina, setPorPagina] = useState(10);
   const { data, isLoading, isError, error, isFetching } = useDisciplinas({
     busqueda: busqueda.trim() || undefined,
     estado: filtroEstado === 'todas' ? undefined : filtroEstado === 'activas' ? 'ACTIVA' : 'INACTIVA',
@@ -40,7 +62,6 @@ export function DisciplinasPage() {
   const cambiandoEstado = desactivar.isPending || reactivar.isPending;
 
   const disciplinas = data?.items ?? [];
-  const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
 
   function cambiarFiltroEstado(valor: FiltroEstado) {
     setFiltroEstado(valor);
@@ -78,7 +99,7 @@ export function DisciplinasPage() {
   const tituloConfirmacion = disciplinaAConfirmar?.activo ? 'Desactivar disciplina' : 'Reactivar disciplina';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Disciplinas</h1>
@@ -110,34 +131,64 @@ export function DisciplinasPage() {
       />
 
       <div className="space-y-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
           <StatusTabs<FiltroEstado>
             value={filtroEstado}
-              onChange={cambiarFiltroEstado}
+            onChange={cambiarFiltroEstado}
             tabs={[
               { value: 'todas', label: 'Todos', count: data?.conteos.todas ?? 0 },
               { value: 'activas', label: 'Activos', count: data?.conteos.activas ?? 0 },
               { value: 'inactivas', label: 'Inactivos', count: data?.conteos.inactivas ?? 0 },
             ]}
           />
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Input value={busqueda} onChange={(evento) => { setBusqueda(evento.target.value); setPagina(1); }} placeholder="Buscar Disciplina" leftIcon={<Search />} containerClassName="sm:min-w-64" />
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="w-full sm:max-w-xs">
+            <Input value={busqueda} onChange={(evento) => { setBusqueda(evento.target.value); setPagina(1); }} placeholder="Buscar Disciplina" leftIcon={<Search />} />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <TableExportMenu<Disciplina>
+              filename="disciplinas"
+              title="Disciplinas"
+              disabled={isLoading && !data}
+              columns={COLUMNAS_EXPORT_DISCIPLINAS}
+              fetchRows={async () => {
+                const res = await listarDisciplinas({
+                  busqueda: busqueda.trim() || undefined,
+                  estado: filtroEstado === 'todas' ? undefined : filtroEstado === 'activas' ? 'ACTIVA' : 'INACTIVA',
+                  pagina: 1,
+                  porPagina: 100,
+                });
+                return res?.items ?? [];
+              }}
+            />
           </div>
         </div>
       </div>
 
-      {isLoading ? <div className="flex justify-center py-12"><Spinner className="h-6 w-6" /></div> : isError ? <Card className="border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">{error instanceof Error ? error.message : 'No se pudieron cargar las disciplinas.'}</Card> : disciplinas.length === 0 ? <Card className="p-8 text-center text-sm text-slate-500"><Dumbbell className="mx-auto mb-2 text-slate-300" size={28} />No hay disciplinas que coincidan con los filtros.</Card> : <>
-        <DisciplinasTable disciplinas={disciplinas} puedeMutar={puedeMutar} accionesDeshabilitadas={cambiandoEstado} onEditar={abrirEdicion} onCambiarEstado={setDisciplinaAConfirmar} />
-        <div className="flex items-center justify-between text-sm text-slate-500">
-          <span>{data?.total ?? 0} disciplina(s){isFetching ? ' · actualizando…' : ''}</span>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" disabled={pagina <= 1 || isFetching} onClick={() => setPagina((actual) => actual - 1)}>Anterior</Button>
-            <span>Página {pagina} de {totalPaginas}</span>
-            <Button variant="secondary" size="sm" disabled={pagina >= totalPaginas || isFetching} onClick={() => setPagina((actual) => actual + 1)}>Siguiente</Button>
-          </div>
+      {isLoading ? (
+        <div className="flex justify-center py-12"><Spinner className="h-6 w-6" /></div>
+      ) : isError ? (
+        <Card className="border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">{error instanceof Error ? error.message : 'No se pudieron cargar las disciplinas.'}</Card>
+      ) : disciplinas.length === 0 ? (
+        <Card className="p-8 text-center text-sm text-slate-500"><Dumbbell className="mx-auto mb-2 text-slate-300" size={28} />No hay disciplinas que coincidan con los filtros.</Card>
+      ) : (
+        <div>
+          <DisciplinasTable disciplinas={disciplinas} puedeMutar={puedeMutar} accionesDeshabilitadas={cambiandoEstado} onEditar={abrirEdicion} onCambiarEstado={setDisciplinaAConfirmar} />
+          <TablePagination
+            pagina={pagina}
+            porPagina={porPagina}
+            total={data?.total ?? 0}
+            isFetching={isFetching}
+            onChangePagina={setPagina}
+            onChangePorPagina={(nuevo) => {
+              setPorPagina(nuevo);
+              setPagina(1);
+            }}
+            srSummary={`${data?.total ?? 0} disciplina(s)`}
+          />
         </div>
-      </>}
+      )}
     </div>
   );
 }
-

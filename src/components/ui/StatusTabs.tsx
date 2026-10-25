@@ -29,7 +29,7 @@ export function StatusTabs<T extends string = string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        'inline-flex flex-wrap items-center gap-1 rounded-xl bg-slate-100/90 p-1 text-xs font-medium text-slate-600',
+        'inline-flex flex-wrap items-center gap-1 rounded-xl bg-slate-100/90 p-1 text-xs font-medium text-slate-600 shrink-0',
         className,
       )}
     >

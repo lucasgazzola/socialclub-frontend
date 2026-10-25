@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Badge, Button, ConfirmDialog, HeaderOrdenable } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
+import { formatearDni } from '@/lib/utils/dni';
 import { isoADisplay } from '@/lib/utils/fecha';
 import { useActivarParticipante } from '../hooks/useActivarParticipante';
 import { useDarDeBajaParticipante } from '../hooks/useDarDeBajaParticipante';
@@ -309,7 +310,7 @@ function ParticipanteRow({
         <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
           {participante.persona.apellido}, {participante.persona.nombre}
         </td>
-        <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{participante.persona.dni}</td>
+        <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{formatearDni(participante.persona.dni)}</td>
         <td className="px-5 py-3.5 text-slate-600">
           {nombres.length === 0 ? '—' : visibles.join(', ')}
           {restantes > 0 && <span className="ml-1 text-xs text-slate-400">+{restantes} más</span>}

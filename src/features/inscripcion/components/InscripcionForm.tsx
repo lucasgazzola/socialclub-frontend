@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, FileText, UserCheck, UserPlus } from 'lucide-react';
 import { Button, DateInput, Input, ModalActions, Select, Spinner } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { isoADisplay } from '@/lib/utils/fecha';
 import {
   GENERO_DISCIPLINA_LABELS,
@@ -367,7 +368,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
               <UserCheck size={16} className="shrink-0" />
               <strong>{pActual.apellido}, {pActual.nombre}</strong>
               <span className="text-brand-400">·</span>
-              <span>DNI {pActual.dni}</span>
+              <span>DNI {formatearDni(pActual.dni)}</span>
               {pActual.fechaNacimiento && (
                 <>
                   <span className="text-brand-400">·</span>
