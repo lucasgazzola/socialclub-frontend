@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, ChevronDown, ChevronUp, Dumbbell, FileText, Pencil, UserMinus, UserPlus } from 'lucide-react';
-import { Badge, Button, ConfirmDialog } from '@/components/ui';
+import { useMemo, useState } from 'react';
+import { Badge, Button, ConfirmDialog, HeaderOrdenable } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
+import { formatearDni } from '@/lib/utils/dni';
 import { isoADisplay } from '@/lib/utils/fecha';
 import { useActivarParticipante } from '../hooks/useActivarParticipante';
 import { useDarDeBajaParticipante } from '../hooks/useDarDeBajaParticipante';
@@ -12,6 +13,9 @@ import type { ParticipanteConDisciplinas } from '../types';
 
 interface ParticipantesTableProps {
   participantes: ParticipanteConDisciplinas[];
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
+  onOrdenar?: (campo: string) => void;
   /** DT-11: abre la documentación del participante (solo si se puede gestionar). */
   onVerDocumentacion?: (participante: ParticipanteConDisciplinas) => void;
   /** TASK-31: inscribir a este participante en otra disciplina. */
@@ -47,7 +51,50 @@ function BadgeParticipante({ activo }: { activo: boolean }) {
  * US-07 — Desde acá el delegado (o un admin) puede dar de baja al
  * participante: la baja alcanza a todas sus disciplinas.
  */
-export function ParticipantesTable({ participantes, onVerDocumentacion, onInscribir }: ParticipantesTableProps) {
+export function ParticipantesTable({ participantes, ordenarPor, orden, onOrdenar, onVerDocumentacion, onInscribir }: ParticipantesTableProps) {
+  const participantesOrdenados = useMemo(() => {
+    if (!ordenarPor || !orden) return participantes;
+    const copia = [...participantes];
+    copia.sort((a, b) => {
+      let comp: number;
+      switch (ordenarPor) {
+        case 'dni': {
+          const dniA = Number(String(a.persona?.dni ?? '').replace(/\D/g, '')) || 0;
+          const dniB = Number(String(b.persona?.dni ?? '').replace(/\D/g, '')) || 0;
+          comp = dniA - dniB;
+          break;
+        }
+        case 'disciplinas': {
+          const cantA = a.cantidadDisciplinas ?? a.disciplinas?.length ?? 0;
+          const cantB = b.cantidadDisciplinas ?? b.disciplinas?.length ?? 0;
+          comp = cantA - cantB;
+          break;
+        }
+        case 'estado': {
+          const estA = a.estado === 'INSCRIPTO' ? 1 : 0;
+          const estB = b.estado === 'INSCRIPTO' ? 1 : 0;
+          comp = estA - estB;
+          break;
+        }
+        case 'documentacion': {
+          const docA = a.estadoDocumental ?? '';
+          const docB = b.estadoDocumental ?? '';
+          comp = docA.localeCompare(docB, 'es', { sensitivity: 'base' });
+          break;
+        }
+        case 'nombre':
+        default: {
+          const nA = `${a.persona?.apellido} ${a.persona?.nombre}`.trim().toLowerCase();
+          const nB = `${b.persona?.apellido} ${b.persona?.nombre}`.trim().toLowerCase();
+          comp = nA.localeCompare(nB, 'es', { sensitivity: 'base' });
+          break;
+        }
+      }
+      return orden === 'asc' ? comp : -comp;
+    });
+    return copia;
+  }, [participantes, ordenarPor, orden]);
+
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
@@ -118,16 +165,46 @@ export function ParticipantesTable({ participantes, onVerDocumentacion, onInscri
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
-              <th className="whitespace-nowrap px-5 py-3.5">Apellido y nombre</th>
-              <th className="px-5 py-3.5">DNI</th>
-              <th className="px-5 py-3.5">Disciplinas</th>
-              <th className="px-5 py-3.5">Estado</th>
-              <th className="px-5 py-3.5">Documentación</th>
+              <HeaderOrdenable
+                campo="nombre"
+                label="Apellido y nombre"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="dni"
+                label="DNI"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="disciplinas"
+                label="Disciplinas"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="estado"
+                label="Estado"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="documentacion"
+                label="Documentación"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
               <th className="px-5 py-3.5 text-right font-medium">Acciones</th>
             </tr>
           </thead>
-        <tbody className="divide-y divide-slate-100">
-          {participantes.map((participante) => {
+        <tbody>
+          {participantesOrdenados.map((participante) => {
             const expandido = expandidos.has(participante.personaId);
             return (
               <ParticipanteRow
@@ -229,11 +306,11 @@ function ParticipanteRow({
 
   return (
     <>
-      <tr className={`transition-colors ${expandido ? 'bg-brand-50/60' : 'hover:bg-slate-50/70'}`}>
+      <tr className={`border-b border-slate-100 last:border-b-0 transition-colors ${expandido ? 'bg-brand-50/60' : 'hover:bg-slate-50/70'}`}>
         <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
           {participante.persona.apellido}, {participante.persona.nombre}
         </td>
-        <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{participante.persona.dni}</td>
+        <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{formatearDni(participante.persona.dni)}</td>
         <td className="px-5 py-3.5 text-slate-600">
           {nombres.length === 0 ? '—' : visibles.join(', ')}
           {restantes > 0 && <span className="ml-1 text-xs text-slate-400">+{restantes} más</span>}

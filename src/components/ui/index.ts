@@ -13,3 +13,15 @@ export { ConfirmDialog } from './ConfirmDialog';
 export { StatusTabs } from './StatusTabs';
 export type { StatusTabItem } from './StatusTabs';
 export { ClubLogo } from './ClubLogo';
+
+export { HeaderOrdenable } from './HeaderOrdenable';
+export type { HeaderOrdenableProps, SentidoOrden } from './HeaderOrdenable';
+
+export { Breadcrumbs } from './Breadcrumbs';
+export type { BreadcrumbsProps } from './Breadcrumbs';
+export { resolverBreadcrumbs } from './breadcrumbs.utils';
+export type { BreadcrumbItem } from './breadcrumbs.utils';
+export { TablePagination } from './TablePagination';
+export type { TablePaginationProps } from './TablePagination';
+export { TableExportMenu } from './TableExportMenu';
+export type { TableExportMenuProps, ExportFormat } from './TableExportMenu';

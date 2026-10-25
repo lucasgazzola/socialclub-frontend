@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
 import { BuscarParticipanteDni } from '@/features/inscripcion/components/buscarParticipanteDni';
@@ -183,7 +184,7 @@ function CuotasPendientesDeportivas({
         <div>
           <p className="text-lg font-semibold text-slate-900">{data.participanteNombre}</p>
           <p className="text-sm text-slate-500">
-            DNI {data.dni ?? '—'} ·{' '}
+            DNI {formatearDni(data.dni)} ·{' '}
             {data.esSocio ? `Socio (${data.categoria ?? 'sin categoría'})` : 'No es socio'}
           </p>
         </div>

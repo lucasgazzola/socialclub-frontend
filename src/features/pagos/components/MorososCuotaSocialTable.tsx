@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CreditCard, AlertCircle } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import type { SocioMorosoCuotaSocial } from '../types';
 
 interface MorososCuotaSocialTableProps {
@@ -82,7 +83,7 @@ export function MorososCuotaSocialTable({ morosos, onCobrar }: MorososCuotaSocia
                       {socio.email || socio.telefono || 'Sin datos de contacto'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-mono text-slate-600">{socio.dni}</td>
+                  <td className="px-6 py-4 font-mono text-slate-600">{formatearDni(socio.dni)}</td>
                   <td className="px-6 py-4">
                     <Badge variant="secondary">{socio.categoria}</Badge>
                   </td>

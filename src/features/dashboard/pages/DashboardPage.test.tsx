@@ -104,7 +104,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Membresía Activa')).toBeInTheDocument();
     expect(screen.getByText(/Hola, Martin/i)).toBeInTheDocument();
     expect(screen.getByText('Pleno')).toBeInTheDocument();
-    expect(screen.getByText('38111222')).toBeInTheDocument();
+    expect(screen.getByText('38.111.222')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Editar mis datos/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/perfil');

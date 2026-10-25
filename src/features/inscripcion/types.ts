@@ -164,6 +164,8 @@ export interface InscripcionesQuery {
   estado?: EstadoInscripcionFiltro;
   pagina?: number;
   porPagina?: number;
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
 }
 
 /** Disciplina de la que se dio de baja al participante (US-07). */

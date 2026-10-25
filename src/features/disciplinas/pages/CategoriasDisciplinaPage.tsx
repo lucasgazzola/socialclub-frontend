@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Layers, Plus, Search } from 'lucide-react';
-import { Button, Card, ConfirmDialog, Input, Modal, Spinner, StatusTabs } from '@/components/ui';
+import { useParams } from 'react-router-dom';
+import { Layers, Plus, Search } from 'lucide-react';
+import { Button, Card, ConfirmDialog, Input, Modal, Spinner, StatusTabs, TablePagination, TableExportMenu } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ROUTES } from '@/routes/paths';
 import { CategoriaForm } from '../components/CategoriaForm';
 import { CategoriasTable } from '../components/CategoriasTable';
 import {
@@ -13,10 +12,19 @@ import {
   useDesactivarCategoria,
   useReactivarCategoria,
 } from '../hooks/useCategorias';
-import type { CategoriaDisciplinaDetalle } from '../types';
+import { listarCategorias } from '../api/categoria.api';
+import {
+  GENERO_DISCIPLINA_LABELS,
+  describirEdad,
+  etiquetaTipoDocumento,
+  restriccionesEfectivas,
+  type CategoriaDisciplinaDetalle,
+} from '../types';
+import type { ExportColumn } from '@/lib/utils/exportTable';
 import type { CategoriaFormValues } from '../schemas/categoria.schema';
 
 type FiltroEstado = 'todas' | 'activas' | 'inactivas';
+const POR_PAGINA_DEFAULT = 10;
 
 /** US-48 a US-51: ABM de categorías de una disciplina y su documentación adicional. */
 export function CategoriasDisciplinaPage() {
@@ -25,6 +33,8 @@ export function CategoriasDisciplinaPage() {
   const puedeMutar = usuario?.roles.includes('ADMIN') ?? false;
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('todas');
   const [busqueda, setBusqueda] = useState('');
+  const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(POR_PAGINA_DEFAULT);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [seleccionada, setSeleccionada] = useState<CategoriaDisciplinaDetalle | null>(null);
   const [aConfirmar, setAConfirmar] = useState<CategoriaDisciplinaDetalle | null>(null);
@@ -42,6 +52,19 @@ export function CategoriasDisciplinaPage() {
 
   const disciplina = data?.disciplina;
   const categorias = data?.items ?? [];
+  const total = data?.total ?? categorias.length;
+  const yaVienePaginadoDelBackend = Boolean(data?.pagina && data?.porPagina);
+  const categoriasPaginadas = yaVienePaginadoDelBackend
+    ? categorias
+    : categorias.slice((pagina - 1) * porPagina, pagina * porPagina);
+
+  const activasEnItems = categorias.filter((c) => c.activo).length;
+  const inactivasEnItems = categorias.length - activasEnItems;
+  const conteos = data?.conteos ?? {
+    todas: total,
+    activas: filtroEstado === 'activas' ? total : filtroEstado === 'inactivas' ? 0 : activasEnItems,
+    inactivas: filtroEstado === 'inactivas' ? total : filtroEstado === 'activas' ? 0 : inactivasEnItems,
+  };
   const requerimientosDisciplina = disciplina?.requerimientosDoc ?? [];
   const restriccionesDisciplina = {
     genero: disciplina?.genero ?? null,
@@ -75,12 +98,9 @@ export function CategoriasDisciplinaPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Link to={ROUTES.disciplinas} className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800">
-            <ArrowLeft size={14} /> Disciplinas
-          </Link>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Categorías{disciplina ? ` de ${disciplina.nombre}` : ''}
           </h1>
@@ -112,18 +132,71 @@ export function CategoriasDisciplinaPage() {
         onCancel={() => setAConfirmar(null)}
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <StatusTabs<FiltroEstado>
-          value={filtroEstado}
-          onChange={setFiltroEstado}
-          aria-label="Filtrar por estado"
-          tabs={[
-            { value: 'todas', label: 'Todas' },
-            { value: 'activas', label: 'Activas' },
-            { value: 'inactivas', label: 'Inactivas' },
-          ]}
-        />
-        <Input value={busqueda} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Buscar categoría" leftIcon={<Search />} containerClassName="sm:min-w-64" />
+      <div className="space-y-3">
+        <div>
+          <StatusTabs<FiltroEstado>
+            value={filtroEstado}
+            onChange={(estado) => {
+              setFiltroEstado(estado);
+              setPagina(1);
+            }}
+            aria-label="Filtrar por estado"
+            tabs={[
+              { value: 'todas', label: 'Todas', count: conteos.todas },
+              { value: 'activas', label: 'Activas', count: conteos.activas },
+              { value: 'inactivas', label: 'Inactivas', count: conteos.inactivas },
+            ]}
+          />
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="w-full sm:max-w-xs">
+            <Input
+              value={busqueda}
+              onChange={(evento) => {
+                setBusqueda(evento.target.value);
+                setPagina(1);
+              }}
+              placeholder="Buscar categoría"
+              leftIcon={<Search />}
+            />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <TableExportMenu<CategoriaDisciplinaDetalle>
+              filename={`categorias-${disciplina?.nombre?.toLowerCase().replace(/\s+/g, '-') ?? disciplinaId}`}
+              title={`Categorías${disciplina ? ` de ${disciplina.nombre}` : ''}`}
+              disabled={isLoading && !data}
+              columns={[
+                { header: 'Nombre', accessor: (c) => c.nombre },
+                {
+                  header: 'Restricciones',
+                  accessor: (c) => {
+                    const efectivas = restriccionesEfectivas(restriccionesDisciplina, c);
+                    return `${efectivas.genero ? GENERO_DISCIPLINA_LABELS[efectivas.genero] : 'Cualquier género'} · ${describirEdad(efectivas)}`;
+                  },
+                },
+                {
+                  header: 'Documentación exigida',
+                  accessor: (c) => {
+                    const docs = [
+                      ...requerimientosDisciplina.map((r) => etiquetaTipoDocumento(r.tipoDocumento)),
+                      ...c.requerimientosDoc.map((r) => etiquetaTipoDocumento(r.tipoDocumento)),
+                    ];
+                    return docs.length === 0 ? 'No requiere' : docs.join(', ');
+                  },
+                },
+                { header: 'Inscriptos', accessor: (c) => c._count.inscripciones },
+                { header: 'Estado', accessor: (c) => (c.activo ? 'Activa' : 'Inactiva') },
+              ] satisfies ExportColumn<CategoriaDisciplinaDetalle>[]}
+              fetchRows={async () => {
+                const res = await listarCategorias(disciplinaId, {
+                  busqueda: busqueda.trim() || undefined,
+                  estado: filtroEstado === 'todas' ? undefined : filtroEstado === 'activas' ? 'ACTIVA' : 'INACTIVA',
+                });
+                return res?.items ?? [];
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {isLoading ? (
@@ -133,10 +206,21 @@ export function CategoriasDisciplinaPage() {
       ) : categorias.length === 0 ? (
         <Card className="p-8 text-center text-sm text-slate-500"><Layers className="mx-auto mb-2 text-slate-300" size={28} />No se encontraron resultados</Card>
       ) : (
-        <>
-          <CategoriasTable categorias={categorias} requerimientosDisciplina={requerimientosDisciplina} restriccionesDisciplina={restriccionesDisciplina} puedeMutar={puedeMutar} accionesDeshabilitadas={cambiandoEstado} onEditar={abrir} onCambiarEstado={setAConfirmar} />
-          <p className="text-sm text-slate-500">{categorias.length} categoría(s){isFetching ? ' · actualizando…' : ''}</p>
-        </>
+        <div>
+          <CategoriasTable categorias={categoriasPaginadas} requerimientosDisciplina={requerimientosDisciplina} restriccionesDisciplina={restriccionesDisciplina} puedeMutar={puedeMutar} accionesDeshabilitadas={cambiandoEstado} onEditar={abrir} onCambiarEstado={setAConfirmar} />
+          <TablePagination
+            pagina={pagina}
+            porPagina={porPagina}
+            total={total}
+            isFetching={isFetching}
+            onChangePagina={setPagina}
+            onChangePorPagina={(nuevoPorPagina) => {
+              setPorPagina(nuevoPorPagina);
+              setPagina(1);
+            }}
+            srSummary={`${total} categoría(s)`}
+          />
+        </div>
       )}
     </div>
   );

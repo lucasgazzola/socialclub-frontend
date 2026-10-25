@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, DateInput } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
 import { BuscarParticipanteDni } from '@/features/inscripcion/components/buscarParticipanteDni';
@@ -41,7 +42,7 @@ function HistorialDeportivo({ data }: { data: HistorialDeportivoResponse }) {
         <div>
           <p className="text-lg font-semibold text-slate-900">{data.participanteNombre}</p>
           <p className="text-sm text-slate-500">
-            DNI {data.dni ?? '—'} · Categoría {data.categoria ?? 'sin categoría'}
+            DNI {formatearDni(data.dni)} · Categoría {data.categoria ?? 'sin categoría'}
           </p>
         </div>
         <div className="text-right">

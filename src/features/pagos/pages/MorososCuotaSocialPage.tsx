@@ -1,21 +1,35 @@
 import { useState, useMemo } from 'react';
-import { Search, DollarSign, Users, AlertTriangle } from 'lucide-react';
-import { Card, Input, Select, Spinner } from '@/components/ui';
+import { Search, DollarSign, Users, AlertTriangle, Filter } from 'lucide-react';
+import { Card, Input, Select, Spinner, TablePagination, TableExportMenu } from '@/components/ui';
+import type { ExportColumn } from '@/lib/utils/exportTable';
+import { formatearDni } from '@/lib/utils/dni';
+import { pagosApi } from '../api/pagos.api';
 import { useMorososCuotaSocial } from '../hooks/useMorososCuotaSocial';
 import { MorososCuotaSocialTable } from '../components/MorososCuotaSocialTable';
 import { ModalCobroCuotaSocio } from '../components/ModalCobroCuotaSocio';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
-import type { FiltrosMorososCuotaSocial } from '../types';
+import type { FiltrosMorososCuotaSocial, SocioMorosoCuotaSocial } from '../types';
 
 function formatMonto(monto: number): string {
   return monto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 }
+
+const COLUMNAS_EXPORT_MOROSOS_SOCIAL: ExportColumn<SocioMorosoCuotaSocial>[] = [
+  { header: 'Socio', accessor: (s) => s.nombreCompleto },
+  { header: 'DNI', accessor: (s) => formatearDni(s.dni) },
+  { header: 'Categoría', accessor: (s) => s.categoria },
+  { header: 'Períodos adeudados', accessor: (s) => s.periodosAdeudados.join(', ') },
+  { header: 'Cantidad períodos', accessor: (s) => s.cantidadPeriodos },
+  { header: 'Deuda total', accessor: (s) => s.montoTotalDeuda },
+];
 
 export function MorososCuotaSocialPage() {
   const [busqueda, setBusqueda] = useState('');
   const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
   const [ordenarPor, setOrdenarPor] = useState<'monto' | 'periodos'>('monto');
   const [orden, setOrden] = useState<'asc' | 'desc'>('desc');
+  const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
 
   // Modal de cobro
   const [socioCobro, setSocioCobro] = useState<{
@@ -37,10 +51,16 @@ export function MorososCuotaSocialPage() {
     [busqueda, categoriaId, ordenarPor, orden],
   );
 
-  const { data, isLoading, isError, error } = useMorososCuotaSocial(filtros);
+  const { data, isLoading, isError, error, isFetching } = useMorososCuotaSocial(filtros);
+  const items = data?.items ?? [];
+  const totalItems = data?.total ?? items.length;
+  const yaVienePaginadoDelBackend = Boolean(data?.pagina && data?.porPagina);
+  const itemsPaginados = yaVienePaginadoDelBackend
+    ? items
+    : items.slice((pagina - 1) * porPagina, pagina * porPagina);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -91,21 +111,42 @@ export function MorososCuotaSocialPage() {
             id="busqueda-morosos"
             placeholder="Buscar por nombre, apellido o DNI..."
             value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPagina(1);
+            }}
             leftIcon={<Search />}
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <TableExportMenu<SocioMorosoCuotaSocial>
+            filename="morosos-cuota-social"
+            title="Morosos de Cuota Social"
+            disabled={isLoading && !data}
+            columns={COLUMNAS_EXPORT_MOROSOS_SOCIAL}
+            fetchRows={async () => {
+              const res = await pagosApi.getMorososCuotaSocial({
+                busqueda: busqueda.trim() || undefined,
+                categoriaId,
+                ordenarPor,
+                orden,
+              });
+              return res?.items ?? [];
+            }}
+          />
+
           {/* Filtro por Categoría */}
-          <div className="w-48">
+          <div className="w-52">
             <Select
               id="filtro-categoria"
               aria-label="Filtrar por categoría"
+              leftIcon={<Filter />}
               value={categoriaId ? String(categoriaId) : ''}
-              onChange={(e) =>
-                setCategoriaId(e.target.value ? Number(e.target.value) : undefined)
-              }
+              onChange={(e) => {
+                setCategoriaId(e.target.value ? Number(e.target.value) : undefined);
+                setPagina(1);
+              }}
             >
               <option value="">Todas las categorías</option>
               {categorias?.map((cat) => (
@@ -129,6 +170,7 @@ export function MorososCuotaSocialPage() {
                 ];
                 setOrdenarPor(criterio);
                 setOrden(dir);
+                setPagina(1);
               }}
             >
               <option value="monto-desc">Mayor deuda primero</option>
@@ -152,10 +194,25 @@ export function MorososCuotaSocialPage() {
           {error instanceof Error ? error.message : 'Error desconocido'}
         </div>
       ) : (
-        <MorososCuotaSocialTable
-          morosos={data?.items ?? []}
-          onCobrar={(socio) => setSocioCobro(socio)}
-        />
+        <div>
+          <MorososCuotaSocialTable
+            morosos={itemsPaginados}
+            onCobrar={(socio) => setSocioCobro(socio)}
+          />
+          {items.length > 0 && (
+            <TablePagination
+              pagina={pagina}
+              porPagina={porPagina}
+              total={totalItems}
+              isFetching={isFetching}
+              onChangePagina={setPagina}
+              onChangePorPagina={(nuevo) => {
+                setPorPagina(nuevo);
+                setPagina(1);
+              }}
+            />
+          )}
+        </div>
       )}
 
       {/* Modal de Cobro */}
@@ -167,4 +224,3 @@ export function MorososCuotaSocialPage() {
     </div>
   );
 }
-

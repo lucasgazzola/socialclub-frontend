@@ -116,19 +116,10 @@ describe('CuotaSocialPage', () => {
     );
   }
 
-  it('renderiza título, botón de retorno y tabla', () => {
+  it('renderiza título y tabla', () => {
     renderPage();
     expect(screen.getByRole('heading', { name: /Cuota social/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Volver a Cuotas/i })).toBeInTheDocument();
     expect(screen.getAllByText('Pleno').length).toBeGreaterThan(0);
-  });
-
-  it('vuelve a /cuotas al hacer click en Volver', async () => {
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(screen.getByRole('button', { name: /Volver a Cuotas/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/cuotas');
   });
 
   it('muestra spinner durante carga', () => {
@@ -218,4 +209,3 @@ describe('CuotaSocialPage', () => {
     expect(screen.getByTestId('editar-cuota-social-modal')).toHaveTextContent('10');
   });
 });
-

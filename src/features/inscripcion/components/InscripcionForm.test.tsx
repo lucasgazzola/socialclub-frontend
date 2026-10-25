@@ -166,7 +166,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.type(screen.getByLabelText('DNI'), '50111222');
 
     expect(await screen.findByText('Gómez, Lola')).toBeInTheDocument();
-    expect(screen.getByText('DNI 50111222')).toBeInTheDocument();
+    expect(screen.getByText('DNI 50.111.222')).toBeInTheDocument();
     expect(screen.getByText('Fecha de nacimiento: 03/05/2012')).toBeInTheDocument();
     // Solo se busca el DNI completo, no el prefijo de 7 dígitos mientras se tipea.
     expect(buscarMock).toHaveBeenCalledTimes(1);
@@ -216,7 +216,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     renderForm(<InscripcionForm participante={participante} onCargarDocumentacion={onCargarDocumentacion} />);
 
     expect(screen.getByText('Gómez, Lola')).toBeInTheDocument();
-    expect(screen.getByText('DNI 50111222')).toBeInTheDocument();
+    expect(screen.getByText('DNI 50.111.222')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
     await user.selectOptions(screen.getByLabelText('Categoría'), '7');
     await user.click(screen.getByRole('button', { name: 'Inscribir' }));

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { AlertasDocumentacion } from '@/features/documentacion/components/AlertasDocumentacion';
 import { ROUTES } from '@/routes/paths';
@@ -236,7 +237,7 @@ function PanelSocio() {
             <CreditCard size={20} />
           </div>
           <h2 className="font-semibold text-slate-900">DNI</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">{persona.dni ?? '—'}</p>
+          <p className="mt-1 text-base font-medium text-slate-700">{formatearDni(persona.dni)}</p>
         </Card>
       </div>
     </div>

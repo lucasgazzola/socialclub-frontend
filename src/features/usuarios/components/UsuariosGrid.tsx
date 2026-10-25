@@ -1,18 +1,11 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
+import { formatearDni } from '@/lib/utils/dni';
 import type { CriterioOrden, SentidoOrden, Usuario } from '../types';
 
 function iniciales(usuario: Usuario): string {
   return `${usuario.nombre.charAt(0)}${usuario.apellido.charAt(0)}`.toUpperCase();
-}
-
-/** Agrupa el DNI de a miles para que sea más fácil de leer (25.123.456). */
-function formatearDni(dni?: string | null): string {
-  if (!dni) {
-    return 'Sin dato';
-  }
-  return /^\d+$/.test(dni) ? Number(dni).toLocaleString('es-AR') : dni;
 }
 
 /** Formatea la fecha ISO a dd/mm/aaaa legible para Argentina */
@@ -191,7 +184,7 @@ export function UsuariosGrid({
                     </div>
                   </td>
                   <td className="px-5 py-3.5 font-mono text-xs text-slate-600 tabular-nums">
-                    {formatearDni(usuario.dni)}
+                    {formatearDni(usuario.dni, 'Sin dato')}
                   </td>
                   <td className="px-5 py-3.5 text-slate-600">
                     {usuario.email}

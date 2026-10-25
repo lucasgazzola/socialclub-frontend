@@ -70,9 +70,9 @@ describe('MorososCuotaSocialPage · US-19', () => {
     renderWithProviders(<MorososCuotaSocialPage />);
 
     expect(await screen.findByText('Juan Gómez')).toBeInTheDocument();
-    expect(screen.getByText('30111222')).toBeInTheDocument();
+    expect(screen.getByText('30.111.222')).toBeInTheDocument();
     expect(screen.getByText('Ana Martínez')).toBeInTheDocument();
-    expect(screen.getByText('28333444')).toBeInTheDocument();
+    expect(screen.getByText('28.333.444')).toBeInTheDocument();
 
     // Períodos adeudados
     expect(screen.getByText('2026-08')).toBeInTheDocument();

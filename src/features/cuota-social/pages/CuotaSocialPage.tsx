@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeft, Filter, Plus, Wallet } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Input, Modal, Select, Spinner } from '@/components/ui';
+import { Filter, Plus, Wallet } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Button, Input, Modal, Select, Spinner, TablePagination, TableExportMenu } from '@/components/ui';
+import type { ExportColumn } from '@/lib/utils/exportTable';
+import { cuotaSocialApi } from '../api/cuota-social.api';
+import type { ConfiguracionCuotaSocial } from '../types';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
 import { CuotaSocialForm } from '../components/CuotaSocialForm';
 import { CuotaSocialTable } from '../components/CuotaSocialTable';
@@ -9,17 +12,20 @@ import { EditarCuotaSocialModal } from '../components/EditarCuotaSocialModal';
 import { useConfigurarCuotaSocial } from '../hooks/useConfigurarCuotaSocial';
 import { useCuotaSocial } from '../hooks/useCuotaSocial';
 import type { CuotaSocialFormValues } from '../schemas';
-import { ROUTES } from '@/routes/paths';
 
-const POR_PAGINA = 10;
+const COLUMNAS_EXPORT_CUOTA_SOCIAL: ExportColumn<ConfiguracionCuotaSocial>[] = [
+  { header: 'Categoría', accessor: (c) => c.categoria.nombre },
+  { header: 'Período', accessor: (c) => c.periodoAplicacion },
+  { header: 'Monto', accessor: (c) => c.monto },
+  { header: 'Estado', accessor: (c) => (c.activo ? 'Activo' : 'Inactivo') },
+];
 
 export function CuotaSocialPage() {
-  const navigate = useNavigate();
-
   const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
   const [periodoInput, setPeriodoInput] = useState('');
   const [periodo, setPeriodo] = useState<string | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
   const [modalAbierto, setModalAbierto] = useState(false);
   // DT-20: la edición es un modal sobre el listado (?editar=<id>).
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,10 +38,9 @@ export function CuotaSocialPage() {
     categoriaId,
     periodoAplicacion: periodo || undefined,
     pagina,
-    porPagina: POR_PAGINA,
+    porPagina,
   });
 
-  const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
 
   async function handleCrear(values: CuotaSocialFormValues) {
@@ -53,16 +58,10 @@ export function CuotaSocialPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.cuotas)}>
-              <ArrowLeft size={16} />
-              Volver a Cuotas
-            </Button>
-          </div>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Cuota social</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Cuota social</h1>
           <p className="mt-1 text-sm text-slate-500">
             Configurá el monto mensual de la cuota social por categoría. Los cambios aplican desde el
             período siguiente.
@@ -88,36 +87,54 @@ export function CuotaSocialPage() {
 
       <EditarCuotaSocialModal cuotaId={cuotaAEditar} onClose={() => setSearchParams({})} />
 
-      <div className="flex flex-wrap items-center gap-2.5">
-        <Select
-          id="filtroCategoria"
-          value={categoriaId ?? ''}
-          onChange={(e) => {
-            setPagina(1);
-            setCategoriaId(e.target.value ? Number(e.target.value) : undefined);
-          }}
-          leftIcon={<Filter />}
-          className="w-full sm:w-48"
-        >
-          <option value="">Todas las categorías</option>
-          {categorias.map((categoria) => (
-            <option key={categoria.id} value={categoria.id}>
-              {categoria.nombre}
-            </option>
-          ))}
-        </Select>
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Select
+            id="filtroCategoria"
+            value={categoriaId ?? ''}
+            onChange={(e) => {
+              setPagina(1);
+              setCategoriaId(e.target.value ? Number(e.target.value) : undefined);
+            }}
+            leftIcon={<Filter />}
+            className="w-full sm:w-48"
+          >
+            <option value="">Todas las categorías</option>
+            {categorias.map((categoria) => (
+              <option key={categoria.id} value={categoria.id}>
+                {categoria.nombre}
+              </option>
+            ))}
+          </Select>
 
-        <Input
-          id="filtroPeriodo"
-          type="month"
-          placeholder="2026-10"
-          value={periodoInput}
-          onChange={(e) => setPeriodoInput(e.target.value)}
-          containerClassName="w-full sm:w-48"
+          <Input
+            id="filtroPeriodo"
+            type="month"
+            placeholder="2026-10"
+            value={periodoInput}
+            onChange={(e) => setPeriodoInput(e.target.value)}
+            containerClassName="w-full sm:w-48"
+          />
+          <Button variant="secondary" onClick={aplicarPeriodo} className="w-full sm:w-auto">
+            Filtrar
+          </Button>
+        </div>
+
+        <TableExportMenu<ConfiguracionCuotaSocial>
+          filename="cuota-social"
+          title="Cuota social"
+          disabled={isLoading && !data}
+          columns={COLUMNAS_EXPORT_CUOTA_SOCIAL}
+          fetchRows={async () => {
+            const res = await cuotaSocialApi.list({
+              categoriaId,
+              periodoAplicacion: periodo || undefined,
+              pagina: 1,
+              porPagina: 100,
+            });
+            return res?.items ?? [];
+          }}
         />
-        <Button variant="secondary" onClick={aplicarPeriodo} className="w-full sm:w-auto">
-          Filtrar
-        </Button>
       </div>
 
       {isLoading ? (
@@ -129,42 +146,27 @@ export function CuotaSocialPage() {
           {error instanceof Error ? error.message : 'No se pudieron cargar las cuotas sociales.'}
         </div>
       ) : (
-        <>
+        <div>
           <CuotaSocialTable
             cuotas={data?.items ?? []}
             onEditar={(cuota) => setSearchParams({ editar: String(cuota.id) })}
           />
 
           {hayResultados && (
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>
-                {data?.total ?? 0} configuración(es)
-                {isFetching ? ' · actualizando…' : ''}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina <= 1}
-                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </Button>
-                <span>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina >= totalPaginas}
-                  onClick={() => setPagina((p) => p + 1)}
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
+            <TablePagination
+              pagina={pagina}
+              porPagina={porPagina}
+              total={data?.total ?? 0}
+              isFetching={isFetching}
+              onChangePagina={setPagina}
+              onChangePorPagina={(nuevo) => {
+                setPorPagina(nuevo);
+                setPagina(1);
+              }}
+              srSummary={`${data?.total ?? 0} configuración(es)`}
+            />
           )}
-        </>
+        </div>
       )}
     </div>
   );

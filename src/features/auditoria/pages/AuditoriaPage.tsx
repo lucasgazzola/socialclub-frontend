@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { Button, Spinner } from '@/components/ui';
+import { Button, Spinner, TableExportMenu } from '@/components/ui';
+import type { ExportColumn } from '@/lib/utils/exportTable';
+import { auditoriaApi } from '../api/auditoria.api';
+import type { RegistroAuditoria } from '../types';
 import { cn } from '@/lib/utils/cn';
 import { useAuditoria } from '../hooks/useAuditoria';
 import { useResponsables } from '../hooks/useResponsables';
@@ -11,12 +14,43 @@ import type { AccionAuditoria } from '../constants';
 
 const POR_PAGINA_DEFAULT = 10;
 
+const COLUMNAS_EXPORT_AUDITORIA: ExportColumn<RegistroAuditoria>[] = [
+  { header: 'Fecha y hora', accessor: (r) => new Date(r.fechaHora).toLocaleString('es-AR') },
+  { header: 'Acción', accessor: (r) => r.accion },
+  { header: 'Entidad', accessor: (r) => r.entidad },
+  { header: 'ID', accessor: (r) => r.idEntidad ?? '—' },
+  {
+    header: 'Responsable',
+    accessor: (r) => (r.responsable ? `${r.responsable.nombre} ${r.responsable.apellido}` : '—'),
+  },
+  { header: 'Detalle', accessor: (r) => r.detalle ?? '—' },
+];
+
 export function AuditoriaPage() {
   const [filtros, setFiltros] = useState<AuditoriaFiltrosFormValues>({
     periodo: 'todo',
   });
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(POR_PAGINA_DEFAULT);
+  const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
+  const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
+
+  function handleOrdenar(campo: string) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+  }
 
   const esPersonalizado = filtros.periodo === 'personalizado';
 
@@ -31,6 +65,8 @@ export function AuditoriaPage() {
     fechaHasta: esPersonalizado ? filtros.fechaHasta || undefined : undefined,
     pagina,
     porPagina,
+    ordenarPor,
+    orden,
   });
 
   const total = data?.total ?? 0;
@@ -71,7 +107,7 @@ export function AuditoriaPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Encabezado según ESTANDARES_UI_UX.md */}
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Auditoría</h1>
@@ -87,6 +123,29 @@ export function AuditoriaPage() {
         filtrosActivos={filtros}
         deshabilitado={isLoading && !data}
         responsables={responsables}
+        exportAction={
+          <TableExportMenu<RegistroAuditoria>
+            filename="auditoria"
+            title="Auditoría"
+            disabled={isLoading && !data}
+            columns={COLUMNAS_EXPORT_AUDITORIA}
+            fetchRows={async () => {
+              const res = await auditoriaApi.list({
+                accion: (filtros.accion as AccionAuditoria) || undefined,
+                entidad: filtros.entidad?.trim() || undefined,
+                responsableId: filtros.responsableId,
+                periodo: filtros.periodo && filtros.periodo !== 'todo' ? filtros.periodo : undefined,
+                fechaDesde: esPersonalizado ? filtros.fechaDesde || undefined : undefined,
+                fechaHasta: esPersonalizado ? filtros.fechaHasta || undefined : undefined,
+                pagina: 1,
+                porPagina: 10000,
+                ordenarPor,
+                orden,
+              });
+              return res?.items ?? [];
+            }}
+          />
+        }
       />
 
       {/* Estado de carga inicial */}
@@ -99,15 +158,24 @@ export function AuditoriaPage() {
           {error instanceof Error ? error.message : 'No se pudo cargar el log de auditoría.'}
         </div>
       ) : (
-        <>
+        <div>
           {/* Tabla de auditoría */}
-          <AuditoriaTable registros={data?.items ?? []} isFetching={isFetching} />
+          <AuditoriaTable
+            registros={data?.items ?? []}
+            isFetching={isFetching}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
+          />
 
           {/* Barra de paginación completa con rango de resultados, selector de filas y páginas */}
           {hayResultados && (
-            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500">
+            <div
+              style={{ marginTop: '16px' }}
+              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500"
+            >
               {/* Izquierda: Mostrando X-Y de Z resultados (estilo Showing 1-3 of 3 results) */}
-              <div>
+              <div style={{ marginTop: '-1px' }}>
                 <span>
                   Mostrando {registroDesde}-{registroHasta} de {total} resultados
                 </span>
@@ -192,7 +260,7 @@ export function AuditoriaPage() {
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Filter, Pencil, Plus, Wallet } from 'lucide-react';
-import { Button, ConfirmDialog, Input, Modal, Select, Spinner } from '@/components/ui';
+import { Button, ConfirmDialog, Input, Modal, Select, Spinner, TablePagination, TableExportMenu } from '@/components/ui';
+import type { ExportColumn } from '@/lib/utils/exportTable';
+import { cuotasApi } from '../api/cuotas.api';
 import { CuotaForm } from '../components/CuotaForm';
 import { CuotasTable } from '../components/CuotasTable';
 import { useActualizarCuota } from '../hooks/useActualizarCuota';
@@ -10,13 +12,27 @@ import { useDisciplinas } from '../hooks/useDisciplinas';
 import type { CuotaFormValues } from '../schemas';
 import type { ConfiguracionCuotaDeportiva } from '../types';
 
-const POR_PAGINA = 10;
-
 /**
  * Administración de cuotas deportivas por disciplina y categoría.
  * Solo ADMIN: configura (crea/actualiza) y edita el monto; los cambios aplican
  * desde el período siguiente (regla cubierta por el backend).
  */
+const COLUMNAS_EXPORT_CUOTAS: ExportColumn<ConfiguracionCuotaDeportiva>[] = [
+  { header: 'Disciplina', accessor: (c) => c.disciplina.nombre },
+  { header: 'Categoría', accessor: (c) => c.categoriaDisciplina?.nombre ?? 'Tarifa base' },
+  { header: 'Rige desde', accessor: (c) => c.periodoAplicacion.split('-').reverse().join('/') },
+  { header: 'Monto', accessor: (c) => c.monto },
+  {
+    header: 'Descuento socios',
+    accessor: (c) => (c.descuentoSocioPorcentaje > 0 ? `${c.descuentoSocioPorcentaje} %` : '—'),
+  },
+  {
+    header: 'Monto socio',
+    accessor: (c) => Math.round(c.monto * (100 - c.descuentoSocioPorcentaje)) / 100,
+  },
+  { header: 'Estado', accessor: (c) => (c.activo ? 'Activa' : 'Inactiva') },
+];
+
 export function CuotasPage() {
   const [modoFormulario, setModoFormulario] = useState<'crear' | 'editar' | null>(null);
   const [cuotaEditando, setCuotaEditando] = useState<ConfiguracionCuotaDeportiva | null>(null);
@@ -26,6 +42,7 @@ export function CuotasPage() {
   const [periodoInput, setPeriodoInput] = useState('');
   const [periodo, setPeriodo] = useState<string | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
   // DT-05: tarifa a activar o desactivar (pide confirmación).
   const [aCambiarEstado, setACambiarEstado] = useState<ConfiguracionCuotaDeportiva | null>(null);
 
@@ -37,14 +54,13 @@ export function CuotasPage() {
     categoriaDisciplinaId,
     periodoAplicacion: periodo || undefined,
     pagina,
-    porPagina: POR_PAGINA,
+    porPagina,
   });
 
   const configurarCuota = useConfigurarCuota();
   const actualizarCuota = useActualizarCuota();
 
   const formularioVisible = modoFormulario !== null;
-  const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
 
   function abrirCreacion() {
@@ -101,7 +117,7 @@ export function CuotasPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Cuotas deportivas</h1>
@@ -141,57 +157,76 @@ export function CuotasPage() {
         )}
       </Modal>
 
-      <div className="flex flex-wrap items-end gap-2">
-        <Select
-          id="filtroDisciplina"
-          value={disciplinaId ?? ''}
-          onChange={(e) => {
-            setPagina(1);
-            setDisciplinaId(e.target.value ? Number(e.target.value) : undefined);
-            setCategoriaDisciplinaId(undefined);
-          }}
-          leftIcon={<Filter />}
-          className="min-w-[180px]"
-        >
-          <option value="">Todas las disciplinas</option>
-          {disciplinas.map((disciplina) => (
-            <option key={disciplina.id} value={disciplina.id}>
-              {disciplina.nombre}
-            </option>
-          ))}
-        </Select>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-wrap items-end gap-2">
+          <Select
+            id="filtroDisciplina"
+            value={disciplinaId ?? ''}
+            onChange={(e) => {
+              setPagina(1);
+              setDisciplinaId(e.target.value ? Number(e.target.value) : undefined);
+              setCategoriaDisciplinaId(undefined);
+            }}
+            leftIcon={<Filter />}
+            className="min-w-[180px]"
+          >
+            <option value="">Todas las disciplinas</option>
+            {disciplinas.map((disciplina) => (
+              <option key={disciplina.id} value={disciplina.id}>
+                {disciplina.nombre}
+              </option>
+            ))}
+          </Select>
 
-        <Select
-          id="filtroCategoria"
-          value={categoriaDisciplinaId ?? ''}
-          disabled={!disciplinaId}
-          onChange={(e) => {
-            setPagina(1);
-            setCategoriaDisciplinaId(e.target.value ? Number(e.target.value) : undefined);
-          }}
-          leftIcon={<Filter />}
-          className="min-w-[160px]"
-        >
-          <option value="">Todas las categorías</option>
-          {categorias.map((categoria) => (
-            <option key={categoria.id} value={categoria.id}>
-              {categoria.nombre}
-            </option>
-          ))}
-        </Select>
+          <Select
+            id="filtroCategoria"
+            value={categoriaDisciplinaId ?? ''}
+            disabled={!disciplinaId}
+            onChange={(e) => {
+              setPagina(1);
+              setCategoriaDisciplinaId(e.target.value ? Number(e.target.value) : undefined);
+            }}
+            leftIcon={<Filter />}
+            className="min-w-[160px]"
+          >
+            <option value="">Todas las categorías</option>
+            {categorias.map((categoria) => (
+              <option key={categoria.id} value={categoria.id}>
+                {categoria.nombre}
+              </option>
+            ))}
+          </Select>
 
-        <Input
-          id="filtroPeriodo"
-          type="month"
-          placeholder="2026-09"
-          value={periodoInput}
-          onChange={(e) => setPeriodoInput(e.target.value)}
-          aria-label="Filtrar por período"
-          containerClassName="w-48"
+          <Input
+            id="filtroPeriodo"
+            type="month"
+            placeholder="2026-09"
+            value={periodoInput}
+            onChange={(e) => setPeriodoInput(e.target.value)}
+            aria-label="Filtrar por período"
+            containerClassName="w-48"
+          />
+          <Button variant="secondary" onClick={aplicarPeriodo}>
+            Filtrar
+          </Button>
+        </div>
+
+        <TableExportMenu<ConfiguracionCuotaDeportiva>
+          filename="cuotas-deportivas"
+          title="Cuotas deportivas"
+          disabled={(isLoading || cargandoDisciplinas) && !data}
+          columns={COLUMNAS_EXPORT_CUOTAS}
+          fetchRows={async () => {
+            const res = await cuotasApi.list({
+              disciplinaId,
+              categoriaDisciplinaId,
+              periodoAplicacion: periodo || undefined,
+              pagina: 1,
+              porPagina: 100,
+            });
+            return res?.items ?? [];
+          }}
         />
-        <Button variant="secondary" onClick={aplicarPeriodo}>
-          Filtrar
-        </Button>
       </div>
 
       {isLoading || cargandoDisciplinas ? (
@@ -203,7 +238,7 @@ export function CuotasPage() {
           {error instanceof Error ? error.message : 'No se pudieron cargar las cuotas.'}
         </div>
       ) : (
-        <>
+        <div>
           <CuotasTable
             cuotas={data?.items ?? []}
             onEditar={abrirEdicion}
@@ -211,35 +246,20 @@ export function CuotasPage() {
           />
 
           {hayResultados && (
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>
-                {data?.total ?? 0} configuración(es)
-                {isFetching ? ' · actualizando…' : ''}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina <= 1}
-                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </Button>
-                <span>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina >= totalPaginas}
-                  onClick={() => setPagina((p) => p + 1)}
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
+            <TablePagination
+              pagina={pagina}
+              porPagina={porPagina}
+              total={data?.total ?? 0}
+              isFetching={isFetching}
+              onChangePagina={setPagina}
+              onChangePorPagina={(nuevo) => {
+                setPorPagina(nuevo);
+                setPagina(1);
+              }}
+              srSummary={`${data?.total ?? 0} configuración(es)`}
+            />
           )}
-        </>
+        </div>
       )}
 
       <ConfirmDialog

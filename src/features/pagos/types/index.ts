@@ -168,6 +168,8 @@ export interface MorososCuotaSocialResponse {
   total: number;
   deudaTotalClub: number;
   items: SocioMorosoCuotaSocial[];
+  pagina?: number;
+  porPagina?: number;
 }
 
 // ── US-23 · Morosos de cuota deportiva ───────────────────────────────────────
@@ -208,6 +210,8 @@ export interface MorososCuotaDeportivaResponse {
   deudaTotal: number;
   diaVencimiento: number;
   items: MorosoCuotaDeportiva[];
+  pagina?: number;
+  porPagina?: number;
 }
 
 export interface FiltrosMorososCuotaDeportiva {
@@ -215,6 +219,8 @@ export interface FiltrosMorososCuotaDeportiva {
   disciplinaId?: number;
   ordenarPor?: 'monto' | 'periodos';
   orden?: 'asc' | 'desc';
+  pagina?: number;
+  porPagina?: number;
 }
 
 export interface FiltrosMorososCuotaSocial {
@@ -222,4 +228,6 @@ export interface FiltrosMorososCuotaSocial {
   categoriaId?: number;
   ordenarPor?: 'monto' | 'periodos';
   orden?: 'asc' | 'desc';
+  pagina?: number;
+  porPagina?: number;
 }

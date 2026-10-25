@@ -1,16 +1,33 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, DollarSign, Search, Users } from 'lucide-react';
-import { Card, Input, Select, Spinner } from '@/components/ui';
+import { AlertTriangle, DollarSign, Filter, Search, Users } from 'lucide-react';
+import { Card, Input, Select, Spinner, TablePagination, TableExportMenu } from '@/components/ui';
+import type { ExportColumn } from '@/lib/utils/exportTable';
+import { formatearDni } from '@/lib/utils/dni';
 import { ROUTES } from '@/routes/paths';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
+import { pagosApi } from '../api/pagos.api';
 import { useMorososCuotaDeportiva } from '../hooks/useMorososCuotaDeportiva';
 import { MorososCuotaDeportivaTable } from '../components/MorososCuotaDeportivaTable';
-import type { FiltrosMorososCuotaDeportiva } from '../types';
+import type { FiltrosMorososCuotaDeportiva, MorosoCuotaDeportiva } from '../types';
 
 function formatMonto(monto: number): string {
   return monto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 }
+
+const COLUMNAS_EXPORT_MOROSOS_DEPORTIVOS: ExportColumn<MorosoCuotaDeportiva>[] = [
+  { header: 'Participante', accessor: (m) => m.nombreCompleto },
+  { header: 'DNI', accessor: (m) => formatearDni(m.dni) },
+  {
+    header: 'Deuda por disciplina',
+    accessor: (m) =>
+      m.disciplinas
+        .map((d) => `${d.disciplinaNombre} (${d.cantidadPeriodos} per. · ${formatMonto(d.montoAdeudado)})`)
+        .join(' | '),
+  },
+  { header: 'Períodos', accessor: (m) => m.cantidadPeriodos },
+  { header: 'Deuda total', accessor: (m) => m.montoTotalDeuda },
+];
 
 /**
  * US-23 — Morosos de cuota deportiva: quienes tienen al menos una cuota vencida
@@ -22,16 +39,29 @@ export function MorososCuotaDeportivaPage() {
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
   const [ordenarPor, setOrdenarPor] = useState<'monto' | 'periodos'>('monto');
   const [orden, setOrden] = useState<'asc' | 'desc'>('desc');
+  const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
   const { disciplinas } = useDisciplinasActivas();
 
   const filtros: FiltrosMorososCuotaDeportiva = useMemo(
-    () => ({ busqueda: busqueda.trim() || undefined, disciplinaId, ordenarPor, orden }),
+    () => ({
+      busqueda: busqueda.trim() || undefined,
+      disciplinaId,
+      ordenarPor,
+      orden,
+    }),
     [busqueda, disciplinaId, ordenarPor, orden],
   );
-  const { data, isLoading, isError, error } = useMorososCuotaDeportiva(filtros);
+  const { data, isLoading, isError, error, isFetching } = useMorososCuotaDeportiva(filtros);
+  const items = data?.items ?? [];
+  const totalItems = data?.total ?? items.length;
+  const yaVienePaginadoDelBackend = Boolean(data?.pagina && data?.porPagina);
+  const itemsPaginados = yaVienePaginadoDelBackend
+    ? items
+    : items.slice((pagina - 1) * porPagina, pagina * porPagina);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Morosos de Cuota Deportiva
@@ -78,17 +108,40 @@ export function MorososCuotaDeportivaPage() {
             placeholder="Buscar por nombre, apellido o DNI..."
             aria-label="Buscar moroso por nombre, apellido o DNI"
             value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPagina(1);
+            }}
             leftIcon={<Search />}
           />
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <TableExportMenu<MorosoCuotaDeportiva>
+            filename="morosos-cuota-deportiva"
+            title="Morosos de Cuota Deportiva"
+            disabled={isLoading && !data}
+            columns={COLUMNAS_EXPORT_MOROSOS_DEPORTIVOS}
+            fetchRows={async () => {
+              const res = await pagosApi.getMorososCuotaDeportiva({
+                busqueda: busqueda.trim() || undefined,
+                disciplinaId,
+                ordenarPor,
+                orden,
+              });
+              return res?.items ?? [];
+            }}
+          />
+
           <div className="w-52">
             <Select
               id="filtro-disciplina"
               aria-label="Filtrar por disciplina"
+              leftIcon={<Filter />}
               value={disciplinaId ? String(disciplinaId) : ''}
-              onChange={(e) => setDisciplinaId(e.target.value ? Number(e.target.value) : undefined)}
+              onChange={(e) => {
+                setDisciplinaId(e.target.value ? Number(e.target.value) : undefined);
+                setPagina(1);
+              }}
             >
               <option value="">Todas las disciplinas</option>
               {disciplinas.map((d) => (
@@ -110,6 +163,7 @@ export function MorososCuotaDeportivaPage() {
                 ];
                 setOrdenarPor(criterio);
                 setOrden(sentido);
+                setPagina(1);
               }}
             >
               <option value="monto-desc">Mayor deuda primero</option>
@@ -132,10 +186,25 @@ export function MorososCuotaDeportivaPage() {
           {error instanceof Error ? error.message : 'Error desconocido'}
         </div>
       ) : (
-        <MorososCuotaDeportivaTable
-          morosos={data?.items ?? []}
-          onCobrar={(moroso) => navigate(ROUTES.cobrarCuotaDeportivaDe(moroso.dni))}
-        />
+        <div>
+          <MorososCuotaDeportivaTable
+            morosos={itemsPaginados}
+            onCobrar={(moroso) => navigate(ROUTES.cobrarCuotaDeportivaDe(moroso.dni))}
+          />
+          {items.length > 0 && (
+            <TablePagination
+              pagina={pagina}
+              porPagina={porPagina}
+              total={totalItems}
+              isFetching={isFetching}
+              onChangePagina={setPagina}
+              onChangePorPagina={(nuevo) => {
+                setPorPagina(nuevo);
+                setPagina(1);
+              }}
+            />
+          )}
+        </div>
       )}
     </div>
   );

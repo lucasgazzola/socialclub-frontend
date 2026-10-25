@@ -34,6 +34,8 @@ export interface SociosQuery {
   estado?: EstadoSocioFiltro;
   pagina?: number;
   porPagina?: number;
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
 }
 
 /** Convierte un Socio (de API) en datos de formulario. */

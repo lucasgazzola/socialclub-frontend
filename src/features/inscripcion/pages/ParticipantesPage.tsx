@@ -1,17 +1,18 @@
 import { useContext, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FileText, Filter, Plus, Search, UserPlus } from 'lucide-react';
-import { Button, Input, Modal, Select, Spinner, StatusTabs } from '@/components/ui';
+import { Button, Input, Modal, Select, Spinner, StatusTabs, TablePagination, TableExportMenu } from '@/components/ui';
 import { AuthContext } from '@/features/auth/context/auth-context';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
 import type { EstadoInscripcionFiltro, ParticipanteConDisciplinas, ParticipanteEncontrado } from '../types';
+import { listarInscripciones } from '../api/inscripcion.api';
+import { formatearDni } from '@/lib/utils/dni';
+import type { ExportColumn } from '@/lib/utils/exportTable';
 import { useInscripciones } from '../hooks/useInscripciones';
 import { ParticipantesTable } from '../components/ParticipantesTable';
 import { InscripcionForm } from '../components/InscripcionForm';
 import { EditarParticipanteModal } from '../components/EditarParticipanteModal';
-
-const POR_PAGINA = 10;
 
 /**
  * US-08 — Consultar participantes.
@@ -25,6 +26,18 @@ const POR_PAGINA = 10;
  */
 type FiltroEstadoParticipante = 'todos' | 'inscriptos' | 'baja';
 
+const COLUMNAS_EXPORT_PARTICIPANTES: ExportColumn<ParticipanteConDisciplinas>[] = [
+  { header: 'Apellido y nombre', accessor: (p) => `${p.persona.apellido}, ${p.persona.nombre}` },
+  { header: 'DNI', accessor: (p) => formatearDni(p.persona.dni) },
+  {
+    header: 'Disciplinas',
+    accessor: (p) =>
+      p.disciplinas.map((d) => `${d.disciplina.nombre}${d.categoriaDisciplina ? ` (${d.categoriaDisciplina.nombre})` : ''}`).join(', ') || '—',
+  },
+  { header: 'Estado', accessor: (p) => (p.estado === 'INSCRIPTO' ? 'Activo' : 'Inactivo') },
+  { header: 'Documentación', accessor: (p) => p.estadoDocumental ?? '—' },
+];
+
 export function ParticipantesPage() {
   const auth = useContext(AuthContext);
   const puedeInscribir = !auth || auth.usuario?.roles.some((r) => ['ADMIN', 'DELEGADO'].includes(r));
@@ -33,7 +46,27 @@ export function ParticipantesPage() {
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoParticipante>('todos');
   const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
+  const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
+  const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  function handleOrdenar(campo: string) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+  }
   const inscripcionAbierta = Boolean(puedeInscribir) && searchParams.get('nueva') === '1';
   const [conDocumentacion, setConDocumentacion] = useState<ParticipanteConDisciplinas | null>(null);
 
@@ -87,10 +120,11 @@ export function ParticipantesPage() {
     disciplinaId,
     estado: estadoQuery,
     pagina,
-    porPagina: POR_PAGINA,
+    porPagina,
+    ordenarPor,
+    orden,
   });
 
-  const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
 
   const [cachedCounts, setCachedCounts] = useState<{
@@ -142,7 +176,7 @@ export function ParticipantesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Participantes</h1>
@@ -188,7 +222,7 @@ export function ParticipantesPage() {
             ? `Documentación de ${conDocumentacion.persona.apellido}, ${conDocumentacion.persona.nombre}`
             : 'Documentación'
         }
-        description={conDocumentacion ? `DNI ${conDocumentacion.persona.dni}` : undefined}
+        description={conDocumentacion ? `DNI ${formatearDni(conDocumentacion.persona.dni)}` : undefined}
         onClose={() => setConDocumentacion(null)}
         icon={<FileText />}
         size="lg"
@@ -211,20 +245,22 @@ export function ParticipantesPage() {
           />
 
           {/* Accesibilidad y compatibilidad con pruebas */}
-          <select
-            id="filtroEstado"
-            aria-label="Filtrar por estado"
-            value={filtroEstado === 'inscriptos' ? 'INSCRIPTO' : filtroEstado === 'baja' ? 'BAJA' : 'todos'}
-            onChange={(e) => cambiarFiltro(e.target.value)}
-            className="sr-only"
-            tabIndex={-1}
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="INSCRIPTO">Solo inscriptos</option>
-            <option value="BAJA">Solo baja</option>
-            <option value="inscriptos" className="hidden">Inscriptos</option>
-            <option value="baja" className="hidden">Baja</option>
-          </select>
+          <div className="relative h-0 w-0 overflow-hidden">
+            <select
+              id="filtroEstado"
+              aria-label="Filtrar por estado"
+              value={filtroEstado === 'inscriptos' ? 'INSCRIPTO' : filtroEstado === 'baja' ? 'BAJA' : 'todos'}
+              onChange={(e) => cambiarFiltro(e.target.value)}
+              className="sr-only"
+              tabIndex={-1}
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="INSCRIPTO">Solo inscriptos</option>
+              <option value="BAJA">Solo baja</option>
+              <option value="inscriptos" className="hidden">Inscriptos</option>
+              <option value="baja" className="hidden">Baja</option>
+            </select>
+          </div>
         </div>
 
       {/* Barra de búsqueda y disciplina estilo Apex */}
@@ -240,6 +276,25 @@ export function ParticipantesPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <TableExportMenu<ParticipanteConDisciplinas>
+            filename="participantes"
+            title="Participantes"
+            disabled={isLoading && !data}
+            columns={COLUMNAS_EXPORT_PARTICIPANTES}
+            fetchRows={async () => {
+              const res = await listarInscripciones({
+                busqueda: busqueda || undefined,
+                disciplinaId,
+                estado: estadoQuery,
+                pagina: 1,
+                porPagina: 10000,
+                ordenarPor,
+                orden,
+              });
+              return res?.items ?? [];
+            }}
+          />
+
           <Select
             id="disciplina"
             aria-label="Filtrar por disciplina"
@@ -268,42 +323,31 @@ export function ParticipantesPage() {
           {error instanceof Error ? error.message : 'No se pudieron cargar los participantes.'}
         </div>
       ) : (
-        <>
+        <div>
           <ParticipantesTable
             participantes={data?.items ?? []}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
             onVerDocumentacion={puedeInscribir ? setConDocumentacion : undefined}
             onInscribir={puedeInscribir ? inscribirExistente : undefined}
           />
 
           {hayResultados && (
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>
-                {data?.total ?? 0} participante(s){isFetching ? ' · actualizando…' : ''}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina <= 1}
-                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </Button>
-                <span>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina >= totalPaginas}
-                  onClick={() => setPagina((p) => p + 1)}
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
+            <TablePagination
+              pagina={pagina}
+              porPagina={porPagina}
+              total={data?.total ?? 0}
+              isFetching={isFetching}
+              onChangePagina={setPagina}
+              onChangePorPagina={(nuevo) => {
+                setPorPagina(nuevo);
+                setPagina(1);
+              }}
+              srSummary={`${data?.total ?? 0} participante(s)`}
+            />
           )}
-        </>
+        </div>
       )}
     </div>
   );

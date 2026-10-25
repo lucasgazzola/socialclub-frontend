@@ -26,4 +26,6 @@ export interface AuditoriaQuery {
   fechaHasta?: string;
   pagina?: number;
   porPagina?: number;
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
 }
