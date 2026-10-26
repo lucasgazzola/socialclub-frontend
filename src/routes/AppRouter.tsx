@@ -30,11 +30,17 @@ import { ReporteAsistenciaPage } from '@/features/reportes/pages/ReporteAsistenc
 import { DisciplinasPage } from '@/features/disciplinas/pages/DisciplinasPage';
 import { CategoriasDisciplinaPage } from '@/features/disciplinas/pages/CategoriasDisciplinaPage';
 import { MiDocumentacionPage } from '@/features/documentacion/pages/MiDocumentacionPage';
+import { RiverPlateLandingPage } from '@/features/landing-club/pages/RiverPlateLandingPage';
 import { ROUTES } from './paths';
 
 export function AppRouter() {
   return (
     <Routes>
+      {/* Portal Institucional estilo River Plate (Público) */}
+      <Route path="portal" element={<RiverPlateLandingPage />} />
+      <Route path="landing" element={<RiverPlateLandingPage />} />
+      <Route path="club/river" element={<RiverPlateLandingPage />} />
+
       <Route path={ROUTES.login} element={<LoginPage />} />
       <Route path={ROUTES.register} element={<RegisterPage />} />
 
