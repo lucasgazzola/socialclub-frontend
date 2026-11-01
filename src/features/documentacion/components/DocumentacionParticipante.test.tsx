@@ -310,6 +310,58 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
       ).toBeInTheDocument();
     });
 
+    it('DT-50: un admin NO ve el botón si la inscripción ya utilizó la excepción única y ve aviso', () => {
+      mockAuth.usuario = { id: 1, email: 'admin@socialclub.com', roles: ['ADMIN'] };
+      mockHook(useEstadoDocumental).mockReturnValue({
+        data: {
+          ...estado,
+          estado: 'BLOQUEADO',
+          inscripciones: [
+            {
+              ...estado.inscripciones[0],
+              estado: 'BLOQUEADO',
+              motivos: ['Certificado médico de aptitud física: vencido el 30/09/2026'],
+              yaHabilitadoExcepcionalmente: true,
+            },
+          ],
+        },
+        isLoading: false,
+      });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      expect(
+        screen.queryByRole('button', { name: /Habilitar excepcionalmente/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText(/Excepción única ya utilizada/i)).toBeInTheDocument();
+    });
+
+    it('DT-50: no muestra botón de extender habilitación mientras la excepción rige', () => {
+      mockAuth.usuario = { id: 1, email: 'admin@socialclub.com', roles: ['ADMIN'] };
+      mockHook(useEstadoDocumental).mockReturnValue({
+        data: {
+          ...estado,
+          estado: 'HABILITADO',
+          inscripciones: [
+            {
+              ...estado.inscripciones[0],
+              estado: 'HABILITADO',
+              habilitadoExcepcionalmenteHasta: '2026-10-31T23:59:59.999Z',
+              yaHabilitadoExcepcionalmente: true,
+            },
+          ],
+        },
+        isLoading: false,
+      });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      expect(screen.getByText(/Habilitado excepcionalmente hasta el/i)).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Extender habilitación/i }),
+      ).not.toBeInTheDocument();
+    });
+
     it('US-28: un delegado NO tiene acceso al botón de habilitación excepcional', () => {
       mockAuth.usuario = { id: 2, email: 'delegado@socialclub.com', roles: ['DELEGADO'] };
       mockHook(useEstadoDocumental).mockReturnValue({
