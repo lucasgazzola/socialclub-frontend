@@ -30,22 +30,10 @@ export interface CrearEntradasResult {
   entradas: Entrada[];
 }
 
+/** US-52 · TASK-51: qué entradas se compran. El pago lo hace la pasarela. */
 export interface ComprarEntradasPayload {
   eventoId: number;
   cantidad: number;
-  titular: string;
-  numeroTarjeta: string;
-  vencimiento: string;
-  cvc: string;
-}
-
-export interface CompraEntradasResult {
-  id: number;
-  eventoId: number;
-  eventoNombre: string;
-  cantidad: number;
-  montoTotal: number | string;
-  entradas: Entrada[];
 }
 
 export interface ValidarEntradaDto {

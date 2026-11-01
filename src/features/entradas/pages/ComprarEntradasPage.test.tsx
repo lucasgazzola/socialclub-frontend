@@ -29,38 +29,15 @@ vi.mock('@/features/eventos/hooks/useEventos', () => ({
 
 const mockMutateAsync = vi.fn();
 vi.mock('../hooks/useEntradas', () => ({
-  useComprarEntradas: () => ({
+  useIniciarCompraEntradas: () => ({
     mutateAsync: mockMutateAsync,
     isPending: false,
   }),
 }));
 
-// Mock MockPasarelaEntradasModal to easily trigger onConfirmPago
-vi.mock('../components/MockPasarelaEntradasModal', () => ({
-  MockPasarelaEntradasModal: ({ isOpen, onConfirmPago, onClose }: any) => {
-    if (!isOpen) return null;
-    return (
-      <div data-testid="mock-pasarela-modal">
-        <button
-          onClick={() =>
-            onConfirmPago({
-              titular: 'Juan Perez',
-              numeroTarjeta: '4500000000000000',
-              vencimiento: '12/28',
-              cvc: '123',
-            })
-          }
-        >
-          Confirmar Mock
-        </button>
-        <button onClick={onClose}>Cancelar Mock</button>
-      </div>
-    );
-  },
-}));
-
-vi.mock('../components/QRCode', () => ({
-  QRCode: ({ value }: { value: string }) => <div data-testid="qr-code">{value}</div>,
+const mockIrAPagar = vi.fn();
+vi.mock('@/features/pasarela/hooks/usePasarela', () => ({
+  irAPagar: (url: string) => mockIrAPagar(url),
 }));
 
 describe('ComprarEntradasPage', () => {
@@ -167,87 +144,77 @@ describe('ComprarEntradasPage', () => {
     expect(cantidadInput).toHaveValue(3);
   });
 
-  it('abre la pasarela y confirma compra con éxito mostrando los QR generados', async () => {
-    const user = userEvent.setup();
-    mockUseEvento.mockReturnValue({
-      data: {
-        id: 1,
-        nombre: 'Torneo Abierto',
-        descripcion: 'Torneo tenis',
-        precio: 1000,
-        entradasDisponibles: 5,
-        estado: 'PUBLICADO',
-        inicioVenta: new Date(Date.now() - 3600000).toISOString(),
-        finVenta: new Date(Date.now() + 3600000).toISOString(),
-      },
-      isLoading: false,
-      isError: false,
-    });
+  const eventoEnVenta = {
+    id: 1,
+    nombre: 'Torneo Abierto',
+    descripcion: 'Torneo tenis',
+    precio: 1000,
+    entradasDisponibles: 5,
+    estado: 'PUBLICADO',
+    inicioVenta: new Date(Date.now() - 3600000).toISOString(),
+    finVenta: new Date(Date.now() + 3600000).toISOString(),
+  };
 
+  it('TC-263 · TASK-51: confirma el pago, reserva y redirige a la pasarela', async () => {
+    const user = userEvent.setup();
+    mockUseEvento.mockReturnValue({ data: eventoEnVenta, isLoading: false, isError: false });
     mockMutateAsync.mockResolvedValueOnce({
-      entradas: [
-        { id: 101, token: 'token-entrada-1' },
-        { id: 102, token: 'token-entrada-2' },
-      ],
+      referencia: 'ref-1',
+      estado: 'PENDIENTE',
+      urlPago: 'https://www.mercadopago.com.ar/checkout/ref-1',
     });
 
     renderWithProviders(<ComprarEntradasPage />);
 
-    const buyButton = screen.getByRole('button', { name: /Comprar entradas/i });
-    expect(buyButton).not.toBeDisabled();
-    await user.click(buyButton);
+    fireEvent.change(screen.getByLabelText(/Cantidad/i), { target: { value: '2' } });
+    await user.click(screen.getByRole('button', { name: /Comprar entradas/i }));
 
-    expect(screen.getByTestId('mock-pasarela-modal')).toBeInTheDocument();
+    // Modal de confirmación con el resumen, sin campos de tarjeta.
+    expect(screen.getByText('Confirmar pago')).toBeInTheDocument();
+    expect(screen.getByText('2 entrada(s)')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/tarjeta/i)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Confirmar Mock' }));
+    await user.click(screen.getByTestId('pagar-ir-a-pasarela'));
 
     await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventoId: 1,
-          cantidad: 1,
-          titular: 'Juan Perez',
-        }),
-      );
+      expect(mockMutateAsync).toHaveBeenCalledWith({ eventoId: 1, cantidad: 2 });
     });
-
-    expect(toast.success).toHaveBeenCalledWith(
-      'Compra confirmada. Tus entradas ya están disponibles.',
-    );
-    expect(screen.getByText('Entradas adquiridas')).toBeInTheDocument();
-    expect(screen.getByText('Entrada #1')).toBeInTheDocument();
-    expect(screen.getByText('Entrada #2')).toBeInTheDocument();
-    expect(screen.getAllByText('token-entrada-1').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Descargar todas \(PDF\)/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /^Descargar PDF$/i })).toHaveLength(2);
-    expect(screen.getAllByRole('button', { name: /Descargar QR/i })).toHaveLength(2);
+    expect(mockIrAPagar).toHaveBeenCalledWith('https://www.mercadopago.com.ar/checkout/ref-1');
   });
 
-  it('notifica error si la mutación de compra falla', async () => {
+  it('TASK-51: si no hay nada que pagar va directo al resultado', async () => {
     const user = userEvent.setup();
-    mockUseEvento.mockReturnValue({
-      data: {
-        id: 1,
-        nombre: 'Torneo Abierto',
-        precio: 1000,
-        entradasDisponibles: 5,
-        estado: 'PUBLICADO',
-        inicioVenta: new Date(Date.now() - 3600000).toISOString(),
-        finVenta: new Date(Date.now() + 3600000).toISOString(),
-      },
-      isLoading: false,
-      isError: false,
-    });
-
-    mockMutateAsync.mockRejectedValueOnce(new Error('Saldo insuficiente'));
+    mockUseEvento.mockReturnValue({ data: eventoEnVenta, isLoading: false, isError: false });
+    mockMutateAsync.mockResolvedValueOnce({ referencia: 'ref-0', estado: 'APROBADA', urlPago: null });
 
     renderWithProviders(<ComprarEntradasPage />);
 
     await user.click(screen.getByRole('button', { name: /Comprar entradas/i }));
-    await user.click(screen.getByRole('button', { name: 'Confirmar Mock' }));
+    await user.click(screen.getByTestId('pagar-ir-a-pasarela'));
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Saldo insuficiente');
+      expect(mockNavigate).toHaveBeenCalledWith('/pagos/resultado?referencia=ref-0');
     });
+    expect(mockIrAPagar).not.toHaveBeenCalled();
+  });
+
+  it('notifica error si no se puede iniciar la compra (p. ej. se agotaron)', async () => {
+    const user = userEvent.setup();
+    mockUseEvento.mockReturnValue({ data: eventoEnVenta, isLoading: false, isError: false });
+    mockMutateAsync.mockRejectedValueOnce(
+      new Error('Las entradas se agotaron. Actualizá la página e intentá nuevamente.'),
+    );
+
+    renderWithProviders(<ComprarEntradasPage />);
+
+    await user.click(screen.getByRole('button', { name: /Comprar entradas/i }));
+    await user.click(screen.getByTestId('pagar-ir-a-pasarela'));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        'Las entradas se agotaron. Actualizá la página e intentá nuevamente.',
+      );
+    });
+    expect(mockIrAPagar).not.toHaveBeenCalled();
   });
 });

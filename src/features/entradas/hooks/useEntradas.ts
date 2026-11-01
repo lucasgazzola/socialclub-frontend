@@ -41,14 +41,17 @@ export function useEntradasPorEvento(eventoId: number) {
   });
 }
 
-export function useComprarEntradas() {
+/**
+ * US-52 · TASK-51: inicia la compra (reserva el cupo). La página redirige a
+ * la pasarela; las entradas se generan cuando el pago se confirma.
+ */
+export function useIniciarCompraEntradas() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: entradasApi.comprarEntradas,
-    onSuccess: (data) => {
+    mutationFn: entradasApi.iniciarCompra,
+    onSuccess: () => {
+      // El cupo quedó reservado: cambian las disponibles del evento.
       void qc.invalidateQueries({ queryKey: ['eventos'] });
-      void qc.invalidateQueries({ queryKey: entradasKeys.propias() });
-      void qc.invalidateQueries({ queryKey: ['eventos', data.eventoId] });
     },
   });
 }

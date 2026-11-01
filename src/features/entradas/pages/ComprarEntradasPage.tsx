@@ -1,39 +1,41 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Download, FileText, Ticket } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Ticket } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, Input, Spinner } from '@/components/ui';
 import { useEvento } from '@/features/eventos/hooks/useEventos';
 import { ventaAbierta } from '@/features/eventos/helpers';
-import { MockPasarelaEntradasModal } from '../components/MockPasarelaEntradasModal';
-import { QRCode } from '../components/QRCode';
-import { useComprarEntradas } from '../hooks/useEntradas';
-import { descargarEntradaPdf, descargarQR, descargarTodasEntradasPdf } from '../utils/descargarEntradaPdf';
-import type { Entrada } from '../types';
-import type { MockPagoFormData } from '@/features/pagos/schemas/pago.schema';
+import { ConfirmarPagoModal } from '@/features/pasarela/components/ConfirmarPagoModal';
+import { irAPagar } from '@/features/pasarela/hooks/usePasarela';
+import { ROUTES } from '@/routes/paths';
+import { useIniciarCompraEntradas } from '../hooks/useEntradas';
 
 export function ComprarEntradasPage() {
   const { eventoId } = useParams<{ eventoId: string }>();
   const id = Number(eventoId);
   const { data: evento, isLoading, isError, error } = useEvento(id);
-  const comprar = useComprarEntradas();
+  const comprar = useIniciarCompraEntradas();
+  const navigate = useNavigate();
 
   const [cantidad, setCantidad] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [entradas, setEntradas] = useState<Entrada[]>([]);
 
   const precio = Number(evento?.precio ?? 0);
   const maxCantidad = evento?.entradasDisponibles ?? 0;
   const ventaHabilitada = !!evento && ventaAbierta(evento);
 
-  async function confirmarPago(data: MockPagoFormData) {
+  // TASK-51: reserva el cupo y redirige a la pasarela (Mercado Pago o el simulador).
+  // Al volver, las entradas quedan en «Mis entradas».
+  async function confirmarPago() {
     try {
-      const resultado = await comprar.mutateAsync({ eventoId: id, cantidad, ...data });
-      setEntradas(resultado.entradas);
-      setModalAbierto(false);
-      toast.success('Compra confirmada. Tus entradas ya están disponibles.');
+      const orden = await comprar.mutateAsync({ eventoId: id, cantidad });
+      if (orden.urlPago) {
+        irAPagar(orden.urlPago);
+      } else {
+        navigate(`${ROUTES.resultadoPago}?referencia=${encodeURIComponent(orden.referencia)}`);
+      }
     } catch (errorDesconocido) {
-      toast.error(errorDesconocido instanceof Error ? errorDesconocido.message : 'No se pudo completar la compra.');
+      toast.error(errorDesconocido instanceof Error ? errorDesconocido.message : 'No se pudo iniciar la compra.');
     }
   }
 
@@ -98,56 +100,15 @@ export function ComprarEntradasPage() {
             </div>
           </Card>
 
-          <MockPasarelaEntradasModal
+          <ConfirmarPagoModal
             isOpen={modalAbierto}
             onClose={() => setModalAbierto(false)}
-            cantidad={cantidad}
-            precioUnitario={precio}
-            onConfirmPago={confirmarPago}
+            titulo={`${cantidad} entrada(s)`}
+            detalle={evento.nombre}
+            total={cantidad * precio}
+            onConfirmar={() => void confirmarPago()}
             isLoading={comprar.isPending}
           />
-
-          {entradas.length > 0 && (
-            <section className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-slate-900">Entradas adquiridas</h2>
-                {entradas.length > 1 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => descargarTodasEntradasPdf(entradas, evento.nombre)}
-                  >
-                    <FileText size={14} /> Descargar todas (PDF)
-                  </Button>
-                )}
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {entradas.map((entrada, index) => (
-                  <Card key={entrada.id} className="flex flex-col items-center p-5 text-center">
-                    <p className="mb-2 text-sm font-medium text-slate-500">Entrada #{index + 1}</p>
-                    <QRCode value={entrada.token} size={160} />
-                    <p className="mt-3 break-all font-mono text-xs text-slate-500">{entrada.token}</p>
-                    <div className="mt-4 flex flex-wrap justify-center gap-2">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => descargarEntradaPdf(entrada, evento.nombre)}
-                      >
-                        <FileText size={14} /> Descargar PDF
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => descargarQR(entrada)}
-                      >
-                        <Download size={14} /> Descargar QR
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )}
         </>
       ) : null}
     </div>
