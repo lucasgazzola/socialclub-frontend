@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BadgeCheck, BadgeAlertIcon, UserPlus, Edit3 } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import { UsuarioForm } from '../../components/UsuarioForm';
@@ -22,10 +23,27 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
   const esEdicion = modo === 'editar';
   // DT-42: opciones de disciplinas a cargo de un delegado.
   const { disciplinas } = useDisciplinasActivas();
+  // DT-46: captura de errores de la API en el alta/edición de usuario.
+  const [errorServidor, setErrorServidor] = useState<string | null>(null);
+
+  useEffect(() => {
+    setErrorServidor(null);
+  }, [open, modo, usuario]);
+
+  function handleClose() {
+    setErrorServidor(null);
+    onClose();
+  }
 
   async function handleSubmit(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
-    await onSubmit(values);
-    onClose();
+    setErrorServidor(null);
+    try {
+      await onSubmit(values);
+      handleClose();
+    } catch (err: unknown) {
+      const mensaje = err instanceof Error ? err.message : 'No se pudo guardar el usuario';
+      setErrorServidor(mensaje);
+    }
   }
 
   // En edición esperamos a tener el usuario cargado antes de mostrar el modal
@@ -42,7 +60,7 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
           ? 'Actualizá los datos básicos y los roles desde este panel.'
           : 'Completá los datos básicos y asigná los roles correspondientes.'
       }
-      onClose={onClose}
+      onClose={handleClose}
       size="lg"
     >
       <div className="space-y-6">
@@ -67,8 +85,9 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
           usuarioInicial={esEdicion ? usuario : null}
           mostrarPasswordField={!esEdicion}
           onSubmit={handleSubmit}
-          onCancel={onClose}
+          onCancel={handleClose}
           disciplinas={disciplinas}
+          errorServidor={errorServidor}
         />
 
       </div>

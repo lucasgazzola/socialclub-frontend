@@ -174,6 +174,27 @@ describe('UsuariosPage', () => {
     });
   });
 
+  it('DT-46: si la API rechaza el alta, mantiene el modal abierto y muestra el error en el formulario', async () => {
+    state.usuarios = [buildUsuario()];
+    state.createMutateAsync = vi.fn().mockRejectedValue(new Error('El apellido contiene caracteres inválidos'));
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    await user.click(screen.getByRole('button', { name: /nuevo usuario/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/nombre/i), 'Nuevo');
+    await user.type(screen.getByLabelText(/apellido/i), 'Admin123');
+    await user.type(screen.getByLabelText(/dni/i), '40123456');
+    await user.type(screen.getByLabelText(/email/i), 'nuevo.admin@socialclub.local');
+    await user.type(screen.getByLabelText(/contraseña/i), 'Admin123!');
+    await user.click(screen.getByRole('button', { name: /crear usuario/i }));
+
+    expect(await screen.findByText('El apellido contiene caracteres inválidos')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
   it('precarga los datos y permite guardar los cambios de un usuario existente (TC-009)', async () => {
     state.usuarios = [buildUsuario()];
     const user = userEvent.setup();
