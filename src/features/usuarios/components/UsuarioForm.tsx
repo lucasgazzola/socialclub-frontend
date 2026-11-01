@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm, type FieldErrors } from 'react-hook-form';
 
 function hasPasswordFieldError(
@@ -25,6 +26,8 @@ interface UsuarioFormProps {
   mostrarPasswordField?: boolean;
   /** DT-42: disciplinas activas que se le pueden asignar a un delegado. */
   disciplinas?: { id: number; nombre: string }[];
+  /** DT-46: error retornado por la API al intentar guardar/crear. */
+  errorServidor?: string | null;
 }
 
 export function UsuarioForm({
@@ -34,6 +37,7 @@ export function UsuarioForm({
   mostrarPasswordField = true,
   onCancel,
   disciplinas = [],
+  errorServidor,
 }: UsuarioFormProps) {
   const schema = modo === 'crear' ? usuarioCreateSchema : usuarioEditSchema;
   const defaultValues = usuarioInicial
@@ -60,11 +64,31 @@ export function UsuarioForm({
     handleSubmit,
     watch,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<UsuarioCreateFormValues | UsuarioEditFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
   });
+
+  useEffect(() => {
+    if (!errorServidor) return;
+    if (/apellido/i.test(errorServidor)) {
+      setError('apellido', { message: errorServidor });
+    } else if (/nombre/i.test(errorServidor)) {
+      setError('nombre', { message: errorServidor });
+    } else if (/email|correo/i.test(errorServidor)) {
+      setError('email', { message: errorServidor });
+    } else if (/dni/i.test(errorServidor)) {
+      setError('dni', { message: errorServidor });
+    } else if (/contrase[ñn]a|password/i.test(errorServidor)) {
+      setError('password', { message: errorServidor });
+    }
+  }, [errorServidor, setError]);
+
+  const esErrorDeCampo = Boolean(
+    errorServidor && /apellido|nombre|email|correo|dni|contrase[ñn]a|password/i.test(errorServidor),
+  );
 
   const dniRegistration = register('dni', {
     setValueAs: (value) => String(value ?? '').replace(/\D/g, '').slice(0, 8),
@@ -188,6 +212,12 @@ export function UsuarioForm({
           )}
           {disciplinasError && <p className="text-sm text-red-600">{disciplinasError}</p>}
         </fieldset>
+      )}
+
+      {errorServidor && !esErrorDeCampo && (
+        <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          {errorServidor}
+        </p>
       )}
 
       <ModalActions>
