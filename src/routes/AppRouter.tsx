@@ -22,6 +22,8 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPage';
 import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
 import { ResultadoPagoPage } from '@/features/pasarela/pages/ResultadoPagoPage';
+import { MisReservasPage } from '@/features/reservas/pages/MisReservasPage';
+import { SolicitudesReservaPage } from '@/features/reservas/pages/SolicitudesReservaPage';
 import { SimuladorPagoPage } from '@/features/pasarela/pages/SimuladorPagoPage';
 import { RegistrarPagoDeportivoPage } from '@/features/pagos/pages/RegistrarPagoDeportivoPage';
 import { HistorialDeportivoPage } from '@/features/pagos/pages/HistorialDeportivoPage';
@@ -55,6 +57,7 @@ export function AppRouter() {
           <Route path={ROUTES.cambiarContrasena} element={<CambiarContrasenaPage />} />
           <Route path={ROUTES.misCuotas} element={<MisCuotasPage />} />
           <Route path={ROUTES.misEntradas} element={<MisEntradasPage />} />
+          <Route path={ROUTES.misReservas} element={<MisReservasPage />} />
           <Route path={ROUTES.resultadoPago} element={<ResultadoPagoPage />} />
           <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />
           <Route path={ROUTES.miDocumentacion} element={<MiDocumentacionPage />} />
@@ -70,6 +73,7 @@ export function AppRouter() {
             <Route path="cuotas/deportiva/morosos" element={<MorososCuotaDeportivaPage />} />
             <Route path="reportes/estado-financiero" element={<EstadoFinancieroPage />} />
             <Route path="reportes/asistencia-eventos" element={<ReporteAsistenciaPage />} />
+            <Route path={ROUTES.solicitudesReserva} element={<SolicitudesReservaPage />} />
           </Route>
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>

@@ -84,6 +84,8 @@ export default defineConfig({
         APP_URL: FRONT_URL,
         // TASK-51: pagos con la pasarela simulada aunque el .env tenga un token de Mercado Pago.
         PASARELA_PAGOS: 'simulada',
+        // US-60..62: las reservas de ejemplo (RES-SEED*) vuelven a su estado inicial.
+        SEED_RESETEAR_RESERVAS: '1',
         MP_ACCESS_TOKEN: '',
         PRISMA_HIDE_UPDATE_MESSAGE: '1',
       },

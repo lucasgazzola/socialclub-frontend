@@ -14,6 +14,7 @@ const ESPERA_MS = 3000;
 const DESTINO: Record<OrdenPago['concepto'], { ruta: string; texto: string }> = {
   CUOTA_SOCIAL: { ruta: ROUTES.misCuotas, texto: 'Ver mis cuotas' },
   ENTRADAS: { ruta: ROUTES.misEntradas, texto: 'Ver mis entradas' },
+  RESERVA: { ruta: ROUTES.misReservas, texto: 'Ver mis reservas' },
 };
 
 /**
