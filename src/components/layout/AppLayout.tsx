@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   CalendarDays,
+  CalendarClock,
+  CalendarCheck2,
   ChartColumn,
   BarChart3,
   Coins,
@@ -70,6 +72,7 @@ const navSections: NavSection[] = [
       },
       { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
       { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
+      { to: ROUTES.misReservas, label: 'Mis reservas', icon: CalendarClock },
       { to: ROUTES.miDocumentacion, label: 'Mi documentación', icon: FileText },
       {
         to: ROUTES.participantes,
@@ -85,6 +88,12 @@ const navSections: NavSection[] = [
     items: [
       { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays },
       { to: ROUTES.validarAcceso, label: 'Validar QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
+      {
+        to: ROUTES.solicitudesReserva,
+        label: 'Solicitudes de reserva',
+        icon: CalendarCheck2,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
       { to: ROUTES.cuotas, label: 'Cuotas', icon: Coins, roles: ['ADMIN'] },
       {
         to: ROUTES.cobrarCuotaDeportiva,
@@ -140,6 +149,8 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.cambiarContrasena]: 'Cambiar Contraseña',
   [ROUTES.misCuotas]: 'Mis Cuotas',
   [ROUTES.misEntradas]: 'Mis Entradas',
+  [ROUTES.misReservas]: 'Mis Reservas',
+  [ROUTES.solicitudesReserva]: 'Solicitudes de Reserva',
   [ROUTES.miDocumentacion]: 'Mi Documentación',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',
