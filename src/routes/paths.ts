@@ -35,6 +35,9 @@ export const ROUTES = {
   cambiarContrasena: '/perfil/cambiar-contrasena',
   misCuotas: '/mis-cuotas',
   misEntradas: '/mis-entradas',
+  /** TASK-51: vuelta de la pasarela de pagos y simulador (sin credenciales de Mercado Pago). */
+  resultadoPago: '/pagos/resultado',
+  simuladorPago: '/pagos/simulador',
   /** DT-28: consulta de propia documentación para socio/participante. */
   miDocumentacion: '/mi-documentacion',
   cobrarCuotaDeportiva: '/cuotas/deportiva/cobrar',

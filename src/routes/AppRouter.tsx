@@ -21,6 +21,8 @@ import { TareasPage } from '@/features/tareas/pages/TareasPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPage';
 import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
+import { ResultadoPagoPage } from '@/features/pasarela/pages/ResultadoPagoPage';
+import { SimuladorPagoPage } from '@/features/pasarela/pages/SimuladorPagoPage';
 import { RegistrarPagoDeportivoPage } from '@/features/pagos/pages/RegistrarPagoDeportivoPage';
 import { HistorialDeportivoPage } from '@/features/pagos/pages/HistorialDeportivoPage';
 import { MorososCuotaSocialPage } from '@/features/pagos/pages/MorososCuotaSocialPage';
@@ -53,6 +55,8 @@ export function AppRouter() {
           <Route path={ROUTES.cambiarContrasena} element={<CambiarContrasenaPage />} />
           <Route path={ROUTES.misCuotas} element={<MisCuotasPage />} />
           <Route path={ROUTES.misEntradas} element={<MisEntradasPage />} />
+          <Route path={ROUTES.resultadoPago} element={<ResultadoPagoPage />} />
+          <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />
           <Route path={ROUTES.miDocumentacion} element={<MiDocumentacionPage />} />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
