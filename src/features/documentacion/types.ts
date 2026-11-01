@@ -63,6 +63,7 @@ export interface EstadoDeInscripcion {
   motivos: string[];
   documentos: EstadoDeDocumento[];
   habilitadoExcepcionalmenteHasta: string | null;
+  yaHabilitadoExcepcionalmente?: boolean;
 }
 
 export interface EstadoDocumentalInscripcion extends EstadoDeInscripcion {
