@@ -84,6 +84,12 @@ describe('UsuariosPage', () => {
     state.activateMutateAsync.mockResolvedValue(undefined);
   });
 
+  /** Obtiene las filas de datos de la tabla de usuarios (excluyendo el header). */
+  function getFilasUsuarios(): HTMLElement[] {
+    const tbody = document.querySelector('tbody');
+    return tbody ? within(tbody).queryAllByRole('row') : [];
+  }
+
   /** Confirma la acción en el ConfirmDialog abierto. */
   async function confirmarEnDialogo(user: ReturnType<typeof userEvent.setup>, etiqueta: RegExp) {
     const dialogo = await screen.findByRole('dialog');
@@ -110,7 +116,7 @@ describe('UsuariosPage', () => {
     expect(screen.getByText('Inactivo')).toBeInTheDocument();
 
     // Una fila por usuario, en el orden que devuelve el backend.
-    const filas = screen.getAllByRole('listitem');
+    const filas = getFilasUsuarios();
     expect(filas).toHaveLength(2);
     expect(filas[0]).toHaveTextContent('Admin Gestor');
     expect(filas[1]).toHaveTextContent('Ana Pérez');
@@ -371,7 +377,7 @@ describe('UsuariosPage', () => {
 
       render(<UsuariosPage />);
 
-      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Admin Gestor');
+      expect(getFilasUsuarios()[0]).toHaveTextContent('Admin Gestor');
 
       // Se desactiva al segundo usuario de la lista.
       await user.click(screen.getAllByRole('button', { name: /desactivar/i })[1]);
@@ -382,7 +388,7 @@ describe('UsuariosPage', () => {
       });
 
       await waitFor(() => {
-        const filas = screen.getAllByRole('listitem');
+        const filas = getFilasUsuarios();
         expect(filas[0]).toHaveTextContent('Ana Pérez');
         expect(filas[0]).toHaveAttribute('aria-current', 'true');
       });
@@ -398,7 +404,7 @@ describe('UsuariosPage', () => {
       await confirmarEnDialogo(user, /cancelar/i);
 
       expect(state.deactivateMutateAsync).not.toHaveBeenCalled();
-      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Admin Gestor');
+      expect(getFilasUsuarios()[0]).toHaveTextContent('Admin Gestor');
     });
 
     it('filtra la grilla por estado y limpia el usuario destacado', async () => {
@@ -418,7 +424,7 @@ describe('UsuariosPage', () => {
 
       await user.selectOptions(screen.getByLabelText(/filtrar por estado/i), 'inactivos');
 
-      const filas = screen.getAllByRole('listitem');
+      const filas = getFilasUsuarios();
       expect(filas).toHaveLength(1);
       expect(filas[0]).toHaveTextContent('Ana Pérez');
       expect(filas[0]).not.toHaveAttribute('aria-current');
@@ -433,7 +439,7 @@ describe('UsuariosPage', () => {
       await user.selectOptions(screen.getByLabelText(/filtrar por estado/i), 'inactivos');
 
       expect(screen.getByText(/ningún usuario coincide con el filtro/i)).toBeInTheDocument();
-      expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+      expect(getFilasUsuarios()).toHaveLength(0);
     });
 
     it('permite ciclo de ordenamiento de 3 estados (neutral -> asc -> desc -> neutral)', async () => {
@@ -446,7 +452,7 @@ describe('UsuariosPage', () => {
       render(<UsuariosPage />);
 
       // Estado 1: Neutral (orden natural sin selección)
-      let filas = screen.getAllByRole('listitem');
+      let filas = getFilasUsuarios();
       expect(filas[0]).toHaveTextContent('Zack Zeta');
       expect(filas[1]).toHaveTextContent('Aaron Alfa');
 
@@ -454,19 +460,19 @@ describe('UsuariosPage', () => {
 
       // Estado 2: Primer clic -> ascendente (20.000.000 antes que 40.000.000)
       await user.click(botonDni);
-      filas = screen.getAllByRole('listitem');
+      filas = getFilasUsuarios();
       expect(filas[0]).toHaveTextContent('Aaron Alfa');
       expect(filas[1]).toHaveTextContent('Zack Zeta');
 
       // Estado 3: Segundo clic -> descendente (40.000.000 antes que 20.000.000)
       await user.click(botonDni);
-      filas = screen.getAllByRole('listitem');
+      filas = getFilasUsuarios();
       expect(filas[0]).toHaveTextContent('Zack Zeta');
       expect(filas[1]).toHaveTextContent('Aaron Alfa');
 
       // Estado 4: Tercer clic -> vuelve al estado primario neutral
       await user.click(botonDni);
-      filas = screen.getAllByRole('listitem');
+      filas = getFilasUsuarios();
       expect(filas[0]).toHaveTextContent('Zack Zeta');
       expect(filas[1]).toHaveTextContent('Aaron Alfa');
     });
@@ -483,13 +489,13 @@ describe('UsuariosPage', () => {
       const botonAlta = screen.getByRole('button', { name: /alta/i });
       // Click en Alta -> asc (más antiguo primero)
       await user.click(botonAlta);
-      let filas = screen.getAllByRole('listitem');
+      let filas = getFilasUsuarios();
       expect(filas[0]).toHaveTextContent('Viejo Usuario');
       expect(filas[1]).toHaveTextContent('Nuevo Usuario');
 
       // Click en Alta de nuevo -> desc (más reciente primero)
       await user.click(botonAlta);
-      filas = screen.getAllByRole('listitem');
+      filas = getFilasUsuarios();
       expect(filas[0]).toHaveTextContent('Nuevo Usuario');
       expect(filas[1]).toHaveTextContent('Viejo Usuario');
     });
