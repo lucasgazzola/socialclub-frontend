@@ -220,5 +220,55 @@ describe('UsuarioForm', () => {
       );
     });
   });
-});
 
+  describe('DT-46: Manejo y visualización de errores del servidor', () => {
+    it('muestra el error asignado al campo apellido cuando la API lo rechaza', async () => {
+      render(
+        <UsuarioForm
+          modo="crear"
+          onSubmit={vi.fn().mockResolvedValue(undefined)}
+          errorServidor="El apellido contiene caracteres inválidos"
+        />,
+      );
+
+      expect(await screen.findByText('El apellido contiene caracteres inválidos')).toBeInTheDocument();
+    });
+
+    it('muestra el error asignado al campo DNI cuando ya existe', async () => {
+      render(
+        <UsuarioForm
+          modo="crear"
+          onSubmit={vi.fn().mockResolvedValue(undefined)}
+          errorServidor="Ya existe un usuario con ese DNI"
+        />,
+      );
+
+      expect(await screen.findByText('Ya existe un usuario con ese DNI')).toBeInTheDocument();
+    });
+
+    it('muestra el error asignado al campo email cuando ya existe', async () => {
+      render(
+        <UsuarioForm
+          modo="crear"
+          onSubmit={vi.fn().mockResolvedValue(undefined)}
+          errorServidor="Ya existe un usuario con ese email"
+        />,
+      );
+
+      expect(await screen.findByText('Ya existe un usuario con ese email')).toBeInTheDocument();
+    });
+
+    it('muestra un banner general de alerta cuando el error no corresponde a un campo específico', async () => {
+      render(
+        <UsuarioForm
+          modo="crear"
+          onSubmit={vi.fn().mockResolvedValue(undefined)}
+          errorServidor="Error interno de conexión con el servidor"
+        />,
+      );
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Error interno de conexión con el servidor');
+    });
+  });
+});
