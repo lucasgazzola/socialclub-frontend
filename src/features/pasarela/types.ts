@@ -3,7 +3,7 @@
  * (Mercado Pago o la simulada): inicia la orden, redirige a `urlPago` y, a la
  * vuelta, le pide a la API que confirme el pago.
  */
-export type ConceptoCobro = 'CUOTA_SOCIAL' | 'ENTRADAS';
+export type ConceptoCobro = 'CUOTA_SOCIAL' | 'ENTRADAS' | 'RESERVA';
 
 export type EstadoOrdenPago =
   | 'PENDIENTE'
