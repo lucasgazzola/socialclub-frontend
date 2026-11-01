@@ -6,12 +6,12 @@ import type {
   PagoRealizado,
   PendientesDeportivosResponse,
   RegistrarPagoDeportivoPayload,
-  RegistrarPagoPayload,
   RegistrarPagoSocioPayload,
   RespuestaPago,
   RespuestaPagoDeportivo,
   ResumenCuotas,
 } from '../types';
+import type { OrdenPago } from '@/features/pasarela/types';
 
 export const pagosApi = {
   async getMisCuotas(): Promise<ResumenCuotas> {
@@ -19,8 +19,9 @@ export const pagosApi = {
     return data;
   },
 
-  async registrarPago(payload: RegistrarPagoPayload): Promise<RespuestaPago> {
-    const { data } = await apiClient.post<RespuestaPago>('/pagos/registrar', payload);
+  /** US-10 · TASK-51: inicia el pago online; devuelve la orden con la URL de la pasarela. */
+  async iniciarPagoCuotas(periodos: string[]): Promise<OrdenPago> {
+    const { data } = await apiClient.post<OrdenPago>('/pagos/checkout', { periodos });
     return data;
   },
 
