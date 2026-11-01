@@ -158,6 +158,7 @@ export interface MorososCuotaSocialResponse {
   total: number;
   deudaTotalClub: number;
   items: SocioMorosoCuotaSocial[];
+  diaVencimiento?: number;
   pagina?: number;
   porPagina?: number;
 }

@@ -67,7 +67,7 @@ export function MorososCuotaSocialPage() {
             Morosos de Cuota Social
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Consultá y gestioná el cobro a socios con cuotas sociales impagas.
+            Consultá y gestioná el cobro a socios con cuotas sociales impagas. La cuota de cada mes vence el día {data?.diaVencimiento ?? 10}.
           </p>
         </div>
       </header>
