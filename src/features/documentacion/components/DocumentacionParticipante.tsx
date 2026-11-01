@@ -181,15 +181,21 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-semibold">Inscripción bloqueada por documentación:</p>
                   {esAdmin && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="border-rose-300 text-rose-800 hover:bg-rose-100"
-                      onClick={() => setInscripcionAHabilitar(insc)}
-                    >
-                      Habilitar excepcionalmente
-                    </Button>
+                    insc.yaHabilitadoExcepcionalmente ? (
+                      <span className="inline-flex items-center rounded-md bg-rose-100 px-2 py-1 text-xs font-medium text-rose-800">
+                        Excepción única ya utilizada
+                      </span>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="border-rose-300 text-rose-800 hover:bg-rose-100"
+                        onClick={() => setInscripcionAHabilitar(insc)}
+                      >
+                        Habilitar excepcionalmente
+                      </Button>
+                    )
                   )}
                 </div>
                 <ul className="mt-1 list-disc pl-4 space-y-0.5">
@@ -204,17 +210,6 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                 <p>
                   Habilitado excepcionalmente hasta el {isoADisplay(insc.habilitadoExcepcionalmenteHasta)}.
                 </p>
-                {esAdmin && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="text-amber-800 hover:bg-amber-100"
-                    onClick={() => setInscripcionAHabilitar(insc)}
-                  >
-                    Extender habilitación
-                  </Button>
-                )}
               </div>
             )}
             {insc.documentos.length === 0 ? (
