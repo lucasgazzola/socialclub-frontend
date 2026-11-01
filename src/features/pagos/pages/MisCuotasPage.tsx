@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import { useMisCuotas } from '../hooks/useMisCuotas';
-import { useRegistrarPago } from '../hooks/useRegistrarPago';
+import { useIniciarPagoCuotas } from '../hooks/useIniciarPagoCuotas';
 import { useHistorialPagos } from '../hooks/useHistorialPagos';
 import { EstadoFinancieroBadge } from '../components/EstadoFinancieroBadge';
 import { CuotasPendientesList } from '../components/CuotasPendientesList';
-import { MockPasarelaPagoModal } from '../components/MockPasarelaPagoModal';
+import { ConfirmarPagoModal } from '@/features/pasarela/components/ConfirmarPagoModal';
+import { irAPagar } from '@/features/pasarela/hooks/usePasarela';
+import { etiquetaMetodoPago } from '@/features/pasarela/types';
 import { Spinner } from '@/components/ui';
 import { Coins, History, CreditCard } from 'lucide-react';
-import type { MockPagoFormData } from '../schemas/pago.schema';
 
 export function MisCuotasPage() {
   const { usuario } = useAuth();
@@ -24,7 +26,8 @@ export function MisCuotasPage() {
   const { data: historial, isLoading: isLoadingHistorial } = useHistorialPagos({
     enabled: esOFueSocio,
   });
-  const registrarPagoMutation = useRegistrarPago();
+  const iniciarPago = useIniciarPagoCuotas();
+  const navigate = useNavigate();
 
   const [selectedPeriodos, setSelectedPeriodos] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,20 +53,21 @@ export function MisCuotasPage() {
     setSelectedPeriodos([]);
   };
 
-  const handleConfirmPago = async (formData: MockPagoFormData) => {
+  // TASK-51: crea la orden y redirige a la pasarela (Mercado Pago o el simulador).
+  const handleConfirmPago = async () => {
     if (selectedPeriodos.length === 0) return;
-
-    await registrarPagoMutation.mutateAsync({
-      periodos: selectedPeriodos,
-      metodoPago: 'MOCK_TARJETA',
-      numeroTarjeta: formData.numeroTarjeta,
-      vencimiento: formData.vencimiento,
-      cvc: formData.cvc,
-      titular: formData.titular,
-    });
-
-    setSelectedPeriodos([]);
-    setIsModalOpen(false);
+    try {
+      const orden = await iniciarPago.mutateAsync(selectedPeriodos);
+      if (orden.urlPago) {
+        irAPagar(orden.urlPago);
+      } else {
+        navigate(`${ROUTES.resultadoPago}?referencia=${encodeURIComponent(orden.referencia)}`);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'No se pudo iniciar el pago. Intentá nuevamente.',
+      );
+    }
   };
 
   if (isLoadingCuotas) {
@@ -187,7 +191,7 @@ export function MisCuotasPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                        {pago.metodoPago}
+                        {etiquetaMetodoPago(pago.metodoPago)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right font-bold text-slate-900">
@@ -201,13 +205,15 @@ export function MisCuotasPage() {
         </div>
       )}
 
-      {/* Modal Pasarela */}
-      <MockPasarelaPagoModal
+      {/* TASK-51 · Confirmación antes de ir a la pasarela */}
+      <ConfirmarPagoModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        selectedCuotas={selectedCuotasObjects}
-        onConfirmPago={handleConfirmPago}
-        isLoading={registrarPagoMutation.isPending}
+        titulo={`Períodos a pagar (${selectedCuotasObjects.length})`}
+        detalle={selectedCuotasObjects.map((c) => c.periodo).join(', ')}
+        total={selectedCuotasObjects.reduce((sum, c) => sum + c.monto, 0)}
+        onConfirmar={() => void handleConfirmPago()}
+        isLoading={iniciarPago.isPending}
       />
     </div>
   );

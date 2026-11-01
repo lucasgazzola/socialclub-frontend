@@ -15,16 +15,6 @@ export interface ResumenCuotas {
   totalAdeudado: number;
 }
 
-export interface RegistrarPagoPayload {
-  periodos: string[];
-  metodoPago?: string;
-  // Campos mock de tarjeta (solo visuales)
-  numeroTarjeta?: string;
-  vencimiento?: string;
-  cvc?: string;
-  titular?: string;
-}
-
 export interface PagoRealizado {
   id: number;
   periodo: string;

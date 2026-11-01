@@ -82,6 +82,9 @@ export default defineConfig({
         TAREAS_TOKEN: 'token-tareas-e2e',
         SMTP_HOST: '',
         APP_URL: FRONT_URL,
+        // TASK-51: pagos con la pasarela simulada aunque el .env tenga un token de Mercado Pago.
+        PASARELA_PAGOS: 'simulada',
+        MP_ACCESS_TOKEN: '',
         PRISMA_HIDE_UPDATE_MESSAGE: '1',
       },
     },

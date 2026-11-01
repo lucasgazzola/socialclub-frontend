@@ -18,6 +18,8 @@ export const RUTAS_BREADCRUMBS: Record<string, RutaMeta> = {
   [ROUTES.cambiarContrasena]: { label: 'Cambiar Contraseña', parent: ROUTES.perfil },
   [ROUTES.misCuotas]: { label: 'Mis Cuotas', parent: ROUTES.dashboard },
   [ROUTES.misEntradas]: { label: 'Mis Entradas', parent: ROUTES.dashboard },
+  [ROUTES.resultadoPago]: { label: 'Resultado del Pago', parent: ROUTES.dashboard },
+  [ROUTES.simuladorPago]: { label: 'Simulador de Pago', parent: ROUTES.dashboard },
   [ROUTES.miDocumentacion]: { label: 'Mi Documentación', parent: ROUTES.dashboard },
   [ROUTES.hacermeSocio]: { label: 'Hacerme Socio', parent: ROUTES.dashboard },
   [ROUTES.socios]: { label: 'Socios', parent: ROUTES.dashboard },

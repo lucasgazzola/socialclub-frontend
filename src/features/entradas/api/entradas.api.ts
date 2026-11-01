@@ -1,11 +1,11 @@
 import { apiClient } from '@/lib/api/client';
 import type {
   ComprarEntradasPayload,
-  CompraEntradasResult,
   CrearEntradasResult,
   Entrada,
   ValidarAccesoResponse,
 } from '../types';
+import type { OrdenPago } from '@/features/pasarela/types';
 
 export const entradasApi = {
   async crearEntradas(eventoId: number, cantidad: number): Promise<CrearEntradasResult> {
@@ -28,8 +28,9 @@ export const entradasApi = {
     return data;
   },
 
-  async comprarEntradas(payload: ComprarEntradasPayload): Promise<CompraEntradasResult> {
-    const { data } = await apiClient.post<CompraEntradasResult>('/entradas/comprar', payload);
+  /** US-52 · TASK-51: reserva el cupo y devuelve la orden con la URL de la pasarela. */
+  async iniciarCompra(payload: ComprarEntradasPayload): Promise<OrdenPago> {
+    const { data } = await apiClient.post<OrdenPago>('/entradas/checkout', payload);
     return data;
   },
 

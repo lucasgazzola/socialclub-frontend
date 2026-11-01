@@ -2,8 +2,10 @@ import { test, expect, iniciarSesion, sufijoUnico, resaltar, USUARIOS } from './
 
 /**
  * Flujo: el ciclo completo de un evento. El administrador lo crea, un socio
- * compra entradas con la pasarela de prueba y recibe sus QR, y un colaborador
- * valida una en la puerta y rechaza el reingreso (US-29, US-30, US-52, US-31).
+ * compra entradas pagando con la pasarela simulada (TASK-51: la misma
+ * circulación que Mercado Pago, sin credenciales) y recibe sus QR, y un
+ * colaborador valida una en la puerta y rechaza el reingreso (US-29, US-30,
+ * US-52, US-31).
  */
 test.describe.configure({ mode: 'serial' });
 
@@ -55,7 +57,7 @@ test(
 
 test(
   'TC-069 · Verificar que la compra de varias entradas genera múltiples QRs individuales',
-  { tag: ['@US-30'] },
+  { tag: ['@US-30', '@US-52', '@TASK-51'] },
   async ({ page, paso }) => {
     await paso('1. Como socio, abrir el evento y elegir 2 entradas', async () => {
       await iniciarSesion(page, USUARIOS.socio);
@@ -67,24 +69,34 @@ test(
       await page.getByLabel('Cantidad').fill('2');
     });
 
-    const pasarela = page.getByRole('dialog', { name: 'Pasarela de pago (simulación)' });
-    await paso('2. Pagar con la pasarela de prueba', async () => {
+    const confirmacion = page.getByRole('dialog', { name: 'Confirmar pago' });
+    await paso('2. Confirmar el pago: el sistema redirige a la pasarela (simulador)', async () => {
       await page.getByRole('button', { name: 'Comprar entradas' }).click();
-      await pasarela.getByLabel('Nombre del titular').fill('Lucía Registrada');
-      await pasarela.getByLabel('Número de tarjeta').fill('4500000000000000');
-      await pasarela.getByLabel('Vencimiento').fill('12/30');
-      await pasarela.getByLabel('Código CVC').fill('123');
-      await resaltar(pasarela);
+      await expect(confirmacion).toContainText('2 entrada(s)');
+      await resaltar(confirmacion);
+      await confirmacion.getByRole('button', { name: 'Ir a pagar' }).click();
+      await expect(page).toHaveURL(/\/pagos\/simulador\?referencia=/);
+      await expect(page.getByText(`2 entrada(s) para "${evento.nombre}"`)).toBeVisible();
     });
 
-    await paso('3. Confirmar: se generan dos entradas, cada una con su QR y su token', async () => {
-      await pasarela.getByRole('button', { name: /Confirmar y pagar/ }).click();
-      await expect(pasarela).toBeHidden();
-      const adquiridas = page.locator('section').filter({ hasText: 'Entradas adquiridas' });
-      await expect(adquiridas.getByText(/^Entrada #\d+$/)).toHaveCount(2);
-      tokens = await adquiridas.locator('p.font-mono').allInnerTexts();
+    await paso('3. Aprobar el pago: vuelve al resultado con el pago acreditado', async () => {
+      await page.getByTestId('simulador-aprobar').click();
+      await expect(page).toHaveURL(/\/pagos\/resultado\?referencia=/);
+      const aprobado = page.getByTestId('pago-aprobado');
+      await expect(aprobado).toBeVisible();
+      await resaltar(aprobado);
+    });
+
+    await paso('4. En «Mis entradas» hay dos entradas nuevas, cada una con su QR y su token', async () => {
+      await page.getByRole('button', { name: 'Ver mis entradas' }).click();
+      await expect(page.getByRole('heading', { name: 'Mis entradas', exact: true })).toBeVisible();
+      const delEvento = page
+        .locator('.grid > *')
+        .filter({ has: page.getByRole('heading', { name: evento.nombre, exact: true }) });
+      await expect(delEvento).toHaveCount(2);
+      tokens = await delEvento.locator('p.font-mono').allInnerTexts();
       expect(new Set(tokens).size).toBe(2);
-      await resaltar(adquiridas);
+      await resaltar(delEvento.first());
     });
   },
 );
