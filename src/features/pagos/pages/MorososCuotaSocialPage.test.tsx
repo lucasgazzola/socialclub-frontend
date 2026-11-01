@@ -64,6 +64,19 @@ describe('MorososCuotaSocialPage · US-19', () => {
     } as any);
   });
 
+  it('DT-48: Informa el día de vencimiento de la cuota social en el encabezado', async () => {
+    vi.mocked(pagosApi.getMorososCuotaSocial).mockResolvedValue({
+      ...mockMorososData,
+      diaVencimiento: 10,
+    });
+
+    renderWithProviders(<MorososCuotaSocialPage />);
+
+    expect(
+      await screen.findByText(/La cuota de cada mes vence el día 10/i),
+    ).toBeInTheDocument();
+  });
+
   it('CA 1 & 4: Renderiza los morosos con datos completos, períodos adeudados y monto total', async () => {
     vi.mocked(pagosApi.getMorososCuotaSocial).mockResolvedValue(mockMorososData);
 
