@@ -81,7 +81,7 @@ test('TC-001 · Registrar un usuario válido', { tag: ['@US-01'] }, async ({ pag
     await dialogo.getByRole('button', { name: 'Crear usuario' }).click();
     await expect(dialogo).toBeHidden();
     await page.getByPlaceholder(/Buscar por nombre/).fill(colaborador.apellido);
-    const fila = page.getByRole('listitem').filter({ hasText: colaborador.email });
+    const fila = page.getByRole('row').filter({ hasText: colaborador.email });
     await expect(fila).toContainText('COLABORADOR');
     await expect(fila).toContainText('Activo');
     await resaltar(fila);
@@ -92,7 +92,7 @@ test(
   'TC-013 · Dar de baja correctamente a un integrante',
   { tag: ['@US-03'] },
   async ({ page, paso }) => {
-    const fila = page.getByRole('listitem').filter({ hasText: colaborador.email });
+    const fila = page.getByRole('row').filter({ hasText: colaborador.email });
 
     await paso('1. Como administrador, buscar al usuario en Usuarios', async () => {
       await iniciarSesion(page, USUARIOS.admin);

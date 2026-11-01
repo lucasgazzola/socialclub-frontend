@@ -1,4 +1,4 @@
-import { test, expect, iniciarSesion, resaltar, USUARIOS } from './soporte/fixtures';
+import { test, expect, iniciarSesion, resaltar, formatearDni, USUARIOS } from './soporte/fixtures';
 
 /**
  * Flujo: secretaría consulta los morosos de cuota deportiva, revisa el detalle
@@ -27,7 +27,7 @@ test(
       '2. Ubicar al moroso: nombre, DNI, deuda por disciplina, períodos y total',
       async () => {
         const fila = page.getByRole('row', { name: new RegExp(VALERIA.nombre) });
-        await expect(fila).toContainText(VALERIA.dni);
+        await expect(fila).toContainText(formatearDni(VALERIA.dni));
         await expect(fila).toContainText('Fútbol Femenino');
         await expect(fila).toContainText('Pelota Paleta');
         await expect(fila).toContainText(/per\. · \$/);

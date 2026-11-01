@@ -139,7 +139,7 @@ test(
 
     await paso('4. La grilla muestra la disciplina debajo del rol', async () => {
       await page.getByPlaceholder(/Buscar por nombre/).fill('Bruno');
-      const fila = page.getByRole('listitem').filter({ hasText: delegadoBasquet.email });
+      const fila = page.getByRole('row').filter({ hasText: delegadoBasquet.email });
       await expect(fila).toContainText('DELEGADO');
       await expect(fila).toContainText('Básquet');
       await resaltar(fila);

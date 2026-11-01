@@ -149,7 +149,7 @@ export function UsuariosGrid({
               </th>
             </tr>
           </thead>
-          <tbody role="list">
+          <tbody>
             {usuarios.map((usuario) => {
               const destacado = usuario.id === usuarioDestacadoId;
               const roles = usuario.roles.map((rol) => rol.rol.nombre);
@@ -158,7 +158,7 @@ export function UsuariosGrid({
               return (
                 <tr
                   key={usuario.id}
-                  role="listitem"
+
                   aria-current={destacado ? 'true' : undefined}
                   className={cn(
                     'border-b border-slate-100 last:border-b-0 transition-[background-color] duration-150 hover:bg-slate-50/70',

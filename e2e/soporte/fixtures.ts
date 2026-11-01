@@ -65,6 +65,7 @@ export const test = base.extend<Fixtures>({
 });
 
 export { expect };
+export { formatearDni } from '../../src/lib/utils/dni';
 
 /** Cliente de la API con la sesión iniciada (cookie httpOnly). */
 export async function sesionApi(rol: Rol, password = PASSWORD_SEED) {

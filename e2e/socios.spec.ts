@@ -5,6 +5,7 @@ import {
   dniUnico,
   sufijoUnico,
   resaltar,
+  formatearDni,
   USUARIOS,
 } from './soporte/fixtures';
 
@@ -50,7 +51,7 @@ test(
       await dialogo.getByRole('button', { name: 'Crear socio' }).click();
       await expect(dialogo).toBeHidden();
       const fila = await buscarSocio(page);
-      await expect(fila).toContainText(socio.dni);
+      await expect(fila).toContainText(formatearDni(socio.dni));
       await expect(fila).toContainText('Cuota General');
       await expect(fila).toContainText('Activo');
       await resaltar(fila);
