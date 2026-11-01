@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Select } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { useCategorias } from '../hooks/useCategorias';
 import { hacermeSocioFormSchema, type HacermeSocioFormValues } from '../schemas';
 
@@ -80,7 +81,7 @@ export function HacermeSocioForm({
           <Input
             id="dni-readonly"
             label="DNI"
-            value={defaultValues.dni}
+            value={formatearDni(defaultValues.dni)}
             readOnly
             disabled
             className="cursor-not-allowed bg-slate-100 text-slate-500"
