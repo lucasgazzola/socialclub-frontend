@@ -154,9 +154,9 @@ describe('UsuarioForm', () => {
     const delegado = {
       id: 7,
       dni: '30111222',
-      email: 'delegado@socialclub.local',
+      email: 'diego.navarro@socialclub.local',
       nombre: 'Diego',
-      apellido: 'Delegado',
+      apellido: 'Navarro',
       activo: true,
       creadoEn: '2026-01-15T10:00:00.000Z',
       roles: [{ rol: { id: 3, nombre: 'DELEGADO' } }],

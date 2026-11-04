@@ -21,7 +21,7 @@ test(
     await paso('1. Como colaborador, abrir «Solicitudes de reserva»: las pendientes, por fecha del turno', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
       await page.goto('/reservas/solicitudes');
-      await expect(fila(page, 'RES-SEED01')).toContainText('Lucía Registrada');
+      await expect(fila(page, 'RES-SEED01')).toContainText('Lucía Vázquez');
       await expect(fila(page, 'RES-SEED01')).toContainText('Socio');
       await resaltar(fila(page, 'RES-SEED01'), fila(page, 'RES-SEED02'));
     });

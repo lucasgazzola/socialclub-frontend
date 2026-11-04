@@ -7,13 +7,13 @@ import * as useRegistrarPagoSocioHook from '../hooks/useRegistrarPagoSocio';
 const SOCIO_MOCK = {
   id: 20,
   nombre: 'Carlos',
-  apellido: 'SinCuenta',
+  apellido: 'Mendoza',
   dni: '20000002',
 };
 
 const CUOTAS_MOCK = {
   personaId: 20,
-  socioNombre: 'Carlos SinCuenta',
+  socioNombre: 'Carlos Mendoza',
   dni: '20000002',
   categoria: 'Cuota Senior',
   categoriaId: 3,
@@ -145,7 +145,7 @@ describe('US-17 · ModalCobroCuotaSocio Component', () => {
     );
 
     // Ficha y cuotas
-    expect(screen.getByText(/Carlos SinCuenta/i)).toBeInTheDocument();
+    expect(screen.getByText(/Carlos Mendoza/i)).toBeInTheDocument();
     expect(screen.getByText(/2026-08/i)).toBeInTheDocument();
     expect(screen.getByText(/2026-09/i)).toBeInTheDocument();
 
