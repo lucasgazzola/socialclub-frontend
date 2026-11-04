@@ -22,9 +22,9 @@ import { API_URL } from '../../playwright.config';
 /** Usuarios del seed del backend (`prisma/seed.ts`). */
 export const USUARIOS = {
   admin: 'admin@socialclub.local',
-  colaborador: 'colaborador@socialclub.local',
-  delegado: 'delegado@socialclub.local',
-  socio: 'lucia.registrada@club.local',
+  colaborador: 'franco.bustos@socialclub.local',
+  delegado: 'diego.navarro@socialclub.local',
+  socio: 'lucia.vazquez@club.local',
 } as const;
 export const PASSWORD_SEED = 'Admin123!';
 export type Rol = keyof typeof USUARIOS;

@@ -39,7 +39,7 @@ function solicitud(extra: Partial<SolicitudReserva> = {}): SolicitudReserva {
     creadoEn: '2026-11-01T10:00:00Z',
     solicitante: {
       usuarioId: 7,
-      nombre: 'Lucía Registrada',
+      nombre: 'Lucía Vázquez',
       dni: '30000003',
       telefono: '3534000000',
       email: 'lucia@club.local',
@@ -63,7 +63,7 @@ describe('US-60/61 · SolicitudesReservaPage', () => {
 
     const fila = await screen.findByTestId('reserva-RES-ABC234');
     expect(api.solicitudes).toHaveBeenCalledWith(['PENDIENTE_APROBACION'], '');
-    expect(within(fila).getByText('Lucía Registrada')).toBeInTheDocument();
+    expect(within(fila).getByText('Lucía Vázquez')).toBeInTheDocument();
     expect(within(fila).getByText(/DNI 30\.000\.003 · Tel\. 3534000000/)).toBeInTheDocument();
     expect(within(fila).getByText('Socio')).toBeInTheDocument();
     expect(within(fila).getByText('Debe 2 cuota(s) · $20.000,00')).toBeInTheDocument();

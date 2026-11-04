@@ -8,7 +8,7 @@ import { test, expect, iniciarSesion, resaltar, formatearDni, USUARIOS } from '.
  * impagas de Fútbol Femenino desde 2026 y de Pelota Paleta hasta su baja
  * (febrero de 2026). Todas vencieron (la cuota de un mes vence el día 10).
  */
-const VALERIA = { nombre: 'Valeria Historica', dni: '60000006' };
+const VALERIA = { nombre: 'Valeria Herrera', dni: '60000006' };
 
 test(
   'TC-201 · Mostrar por moroso nombre completo, DNI, disciplina, períodos adeudados y monto total',
