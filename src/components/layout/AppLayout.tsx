@@ -21,6 +21,7 @@ import {
   ChevronRight,
   ChevronDown,
   Dumbbell,
+  Building2,
   Ticket,
   Timer,
   FileText,
@@ -94,6 +95,12 @@ const navSections: NavSection[] = [
         icon: CalendarCheck2,
         roles: ['ADMIN', 'COLABORADOR'],
       },
+      {
+        to: ROUTES.espacios,
+        label: 'Espacios físicos',
+        icon: Building2,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
       { to: ROUTES.cuotas, label: 'Cuotas', icon: Coins, roles: ['ADMIN'] },
       {
         to: ROUTES.cobrarCuotaDeportiva,
@@ -151,6 +158,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.misEntradas]: 'Mis Entradas',
   [ROUTES.misReservas]: 'Mis Reservas',
   [ROUTES.solicitudesReserva]: 'Solicitudes de Reserva',
+  [ROUTES.espacios]: 'Espacios Físicos',
   [ROUTES.miDocumentacion]: 'Mi Documentación',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',

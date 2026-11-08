@@ -33,6 +33,7 @@ import { EstadoFinancieroPage } from '@/features/reportes/pages/EstadoFinanciero
 import { ReporteAsistenciaPage } from '@/features/reportes/pages/ReporteAsistenciaPage';
 import { DisciplinasPage } from '@/features/disciplinas/pages/DisciplinasPage';
 import { CategoriasDisciplinaPage } from '@/features/disciplinas/pages/CategoriasDisciplinaPage';
+import { EspaciosPage } from '@/features/espacios/pages/EspaciosPage';
 import { MiDocumentacionPage } from '@/features/documentacion/pages/MiDocumentacionPage';
 import { ROUTES } from './paths';
 
@@ -74,6 +75,7 @@ export function AppRouter() {
             <Route path="reportes/estado-financiero" element={<EstadoFinancieroPage />} />
             <Route path="reportes/asistencia-eventos" element={<ReporteAsistenciaPage />} />
             <Route path={ROUTES.solicitudesReserva} element={<SolicitudesReservaPage />} />
+            <Route path={ROUTES.espacios} element={<EspaciosPage />} />
           </Route>
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
