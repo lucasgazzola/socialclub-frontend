@@ -1,72 +1,68 @@
-import { useEffect } from 'react';
 import {
-  AlertCircle,
+  ArrowRight,
   CalendarDays,
   CreditCard,
-  RefreshCw,
+  ScrollText,
+  ShieldCheck,
   Sparkles,
   User,
   UserPlus,
   Users,
 } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Button, Card } from '@/components/ui';
-import { cn } from '@/lib/utils/cn';
+import { useNavigate } from 'react-router-dom';
+import { Badge, Button, Card } from '@/components/ui';
 import { formatearDni } from '@/lib/utils/dni';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { AlertasDocumentacion } from '@/features/documentacion/components/AlertasDocumentacion';
 import { ROUTES } from '@/routes/paths';
-import { DashboardKpiCards } from '../components/DashboardKpiCards';
-import { DashboardProximosEventos } from '../components/DashboardProximosEventos';
-import { useDashboard } from '../hooks/useDashboard';
-import { formatearHoraActualizacion } from '../utils/dashboard.utils';
+
+const modulos = [
+  {
+    titulo: 'Socios',
+    descripcion: 'Alta, edición, baja y consulta de socios del club.',
+    icon: Users,
+    ruta: ROUTES.socios,
+    tag: 'Padrón activo',
+  },
+  {
+    titulo: 'Usuarios',
+    descripcion: 'Gestión de usuarios administrativos y sus roles.',
+    icon: ShieldCheck,
+    ruta: ROUTES.usuarios,
+    tag: 'Seguridad & Roles',
+  },
+  {
+    titulo: 'Auditoría',
+    descripcion: 'Registro inalterable de todas las operaciones del sistema.',
+    icon: ScrollText,
+    ruta: ROUTES.auditoria,
+    tag: 'Trazabilidad',
+  },
+  {
+    titulo: 'Participantes',
+    descripcion: 'Inscripciones de participantes a una o varias disciplinas y su documentación.',
+    icon: UserPlus,
+    ruta: ROUTES.participantes,
+    tag: 'Disciplinas 2026',
+  },
+];
 
 function formatearFecha(iso?: string | null) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
+  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 /**
- * Pantalla principal según el rol del usuario:
- * - ADMIN/COLABORADOR: dashboard ejecutivo con indicadores clave (US-34) y alertas de documentación para ADMIN (US-26).
- * - DELEGADO: alertas de documentación (US-26) y acceso a participantes (en `/`); sin acceso a `/dashboard`.
- * - SOCIO: pantalla principal de socio (en `/`); redirigido a `/mi-perfil` si intenta ingresar a `/dashboard`.
+ * Pantalla principal segun el rol del usuario:
+ * - ADMIN/COLABORADOR: panel de administración (ADMIN ve además las alertas de documentación).
+ * - DELEGADO: alertas de documentación (US-26) y acceso a participantes.
+ * - SOCIO: pantalla principal de socio.
  * - Sin roles: pantalla neutra con la opción 'Hacerme socio'.
  */
 export function DashboardPage() {
   const { usuario } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
 
-  const esAutorizadoDashboard = Boolean(
-    usuario?.roles.some((rol) => rol === 'ADMIN' || rol === 'COLABORADOR'),
-  );
-  const enRutaExclusivaDashboard = location.pathname === '/dashboard';
-
-  useEffect(() => {
-    if (enRutaExclusivaDashboard && usuario && !esAutorizadoDashboard) {
-      toast.error('No posee permisos para acceder al dashboard de gestión de la organización');
-      navigate('/mi-perfil', { replace: true });
-    }
-  }, [enRutaExclusivaDashboard, usuario, esAutorizadoDashboard, navigate]);
-
-  if (enRutaExclusivaDashboard && usuario && !esAutorizadoDashboard) {
-    return (
-      <div
-        role="alert"
-        className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700"
-      >
-        No posee permisos para acceder al dashboard de gestión de la organización
-      </div>
-    );
-  }
-
-  if (esAutorizadoDashboard) {
+  if (usuario?.roles.some((rol) => rol === 'ADMIN' || rol === 'COLABORADOR')) {
     return <PanelAdministracion />;
   }
 
@@ -81,78 +77,28 @@ export function DashboardPage() {
   return <PantallaNeutra />;
 }
 
-function DashboardSkeleton() {
-  return (
-    <div
-      data-testid="dashboard-skeleton"
-      aria-busy="true"
-      aria-label="Cargando métricas del dashboard"
-      className="space-y-6"
-    >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((item) => (
-          <Card key={item} className="p-5">
-            <div className="flex items-start justify-between">
-              <div className="size-10 animate-pulse rounded-xl bg-slate-200" />
-              <div className="h-5 w-20 animate-pulse rounded-full bg-slate-200" />
-            </div>
-            <div className="mt-4 h-3 w-32 animate-pulse rounded bg-slate-200" />
-            <div className="mt-2 h-8 w-20 animate-pulse rounded bg-slate-200" />
-            <div className="mt-2 h-3 w-40 animate-pulse rounded bg-slate-100" />
-          </Card>
-        ))}
-      </div>
-
-      <Card className="p-6">
-        <div className="mb-4 h-4 w-40 animate-pulse rounded bg-slate-200" />
-        <div className="space-y-3">
-          {[1, 2, 3].map((row) => (
-            <div key={row} className="h-10 w-full animate-pulse rounded bg-slate-100" />
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
 function PanelAdministracion() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
   const veAlertas = usuario?.roles.includes('ADMIN');
-  const { data, isLoading, isError, isFetching, dataUpdatedAt, refetch } = useDashboard();
 
   return (
     <div className="space-y-8">
       {/* Header institucional */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="bg-brand-50 text-brand-700 ring-brand-600/15 mb-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-600/15 mb-2">
             <Sparkles className="size-3" /> SocialClub · Panel de Gestión
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Hola, {usuario?.nombre ?? usuario?.email}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Bienvenido al panel central de SocialClub. Consultá los indicadores clave y el estado
-            general de la organización.
+            Bienvenido al panel central de SocialClub. Consultá el estado de la gestión y accedé a los módulos principales.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {dataUpdatedAt > 0 && (
-            <span className="text-xs text-slate-500">
-              Última actualización: {formatearHoraActualizacion(dataUpdatedAt)}
-            </span>
-          )}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-          >
-            <RefreshCw className={cn('size-3.5', isFetching && 'animate-spin')} />
-            Actualizar
-          </Button>
+        <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate(ROUTES.perfil)}>
             <User size={15} />
             Mi cuenta
@@ -160,31 +106,48 @@ function PanelAdministracion() {
         </div>
       </div>
 
-      {/* Contenido principal del Dashboard (US-34) */}
-      {isLoading ? (
-        <DashboardSkeleton />
-      ) : isError || !data ? (
-        <div
-          role="alert"
-          className="flex flex-col items-center justify-center gap-3 rounded-xl border border-rose-200 bg-rose-50/80 p-8 text-center"
-        >
-          <AlertCircle className="size-8 text-rose-600" />
-          <p className="text-sm font-medium text-rose-800">
-            No se pudieron cargar las métricas del dashboard. Por favor, reintente en unos minutos.
-          </p>
-          <Button variant="danger" size="sm" onClick={() => void refetch()}>
-            <RefreshCw className="size-3.5" />
-            Reintentar carga
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          <DashboardKpiCards metricas={data} />
-          <DashboardProximosEventos eventos={data.proximosEventos} />
-        </div>
-      )}
-
       {veAlertas && <AlertasDocumentacion />}
+
+      {/* Grid de módulos con estilo Apex */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Módulos del Sistema
+          </h2>
+          <span className="text-xs text-slate-400">4 módulos disponibles</span>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {modulos.map(({ titulo, descripcion, icon: Icon, ruta, tag }) => (
+            <Card
+              key={titulo}
+              onClick={() => ruta && navigate(ruta)}
+              className="group relative cursor-pointer overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between">
+                <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100 transition-colors group-hover:bg-brand-600 group-hover:text-white">
+                  <Icon size={20} />
+                </div>
+                <Badge variant="outline" className="text-[11px] font-normal">
+                  {tag}
+                </Badge>
+              </div>
+
+              <h3 className="font-semibold text-slate-900 transition-colors group-hover:text-brand-600">
+                {titulo}
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-500 line-clamp-2">
+                {descripcion}
+              </p>
+
+              <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-brand-700 opacity-80 group-hover:opacity-100">
+                <span>Acceder</span>
+                <ArrowRight className="size-3 transition-transform duration-200 group-hover:translate-x-1" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -198,7 +161,7 @@ function PanelDelegado() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="bg-brand-50 text-brand-700 ring-brand-600/15 mb-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-600/15 mb-2">
             <Sparkles className="size-3" /> SocialClub · Delegado
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -236,7 +199,7 @@ function PanelSocio() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/15 ring-inset">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/15 mb-2">
             Membresía Activa
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -254,27 +217,23 @@ function PanelSocio() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="p-5">
-          <div className="bg-brand-50 text-brand-700 ring-brand-100 mb-3 inline-flex rounded-xl p-2.5 ring-1">
+          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
             <Users size={20} />
           </div>
           <h2 className="font-semibold text-slate-900">Categoría</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">
-            {membresiaActiva.categoria?.nombre ?? '—'}
-          </p>
+          <p className="mt-1 text-base font-medium text-slate-700">{membresiaActiva.categoria?.nombre ?? '—'}</p>
         </Card>
 
         <Card className="p-5">
-          <div className="bg-brand-50 text-brand-700 ring-brand-100 mb-3 inline-flex rounded-xl p-2.5 ring-1">
+          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
             <CalendarDays size={20} />
           </div>
           <h2 className="font-semibold text-slate-900">Socio desde</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">
-            {formatearFecha(membresiaActiva.fechaAlta)}
-          </p>
+          <p className="mt-1 text-base font-medium text-slate-700">{formatearFecha(membresiaActiva.fechaAlta)}</p>
         </Card>
 
         <Card className="p-5">
-          <div className="bg-brand-50 text-brand-700 ring-brand-100 mb-3 inline-flex rounded-xl p-2.5 ring-1">
+          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
             <CreditCard size={20} />
           </div>
           <h2 className="font-semibold text-slate-900">DNI</h2>
@@ -300,7 +259,7 @@ function PantallaNeutra() {
       </header>
 
       <Card className="max-w-xl p-6">
-        <div className="bg-brand-50 text-brand-700 mb-3 inline-flex rounded-lg p-2">
+        <div className="mb-3 inline-flex rounded-lg bg-brand-50 p-2 text-brand-700">
           <UserPlus size={20} />
         </div>
         <h2 className="text-lg font-medium text-slate-900">Sumate al club</h2>

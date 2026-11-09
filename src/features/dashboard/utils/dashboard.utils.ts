@@ -26,7 +26,7 @@ export function obtenerSemaforoMorosidad(porcentaje: number): InfoSemaforoMorosi
   if (porcentaje < UMBRALES_MOROSIDAD.AMARILLO_DESDE) {
     return {
       nivel: 'verde',
-      etiqueta: 'Normal (< 15%)',
+      etiqueta: 'Normal',
       varianteBadge: 'success',
       clasePunto: 'bg-emerald-500',
     };
@@ -34,14 +34,14 @@ export function obtenerSemaforoMorosidad(porcentaje: number): InfoSemaforoMorosi
   if (porcentaje <= UMBRALES_MOROSIDAD.ROJO_DESDE) {
     return {
       nivel: 'amarillo',
-      etiqueta: 'Moderado (15-30%)',
+      etiqueta: 'Moderado',
       varianteBadge: 'warning',
       clasePunto: 'bg-amber-500',
     };
   }
   return {
     nivel: 'rojo',
-    etiqueta: 'Crítico (> 30%)',
+    etiqueta: 'Crítico',
     varianteBadge: 'danger',
     clasePunto: 'bg-rose-500',
   };

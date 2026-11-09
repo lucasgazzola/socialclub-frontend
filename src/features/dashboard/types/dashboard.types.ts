@@ -13,6 +13,27 @@ export interface InscripcionesIrregulares {
   total: number;
   pendientes: number;
   bloqueadas: number;
+  habilitadas?: number;
+}
+
+export interface ComposicionIntegrantes {
+  soloSocios: number;
+  sociosDeportistas: number;
+  soloDeportistas: number;
+}
+
+export interface MorosidadPorConcepto {
+  cuotaSocial: number;
+  cuotaDeportiva: number;
+  ambasCuotas: number;
+}
+
+export interface DisciplinaResumenDashboard {
+  disciplinaId: number;
+  nombre: string;
+  inscriptos: number;
+  habilitados: number;
+  irregulares: number;
 }
 
 export interface DashboardMetricas {
@@ -22,4 +43,7 @@ export interface DashboardMetricas {
   documentosPorVencer: number;
   inscripcionesIrregulares: InscripcionesIrregulares;
   proximosEventos: DashboardEvento[];
+  composicionIntegrantes?: ComposicionIntegrantes;
+  morosidadPorConcepto?: MorosidadPorConcepto;
+  participantesPorDisciplina?: DisciplinaResumenDashboard[];
 }

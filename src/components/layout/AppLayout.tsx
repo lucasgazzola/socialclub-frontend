@@ -55,6 +55,12 @@ const navSections: NavSection[] = [
     title: 'Principal',
     items: [
       { to: ROUTES.dashboard, label: 'Inicio', icon: LayoutDashboard },
+      {
+        to: ROUTES.dashboardGestion,
+        label: 'Dashboard',
+        icon: BarChart3,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
       { to: ROUTES.perfil, label: 'Mi perfil', icon: User },
     ],
   },
@@ -145,6 +151,7 @@ const navSections: NavSection[] = [
 
 const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.dashboard]: 'Panel de Inicio',
+  [ROUTES.dashboardGestion]: 'Dashboard de Gestión',
   [ROUTES.perfil]: 'Mi Perfil',
   [ROUTES.cambiarContrasena]: 'Cambiar Contraseña',
   [ROUTES.misCuotas]: 'Mis Cuotas',

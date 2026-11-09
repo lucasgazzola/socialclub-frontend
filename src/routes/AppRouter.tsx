@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
+import { DashboardGestionPage } from '@/features/dashboard/pages/DashboardGestionPage';
 import { HacermeSocioPage } from '@/features/socios/pages/HacermeSocioPage';
 import { PerfilSocioPage } from '@/features/socios/pages/PerfilSocioPage';
 import { CambiarContrasenaPage } from '@/features/auth/pages/CambiarContrasenaPage';
@@ -50,7 +51,7 @@ export function AppRouter() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardGestionPage />} />
 
           {/* Cualquier usuario autenticado */}
           <Route path={ROUTES.hacermeSocio} element={<HacermeSocioPage />} />

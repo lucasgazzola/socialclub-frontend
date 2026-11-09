@@ -34,15 +34,26 @@ export function DashboardProximosEventos({ eventos }: DashboardProximosEventosPr
           No hay eventos próximos programados o publicados en la organización
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
+        <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table
+              aria-labelledby="proximos-eventos-heading"
+              className="w-full text-left text-sm"
+            >
               <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold tracking-wider text-slate-500 uppercase">
                 <tr>
-                  <th className="px-5 py-3.5">Nombre del Evento</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">Fecha y Hora</th>
-                  <th className="px-5 py-3.5">Lugar de Acreditación</th>
-                  <th className="px-5 py-3.5 text-right">Entradas</th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Nombre del Evento
+                  </th>
+                  <th scope="col" className="px-5 py-3.5 whitespace-nowrap">
+                    Fecha y Hora
+                  </th>
+                  <th scope="col" className="px-5 py-3.5">
+                    Lugar de Acreditación
+                  </th>
+                  <th scope="col" className="px-5 py-3.5 text-right">
+                    Entradas
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
