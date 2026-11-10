@@ -1,7 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { espaciosApi } from '../api/espacios.api';
-import type { CreateBloqueoPayload, CreateEspacioPayload, FindEspaciosQuery } from '../types';
+import type {
+  CreateBloqueoPayload,
+  CreateEspacioPayload,
+  FindEspaciosQuery,
+  UpdateBloqueoPayload,
+  UpdateEspacioPayload,
+} from '../types';
 
 export const ESPACIOS_QUERY_KEY = ['espacios'] as const;
 
@@ -32,6 +38,22 @@ export function useCrearEspacio() {
   });
 }
 
+export function useActualizarEspacio() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: UpdateEspacioPayload }) =>
+      espaciosApi.update(id, payload),
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ESPACIOS_QUERY_KEY });
+      void queryClient.invalidateQueries({
+        queryKey: [...ESPACIOS_QUERY_KEY, 'detalle', variables.id],
+      });
+      toast.success('Espacio físico actualizado correctamente');
+    },
+  });
+}
+
 export function useAgregarBloqueo() {
   const queryClient = useQueryClient();
 
@@ -44,6 +66,45 @@ export function useAgregarBloqueo() {
         queryKey: [...ESPACIOS_QUERY_KEY, 'detalle', variables.espacioId],
       });
       toast.success('Bloqueo de agenda registrado correctamente');
+    },
+  });
+}
+
+export function useActualizarBloqueo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      espacioId,
+      bloqueoId,
+      payload,
+    }: {
+      espacioId: number;
+      bloqueoId: number;
+      payload: UpdateBloqueoPayload;
+    }) => espaciosApi.updateBloqueo(espacioId, bloqueoId, payload),
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ESPACIOS_QUERY_KEY });
+      void queryClient.invalidateQueries({
+        queryKey: [...ESPACIOS_QUERY_KEY, 'detalle', variables.espacioId],
+      });
+      toast.success('Bloqueo de agenda actualizado correctamente');
+    },
+  });
+}
+
+export function useEliminarBloqueo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ espacioId, bloqueoId }: { espacioId: number; bloqueoId: number }) =>
+      espaciosApi.deleteBloqueo(espacioId, bloqueoId),
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ESPACIOS_QUERY_KEY });
+      void queryClient.invalidateQueries({
+        queryKey: [...ESPACIOS_QUERY_KEY, 'detalle', variables.espacioId],
+      });
+      toast.success('Bloqueo de agenda eliminado correctamente');
     },
   });
 }

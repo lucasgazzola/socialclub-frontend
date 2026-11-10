@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils/cn';
 import type { ExportColumn } from '@/lib/utils/exportTable';
 import { espaciosApi } from '../api/espacios.api';
 import { ConfigurarBloqueoModal } from '../components/ConfigurarBloqueoModal';
+import { EditarEspacioModal } from '../components/EditarEspacioModal';
 import { EspacioForm } from '../components/EspacioForm';
 import { EspaciosCatalogo } from '../components/EspaciosCatalogo';
 import { EspaciosTable, type CampoOrdenEspacio } from '../components/EspaciosTable';
@@ -91,6 +92,7 @@ export function EspaciosPage() {
 
   const [modalCrearAbierto, setModalCrearAbierto] = useState(false);
   const [espacioBloqueo, setEspacioBloqueo] = useState<Espacio | null>(null);
+  const [espacioEditando, setEspacioEditando] = useState<Espacio | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
   // Debounce de 300ms en la búsqueda (ESTANDARES_CRUD_FULLSTACK.md)
@@ -354,6 +356,17 @@ export function EspaciosPage() {
         />
       </Modal>
 
+      <EditarEspacioModal
+        espacio={espacioEditando}
+        open={espacioEditando !== null}
+        onClose={() => setEspacioEditando(null)}
+        onSuccess={() => {
+          setMensajeExito(
+            `El espacio "${espacioEditando?.nombre}" fue actualizado exitosamente.`,
+          );
+        }}
+      />
+
       <ConfigurarBloqueoModal
         espacio={espacioBloqueo}
         open={espacioBloqueo !== null}
@@ -493,6 +506,7 @@ export function EspaciosPage() {
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={handleOrdenar}
+                onEditar={setEspacioEditando}
                 onConfigurarBloqueo={setEspacioBloqueo}
               />
               <TablePagination
