@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/test-utils';
 import { EspaciosPage } from './EspaciosPage';
@@ -28,7 +28,11 @@ vi.mock('../api/espacios.api', () => ({
     list: vi.fn(),
     getById: vi.fn(),
     create: vi.fn(),
+    update: vi.fn(),
+    remove: vi.fn(),
     agregarBloqueo: vi.fn(),
+    updateBloqueo: vi.fn(),
+    deleteBloqueo: vi.fn(),
   },
 }));
 
@@ -72,6 +76,10 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
       pagina: 1,
       porPagina: 10,
       counts: { todos: 2, activos: 2, inactivos: 0 },
+    });
+    vi.mocked(espaciosApi.remove).mockResolvedValue({
+      mensaje: 'Espacio dado de baja exitosamente',
+      id: 1,
     });
   });
 
@@ -172,5 +180,69 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
     const alerta = await screen.findByTestId('alerta-conflicto-bloqueo');
     expect(alerta).toHaveTextContent(/Conflicto con reserva aprobada/i);
     expect(alerta).toHaveTextContent(/RES-SEED01/);
+  });
+
+  describe('US-57 · Eliminar espacio (Baja lógica)', () => {
+    it('muestra diálogo de confirmación y llama a DELETE /espacios/:id al confirmar', async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<EspaciosPage />);
+
+      expect(await screen.findByText('Cancha de Fútbol 5 Norte')).toBeInTheDocument();
+
+      const botonesEliminar = screen.getAllByRole('button', { name: /Dar de baja/i });
+      await user.click(botonesEliminar[0]);
+
+      // Verifica apertura del modal de confirmación
+      expect(
+        screen.getByText(/¿Estás seguro de que deseás dar de baja el espacio/i),
+      ).toBeInTheDocument();
+
+      // Botón destructivo en el modal
+      const modalDialog = screen.getByRole('dialog');
+      const btnConfirmar = within(modalDialog).getByRole('button', { name: 'Dar de baja' });
+      await user.click(btnConfirmar);
+
+      await waitFor(() => {
+        expect(espaciosApi.remove).toHaveBeenCalledWith(1);
+      });
+
+      expect(
+        await screen.findByText(/El espacio "Cancha de Fútbol 5 Norte" fue dado de baja correctamente/i),
+      ).toBeInTheDocument();
+    });
+
+    it('maneja conflicto 409 cuando hay reservas futuras y muestra alerta explicativa', async () => {
+      const user = userEvent.setup();
+      const err409 = Object.assign(
+        new Error(
+          'No se puede dar de baja el espacio porque tiene reservas futuras activas o pendientes (RES-001, RES-002). Debe resolverlas o cancelarlas previamente.',
+        ),
+        {
+          response: {
+            status: 409,
+            data: {
+              message:
+                'No se puede dar de baja el espacio porque tiene reservas futuras activas o pendientes (RES-001, RES-002). Debe resolverlas o cancelarlas previamente.',
+            },
+          },
+        },
+      );
+      vi.mocked(espaciosApi.remove).mockRejectedValue(err409);
+
+      renderWithProviders(<EspaciosPage />);
+
+      expect(await screen.findByText('Cancha de Fútbol 5 Norte')).toBeInTheDocument();
+
+      const botonesEliminar = screen.getAllByRole('button', { name: /Dar de baja/i });
+      await user.click(botonesEliminar[0]);
+
+      const modalDialog = screen.getByRole('dialog');
+      const btnConfirmar = within(modalDialog).getByRole('button', { name: 'Dar de baja' });
+      await user.click(btnConfirmar);
+
+      const alerta = await screen.findByTestId('alerta-conflicto-baja');
+      expect(alerta).toHaveTextContent(/RES-001, RES-002/);
+      expect(alerta).toHaveTextContent(/No es posible dar de baja el espacio/i);
+    });
   });
 });

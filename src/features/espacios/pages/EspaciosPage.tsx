@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  AlertTriangle,
   Building2,
   CheckCircle2,
   Filter,
@@ -12,6 +13,7 @@ import {
 import {
   Button,
   Card,
+  ConfirmDialog,
   Input,
   Modal,
   Select,
@@ -30,7 +32,12 @@ import { EditarEspacioModal } from '../components/EditarEspacioModal';
 import { EspacioForm } from '../components/EspacioForm';
 import { EspaciosCatalogo } from '../components/EspaciosCatalogo';
 import { EspaciosTable, type CampoOrdenEspacio } from '../components/EspaciosTable';
-import { useAgregarBloqueo, useCrearEspacio, useEspacios } from '../hooks/useEspacios';
+import {
+  useAgregarBloqueo,
+  useCrearEspacio,
+  useEliminarEspacio,
+  useEspacios,
+} from '../hooks/useEspacios';
 import {
   MODALIDAD_RESERVA_LABELS,
   TIPO_ESPACIO_LABELS,
@@ -93,6 +100,8 @@ export function EspaciosPage() {
   const [modalCrearAbierto, setModalCrearAbierto] = useState(false);
   const [espacioBloqueo, setEspacioBloqueo] = useState<Espacio | null>(null);
   const [espacioEditando, setEspacioEditando] = useState<Espacio | null>(null);
+  const [espacioAEliminar, setEspacioAEliminar] = useState<Espacio | null>(null);
+  const [errorBajaEspacio, setErrorBajaEspacio] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
   // Debounce de 300ms en la búsqueda (ESTANDARES_CRUD_FULLSTACK.md)
@@ -121,6 +130,7 @@ export function EspaciosPage() {
 
   const crearEspacio = useCrearEspacio();
   const agregarBloqueo = useAgregarBloqueo();
+  const eliminarEspacio = useEliminarEspacio();
 
   const itemsRaw: Espacio[] = useMemo(
     () => (Array.isArray(data) ? data : (data?.items ?? [])),
@@ -252,6 +262,31 @@ export function EspaciosPage() {
     await agregarBloqueo.mutateAsync({ espacioId, payload });
   };
 
+  const handleConfirmarBaja = async () => {
+    if (errorBajaEspacio) {
+      setEspacioAEliminar(null);
+      setErrorBajaEspacio(null);
+      return;
+    }
+
+    if (!espacioAEliminar) return;
+
+    try {
+      await eliminarEspacio.mutateAsync(espacioAEliminar.id);
+      setMensajeExito(
+        `El espacio "${espacioAEliminar.nombre}" fue dado de baja correctamente.`,
+      );
+      setEspacioAEliminar(null);
+      setErrorBajaEspacio(null);
+    } catch (err: any) {
+      const msj =
+        err?.response?.data?.message ||
+        err?.message ||
+        'No se puede dar de baja el espacio porque tiene reservas futuras activas o pendientes.';
+      setErrorBajaEspacio(msj);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -374,6 +409,51 @@ export function EspaciosPage() {
         onSubmit={handleAgregarBloqueo}
         guardando={agregarBloqueo.isPending}
       />
+
+      {/* Diálogo de Confirmación para Baja Lógica (US-57) */}
+      <ConfirmDialog
+        open={espacioAEliminar !== null}
+        title="Dar de baja espacio físico"
+        variant="danger"
+        confirmLabel={errorBajaEspacio ? 'Entendido' : 'Dar de baja'}
+        cancelLabel={errorBajaEspacio ? undefined : 'Cancelar'}
+        loading={eliminarEspacio.isPending}
+        onConfirm={handleConfirmarBaja}
+        onCancel={() => {
+          setEspacioAEliminar(null);
+          setErrorBajaEspacio(null);
+        }}
+      >
+        {errorBajaEspacio ? (
+          <div className="space-y-3">
+            <div
+              role="alert"
+              data-testid="alerta-conflicto-baja"
+              className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs text-rose-900"
+            >
+              <AlertTriangle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-semibold">No es posible dar de baja el espacio:</strong>
+                <p className="mt-0.5">{errorBajaEspacio}</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500">
+              Debés resolver o cancelar previamente las reservas pendientes o aprobadas que involucran a este espacio o sus sub-espacios antes de poder darlo de baja.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-600">
+            ¿Estás seguro de que deseás dar de baja el espacio{' '}
+            <strong>"{espacioAEliminar?.nombre}"</strong>?
+            {espacioAEliminar?.subespacios && espacioAEliminar.subespacios.length > 0 && (
+              <span>
+                {' '}También se darán de baja automáticamente sus{' '}
+                <strong>{espacioAEliminar.subespacios.length} sub-espacios</strong> asociados.
+              </span>
+            )}
+          </p>
+        )}
+      </ConfirmDialog>
 
       {/* Renderizado Condicional: Vista Catálogo vs Vista Grilla Administrativa */}
       {modoVista === 'catalogo' ? (
@@ -507,6 +587,7 @@ export function EspaciosPage() {
                 orden={orden}
                 onOrdenar={handleOrdenar}
                 onEditar={setEspacioEditando}
+                onEliminar={setEspacioAEliminar}
                 onConfigurarBloqueo={setEspacioBloqueo}
               />
               <TablePagination
