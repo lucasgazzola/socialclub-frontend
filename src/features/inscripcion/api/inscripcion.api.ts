@@ -3,6 +3,7 @@ import type {
   ActualizarDatosPersonaPayload,
   ActivacionParticipanteResultado,
   BajaParticipanteResultado,
+  CatalogoInscripcionResponse,
   CrearInscripcionPayload,
   InscripcionCreada,
   Inscripcion,
@@ -11,6 +12,8 @@ import type {
   ParticipanteEncontrado,
   PersonaActualizada,
   RequisitosInscripcion,
+  SolicitarInscripcionPayload,
+  SolicitudInscripcion,
 } from '../types';
 import type {
   CrearHabilitacionExcepcionalPayload,
@@ -128,5 +131,25 @@ export async function listarHabilitacionesExcepcionales(
   const { data } = await apiClient.get<HabilitacionExcepcional[]>(
     `/inscripcion/${inscripcionId}/habilitaciones-excepcionales`,
   );
+  return data;
+}
+
+/** US-63: obtener catálogo de disciplinas y categorías activas para postulación. */
+export async function obtenerCatalogoInscripcion(): Promise<CatalogoInscripcionResponse> {
+  const { data } = await apiClient.get<CatalogoInscripcionResponse>('/inscripcion/catalogo');
+  return data;
+}
+
+/** US-63: solicitar inscripción a una disciplina y categoría. */
+export async function solicitarInscripcion(
+  payload: SolicitarInscripcionPayload,
+): Promise<SolicitudInscripcion> {
+  const { data } = await apiClient.post<SolicitudInscripcion>('/inscripcion/solicitar', payload);
+  return data;
+}
+
+/** US-63: listar solicitudes de inscripción del socio autenticado. */
+export async function obtenerMisSolicitudesInscripcion(): Promise<SolicitudInscripcion[]> {
+  const { data } = await apiClient.get<SolicitudInscripcion[]>('/inscripcion/mis-solicitudes');
   return data;
 }

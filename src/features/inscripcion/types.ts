@@ -210,3 +210,67 @@ export interface PersonaActualizada {
   dni: string;
   activo: boolean;
 }
+
+// ── US-63: Solicitud de inscripción ──────────────────────────────────
+
+export type EstadoSolicitudInscripcion = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'CANCELADA';
+
+export interface DocumentoRequeridoCatalogo {
+  tipoDocumento: TipoDocumentacionDisciplina;
+  nombre: string;
+  plazoDiasTolerancia: number;
+}
+
+export interface CategoriaCatalogo {
+  id: number;
+  nombre: string;
+  genero: GeneroDisciplina | null;
+  edadMinima: number | null;
+  edadMaxima: number | null;
+  arancelMensual: number;
+  documentosObligatorios: DocumentoRequeridoCatalogo[];
+  cumpleRestricciones: boolean;
+  motivosIncumplimiento: string[];
+}
+
+export interface DisciplinaCatalogo {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  genero: GeneroDisciplina | null;
+  edadMinima: number | null;
+  edadMaxima: number | null;
+  solicitaDocumentacion: boolean;
+  arancelMensual: number;
+  descuentoSocioPorcentaje: number;
+  documentosObligatorios: DocumentoRequeridoCatalogo[];
+  categorias: CategoriaCatalogo[];
+  cumpleRestricciones: boolean;
+  motivosIncumplimiento: string[];
+  inscripto: boolean;
+  solicitudPendiente: boolean;
+}
+
+export interface CatalogoInscripcionResponse {
+  esSocio: boolean;
+  items: DisciplinaCatalogo[];
+}
+
+export interface SolicitarInscripcionPayload {
+  disciplinaId: number;
+  categoriaDisciplinaId?: number;
+}
+
+export interface SolicitudInscripcion {
+  id: number;
+  personaId: number;
+  disciplinaId: number;
+  categoriaDisciplinaId: number | null;
+  estado: EstadoSolicitudInscripcion;
+  fechaSolicitud: string;
+  fechaResolucion: string | null;
+  motivoRechazo: string | null;
+  disciplina: { id: number; nombre: string; descripcion?: string | null };
+  categoriaDisciplina?: { id: number; nombre: string } | null;
+  persona?: { id: number; nombre: string; apellido: string; dni: string };
+}
