@@ -122,6 +122,8 @@ export interface CreateEspacioPayload {
 export interface FindEspaciosQuery {
   tipo?: TipoEspacio;
   modalidad?: ModalidadReserva;
+  capacidadMin?: number;
+  capacidadMax?: number;
   estado?: EstadoEspacioFiltro;
   activo?: boolean;
   busqueda?: string;

@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Building2, CheckCircle2, Filter, Plus, Search, X } from 'lucide-react';
+import {
+  Building2,
+  CheckCircle2,
+  Filter,
+  LayoutGrid,
+  List,
+  Plus,
+  Search,
+  X,
+} from 'lucide-react';
 import {
   Button,
   Card,
@@ -13,10 +22,12 @@ import {
   type SentidoOrden,
 } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { cn } from '@/lib/utils/cn';
 import type { ExportColumn } from '@/lib/utils/exportTable';
 import { espaciosApi } from '../api/espacios.api';
 import { ConfigurarBloqueoModal } from '../components/ConfigurarBloqueoModal';
 import { EspacioForm } from '../components/EspacioForm';
+import { EspaciosCatalogo } from '../components/EspaciosCatalogo';
 import { EspaciosTable, type CampoOrdenEspacio } from '../components/EspaciosTable';
 import { useAgregarBloqueo, useCrearEspacio, useEspacios } from '../hooks/useEspacios';
 import {
@@ -26,6 +37,7 @@ import {
   type CreateEspacioPayload,
   type Espacio,
   type EstadoEspacioFiltro,
+  type ModalidadReserva,
   type TipoEspacio,
 } from '../types';
 
@@ -56,12 +68,22 @@ const COLUMNAS_EXPORT_ESPACIOS: ExportColumn<Espacio>[] = [
 
 export function EspaciosPage() {
   const { usuario } = useAuth();
+  const esAdminOColaborador =
+    usuario?.roles.some((r) => r === 'ADMIN' || r === 'COLABORADOR') ?? false;
   const puedeMutar = !usuario || usuario.roles.includes('ADMIN');
+  const esSocio = usuario?.roles.includes('SOCIO') ?? false;
+
+  const [modoVista, setModoVista] = useState<'tabla' | 'catalogo'>(
+    esAdminOColaborador ? 'tabla' : 'catalogo',
+  );
 
   const [filtroEstado, setFiltroEstado] = useState<EstadoEspacioFiltro>('todos');
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState<TipoEspacio | ''>('');
+  const [modalidadFiltro, setModalidadFiltro] = useState<ModalidadReserva | ''>('');
+  const [capacidadMinFiltro, setCapacidadMinFiltro] = useState<number | ''>('');
+
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
   const [ordenarPor, setOrdenarPor] = useState<CampoOrdenEspacio | undefined>(undefined);
@@ -85,10 +107,12 @@ export function EspaciosPage() {
   const { data, isLoading, isError, error, isFetching } = useEspacios({
     busqueda: busqueda || undefined,
     tipo: tipoFiltro || undefined,
-    estado: filtroEstado,
+    modalidad: modalidadFiltro || undefined,
+    capacidadMin: capacidadMinFiltro !== '' ? capacidadMinFiltro : undefined,
+    estado: esAdminOColaborador && modoVista === 'tabla' ? filtroEstado : 'activos',
     soloRaiz: busqueda ? undefined : true,
-    pagina,
-    porPagina,
+    pagina: modoVista === 'tabla' ? pagina : 1,
+    porPagina: modoVista === 'tabla' ? porPagina : 24,
     ordenarPor,
     orden,
   });
@@ -149,6 +173,15 @@ export function EspaciosPage() {
       setOrdenarPor(campo);
       setOrden('asc');
     }
+    setPagina(1);
+  }
+
+  function handleLimpiarFiltros() {
+    setTextoInput('');
+    setBusqueda('');
+    setTipoFiltro('');
+    setModalidadFiltro('');
+    setCapacidadMinFiltro('');
     setPagina(1);
   }
 
@@ -223,19 +256,63 @@ export function EspaciosPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Espacios físicos</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Administrá las instalaciones del club, sus sub-espacios, disciplinas compatibles y bloqueos de agenda.
+            {esAdminOColaborador && modoVista === 'tabla'
+              ? 'Administrá las instalaciones del club, sus sub-espacios, disciplinas compatibles y bloqueos de agenda.'
+              : 'Consultá los espacios físicos disponibles del club para actividades deportivas, sociales y alquileres.'}
           </p>
         </div>
 
-        {puedeMutar && (
-          <Button
-            onClick={() => setModalCrearAbierto(true)}
-            className="self-start shadow-xs sm:self-auto"
-          >
-            <Plus size={16} aria-hidden="true" />
-            Nuevo espacio
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Selector de Modo de Vista para Administradores y Colaboradores */}
+          {esAdminOColaborador && (
+            <div
+              role="radiogroup"
+              aria-label="Modo de vista"
+              className="inline-flex rounded-lg border border-slate-200/80 bg-slate-100 p-0.5 text-xs font-medium"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={modoVista === 'tabla'}
+                onClick={() => setModoVista('tabla')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors',
+                  modoVista === 'tabla'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900',
+                )}
+              >
+                <List size={14} aria-hidden="true" />
+                <span>Grilla</span>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={modoVista === 'catalogo'}
+                onClick={() => setModoVista('catalogo')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors',
+                  modoVista === 'catalogo'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900',
+                )}
+              >
+                <LayoutGrid size={14} aria-hidden="true" />
+                <span>Catálogo</span>
+              </button>
+            </div>
+          )}
+
+          {puedeMutar && (
+            <Button
+              onClick={() => setModalCrearAbierto(true)}
+              className="self-start shadow-xs sm:self-auto"
+            >
+              <Plus size={16} aria-hidden="true" />
+              Nuevo espacio
+            </Button>
+          )}
+        </div>
       </header>
 
       {mensajeExito && (
@@ -285,111 +362,152 @@ export function EspaciosPage() {
         guardando={agregarBloqueo.isPending}
       />
 
-      {/* Controles de filtro y búsqueda (Patrón US-04 / ESTANDARES_CRUD_FULLSTACK.md) */}
-      <div className="space-y-3">
-        <div>
-          <StatusTabs<EstadoEspacioFiltro>
-            value={filtroEstado}
-            onChange={(val) => {
-              setFiltroEstado(val);
+      {/* Renderizado Condicional: Vista Catálogo vs Vista Grilla Administrativa */}
+      {modoVista === 'catalogo' ? (
+        isLoading ? (
+          <div className="flex justify-center py-12">
+            <Spinner className="h-6 w-6" />
+          </div>
+        ) : isError ? (
+          <Card className="border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
+            {error instanceof Error ? error.message : 'No se pudieron cargar los espacios físicos.'}
+          </Card>
+        ) : (
+          <EspaciosCatalogo
+            espacios={itemsRaw}
+            cargando={isLoading}
+            busqueda={textoInput}
+            onBusquedaChange={setTextoInput}
+            tipoFiltro={tipoFiltro}
+            onTipoFiltroChange={(v) => {
+              setTipoFiltro(v);
               setPagina(1);
             }}
-            tabs={[
-              { value: 'todos', label: 'Todos', count: counts.todos },
-              { value: 'activos', label: 'Activos', count: counts.activos },
-              { value: 'inactivos', label: 'Inactivos', count: counts.inactivos },
-            ]}
+            modalidadFiltro={modalidadFiltro}
+            onModalidadFiltroChange={(m) => {
+              setModalidadFiltro(m);
+              setPagina(1);
+            }}
+            capacidadMinFiltro={capacidadMinFiltro}
+            onCapacidadMinFiltroChange={(c) => {
+              setCapacidadMinFiltro(c);
+              setPagina(1);
+            }}
+            onLimpiarFiltros={handleLimpiarFiltros}
+            esSocio={esSocio}
           />
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="w-full sm:max-w-xs">
-            <Input
-              id="busqueda-espacios"
-              placeholder="Buscar por nombre o ubicación..."
-              value={textoInput}
-              onChange={(e) => setTextoInput(e.target.value)}
-              leftIcon={<Search />}
-            />
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <TableExportMenu<Espacio>
-              filename="espacios-fisicos"
-              title="Espacios físicos"
-              disabled={isLoading && !data}
-              columns={COLUMNAS_EXPORT_ESPACIOS}
-              fetchRows={async () => {
-                const res = await espaciosApi.list({
-                  busqueda: busqueda || undefined,
-                  tipo: tipoFiltro || undefined,
-                  estado: filtroEstado,
-                  soloRaiz: busqueda ? undefined : true,
-                  pagina: 1,
-                  porPagina: 100,
-                  ordenarPor,
-                  orden,
-                });
-                return Array.isArray(res) ? res : (res?.items ?? []);
-              }}
-            />
-
-            <Select
-              id="filtro-tipo-espacio"
-              aria-label="Filtrar por tipo de espacio"
-              value={tipoFiltro}
-              onChange={(e) => {
-                setTipoFiltro(e.target.value as TipoEspacio | '');
-                setPagina(1);
-              }}
-              leftIcon={<Filter />}
-              className="w-full sm:w-52"
-            >
-              <option value="">Todos los tipos</option>
-              {(Object.keys(TIPO_ESPACIO_LABELS) as TipoEspacio[]).map((t) => (
-                <option key={t} value={t}>
-                  {TIPO_ESPACIO_LABELS[t]}
-                </option>
-              ))}
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Spinner className="h-6 w-6" />
-        </div>
-      ) : isError ? (
-        <Card className="border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
-          {error instanceof Error ? error.message : 'No se pudieron cargar los espacios físicos.'}
-        </Card>
-      ) : espaciosPaginados.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-slate-500">
-          <Building2 className="mx-auto mb-2 text-slate-300" size={28} />
-          No hay espacios físicos que coincidan con los filtros.
-        </Card>
+        )
       ) : (
-        <div>
-          <EspaciosTable
-            espacios={espaciosPaginados}
-            puedeMutar={puedeMutar}
-            ordenarPor={ordenarPor}
-            orden={orden}
-            onOrdenar={handleOrdenar}
-            onConfigurarBloqueo={setEspacioBloqueo}
-          />
-          <TablePagination
-            pagina={pagina}
-            porPagina={porPagina}
-            total={totalEspacios}
-            isFetching={isFetching}
-            onChangePagina={setPagina}
-            onChangePorPagina={(nuevo) => {
-              setPorPagina(nuevo);
-              setPagina(1);
-            }}
-          />
+        /* Vista Grilla Administrativa (ADMIN / COLABORADOR) */
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div>
+              <StatusTabs<EstadoEspacioFiltro>
+                value={filtroEstado}
+                onChange={(val) => {
+                  setFiltroEstado(val);
+                  setPagina(1);
+                }}
+                tabs={[
+                  { value: 'todos', label: 'Todos', count: counts.todos },
+                  { value: 'activos', label: 'Activos', count: counts.activos },
+                  { value: 'inactivos', label: 'Inactivos', count: counts.inactivos },
+                ]}
+              />
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="w-full sm:max-w-xs">
+                <Input
+                  id="busqueda-espacios"
+                  placeholder="Buscar por nombre o ubicación..."
+                  value={textoInput}
+                  onChange={(e) => setTextoInput(e.target.value)}
+                  leftIcon={<Search />}
+                />
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <TableExportMenu<Espacio>
+                  filename="espacios-fisicos"
+                  title="Espacios físicos"
+                  disabled={isLoading && !data}
+                  columns={COLUMNAS_EXPORT_ESPACIOS}
+                  fetchRows={async () => {
+                    const res = await espaciosApi.list({
+                      busqueda: busqueda || undefined,
+                      tipo: tipoFiltro || undefined,
+                      estado: filtroEstado,
+                      soloRaiz: busqueda ? undefined : true,
+                      pagina: 1,
+                      porPagina: 100,
+                      ordenarPor,
+                      orden,
+                    });
+                    return Array.isArray(res) ? res : (res?.items ?? []);
+                  }}
+                />
+
+                <Select
+                  id="filtro-tipo-espacio"
+                  aria-label="Filtrar por tipo de espacio"
+                  value={tipoFiltro}
+                  onChange={(e) => {
+                    setTipoFiltro(e.target.value as TipoEspacio | '');
+                    setPagina(1);
+                  }}
+                  leftIcon={<Filter />}
+                  className="w-full sm:w-52"
+                >
+                  <option value="">Todos los tipos</option>
+                  {(Object.keys(TIPO_ESPACIO_LABELS) as TipoEspacio[]).map((t) => (
+                    <option key={t} value={t}>
+                      {TIPO_ESPACIO_LABELS[t]}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="h-6 w-6" />
+            </div>
+          ) : isError ? (
+            <Card className="border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
+              {error instanceof Error
+                ? error.message
+                : 'No se pudieron cargar los espacios físicos.'}
+            </Card>
+          ) : espaciosPaginados.length === 0 ? (
+            <Card className="p-8 text-center text-sm text-slate-500">
+              <Building2 className="mx-auto mb-2 text-slate-300" size={28} />
+              No hay espacios físicos que coincidan con los filtros.
+            </Card>
+          ) : (
+            <div>
+              <EspaciosTable
+                espacios={espaciosPaginados}
+                puedeMutar={puedeMutar}
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={handleOrdenar}
+                onConfigurarBloqueo={setEspacioBloqueo}
+              />
+              <TablePagination
+                pagina={pagina}
+                porPagina={porPagina}
+                total={totalEspacios}
+                isFetching={isFetching}
+                onChangePagina={setPagina}
+                onChangePorPagina={(nuevo) => {
+                  setPorPagina(nuevo);
+                  setPagina(1);
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
