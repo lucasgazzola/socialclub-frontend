@@ -11,6 +11,9 @@ import {
   listarInscripciones,
   darDeBajaParticipante,
   activarParticipante,
+  obtenerCatalogoInscripcion,
+  solicitarInscripcion,
+  obtenerMisSolicitudesInscripcion,
 } from './inscripcion.api';
 
 vi.mock('@/lib/api/client', () => ({
@@ -107,5 +110,32 @@ describe('inscripcion.api', () => {
     const res = await activarParticipante(10);
     expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/persona/10/activar');
     expect(res).toEqual({ ok: true });
+  });
+
+  it('obtenerCatalogoInscripcion() envía get a /inscripcion/catalogo', async () => {
+    const catalogoMock = { esSocio: true, items: [] };
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: catalogoMock });
+    const res = await obtenerCatalogoInscripcion();
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/catalogo');
+    expect(res).toEqual(catalogoMock);
+  });
+
+  it('solicitarInscripcion() envía post a /inscripcion/solicitar', async () => {
+    const solicitudMock = { id: 1, disciplinaId: 5, estado: 'PENDIENTE' };
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: solicitudMock });
+    const res = await solicitarInscripcion({ disciplinaId: 5, categoriaDisciplinaId: 10 });
+    expect(apiClient.post).toHaveBeenCalledWith('/inscripcion/solicitar', {
+      disciplinaId: 5,
+      categoriaDisciplinaId: 10,
+    });
+    expect(res).toEqual(solicitudMock);
+  });
+
+  it('obtenerMisSolicitudesInscripcion() envía get a /inscripcion/mis-solicitudes', async () => {
+    const listaMock = [{ id: 1, estado: 'PENDIENTE' }];
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: listaMock });
+    const res = await obtenerMisSolicitudesInscripcion();
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/mis-solicitudes');
+    expect(res).toEqual(listaMock);
   });
 });

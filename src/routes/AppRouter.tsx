@@ -35,6 +35,7 @@ import { ReporteAsistenciaPage } from '@/features/reportes/pages/ReporteAsistenc
 import { DisciplinasPage } from '@/features/disciplinas/pages/DisciplinasPage';
 import { CategoriasDisciplinaPage } from '@/features/disciplinas/pages/CategoriasDisciplinaPage';
 import { MiDocumentacionPage } from '@/features/documentacion/pages/MiDocumentacionPage';
+import { SolicitarInscripcionPage } from '@/features/inscripcion/pages/SolicitarInscripcionPage';
 import { ROUTES } from './paths';
 
 export function AppRouter() {
@@ -64,6 +65,7 @@ export function AppRouter() {
           <Route path={ROUTES.resultadoPago} element={<ResultadoPagoPage />} />
           <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />
           <Route path={ROUTES.miDocumentacion} element={<MiDocumentacionPage />} />
+          <Route path={ROUTES.solicitarInscripcion} element={<SolicitarInscripcionPage />} />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />

@@ -79,6 +79,7 @@ const navSections: NavSection[] = [
       { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
       { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
       { to: ROUTES.misReservas, label: 'Mis reservas', icon: CalendarClock },
+      { to: ROUTES.solicitarInscripcion, label: 'Inscribirme a disciplina', icon: Dumbbell },
       { to: ROUTES.miDocumentacion, label: 'Mi documentación', icon: FileText },
       {
         to: ROUTES.participantes,
@@ -158,6 +159,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.misEntradas]: 'Mis Entradas',
   [ROUTES.misReservas]: 'Mis Reservas',
   [ROUTES.solicitudesReserva]: 'Solicitudes de Reserva',
+  [ROUTES.solicitarInscripcion]: 'Solicitar Inscripción',
   [ROUTES.miDocumentacion]: 'Mi Documentación',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',
