@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import {
   AlertTriangle,
   Building2,
   CheckCircle2,
   Filter,
-  LayoutGrid,
-  List,
   Plus,
   Search,
   X,
@@ -24,7 +23,6 @@ import {
   type SentidoOrden,
 } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { cn } from '@/lib/utils/cn';
 import type { ExportColumn } from '@/lib/utils/exportTable';
 import { espaciosApi } from '../api/espacios.api';
 import { ConfigurarBloqueoModal } from '../components/ConfigurarBloqueoModal';
@@ -37,6 +35,7 @@ import {
   useCrearEspacio,
   useEliminarEspacio,
   useEspacios,
+  useReactivarEspacio,
 } from '../hooks/useEspacios';
 import {
   MODALIDAD_RESERVA_LABELS,
@@ -80,10 +79,7 @@ export function EspaciosPage() {
     usuario?.roles.some((r) => r === 'ADMIN' || r === 'COLABORADOR') ?? false;
   const puedeMutar = !usuario || usuario.roles.includes('ADMIN');
   const esSocio = usuario?.roles.includes('SOCIO') ?? false;
-
-  const [modoVista, setModoVista] = useState<'tabla' | 'catalogo'>(
-    esAdminOColaborador ? 'tabla' : 'catalogo',
-  );
+  const modoVista: 'tabla' | 'catalogo' = esAdminOColaborador ? 'tabla' : 'catalogo';
 
   const [filtroEstado, setFiltroEstado] = useState<EstadoEspacioFiltro>('todos');
   const [textoInput, setTextoInput] = useState('');
@@ -100,7 +96,11 @@ export function EspaciosPage() {
   const [modalCrearAbierto, setModalCrearAbierto] = useState(false);
   const [espacioBloqueo, setEspacioBloqueo] = useState<Espacio | null>(null);
   const [espacioEditando, setEspacioEditando] = useState<Espacio | null>(null);
+  const [tabInicialEdicion, setTabInicialEdicion] = useState<
+    'datos' | 'subespacios' | 'bloqueos'
+  >('datos');
   const [espacioAEliminar, setEspacioAEliminar] = useState<Espacio | null>(null);
+  const [espacioAReactivar, setEspacioAReactivar] = useState<Espacio | null>(null);
   const [errorBajaEspacio, setErrorBajaEspacio] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
@@ -131,6 +131,7 @@ export function EspaciosPage() {
   const crearEspacio = useCrearEspacio();
   const agregarBloqueo = useAgregarBloqueo();
   const eliminarEspacio = useEliminarEspacio();
+  const reactivarEspacio = useReactivarEspacio();
 
   const itemsRaw: Espacio[] = useMemo(
     () => (Array.isArray(data) ? data : (data?.items ?? [])),
@@ -287,69 +288,44 @@ export function EspaciosPage() {
     }
   };
 
+  const handleConfirmarReactivacion = async () => {
+    if (!espacioAReactivar) return;
+    try {
+      await reactivarEspacio.mutateAsync(espacioAReactivar.id);
+      setMensajeExito(
+        `El espacio "${espacioAReactivar.nombre}" fue reactivado exitosamente.`,
+      );
+      setEspacioAReactivar(null);
+    } catch (err: any) {
+      const msj =
+        err?.response?.data?.message ||
+        err?.message ||
+        'No se pudo reactivar el espacio físico.';
+      toast.error(Array.isArray(msj) ? msj.join(', ') : msj);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Espacios físicos</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {esAdminOColaborador && modoVista === 'tabla'
+            {esAdminOColaborador
               ? 'Administrá las instalaciones del club, sus sub-espacios, disciplinas compatibles y bloqueos de agenda.'
               : 'Consultá los espacios físicos disponibles del club para actividades deportivas, sociales y alquileres.'}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Selector de Modo de Vista para Administradores y Colaboradores */}
-          {esAdminOColaborador && (
-            <div
-              role="radiogroup"
-              aria-label="Modo de vista"
-              className="inline-flex rounded-lg border border-slate-200/80 bg-slate-100 p-0.5 text-xs font-medium"
-            >
-              <button
-                type="button"
-                role="radio"
-                aria-checked={modoVista === 'tabla'}
-                onClick={() => setModoVista('tabla')}
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors',
-                  modoVista === 'tabla'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900',
-                )}
-              >
-                <List size={14} aria-hidden="true" />
-                <span>Grilla</span>
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={modoVista === 'catalogo'}
-                onClick={() => setModoVista('catalogo')}
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors',
-                  modoVista === 'catalogo'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900',
-                )}
-              >
-                <LayoutGrid size={14} aria-hidden="true" />
-                <span>Catálogo</span>
-              </button>
-            </div>
-          )}
-
-          {puedeMutar && (
-            <Button
-              onClick={() => setModalCrearAbierto(true)}
-              className="self-start shadow-xs sm:self-auto"
-            >
-              <Plus size={16} aria-hidden="true" />
-              Nuevo espacio
-            </Button>
-          )}
-        </div>
+        {puedeMutar && (
+          <Button
+            onClick={() => setModalCrearAbierto(true)}
+            className="self-start shadow-xs sm:self-auto"
+          >
+            <Plus size={16} aria-hidden="true" />
+            Nuevo espacio
+          </Button>
+        )}
       </header>
 
       {mensajeExito && (
@@ -394,7 +370,11 @@ export function EspaciosPage() {
       <EditarEspacioModal
         espacio={espacioEditando}
         open={espacioEditando !== null}
-        onClose={() => setEspacioEditando(null)}
+        initialTab={tabInicialEdicion}
+        onClose={() => {
+          setEspacioEditando(null);
+          setTabInicialEdicion('datos');
+        }}
         onSuccess={() => {
           setMensajeExito(
             `El espacio "${espacioEditando?.nombre}" fue actualizado exitosamente.`,
@@ -453,6 +433,29 @@ export function EspaciosPage() {
             )}
           </p>
         )}
+      </ConfirmDialog>
+
+      {/* Diálogo de Confirmación de Reactivación (US-57) */}
+      <ConfirmDialog
+        open={espacioAReactivar !== null}
+        title="Reactivar espacio físico"
+        confirmLabel="Reactivar espacio"
+        cancelLabel="Cancelar"
+        variant="success"
+        loading={reactivarEspacio.isPending}
+        onConfirm={handleConfirmarReactivacion}
+        onCancel={() => setEspacioAReactivar(null)}
+      >
+        <p className="text-sm text-slate-600">
+          ¿Estás seguro de que deseás volver a habilitar el espacio{' '}
+          <strong>"{espacioAReactivar?.nombre}"</strong>?
+          {espacioAReactivar?.subespacios && espacioAReactivar.subespacios.length > 0 && (
+            <span>
+              {' '}También se reactivarán automáticamente sus{' '}
+              <strong>{espacioAReactivar.subespacios.length} sub-espacios</strong> asociados.
+            </span>
+          )}
+        </p>
       </ConfirmDialog>
 
       {/* Renderizado Condicional: Vista Catálogo vs Vista Grilla Administrativa */}
@@ -586,9 +589,12 @@ export function EspaciosPage() {
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={handleOrdenar}
-                onEditar={setEspacioEditando}
+                onEditar={(esp, tab) => {
+                  setTabInicialEdicion(tab ?? 'datos');
+                  setEspacioEditando(esp);
+                }}
                 onEliminar={setEspacioAEliminar}
-                onConfigurarBloqueo={setEspacioBloqueo}
+                onReactivar={setEspacioAReactivar}
               />
               <TablePagination
                 pagina={pagina}

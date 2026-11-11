@@ -2,14 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/test-utils';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { EspaciosPage } from './EspaciosPage';
 import { espaciosApi } from '../api/espacios.api';
 import type { Espacio } from '../types';
 
 vi.mock('@/features/auth/hooks/useAuth', () => ({
-  useAuth: () => ({
-    usuario: { id: 1, nombre: 'Admin', apellido: 'Club', roles: ['ADMIN'] },
-  }),
+  useAuth: vi.fn(),
 }));
 
 vi.mock('@/features/disciplinas/hooks/useDisciplinasActivas', () => ({
@@ -33,6 +32,7 @@ vi.mock('../api/espacios.api', () => ({
     agregarBloqueo: vi.fn(),
     updateBloqueo: vi.fn(),
     deleteBloqueo: vi.fn(),
+    reactivar: vi.fn(),
   },
 }));
 
@@ -70,6 +70,9 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useAuth).mockReturnValue({
+      usuario: { id: 1, nombre: 'Admin', apellido: 'Club', roles: ['ADMIN'] },
+    } as any);
     vi.mocked(espaciosApi.list).mockResolvedValue({
       items: espaciosMock,
       total: 2,
@@ -102,15 +105,11 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
     expect(screen.getByText('Nuevo espacio físico')).toBeInTheDocument();
   });
 
-  it('permite alternar a la vista Catálogo y muestra tarjetas con tarifas diferenciadas y botón de alquiler', async () => {
-    const user = userEvent.setup();
+  it('muestra la vista Catálogo para rol SOCIO con tarjetas, tarifas diferenciadas y botón de alquiler', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      usuario: { id: 2, nombre: 'Socio', apellido: 'Club', roles: ['SOCIO'] },
+    } as any);
     renderWithProviders(<EspaciosPage />);
-
-    expect(await screen.findByText('Cancha de Fútbol 5 Norte')).toBeInTheDocument();
-
-    // Alternar a vista Catálogo
-    const btnCatalogo = screen.getByRole('radio', { name: /Catálogo/i });
-    await user.click(btnCatalogo);
 
     // Debe mostrar tarjetas de catálogo
     expect(await screen.findByTestId('catalogo-card-1')).toBeInTheDocument();
@@ -121,7 +120,10 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
     expect(screen.getAllByRole('button', { name: /Solicitar alquiler/i })).toHaveLength(2);
   });
 
-  it('muestra mensaje claro cuando no hay resultados en el catálogo', async () => {
+  it('muestra mensaje claro cuando no hay resultados en el catálogo para rol SOCIO', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      usuario: { id: 2, nombre: 'Socio', apellido: 'Club', roles: ['SOCIO'] },
+    } as any);
     vi.mocked(espaciosApi.list).mockResolvedValue({
       items: [],
       total: 0,
@@ -131,10 +133,6 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
     });
 
     renderWithProviders(<EspaciosPage />);
-
-    const user = userEvent.setup();
-    const btnCatalogo = await screen.findByRole('radio', { name: /Catálogo/i });
-    await user.click(btnCatalogo);
 
     expect(await screen.findByText('No se encontraron resultados')).toBeInTheDocument();
   });
@@ -147,34 +145,42 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
       ),
       { status: 409 },
     );
+    vi.mocked(espaciosApi.getById).mockResolvedValue({
+      ...espaciosMock[0],
+      bloqueos: [],
+    });
     vi.mocked(espaciosApi.agregarBloqueo).mockRejectedValue(err409);
 
     renderWithProviders(<EspaciosPage />);
 
     expect(await screen.findByText('Cancha de Fútbol 5 Norte')).toBeInTheDocument();
 
-    const botonesBloqueos = screen.getAllByRole('button', { name: /Bloqueos/i });
-    await user.click(botonesBloqueos[0]);
+    const botonesEditar = screen.getAllByRole('button', { name: /Editar/i });
+    await user.click(botonesEditar[0]);
 
-    expect(
-      screen.getByText(/Configurar bloqueo · Cancha de Fútbol 5 Norte/i),
-    ).toBeInTheDocument();
+    const tabBloqueos = await screen.findByRole('button', { name: /Bloqueos de agenda/i });
+    await user.click(tabBloqueos);
+
+    await user.click(screen.getByRole('button', { name: /Nuevo bloqueo/i }));
 
     // Seleccionar Puntual y completar
     await user.selectOptions(screen.getByLabelText(/Tipo de bloqueo/i), 'PUNTUAL');
     await user.type(screen.getByLabelText(/Fecha específica/i), '2026-11-20');
     await user.type(screen.getByLabelText(/Motivo del bloqueo/i), 'Mantenimiento');
 
-    await user.click(screen.getByRole('button', { name: /Guardar bloqueo/i }));
+    await user.click(screen.getByRole('button', { name: /Crear bloqueo/i }));
 
     await waitFor(() => {
-      expect(espaciosApi.agregarBloqueo).toHaveBeenCalledWith(1, {
-        tipo: 'PUNTUAL',
-        fecha: '2026-11-20',
-        horaInicio: '18:00',
-        horaFin: '20:00',
-        motivo: 'Mantenimiento',
-      });
+      expect(espaciosApi.agregarBloqueo).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          tipo: 'PUNTUAL',
+          fecha: '2026-11-20',
+          horaInicio: '18:00',
+          horaFin: '20:00',
+          motivo: 'Mantenimiento',
+        }),
+      );
     });
 
     const alerta = await screen.findByTestId('alerta-conflicto-bloqueo');
@@ -243,6 +249,52 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
       const alerta = await screen.findByTestId('alerta-conflicto-baja');
       expect(alerta).toHaveTextContent(/RES-001, RES-002/);
       expect(alerta).toHaveTextContent(/No es posible dar de baja el espacio/i);
+    });
+
+    it('muestra diálogo de confirmación y llama a PATCH /espacios/:id/reactivar al confirmar', async () => {
+      const espaciosConInactivo: Espacio[] = [
+        {
+          ...espaciosMock[0],
+          id: 3,
+          nombre: 'Cancha 3 Inactiva',
+          activo: false,
+        },
+      ];
+      vi.mocked(espaciosApi.list).mockResolvedValue({
+        items: espaciosConInactivo,
+        total: 1,
+        pagina: 1,
+        porPagina: 10,
+        counts: { todos: 1, activos: 0, inactivos: 1 },
+      });
+      vi.mocked(espaciosApi.reactivar).mockResolvedValue({
+        mensaje: 'Espacio reactivado exitosamente',
+        id: 3,
+      });
+
+      const user = userEvent.setup();
+      renderWithProviders(<EspaciosPage />);
+
+      expect(await screen.findByText('Cancha 3 Inactiva')).toBeInTheDocument();
+
+      const btnReactivar = screen.getByRole('button', { name: /Reactivar/i });
+      await user.click(btnReactivar);
+
+      expect(
+        screen.getByText(/¿Estás seguro de que deseás volver a habilitar el espacio/i),
+      ).toBeInTheDocument();
+
+      const modalDialog = screen.getByRole('dialog');
+      const btnConfirmar = within(modalDialog).getByRole('button', { name: 'Reactivar espacio' });
+      await user.click(btnConfirmar);
+
+      await waitFor(() => {
+        expect(espaciosApi.reactivar).toHaveBeenCalledWith(3);
+      });
+
+      expect(
+        await screen.findByText(/El espacio "Cancha 3 Inactiva" fue reactivado exitosamente/i),
+      ).toBeInTheDocument();
     });
   });
 });
