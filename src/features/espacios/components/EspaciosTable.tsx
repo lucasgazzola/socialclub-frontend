@@ -4,7 +4,6 @@ import type { SentidoOrden } from '@/components/ui';
 import {
   MODALIDAD_RESERVA_LABELS,
   TIPO_ESPACIO_LABELS,
-  obtenerDescuentoSocio,
   type Espacio,
 } from '../types';
 
@@ -159,14 +158,6 @@ export function EspaciosTable({
                       {formatMoneda(espacio.precio)}
                     </div>
                     <div className="text-xs text-slate-500">
-                      {obtenerDescuentoSocio(espacio) > 0 && (
-                        <>
-                          <span className="font-medium text-emerald-700">
-                            {obtenerDescuentoSocio(espacio)}% socios
-                          </span>
-                          {' · '}
-                        </>
-                      )}
                       Seña {formatMoneda(espacio.montoSena)}
                     </div>
                   </td>
@@ -177,11 +168,12 @@ export function EspaciosTable({
                   </td>
                   {puedeMutar && (
                     <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="inline-flex items-center justify-end gap-1.5">
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
+                          className="w-20 justify-center"
                           onClick={() => onEditar?.(espacio)}
                           title="Editar espacio y bloqueos"
                         >
@@ -193,7 +185,7 @@ export function EspaciosTable({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="text-rose-600 hover:bg-rose-50"
+                            className="w-28 justify-center text-rose-600 hover:bg-rose-50"
                             onClick={() => onEliminar?.(espacio)}
                             title="Dar de baja este espacio"
                           >
@@ -205,7 +197,7 @@ export function EspaciosTable({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="text-emerald-600 hover:bg-emerald-50"
+                            className="w-28 justify-center text-emerald-600 hover:bg-emerald-50"
                             onClick={() => onReactivar?.(espacio)}
                             title="Reactivar este espacio"
                           >
