@@ -166,6 +166,12 @@ export const espacioSchema = z
     precio: z
       .number({ message: 'El precio de alquiler debe ser un número válido' })
       .positive('El precio de alquiler debe ser mayor a cero'),
+    descuentoSocio: z
+      .number({ message: 'El descuento para socios debe ser un número válido' })
+      .int('El descuento para socios debe ser un número entero')
+      .min(0, 'El descuento no puede ser negativo')
+      .max(100, 'El descuento no puede ser superior al 100%')
+      .default(0),
     precioSocio: z
       .number({ message: 'El precio para socios debe ser un número válido' })
       .positive('El precio para socios debe ser mayor a cero')
@@ -278,6 +284,12 @@ export function normalizarEspacioPayload(values: EspacioFormValues): CreateEspac
     }
   }
 
+  const descuento = values.descuentoSocio ?? 0;
+  const precioSocioCalculado =
+    descuento > 0
+      ? Math.max(0, Math.round(values.precio * (1 - descuento / 100)))
+      : values.precioSocio ?? undefined;
+
   return {
     nombre: values.nombre.trim(),
     tipo: values.tipo,
@@ -286,7 +298,8 @@ export function normalizarEspacioPayload(values: EspacioFormValues): CreateEspac
     ...(values.ubicacion?.trim() ? { ubicacion: values.ubicacion.trim() } : {}),
     ...(values.descripcion?.trim() ? { descripcion: values.descripcion.trim() } : {}),
     precio: values.precio,
-    ...(values.precioSocio ? { precioSocio: values.precioSocio } : {}),
+    ...(descuento > 0 ? { descuentoSocio: descuento } : {}),
+    ...(precioSocioCalculado ? { precioSocio: precioSocioCalculado } : {}),
     montoSena: values.montoSena,
     ...compositeProps,
     ...(disciplinaIds.length > 0 ? { disciplinaIds } : {}),

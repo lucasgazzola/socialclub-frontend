@@ -41,6 +41,7 @@ const VALORES_INICIALES: EspacioFormValues = {
   ubicacion: '',
   descripcion: '',
   precio: 0,
+  descuentoSocio: 0,
   precioSocio: null,
   montoSena: 0,
   disciplinaIds: [],
@@ -87,7 +88,7 @@ export function EspacioForm({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<EspacioFormValues>({
-    resolver: zodResolver(espacioSchema),
+    resolver: zodResolver(espacioSchema) as any,
     defaultValues: VALORES_INICIALES,
   });
 
@@ -117,6 +118,15 @@ export function EspacioForm({
   const modoSubespaciosWatch = watch('modoSubespacios') ?? 'LOTE';
   const cantidadSubespaciosWatch = watch('cantidadSubespacios');
   const prefijoSubespacioWatch = watch('prefijoSubespacio');
+  const precioWatch = watch('precio');
+  const descuentoSocioWatch = watch('descuentoSocio');
+
+  const precioNum = Number(precioWatch) || 0;
+  const descuentoNum = Number(descuentoSocioWatch) || 0;
+  const precioSocioCalculado =
+    descuentoNum > 0 ? Math.max(0, Math.round(precioNum * (1 - descuentoNum / 100))) : null;
+  const ahorroCalculado =
+    descuentoNum > 0 && precioNum > 0 ? Math.round((precioNum * descuentoNum) / 100) : 0;
 
   const esSocial = tipoSeleccionado === 'SOCIAL';
 
@@ -329,18 +339,26 @@ export function EspacioForm({
           })}
         />
 
-        <Input
-          id="precioSocio"
-          label="Precio para socios ($)"
-          type="number"
-          min={1}
-          step="any"
-          placeholder="Opcional"
-          error={errors.precioSocio?.message}
-          {...register('precioSocio', {
-            setValueAs: (v) => (v === '' || v === null || v === undefined ? null : Number(v)),
-          })}
-        />
+        <div>
+          <Input
+            id="descuentoSocio"
+            label="Descuento para socios (%)"
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            placeholder="0"
+            error={errors.descuentoSocio?.message}
+            {...register('descuentoSocio', {
+              setValueAs: (v) => (v === '' || v === null || v === undefined ? 0 : Number(v)),
+            })}
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            {descuentoNum > 0 && precioNum > 0
+              ? `Tarifa final socios: $${precioSocioCalculado?.toLocaleString('es-AR')} (${descuentoNum}% OFF · Ahorro: $${ahorroCalculado.toLocaleString('es-AR')})`
+              : '0% = Sin descuento (los socios abonan tarifa general)'}
+          </p>
+        </div>
 
         <Input
           id="montoSena"

@@ -21,6 +21,8 @@ import {
   DIAS_SEMANA,
   MODALIDAD_RESERVA_LABELS,
   TIPO_ESPACIO_LABELS,
+  calcularPrecioSocio,
+  obtenerDescuentoSocio,
   type BloqueoAgenda,
   type CreateBloqueoPayload,
   type Espacio,
@@ -52,6 +54,7 @@ const espacioEditSchema = z
     ubicacion: z.string().max(200, 'Máximo 200 caracteres').optional(),
     descripcion: z.string().max(500, 'Máximo 500 caracteres').optional(),
     precio: z.number().min(1, 'El precio debe ser mayor a 0'),
+    descuentoSocio: z.number().int().min(0, 'El descuento no puede ser negativo').max(100, 'Máximo 100%').default(0),
     precioSocio: z.number().min(0).optional().nullable(),
     montoSena: z.number().min(0, 'La seña no puede ser negativa'),
     disciplinaIds: z.array(z.number()),
@@ -89,7 +92,7 @@ export function EditarEspacioModal({
   const [subNombre, setSubNombre] = useState('');
   const [subCapacidad, setSubCapacidad] = useState<number>(10);
   const [subPrecio, setSubPrecio] = useState<number>(1000);
-  const [subPrecioSocio, setSubPrecioSocio] = useState<string>('');
+  const [subDescuentoSocio, setSubDescuentoSocio] = useState<number>(0);
   const [subMontoSena, setSubMontoSena] = useState<number>(0);
 
   // Sub-formulario para agregar o editar un bloqueo
@@ -139,6 +142,7 @@ export function EditarEspacioModal({
       ubicacion: '',
       descripcion: '',
       precio: 1000,
+      descuentoSocio: 0,
       precioSocio: null,
       montoSena: 0,
       disciplinaIds: [],
@@ -147,6 +151,9 @@ export function EditarEspacioModal({
 
   const tipoActual = watch('tipo');
   const disciplinaIdsActual = watch('disciplinaIds') ?? [];
+  const precioActualWatch = watch('precio') || 0;
+  const descuentoSocioWatch = watch('descuentoSocio') ?? 0;
+  const precioSocioCalculado = calcularPrecioSocio(precioActualWatch, descuentoSocioWatch);
 
   useEffect(() => {
     if (!open) {
@@ -164,6 +171,11 @@ export function EditarEspacioModal({
     if (espacioActual && open) {
       const discIds =
         espacioActual.disciplinas?.map((d) => d.disciplina.id) ?? [];
+      const descCalculado =
+        espacioActual.descuentoSocio ?? obtenerDescuentoSocio(espacioActual);
+      const precioNum = Number(espacioActual.precio);
+      const precioSocioNum = calcularPrecioSocio(precioNum, descCalculado);
+
       reset({
         nombre: espacioActual.nombre,
         tipo: espacioActual.tipo,
@@ -171,8 +183,9 @@ export function EditarEspacioModal({
         modalidad: espacioActual.modalidad,
         ubicacion: espacioActual.ubicacion ?? '',
         descripcion: espacioActual.descripcion ?? '',
-        precio: Number(espacioActual.precio),
-        precioSocio: espacioActual.precioSocio ? Number(espacioActual.precioSocio) : null,
+        precio: precioNum,
+        descuentoSocio: descCalculado,
+        precioSocio: descCalculado > 0 ? precioSocioNum : null,
         montoSena: Number(espacioActual.montoSena),
         disciplinaIds: espacioActual.tipo === 'SOCIAL' ? [] : discIds,
       });
@@ -207,11 +220,8 @@ export function EditarEspacioModal({
         : Math.max(1, Math.floor(espacioActual.capacidadMaxima / 2)),
     );
     setSubPrecio(Number(espacioActual.precio));
-    setSubPrecioSocio(
-      espacioActual.precioSocio !== null && espacioActual.precioSocio !== undefined
-        ? String(Number(espacioActual.precioSocio))
-        : '',
-    );
+    const descPadre = espacioActual.descuentoSocio ?? obtenerDescuentoSocio(espacioActual);
+    setSubDescuentoSocio(descPadre);
     setSubMontoSena(Number(espacioActual.montoSena));
     setErrorSubespacio(null);
     setMostrandoFormSub(true);
@@ -222,11 +232,8 @@ export function EditarEspacioModal({
     setSubNombre(sub.nombre);
     setSubCapacidad(sub.capacidadMaxima);
     setSubPrecio(Number(sub.precio));
-    setSubPrecioSocio(
-      sub.precioSocio !== null && sub.precioSocio !== undefined
-        ? String(Number(sub.precioSocio))
-        : '',
-    );
+    const descSub = sub.descuentoSocio ?? obtenerDescuentoSocio(sub);
+    setSubDescuentoSocio(descSub);
     setSubMontoSena(Number(sub.montoSena));
     setErrorSubespacio(null);
     setMostrandoFormSub(true);
@@ -245,6 +252,9 @@ export function EditarEspacioModal({
       return;
     }
 
+    const descSub = Number(subDescuentoSocio) || 0;
+    const precioSocioCalc = calcularPrecioSocio(Number(subPrecio), descSub);
+
     try {
       if (subEnEdicion) {
         await actualizarEspacio.mutateAsync({
@@ -253,7 +263,8 @@ export function EditarEspacioModal({
             nombre: subNombre.trim(),
             capacidadMaxima: Number(subCapacidad),
             precio: Number(subPrecio),
-            precioSocio: subPrecioSocio !== '' ? Number(subPrecioSocio) : undefined,
+            descuentoSocio: descSub,
+            precioSocio: descSub > 0 ? precioSocioCalc : undefined,
             montoSena: Number(subMontoSena),
           },
         });
@@ -265,7 +276,8 @@ export function EditarEspacioModal({
           ubicacion: espacioActual.ubicacion ?? undefined,
           capacidadMaxima: Number(subCapacidad),
           precio: Number(subPrecio),
-          precioSocio: subPrecioSocio !== '' ? Number(subPrecioSocio) : undefined,
+          descuentoSocio: descSub,
+          precioSocio: descSub > 0 ? precioSocioCalc : undefined,
           montoSena: Number(subMontoSena),
           espacioPadreId: espacioActual.id,
           disciplinaIds:
@@ -304,6 +316,9 @@ export function EditarEspacioModal({
 
   const handleGuardarDatos = async (values: EspacioEditFormValues) => {
     try {
+      const desc = values.descuentoSocio ?? 0;
+      const precioSocioCalc = calcularPrecioSocio(values.precio, desc);
+
       const payload: UpdateEspacioPayload = {
         nombre: values.nombre.trim(),
         tipo: values.tipo,
@@ -312,7 +327,8 @@ export function EditarEspacioModal({
         ubicacion: values.ubicacion?.trim() || undefined,
         descripcion: values.descripcion?.trim() || undefined,
         precio: values.precio,
-        precioSocio: values.precioSocio ? values.precioSocio : undefined,
+        descuentoSocio: desc,
+        precioSocio: desc > 0 ? precioSocioCalc : undefined,
         montoSena: values.montoSena,
         disciplinaIds: values.tipo === 'SOCIAL' ? [] : values.disciplinaIds,
       };
@@ -622,20 +638,28 @@ export function EditarEspacioModal({
 
               <div>
                 <label
-                  htmlFor="edit-precioSocio"
+                  htmlFor="edit-descuentoSocio"
                   className="block text-xs font-semibold text-slate-700"
                 >
-                  Tarifa preferencial para socios ($)
+                  Descuento para socios (%)
                 </label>
                 <Input
-                  id="edit-precioSocio"
+                  id="edit-descuentoSocio"
                   type="number"
-                  {...register('precioSocio', {
-                    setValueAs: (v) => (v === '' ? null : Number(v)),
-                  })}
-                  placeholder="Dejar vacío si es igual a no socio"
+                  min={0}
+                  max={100}
+                  {...register('descuentoSocio', { valueAsNumber: true })}
+                  placeholder="0"
                   className="mt-1"
                 />
+                {errors.descuentoSocio && (
+                  <p className="mt-1 text-xs text-rose-600">{errors.descuentoSocio.message}</p>
+                )}
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {descuentoSocioWatch > 0
+                    ? `Tarifa final para socios: $${precioSocioCalculado.toLocaleString('es-AR')} (ahorro del ${descuentoSocioWatch}%)`
+                    : 'Sin descuento (los socios pagan tarifa completa)'}
+                </p>
               </div>
 
               <div>
@@ -780,7 +804,8 @@ export function EditarEspacioModal({
                           </div>
                           <div className="text-xs text-slate-500 tabular-nums">
                             Capacidad: {sub.capacidadMaxima} pers. · Alquiler: $
-                            {Number(sub.precio).toLocaleString('es-AR')} · Seña: $
+                            {Number(sub.precio).toLocaleString('es-AR')}
+                            {obtenerDescuentoSocio(sub) > 0 && ` (${obtenerDescuentoSocio(sub)}% socios)`} · Seña: $
                             {Number(sub.montoSena).toLocaleString('es-AR')}
                           </div>
                         </div>
@@ -897,18 +922,24 @@ export function EditarEspacioModal({
                   </div>
 
                   <div>
-                    <label htmlFor="sub-precio-socio" className="block font-medium text-slate-700">
-                      Tarifa preferencial socios ($)
+                    <label htmlFor="sub-descuento-socio" className="block font-medium text-slate-700">
+                      Descuento para socios (%)
                     </label>
                     <Input
-                      id="sub-precio-socio"
+                      id="sub-descuento-socio"
                       type="number"
                       min={0}
-                      value={subPrecioSocio}
-                      onChange={(e) => setSubPrecioSocio(e.target.value)}
-                      placeholder="Opcional"
+                      max={100}
+                      value={subDescuentoSocio}
+                      onChange={(e) => setSubDescuentoSocio(Number(e.target.value))}
+                      placeholder="0"
                       className="mt-1"
                     />
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      {subDescuentoSocio > 0
+                        ? `Tarifa final socios: $${calcularPrecioSocio(subPrecio, subDescuentoSocio).toLocaleString('es-AR')} (${subDescuentoSocio}% OFF)`
+                        : 'Sin descuento (pagan tarifa general)'}
+                    </p>
                   </div>
 
                   <div>

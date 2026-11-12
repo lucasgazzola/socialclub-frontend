@@ -4,6 +4,7 @@ import type { SentidoOrden } from '@/components/ui';
 import {
   MODALIDAD_RESERVA_LABELS,
   TIPO_ESPACIO_LABELS,
+  obtenerDescuentoSocio,
   type Espacio,
 } from '../types';
 
@@ -158,6 +159,14 @@ export function EspaciosTable({
                       {formatMoneda(espacio.precio)}
                     </div>
                     <div className="text-xs text-slate-500">
+                      {obtenerDescuentoSocio(espacio) > 0 && (
+                        <>
+                          <span className="font-medium text-emerald-700">
+                            {obtenerDescuentoSocio(espacio)}% socios
+                          </span>
+                          {' · '}
+                        </>
+                      )}
                       Seña {formatMoneda(espacio.montoSena)}
                     </div>
                   </td>

@@ -19,6 +19,8 @@ import { ROUTES } from '@/routes/paths';
 import {
   MODALIDAD_RESERVA_LABELS,
   TIPO_ESPACIO_LABELS,
+  calcularPrecioSocio,
+  obtenerDescuentoSocio,
   type Espacio,
   type ModalidadReserva,
   type TipoEspacio,
@@ -188,8 +190,14 @@ export function EspaciosCatalogo({
               espacio.disciplinas?.map((d) => d.disciplina.nombre) ?? [];
 
             const unidadTiempo = espacio.modalidad === 'POR_HORA' ? 'hora' : 'día';
-            const precioSocioNum = espacio.precioSocio ? Number(espacio.precioSocio) : null;
             const precioGralNum = Number(espacio.precio);
+            const descSocio = espacio.descuentoSocio ?? obtenerDescuentoSocio(espacio);
+            const precioSocioNum =
+              descSocio > 0
+                ? calcularPrecioSocio(precioGralNum, descSocio)
+                : espacio.precioSocio
+                ? Number(espacio.precioSocio)
+                : null;
 
             return (
               <div
@@ -272,6 +280,11 @@ export function EspaciosCatalogo({
                         <span className="text-slate-500">Tarifa para socios:</span>
                         <span className="font-bold text-slate-900">
                           {formatMoneda(precioSocioNum ?? precioGralNum)}{' '}
+                          {descSocio > 0 && (
+                            <span className="text-[11px] font-semibold text-emerald-700">
+                              ({descSocio}% OFF)
+                            </span>
+                          )}{' '}
                           <span className="font-normal text-slate-500">/ {unidadTiempo}</span>
                         </span>
                       </div>
@@ -344,8 +357,13 @@ export function EspaciosCatalogo({
                   Tarifa {esSocio ? 'socio' : 'general'}:{' '}
                   <strong>
                     {formatMoneda(
-                      esSocio && espacioSeleccionado.precioSocio
-                        ? espacioSeleccionado.precioSocio
+                      esSocio
+                        ? (espacioSeleccionado.descuentoSocio ?? obtenerDescuentoSocio(espacioSeleccionado)) > 0
+                          ? calcularPrecioSocio(
+                              Number(espacioSeleccionado.precio),
+                              espacioSeleccionado.descuentoSocio ?? obtenerDescuentoSocio(espacioSeleccionado),
+                            )
+                          : espacioSeleccionado.precioSocio ?? espacioSeleccionado.precio
                         : espacioSeleccionado.precio,
                     )}
                   </strong>
