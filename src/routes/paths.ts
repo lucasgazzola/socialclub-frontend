@@ -38,9 +38,10 @@ export const ROUTES = {
   misEntradas: '/mis-entradas',
   /** TASK-51: vuelta de la pasarela de pagos y simulador (sin credenciales de Mercado Pago). */
   resultadoPago: '/pagos/resultado',
-  /** US-62 y US-60. */
+  /** US-62, US-60 y US-55. */
   misReservas: '/mis-reservas',
   solicitudesReserva: '/reservas/solicitudes',
+  espacios: '/espacios',
   simuladorPago: '/pagos/simulador',
   /** US-63: postulación / solicitud de inscripción a disciplina. */
   solicitarInscripcion: '/inscripcion/solicitar',
