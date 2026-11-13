@@ -162,7 +162,7 @@ export function EspaciosPage() {
     }
     if (ordenarPor && orden) {
       copia.sort((a, b) => {
-        let comp = 0;
+        let comp: number;
         switch (ordenarPor) {
           case 'tipo':
             comp = a.tipo.localeCompare(b.tipo, 'es');
