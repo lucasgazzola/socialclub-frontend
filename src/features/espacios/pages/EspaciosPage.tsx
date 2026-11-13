@@ -208,7 +208,7 @@ export function EspaciosPage() {
     }
     if (ordenarPor && orden) {
       copia.sort((a, b) => {
-        let comp = 0;
+        let comp: number;
         switch (ordenarPor) {
           case 'tipo':
             comp = a.tipo.localeCompare(b.tipo, 'es');
@@ -279,10 +279,14 @@ export function EspaciosPage() {
       );
       setEspacioAEliminar(null);
       setErrorBajaEspacio(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as {
+        message?: string;
+        response?: { data?: { message?: string } };
+      };
       const msj =
-        err?.response?.data?.message ||
-        err?.message ||
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
         'No se puede dar de baja el espacio porque tiene reservas futuras activas o pendientes.';
       setErrorBajaEspacio(msj);
     }

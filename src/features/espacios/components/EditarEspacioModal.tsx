@@ -136,7 +136,7 @@ export function EditarEspacioModal({
     reset,
     formState: { errors },
   } = useForm<EspacioEditFormValues>({
-    resolver: zodResolver(espacioEditSchema) as any,
+    resolver: zodResolver(espacioEditSchema),
     defaultValues: {
       nombre: '',
       tipo: 'DEPORTIVO',
@@ -427,11 +427,16 @@ export function EditarEspacioModal({
 
       setMostrandoFormBloqueo(false);
       setBloqueoEnEdicion(null);
-    } catch (err: any) {
-      if (err?.status === 409 || err?.response?.status === 409) {
+    } catch (err: unknown) {
+      const errorObj = err as {
+        status?: number;
+        message?: string;
+        response?: { status?: number; data?: { message?: string } };
+      };
+      if (errorObj?.status === 409 || errorObj?.response?.status === 409) {
         const msj =
-          err?.response?.data?.message ||
-          err?.message ||
+          errorObj?.response?.data?.message ||
+          errorObj?.message ||
           'El bloqueo entra en conflicto con una reserva aprobada.';
         setErrorConflictoBloqueo(msj);
       }
@@ -1143,7 +1148,7 @@ export function EditarEspacioModal({
                     <Select
                       id="bloq-tipo"
                       value={bloqTipo}
-                      onChange={(e) => setBloqTipo(e.target.value as any)}
+                      onChange={(e) => setBloqTipo(e.target.value as 'RECURRENTE' | 'PUNTUAL')}
                       className="mt-1"
                     >
                       <option value="RECURRENTE">Recurrente semanal</option>

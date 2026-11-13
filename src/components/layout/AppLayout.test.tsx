@@ -110,4 +110,62 @@ describe('AppLayout', () => {
     expect(screen.getByRole('link', { name: /Hacerme socio/i })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Auditoría/i })).not.toBeInTheDocument();
   });
+
+  it('US-34 · muestra la entrada "Dashboard" en el menú lateral para ADMIN y COLABORADOR', () => {
+    mockUsuario = {
+      id: 1,
+      nombre: 'Admin',
+      apellido: 'Uno',
+      email: 'admin@club.com',
+      roles: ['ADMIN'],
+      persona: null,
+    };
+
+    const { unmount } = renderWithProviders(<AppLayout />);
+    const linkAdmin = screen.getByRole('link', { name: /^Dashboard$/i });
+    expect(linkAdmin).toBeInTheDocument();
+    expect(linkAdmin).toHaveAttribute('href', '/dashboard');
+    unmount();
+
+    mockUsuario = {
+      id: 3,
+      nombre: 'Colaborador',
+      apellido: 'Uno',
+      email: 'colab@club.com',
+      roles: ['COLABORADOR'],
+      persona: null,
+    };
+
+    renderWithProviders(<AppLayout />);
+    const linkColab = screen.getByRole('link', { name: /^Dashboard$/i });
+    expect(linkColab).toBeInTheDocument();
+    expect(linkColab).toHaveAttribute('href', '/dashboard');
+  });
+
+  it('US-34 · oculta la entrada "Dashboard" para DELEGADO y SOCIO', () => {
+    mockUsuario = {
+      id: 4,
+      nombre: 'Delegado',
+      apellido: 'Uno',
+      email: 'delegado@club.com',
+      roles: ['DELEGADO'],
+      persona: null,
+    };
+
+    const { unmount } = renderWithProviders(<AppLayout />);
+    expect(screen.queryByRole('link', { name: /^Dashboard$/i })).not.toBeInTheDocument();
+    unmount();
+
+    mockUsuario = {
+      id: 2,
+      nombre: 'Socio',
+      apellido: 'Uno',
+      email: 'socio@club.com',
+      roles: ['SOCIO'],
+      persona: { membresias: [{ id: 1, activo: true }] },
+    };
+
+    renderWithProviders(<AppLayout />);
+    expect(screen.queryByRole('link', { name: /^Dashboard$/i })).not.toBeInTheDocument();
+  });
 });

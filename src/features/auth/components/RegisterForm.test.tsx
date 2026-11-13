@@ -23,6 +23,9 @@ vi.mock('../schemas/register.schema', () => {
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/,
         'La contraseña debe tener mínimo 8 caracteres, con mayúscula, minúscula, número y carácter especial',
       ),
+    confirmarPassword: z.string().min(1),
+    fechaNacimiento: z.string().min(1),
+    genero: z.string().min(1, 'Seleccioná un género'),
   });
   return { registerSchema };
 });
@@ -45,8 +48,17 @@ vi.mock('@/components/ui', () => ({
       {error && <p role="alert">{error}</p>}
     </div>
   ),
-  Button: ({ children, ...props }: { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) => (
+  Button: ({
+    children,
+    ...props
+  }: { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props}>{children}</button>
+  ),
+  Select: ({
+    children,
+    ...props
+  }: { children?: ReactNode } & InputHTMLAttributes<HTMLSelectElement>) => (
+    <select {...props}>{children}</select>
   ),
 }));
 
@@ -58,6 +70,9 @@ const datosValidos = {
   apellido: 'Pérez',
   email: 'ana@test.com',
   password: 'Nuevo123!',
+  confirmarPassword: 'Nuevo123!',
+  fechaNacimiento: '1990-01-01',
+  genero: 'MASCULINO',
 };
 
 const usuarioAutenticadoMock: UsuarioAutenticado = {
@@ -77,6 +92,9 @@ async function completarFormulario(
   await user.type(screen.getByLabelText('Apellido'), datos.apellido);
   await user.type(screen.getByLabelText('Email'), datos.email);
   await user.type(screen.getByLabelText('Contraseña'), datos.password);
+  await user.type(screen.getByLabelText('CONFIRMAR CONTRASEÑA'), datos.confirmarPassword);
+  await user.type(screen.getByLabelText('Fecha de nacimiento'), datos.fechaNacimiento);
+  await user.selectOptions(screen.getByLabelText('GENERO'), datos.genero);
 }
 
 describe('RegisterForm', () => {
