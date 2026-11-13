@@ -1,6 +1,7 @@
 import { Layers, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { Badge, Button, HeaderOrdenable } from '@/components/ui';
 import type { SentidoOrden } from '@/components/ui';
+import { cn } from '@/lib/utils/cn';
 import {
   MODALIDAD_RESERVA_LABELS,
   TIPO_ESPACIO_LABELS,
@@ -27,14 +28,33 @@ function formatMoneda(valor: number | string | null | undefined): string {
   return `$${num.toLocaleString('es-AR')}`;
 }
 
-function resumirSubespacios(espacio: Espacio): { etiqueta: string; detalle: string } | null {
+function resumirSubespacios(espacio: Espacio): {
+  etiqueta: string;
+  detalle: string;
+  inactivo: boolean;
+} | null {
   const subs = espacio.subespacios ?? [];
   const total = subs.length || espacio._count?.subespacios || 0;
   if (total === 0) return null;
-  const etiqueta = total === 1 ? '1 sub-espacio' : `${total} sub-espacios`;
+
+  const inactivo =
+    !espacio.activo || (subs.length > 0 && subs.every((s) => !s.activo));
+
+  const etiqueta =
+    total === 1
+      ? inactivo
+        ? '1 sub-espacio inactivo'
+        : '1 sub-espacio'
+      : inactivo
+        ? `${total} sub-espacios inactivos`
+        : `${total} sub-espacios`;
+
   const detalle =
-    subs.length > 0 ? subs.map((s) => s.nombre).join(', ') : etiqueta;
-  return { etiqueta, detalle };
+    subs.length > 0
+      ? subs.map((s) => `${s.nombre}${!s.activo ? ' (inactivo)' : ''}`).join(', ')
+      : etiqueta;
+
+  return { etiqueta, detalle, inactivo };
 }
 
 export function EspaciosTable({
@@ -111,7 +131,12 @@ export function EspaciosTable({
                         <button
                           type="button"
                           onClick={() => onEditar?.(espacio, 'subespacios')}
-                          className="inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-brand-50 px-1.5 py-0.5 text-[11px] font-medium text-brand-700 hover:bg-brand-100 transition-colors cursor-pointer"
+                          className={cn(
+                            'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors cursor-pointer border',
+                            resumenComposite.inactivo
+                              ? 'bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-100'
+                              : 'bg-brand-50 text-brand-700 border-brand-200/70 hover:bg-brand-100',
+                          )}
                           title={`Gestionar sub-espacios: ${resumenComposite.detalle}`}
                         >
                           <Layers size={11} aria-hidden="true" className="shrink-0" />

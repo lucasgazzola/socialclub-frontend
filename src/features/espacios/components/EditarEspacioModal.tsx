@@ -798,7 +798,7 @@ export function EditarEspacioModal({
                             <span className="text-sm font-semibold text-slate-900">
                               {sub.nombre}
                             </span>
-                            <Badge variant={sub.activo ? 'success' : 'secondary'}>
+                            <Badge variant={sub.activo ? 'success' : 'danger'}>
                               {sub.activo ? 'Activo' : 'Inactivo'}
                             </Badge>
                           </div>
