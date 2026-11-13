@@ -24,6 +24,9 @@ describe('Auth Schemas', () => {
         apellido: 'Perez',
         email: 'juan@club.com',
         password: 'Password123!',
+        confirmarPassword: 'Password123!',
+        fechaNacimiento: '1990-01-01',
+        genero: 'MASCULINO',
       };
       const res = registerSchema.safeParse(valid);
       expect(res.success).toBe(true);

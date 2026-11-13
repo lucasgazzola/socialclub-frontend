@@ -56,6 +56,12 @@ const navSections: NavSection[] = [
     title: 'Principal',
     items: [
       { to: ROUTES.dashboard, label: 'Inicio', icon: LayoutDashboard },
+      {
+        to: ROUTES.dashboardGestion,
+        label: 'Dashboard',
+        icon: BarChart3,
+        roles: ['ADMIN', 'COLABORADOR'],
+      },
       { to: ROUTES.perfil, label: 'Mi perfil', icon: User },
     ],
   },
@@ -74,6 +80,7 @@ const navSections: NavSection[] = [
       { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
       { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
       { to: ROUTES.misReservas, label: 'Mis reservas', icon: CalendarClock },
+      { to: ROUTES.solicitarInscripcion, label: 'Inscribirme a disciplina', icon: Dumbbell },
       { to: ROUTES.miDocumentacion, label: 'Mi documentación', icon: FileText },
       {
         to: ROUTES.participantes,
@@ -152,6 +159,7 @@ const navSections: NavSection[] = [
 
 const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.dashboard]: 'Panel de Inicio',
+  [ROUTES.dashboardGestion]: 'Dashboard de Gestión',
   [ROUTES.perfil]: 'Mi Perfil',
   [ROUTES.cambiarContrasena]: 'Cambiar Contraseña',
   [ROUTES.misCuotas]: 'Mis Cuotas',
@@ -159,6 +167,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.misReservas]: 'Mis Reservas',
   [ROUTES.solicitudesReserva]: 'Solicitudes de Reserva',
   [ROUTES.espacios]: 'Espacios Físicos',
+  [ROUTES.solicitarInscripcion]: 'Solicitar Inscripción',
   [ROUTES.miDocumentacion]: 'Mi Documentación',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',
