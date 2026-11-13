@@ -11,6 +11,7 @@ import {
   Layers,
   Pencil,
   Plus,
+  RotateCcw,
   Save,
   Trash2,
   X,
@@ -40,6 +41,7 @@ import {
   useEliminarBloqueo,
   useEliminarEspacio,
   useEspacio,
+  useReactivarEspacio,
 } from '../hooks/useEspacios';
 
 const espacioEditSchema = z
@@ -121,6 +123,7 @@ export function EditarEspacioModal({
   const crearEspacio = useCrearEspacio();
   const actualizarEspacio = useActualizarEspacio();
   const eliminarEspacio = useEliminarEspacio();
+  const reactivarEspacio = useReactivarEspacio();
   const agregarBloqueo = useAgregarBloqueo();
   const actualizarBloqueo = useActualizarBloqueo();
   const eliminarBloqueo = useEliminarBloqueo();
@@ -308,6 +311,20 @@ export function EditarEspacioModal({
           'No se puede dar de baja el sub-espacio porque tiene reservas futuras activas.';
         setErrorSubespacio(msj);
       }
+    }
+  };
+
+  const handleReactivarSubespacio = async (sub: SubespacioResumen) => {
+    setErrorSubespacio(null);
+    try {
+      await reactivarEspacio.mutateAsync(sub.id);
+      await refetchEspacio();
+    } catch (err: any) {
+      const msj =
+        err?.response?.data?.message ||
+        err?.message ||
+        'No se pudo reactivar el sub-espacio.';
+      setErrorSubespacio(msj);
     }
   };
 
@@ -829,7 +846,7 @@ export function EditarEspacioModal({
                             <CalendarClock size={13} aria-hidden="true" />
                             Bloqueos
                           </Button>
-                          {sub.activo && (
+                          {sub.activo ? (
                             <Button
                               type="button"
                               variant="ghost"
@@ -840,6 +857,18 @@ export function EditarEspacioModal({
                             >
                               <Trash2 size={13} aria-hidden="true" />
                               Dar de baja
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-emerald-600 hover:bg-emerald-50"
+                              onClick={() => handleReactivarSubespacio(sub)}
+                              title="Reactivar este sub-espacio"
+                            >
+                              <RotateCcw size={13} aria-hidden="true" />
+                              Reactivar
                             </Button>
                           )}
                         </div>
