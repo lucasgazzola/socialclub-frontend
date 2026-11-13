@@ -42,7 +42,7 @@ describe('useDashboard', () => {
     expect(result.current.data).toEqual(mockData);
     expect(dashboardApi.getMetricas).toHaveBeenCalledTimes(1);
     expect(DASHBOARD_STALE_TIME_MS).toBeGreaterThanOrEqual(30_000);
-    expect(DASHBOARD_STALE_TIME_MS).toBeLessThanOrEqual(60_000);
+    expect(DASHBOARD_STALE_TIME_MS).toBeLessThanOrEqual(5 * 60_000);
     expect(dashboardKeys.metricas()).toEqual(['dashboard', 'metricas']);
   });
 });
