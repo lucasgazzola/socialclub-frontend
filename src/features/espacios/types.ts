@@ -50,6 +50,7 @@ export interface SubespacioResumen {
   nombre: string;
   capacidadMaxima: number;
   precio: number | string;
+  descuentoSocio?: number;
   precioSocio: number | string | null;
   montoSena: number | string;
   activo: boolean;
@@ -67,6 +68,7 @@ export interface Espacio {
   espacioPadre?: { id: number; nombre: string; ubicacion?: string | null } | null;
   subespacios?: SubespacioResumen[];
   precio: number | string;
+  descuentoSocio?: number;
   precioSocio: number | string | null;
   montoSena: number | string;
   activo: boolean;
@@ -79,11 +81,46 @@ export interface Espacio {
   };
 }
 
+export function obtenerDescuentoSocio(espacio: {
+  precio: number | string;
+  descuentoSocio?: number | null;
+  precioSocio?: number | string | null;
+}): number {
+  if (espacio.descuentoSocio !== undefined && espacio.descuentoSocio !== null) {
+    return Number(espacio.descuentoSocio);
+  }
+  const precioGral = Number(espacio.precio);
+  const precioSocio =
+    espacio.precioSocio !== null && espacio.precioSocio !== undefined
+      ? Number(espacio.precioSocio)
+      : null;
+  if (precioSocio !== null && precioGral > 0 && precioSocio < precioGral) {
+    return Math.round(((precioGral - precioSocio) / precioGral) * 100);
+  }
+  return 0;
+}
+
+export function calcularPrecioSocio(
+  precio: number | string,
+  descuentoSocio?: number | null,
+  precioSocio?: number | string | null,
+): number {
+  const precioNum = Number(precio);
+  if (descuentoSocio !== undefined && descuentoSocio !== null && descuentoSocio > 0) {
+    return Math.max(0, Math.round(precioNum * (1 - descuentoSocio / 100)));
+  }
+  if (precioSocio !== undefined && precioSocio !== null) {
+    return Number(precioSocio);
+  }
+  return precioNum;
+}
+
 export interface CreateSubespacioPayload {
   nombre: string;
   capacidadMaxima?: number;
   descripcion?: string;
   precio?: number;
+  descuentoSocio?: number;
   precioSocio?: number;
   montoSena?: number;
 }
@@ -108,6 +145,7 @@ export interface CreateEspacioPayload {
   ubicacion?: string;
   descripcion?: string;
   precio: number;
+  descuentoSocio?: number;
   precioSocio?: number;
   montoSena: number;
   espacioPadreId?: number;

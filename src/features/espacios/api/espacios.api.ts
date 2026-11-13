@@ -75,4 +75,12 @@ export const espaciosApi = {
     const response = await apiClient.delete<{ mensaje: string; id: number }>(`/espacios/${id}`);
     return response.data;
   },
+
+  /** US-57: Reactiva un espacio físico dado de baja lógica y sus sub-espacios asociados. */
+  async reactivar(id: number): Promise<{ mensaje: string; id: number }> {
+    const response = await apiClient.patch<{ mensaje: string; id: number }>(
+      `/espacios/${id}/reactivar`,
+    );
+    return response.data;
+  },
 };

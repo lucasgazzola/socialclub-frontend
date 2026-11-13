@@ -66,6 +66,18 @@ export function useEliminarEspacio() {
   });
 }
 
+export function useReactivarEspacio() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => espaciosApi.reactivar(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ESPACIOS_QUERY_KEY });
+      toast.success('Espacio físico reactivado correctamente');
+    },
+  });
+}
+
 export function useAgregarBloqueo() {
   const queryClient = useQueryClient();
 

@@ -15,6 +15,7 @@ describe('US-55 · espacioSchema y bloqueoFormSchema', () => {
     ubicacion: 'Sector Norte',
     descripcion: 'Césped sintético y blindex',
     precio: 12000,
+    descuentoSocio: 25,
     precioSocio: 9000,
     montoSena: 4000,
     disciplinaIds: [1],

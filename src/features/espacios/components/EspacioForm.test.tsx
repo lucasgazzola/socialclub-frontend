@@ -141,7 +141,8 @@ describe('US-55 · EspacioForm', () => {
     await user.type(screen.getByLabelText(/Ubicación \/ Sector/i), 'Polideportivo Norte');
     await user.clear(screen.getByLabelText(/Precio de alquiler/i));
     await user.type(screen.getByLabelText(/Precio de alquiler/i), '15000');
-    await user.type(screen.getByLabelText(/Precio para socios/i), '10000');
+    await user.clear(screen.getByLabelText(/Descuento para socios/i));
+    await user.type(screen.getByLabelText(/Descuento para socios/i), '20');
     await user.clear(screen.getByLabelText(/Seña requerida/i));
     await user.type(screen.getByLabelText(/Seña requerida/i), '5000');
 
@@ -173,7 +174,7 @@ describe('US-55 · EspacioForm', () => {
         modalidad: 'POR_HORA',
         ubicacion: 'Polideportivo Norte',
         precio: 15000,
-        precioSocio: 10000,
+        descuentoSocio: 20,
         montoSena: 5000,
         disciplinaIds: [1, 2],
         bloqueos: [

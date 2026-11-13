@@ -6,6 +6,8 @@ vi.mock('@/lib/api/client', () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -64,5 +66,27 @@ describe('US-55 · espaciosApi', () => {
 
     expect(apiClient.post).toHaveBeenCalledWith('/espacios/5/bloqueos', payload);
     expect(res.id).toBe(99);
+  });
+
+  it('reactivar · envía PATCH /espacios/:id/reactivar', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({
+      data: { mensaje: 'Espacio reactivado exitosamente', id: 7 },
+    });
+
+    const res = await espaciosApi.reactivar(7);
+
+    expect(apiClient.patch).toHaveBeenCalledWith('/espacios/7/reactivar');
+    expect(res.id).toBe(7);
+  });
+
+  it('remove · envía DELETE /espacios/:id', async () => {
+    vi.mocked(apiClient.delete).mockResolvedValue({
+      data: { mensaje: 'Espacio dado de baja exitosamente', id: 7 },
+    });
+
+    const res = await espaciosApi.remove(7);
+
+    expect(apiClient.delete).toHaveBeenCalledWith('/espacios/7');
+    expect(res.id).toBe(7);
   });
 });
