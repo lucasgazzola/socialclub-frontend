@@ -3,9 +3,17 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/test-utils';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { toast } from 'sonner';
 import { EspaciosPage } from './EspaciosPage';
 import { espaciosApi } from '../api/espacios.api';
 import type { Espacio } from '../types';
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 vi.mock('@/features/auth/hooks/useAuth', () => ({
   useAuth: vi.fn(),
@@ -212,9 +220,11 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
         expect(espaciosApi.remove).toHaveBeenCalledWith(1);
       });
 
-      expect(
-        await screen.findByText(/El espacio "Cancha de Fútbol 5 Norte" fue dado de baja correctamente/i),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalledWith(
+          expect.stringContaining('Cancha de Fútbol 5 Norte'),
+        );
+      });
     });
 
     it('maneja conflicto 409 cuando hay reservas futuras y muestra alerta explicativa', async () => {
@@ -292,9 +302,11 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
         expect(espaciosApi.reactivar).toHaveBeenCalledWith(3);
       });
 
-      expect(
-        await screen.findByText(/El espacio "Cancha 3 Inactiva" fue reactivado exitosamente/i),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalledWith(
+          expect.stringContaining('Cancha 3 Inactiva'),
+        );
+      });
     });
   });
 });
