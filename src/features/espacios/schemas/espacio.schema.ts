@@ -285,10 +285,6 @@ export function normalizarEspacioPayload(values: EspacioFormValues): CreateEspac
   }
 
   const descuento = values.descuentoSocio ?? 0;
-  const precioSocioCalculado =
-    descuento > 0
-      ? Math.max(0, Math.round(values.precio * (1 - descuento / 100)))
-      : values.precioSocio ?? undefined;
 
   return {
     nombre: values.nombre.trim(),
@@ -299,7 +295,6 @@ export function normalizarEspacioPayload(values: EspacioFormValues): CreateEspac
     ...(values.descripcion?.trim() ? { descripcion: values.descripcion.trim() } : {}),
     precio: values.precio,
     ...(descuento > 0 ? { descuentoSocio: descuento } : {}),
-    ...(precioSocioCalculado ? { precioSocio: precioSocioCalculado } : {}),
     montoSena: values.montoSena,
     ...compositeProps,
     ...(disciplinaIds.length > 0 ? { disciplinaIds } : {}),

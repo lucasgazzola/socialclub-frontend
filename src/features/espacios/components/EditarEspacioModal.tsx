@@ -253,7 +253,6 @@ export function EditarEspacioModal({
     }
 
     const descSub = Number(subDescuentoSocio) || 0;
-    const precioSocioCalc = calcularPrecioSocio(Number(subPrecio), descSub);
 
     try {
       if (subEnEdicion) {
@@ -264,7 +263,6 @@ export function EditarEspacioModal({
             capacidadMaxima: Number(subCapacidad),
             precio: Number(subPrecio),
             descuentoSocio: descSub,
-            precioSocio: descSub > 0 ? precioSocioCalc : undefined,
             montoSena: Number(subMontoSena),
           },
         });
@@ -277,7 +275,6 @@ export function EditarEspacioModal({
           capacidadMaxima: Number(subCapacidad),
           precio: Number(subPrecio),
           descuentoSocio: descSub,
-          precioSocio: descSub > 0 ? precioSocioCalc : undefined,
           montoSena: Number(subMontoSena),
           espacioPadreId: espacioActual.id,
           disciplinaIds:
@@ -317,7 +314,6 @@ export function EditarEspacioModal({
   const handleGuardarDatos = async (values: EspacioEditFormValues) => {
     try {
       const desc = values.descuentoSocio ?? 0;
-      const precioSocioCalc = calcularPrecioSocio(values.precio, desc);
 
       const payload: UpdateEspacioPayload = {
         nombre: values.nombre.trim(),
@@ -328,7 +324,6 @@ export function EditarEspacioModal({
         descripcion: values.descripcion?.trim() || undefined,
         precio: values.precio,
         descuentoSocio: desc,
-        precioSocio: desc > 0 ? precioSocioCalc : undefined,
         montoSena: values.montoSena,
         disciplinaIds: values.tipo === 'SOCIAL' ? [] : values.disciplinaIds,
       };

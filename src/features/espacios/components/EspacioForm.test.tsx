@@ -173,7 +173,6 @@ describe('US-55 · EspacioForm', () => {
         ubicacion: 'Polideportivo Norte',
         precio: 15000,
         descuentoSocio: 20,
-        precioSocio: 12000,
         montoSena: 5000,
         disciplinaIds: [1, 2],
         bloqueos: [
