@@ -300,10 +300,11 @@ export function EspaciosPage() {
         `El espacio "${espacioAReactivar.nombre}" fue reactivado exitosamente.`,
       );
       setEspacioAReactivar(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string; response?: { data?: { message?: string | string[] } } };
       const msj =
-        err?.response?.data?.message ||
-        err?.message ||
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
         'No se pudo reactivar el espacio físico.';
       toast.error(Array.isArray(msj) ? msj.join(', ') : msj);
     }

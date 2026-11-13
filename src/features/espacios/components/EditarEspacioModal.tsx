@@ -136,7 +136,8 @@ export function EditarEspacioModal({
     reset,
     formState: { errors },
   } = useForm<EspacioEditFormValues>({
-    resolver: zodResolver(espacioEditSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(espacioEditSchema) as any,
     defaultValues: {
       nombre: '',
       tipo: 'DEPORTIVO',
@@ -289,10 +290,11 @@ export function EditarEspacioModal({
       await refetchEspacio();
       setMostrandoFormSub(false);
       setSubEnEdicion(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string; response?: { data?: { message?: string } } };
       const msj =
-        err?.response?.data?.message ||
-        err?.message ||
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
         'No se pudo guardar el sub-espacio.';
       setErrorSubespacio(msj);
     }
@@ -304,10 +306,11 @@ export function EditarEspacioModal({
       try {
         await eliminarEspacio.mutateAsync(sub.id);
         await refetchEspacio();
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorObj = err as { message?: string; response?: { data?: { message?: string } } };
         const msj =
-          err?.response?.data?.message ||
-          err?.message ||
+          errorObj?.response?.data?.message ||
+          errorObj?.message ||
           'No se puede dar de baja el sub-espacio porque tiene reservas futuras activas.';
         setErrorSubespacio(msj);
       }
@@ -319,10 +322,11 @@ export function EditarEspacioModal({
     try {
       await reactivarEspacio.mutateAsync(sub.id);
       await refetchEspacio();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string; response?: { data?: { message?: string } } };
       const msj =
-        err?.response?.data?.message ||
-        err?.message ||
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
         'No se pudo reactivar el sub-espacio.';
       setErrorSubespacio(msj);
     }

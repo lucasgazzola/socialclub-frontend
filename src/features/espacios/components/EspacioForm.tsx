@@ -88,6 +88,7 @@ export function EspacioForm({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<EspacioFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(espacioSchema) as any,
     defaultValues: VALORES_INICIALES,
   });
