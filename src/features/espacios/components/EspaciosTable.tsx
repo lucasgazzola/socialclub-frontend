@@ -40,14 +40,7 @@ function resumirSubespacios(espacio: Espacio): {
   const inactivo =
     !espacio.activo || (subs.length > 0 && subs.every((s) => !s.activo));
 
-  const etiqueta =
-    total === 1
-      ? inactivo
-        ? '1 sub-espacio inactivo'
-        : '1 sub-espacio'
-      : inactivo
-        ? `${total} sub-espacios inactivos`
-        : `${total} sub-espacios`;
+  const etiqueta = total === 1 ? '1 sub-espacio' : `${total} sub-espacios`;
 
   const detalle =
     subs.length > 0

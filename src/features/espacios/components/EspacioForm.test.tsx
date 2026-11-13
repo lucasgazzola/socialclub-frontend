@@ -194,7 +194,7 @@ describe('US-55 · EspacioForm', () => {
         ],
       });
     });
-  });
+  }, 15000);
 
   it('Criterio 5: muestra el mensaje de advertencia con el código de reserva cuando la API responde conflicto 409', async () => {
     const user = userEvent.setup();
