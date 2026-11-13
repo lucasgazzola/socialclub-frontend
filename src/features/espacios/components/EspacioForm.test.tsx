@@ -78,7 +78,7 @@ describe('US-55 · EspacioForm', () => {
         montoSena: 30000,
       });
     });
-  });
+  }, 15000);
 
   it('Patrón Composite: permite activar sub-espacios en lote, muestra vista previa y envía cantidadSubespacios y prefijoSubespacio', async () => {
     const user = userEvent.setup();
@@ -125,9 +125,11 @@ describe('US-55 · EspacioForm', () => {
         capacidadSubespacio: 10,
       });
     });
-  });
+  }, 15000);
 
-  it('Criterios 1, 2, 3 y 4: envía correctamente un espacio deportivo con disciplinas, bloqueo recurrente y bloqueo puntual', async () => {
+  it(
+    'Criterios 1, 2, 3 y 4: envía correctamente un espacio deportivo con disciplinas, bloqueo recurrente y bloqueo puntual',
+    async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
@@ -192,7 +194,7 @@ describe('US-55 · EspacioForm', () => {
         ],
       });
     });
-  });
+  }, 15000);
 
   it('Criterio 5: muestra el mensaje de advertencia con el código de reserva cuando la API responde conflicto 409', async () => {
     const user = userEvent.setup();

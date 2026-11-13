@@ -1,5 +1,15 @@
 import type { CategoriaSocio } from '@/features/socios/types';
 
+export type GeneroPersona =
+  'FEMENINO' | 'MASCULINO' | 'NO_BINARIO_NO_ESPECIFICADO' | 'PREFIERO_NO_DECIRLO';
+
+export const GENERO_PERSONA_LABELS: Record<GeneroPersona, string> = {
+  FEMENINO: 'Femenino',
+  MASCULINO: 'Masculino',
+  NO_BINARIO_NO_ESPECIFICADO: 'No binario',
+  PREFIERO_NO_DECIRLO: 'Prefiero no decirlo',
+};
+
 export type RolNombre = 'ADMIN' | 'COLABORADOR' | 'DELEGADO' | 'SOCIO';
 
 /** Membresía de una persona (período como socio). */
@@ -21,6 +31,7 @@ export interface PersonaDeUsuario {
   email?: string | null;
   telefono?: string | null;
   fechaNacimiento?: string | null;
+  genero?: GeneroPersona | null;
   membresias: MembresiaDePersona[];
 }
 
@@ -44,8 +55,11 @@ export interface LoginPayload {
 export interface RegisterPayload {
   email: string;
   password: string;
+  confirmarPassword: string;
   nombre: string;
   apellido: string;
+  fechaNacimiento: string;
+  genero: GeneroPersona;
 }
 
 /**
