@@ -22,19 +22,28 @@ export type TipoDocumentacionDisciplina =
   | 'FICHA_TECNICA_DEPORTES_CONTACTO'
   | 'COMPROBANTE_PAGO_CUOTA_SOCIAL_DEPORTIVA';
 
-export const TIPOS_DOCUMENTACION_DISCIPLINA: Array<{ value: TipoDocumentacionDisciplina; label: string }> = [
+export const TIPOS_DOCUMENTACION_DISCIPLINA: Array<{
+  value: TipoDocumentacionDisciplina;
+  label: string;
+}> = [
   { value: 'DNI', label: 'DNI' },
   { value: 'FICHA_INSCRIPCION', label: 'Ficha de inscripción' },
   { value: 'CERTIFICADO_MEDICO_APTITUD_FISICA', label: 'Certificado médico de aptitud física' },
   { value: 'SEGURO_COBERTURA_MEDICA', label: 'Seguro o cobertura médica' },
   { value: 'AUTORIZACION_PADRES_TUTORES', label: 'Autorización de padres/tutores' },
-  { value: 'CARNET_FEDERATIVO_LICENCIA_DEPORTIVA', label: 'Carnet federativo o licencia deportiva' },
+  {
+    value: 'CARNET_FEDERATIVO_LICENCIA_DEPORTIVA',
+    label: 'Carnet federativo o licencia deportiva',
+  },
   { value: 'REGLAMENTO_INTERNO_FIRMADO', label: 'Reglamento interno firmado' },
   { value: 'FICHA_TECNICA_NATACION', label: 'Ficha técnica: Natación' },
   { value: 'FICHA_TECNICA_GIMNASIO_FITNESS', label: 'Ficha técnica: Gimnasio/Fitness' },
   { value: 'FICHA_TECNICA_ARTES_MARCIALES', label: 'Ficha técnica: Artes marciales' },
   { value: 'FICHA_TECNICA_DEPORTES_CONTACTO', label: 'Ficha técnica: Deportes de contacto' },
-  { value: 'COMPROBANTE_PAGO_CUOTA_SOCIAL_DEPORTIVA', label: 'Comprobante de pago de cuota social/deportiva' },
+  {
+    value: 'COMPROBANTE_PAGO_CUOTA_SOCIAL_DEPORTIVA',
+    label: 'Comprobante de pago de cuota social/deportiva',
+  },
 ];
 
 // ─── Modelos ──────────────────────────────────────────────────────────────────
@@ -198,7 +207,10 @@ export function requiereVencimiento(tipo: TipoDocumentacionDisciplina): boolean 
 }
 
 /** Restricción que rige: la de la categoría si la define, si no la de la disciplina. */
-export function restriccionesEfectivas(disciplina: Restricciones, categoria?: Restricciones | null): Restricciones {
+export function restriccionesEfectivas(
+  disciplina: Restricciones,
+  categoria?: Restricciones | null,
+): Restricciones {
   return {
     genero: categoria?.genero ?? disciplina.genero,
     edadMinima: categoria?.edadMinima ?? disciplina.edadMinima,
@@ -207,14 +219,18 @@ export function restriccionesEfectivas(disciplina: Restricciones, categoria?: Re
 }
 
 export function describirEdad({ edadMinima, edadMaxima }: Restricciones): string {
-  if (edadMinima !== null && edadMaxima !== null) return edadMinima === edadMaxima ? `${edadMinima} años` : `${edadMinima} a ${edadMaxima} años`;
+  if (edadMinima !== null && edadMaxima !== null)
+    return edadMinima === edadMaxima ? `${edadMinima} años` : `${edadMinima} a ${edadMaxima} años`;
   if (edadMinima !== null) return `Desde ${edadMinima} años`;
   if (edadMaxima !== null) return `Hasta ${edadMaxima} años`;
   return 'Sin límite de edad';
 }
 
 /** Años de nacimiento que abarca el rango en la temporada indicada (ej. "Nacidos 2011–2013"). */
-export function describirAniosNacimiento({ edadMinima, edadMaxima }: Restricciones, anio = new Date().getFullYear()): string | null {
+export function describirAniosNacimiento(
+  { edadMinima, edadMaxima }: Restricciones,
+  anio = new Date().getFullYear(),
+): string | null {
   if (edadMinima !== null && edadMaxima !== null) {
     const desde = anio - edadMaxima;
     const hasta = anio - edadMinima;
@@ -235,7 +251,11 @@ export function etiquetaPlazo(dias: number): string {
  */
 export function categoriaCumpleRestricciones(
   categoria: CategoriaDisciplinaOption,
-  disciplina?: { genero?: GeneroDisciplina | null; edadMinima?: number | null; edadMaxima?: number | null } | null,
+  disciplina?: {
+    genero?: GeneroDisciplina | null;
+    edadMinima?: number | null;
+    edadMaxima?: number | null;
+  } | null,
   participante?: { fechaNacimiento?: string | null; genero?: GeneroDisciplina | null } | null,
   anio = new Date().getFullYear(),
 ): boolean {
@@ -274,11 +294,20 @@ export function categoriaCumpleRestricciones(
  * Además, solo aparecen las categorías cuyos requisitos son cumplidos por el participante.
  */
 export function categoriasDisponibles(
-  disciplina: { categorias: CategoriaDisciplinaOption[]; genero?: GeneroDisciplina | null; edadMinima?: number | null; edadMaxima?: number | null } | undefined,
+  disciplina:
+    | {
+        categorias: CategoriaDisciplinaOption[];
+        genero?: GeneroDisciplina | null;
+        edadMinima?: number | null;
+        edadMaxima?: number | null;
+      }
+    | undefined,
   categoriaActualId?: number | null,
   participante?: { fechaNacimiento?: string | null; genero?: GeneroDisciplina | null } | null,
 ): CategoriaDisciplinaOption[] {
-  const activas = (disciplina?.categorias ?? []).filter((c) => c.activo || c.id === categoriaActualId);
+  const activas = (disciplina?.categorias ?? []).filter(
+    (c) => c.activo || c.id === categoriaActualId,
+  );
   return activas.filter(
     (c) => c.id === categoriaActualId || categoriaCumpleRestricciones(c, disciplina, participante),
   );
