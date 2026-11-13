@@ -6,6 +6,7 @@ export const ROUTES = {
   login: '/login',
   register: '/register',
   dashboard: '/',
+  dashboardGestion: '/dashboard',
   hacermeSocio: '/hacerme-socio',
   socios: '/socios',
   /** DT-20: las ediciones son modales sobre el listado (?editar=<id>). */
