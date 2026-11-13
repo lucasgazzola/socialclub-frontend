@@ -831,11 +831,12 @@ export function EditarEspacioModal({
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-end gap-1.5 shrink-0">
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
+                            className="w-20 justify-center"
                             onClick={() => handleAbrirEditarSubespacio(sub)}
                             title="Edición rápida de nombre, capacidad y tarifas"
                           >
@@ -846,6 +847,7 @@ export function EditarEspacioModal({
                             type="button"
                             variant="ghost"
                             size="sm"
+                            className="w-24 justify-center"
                             onClick={() => {
                               setEspacioHijoId(sub.id);
                               setTabActiva('bloqueos');
@@ -860,7 +862,7 @@ export function EditarEspacioModal({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="text-rose-600 hover:bg-rose-50"
+                              className="w-28 justify-center text-rose-600 hover:bg-rose-50"
                               onClick={() => handleEliminarSubespacio(sub)}
                               title="Dar de baja este sub-espacio"
                             >
@@ -872,7 +874,7 @@ export function EditarEspacioModal({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="text-emerald-600 hover:bg-emerald-50"
+                              className="w-28 justify-center text-emerald-600 hover:bg-emerald-50"
                               onClick={() => handleReactivarSubespacio(sub)}
                               title="Reactivar este sub-espacio"
                             >
