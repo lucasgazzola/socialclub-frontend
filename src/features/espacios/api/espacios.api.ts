@@ -69,4 +69,10 @@ export const espaciosApi = {
     );
     return response.data;
   },
+
+  /** US-57: Da de baja lógicamente un espacio físico y sus sub-espacios asociados. */
+  async remove(id: number): Promise<{ mensaje: string; id: number }> {
+    const response = await apiClient.delete<{ mensaje: string; id: number }>(`/espacios/${id}`);
+    return response.data;
+  },
 };

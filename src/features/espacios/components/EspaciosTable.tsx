@@ -1,4 +1,4 @@
-import { CalendarClock, Layers, Pencil } from 'lucide-react';
+import { CalendarClock, Layers, Pencil, Trash2 } from 'lucide-react';
 import { Badge, Button, HeaderOrdenable } from '@/components/ui';
 import type { SentidoOrden } from '@/components/ui';
 import {
@@ -16,6 +16,7 @@ interface EspaciosTableProps {
   orden?: SentidoOrden;
   onOrdenar?: (campo: CampoOrdenEspacio) => void;
   onEditar?: (espacio: Espacio) => void;
+  onEliminar?: (espacio: Espacio) => void;
   onConfigurarBloqueo?: (espacio: Espacio) => void;
 }
 
@@ -45,6 +46,7 @@ export function EspaciosTable({
   orden,
   onOrdenar,
   onEditar,
+  onEliminar,
   onConfigurarBloqueo,
 }: EspaciosTableProps) {
   return (
@@ -178,6 +180,19 @@ export function EspaciosTable({
                           <CalendarClock size={14} aria-hidden="true" />
                           Bloqueos
                         </Button>
+                        {espacio.activo && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-rose-600 hover:bg-rose-50"
+                            onClick={() => onEliminar?.(espacio)}
+                            title="Dar de baja este espacio"
+                          >
+                            <Trash2 size={14} aria-hidden="true" />
+                            Dar de baja
+                          </Button>
+                        )}
                       </div>
                     </td>
                   )}
