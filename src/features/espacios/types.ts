@@ -119,9 +119,14 @@ export interface CreateEspacioPayload {
   bloqueos?: CreateBloqueoPayload[];
 }
 
+export type UpdateEspacioPayload = Partial<CreateEspacioPayload>;
+export type UpdateBloqueoPayload = Partial<CreateBloqueoPayload>;
+
 export interface FindEspaciosQuery {
   tipo?: TipoEspacio;
   modalidad?: ModalidadReserva;
+  capacidadMin?: number;
+  capacidadMax?: number;
   estado?: EstadoEspacioFiltro;
   activo?: boolean;
   busqueda?: string;

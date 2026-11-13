@@ -40,8 +40,8 @@ export function HeaderOrdenable<T extends string = string>({
         onClick={() => onOrdenar?.(campo)}
         title={`Ordenar por ${label}`}
         className={cn(
-          'group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-colors select-none outline-none focus:outline-none focus-visible:outline-none focus:ring-0',
-          align === 'right' && 'flex-row-reverse text-right'
+          'group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-colors select-none outline-none focus:outline-hidden focus-visible:outline-hidden focus:ring-0',
+          align === 'right' && 'w-full justify-end'
         )}
       >
         <span>{label}</span>

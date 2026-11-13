@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/test-utils';
 import { EspaciosPage } from './EspaciosPage';
 import { espaciosApi } from '../api/espacios.api';
+import type { Espacio } from '../types';
 
 vi.mock('@/features/auth/hooks/useAuth', () => ({
   useAuth: () => ({
@@ -31,42 +32,50 @@ vi.mock('../api/espacios.api', () => ({
   },
 }));
 
-describe('US-55 · EspaciosPage', () => {
+describe('US-58 · Consultar espacios y Catálogo público', () => {
+  const espaciosMock: Espacio[] = [
+    {
+      id: 1,
+      nombre: 'Cancha de Fútbol 5 Norte',
+      tipo: 'DEPORTIVO',
+      capacidadMaxima: 12,
+      modalidad: 'POR_HORA',
+      ubicacion: 'Sector Norte',
+      descripcion: 'Césped sintético iluminado',
+      precio: 15000,
+      precioSocio: 10000,
+      montoSena: 5000,
+      activo: true,
+      disciplinas: [{ disciplina: { id: 1, nombre: 'Fútbol' } }],
+    },
+    {
+      id: 2,
+      nombre: 'Salón de Eventos',
+      tipo: 'SOCIAL',
+      capacidadMaxima: 100,
+      modalidad: 'DIA_COMPLETO',
+      ubicacion: 'Sede Central',
+      descripcion: 'Salón con aire acondicionado',
+      precio: 90000,
+      precioSocio: null,
+      montoSena: 30000,
+      activo: true,
+      disciplinas: [],
+    },
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(espaciosApi.list).mockResolvedValue([
-      {
-        id: 1,
-        nombre: 'Cancha de Fútbol 5 Norte',
-        tipo: 'DEPORTIVO',
-        capacidadMaxima: 12,
-        modalidad: 'POR_HORA',
-        ubicacion: 'Sector Norte',
-        descripcion: 'Sintético',
-        precio: 15000,
-        precioSocio: 10000,
-        montoSena: 5000,
-        activo: true,
-        disciplinas: [{ disciplina: { id: 1, nombre: 'Fútbol' } }],
-      },
-      {
-        id: 2,
-        nombre: 'Salón de Eventos',
-        tipo: 'SOCIAL',
-        capacidadMaxima: 100,
-        modalidad: 'DIA_COMPLETO',
-        ubicacion: 'Sede Central',
-        descripcion: null,
-        precio: 90000,
-        precioSocio: null,
-        montoSena: 30000,
-        activo: true,
-        disciplinas: [],
-      },
-    ]);
+    vi.mocked(espaciosApi.list).mockResolvedValue({
+      items: espaciosMock,
+      total: 2,
+      pagina: 1,
+      porPagina: 10,
+      counts: { todos: 2, activos: 2, inactivos: 0 },
+    });
   });
 
-  it('muestra el listado de espacios físicos y permite abrir el modal de alta', async () => {
+  it('muestra la grilla administrativa por defecto para rol ADMIN con StatusTabs y columnas ordenables', async () => {
     const user = userEvent.setup();
     renderWithProviders(<EspaciosPage />);
 
@@ -74,13 +83,55 @@ describe('US-55 · EspaciosPage', () => {
     expect(screen.getByText('Salón de Eventos')).toBeInTheDocument();
     expect(screen.getByText('Fútbol')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Nuevo espacio/i }));
+    // Verificación de tabs de estado con counts
+    expect(screen.getByRole('tab', { name: /^Todos/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Activos/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /^Inactivos/i })).toBeInTheDocument();
 
+    // Botón de alta presente
+    await user.click(screen.getByRole('button', { name: /Nuevo espacio/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Nuevo espacio físico')).toBeInTheDocument();
   });
 
-  it('Criterio 5: muestra advertencia con el código de reserva cuando POST /espacios/:id/bloqueos responde 409', async () => {
+  it('permite alternar a la vista Catálogo y muestra tarjetas con tarifas diferenciadas y botón de alquiler', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<EspaciosPage />);
+
+    expect(await screen.findByText('Cancha de Fútbol 5 Norte')).toBeInTheDocument();
+
+    // Alternar a vista Catálogo
+    const btnCatalogo = screen.getByRole('radio', { name: /Catálogo/i });
+    await user.click(btnCatalogo);
+
+    // Debe mostrar tarjetas de catálogo
+    expect(await screen.findByTestId('catalogo-card-1')).toBeInTheDocument();
+    expect(screen.getByTestId('catalogo-card-2')).toBeInTheDocument();
+
+    // Datos del espacio en la tarjeta
+    expect(screen.getByText('12 personas')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Solicitar alquiler/i })).toHaveLength(2);
+  });
+
+  it('muestra mensaje claro cuando no hay resultados en el catálogo', async () => {
+    vi.mocked(espaciosApi.list).mockResolvedValue({
+      items: [],
+      total: 0,
+      pagina: 1,
+      porPagina: 10,
+      counts: { todos: 0, activos: 0, inactivos: 0 },
+    });
+
+    renderWithProviders(<EspaciosPage />);
+
+    const user = userEvent.setup();
+    const btnCatalogo = await screen.findByRole('radio', { name: /Catálogo/i });
+    await user.click(btnCatalogo);
+
+    expect(await screen.findByText('No se encontraron resultados')).toBeInTheDocument();
+  });
+
+  it('Criterio 5 (US-55): muestra advertencia cuando POST /espacios/:id/bloqueos responde 409', async () => {
     const user = userEvent.setup();
     const err409 = Object.assign(
       new Error(
