@@ -79,6 +79,7 @@ const navSections: NavSection[] = [
       },
       { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
       { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
+      { to: ROUTES.solicitarReserva, label: 'Solicitar reserva', icon: CalendarClock },
       { to: ROUTES.misReservas, label: 'Mis reservas', icon: CalendarClock },
       { to: ROUTES.solicitarInscripcion, label: 'Inscribirme a disciplina', icon: Dumbbell },
       { to: ROUTES.miDocumentacion, label: 'Mi documentación', icon: FileText },

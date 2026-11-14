@@ -386,11 +386,12 @@ export function EspaciosCatalogo({
               <Button
                 type="button"
                 onClick={() => {
+                  const id = espacioSeleccionado.id;
                   setEspacioSeleccionado(null);
-                  navigate(ROUTES.solicitudesReserva);
+                  navigate(`${ROUTES.solicitarReserva}?espacioId=${id}`);
                 }}
               >
-                Ir a reservas
+                Solicitar reserva
               </Button>
             </div>
           </div>

@@ -1,13 +1,53 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { reservasApi } from '../api/reservas.api';
-import type { EstadoReserva, MetodoPagoSena } from '../types';
+import type {
+  CreateReservaInput,
+  EstadoReserva,
+  MetodoPagoSena,
+  SolicitudPresupuestoInput,
+} from '../types';
 
 export const reservasKeys = {
   all: ['reservas'] as const,
+  espacios: () => [...reservasKeys.all, 'espacios'] as const,
+  disponibilidad: (espacioId: number, desde: string, hasta: string) =>
+    [...reservasKeys.all, 'disponibilidad', espacioId, desde, hasta] as const,
+  presupuesto: (input: SolicitudPresupuestoInput | null) =>
+    [...reservasKeys.all, 'presupuesto', input] as const,
   solicitudes: (estados: EstadoReserva[], busqueda: string) =>
     [...reservasKeys.all, 'solicitudes', estados.join(','), busqueda] as const,
   mias: () => [...reservasKeys.all, 'mias'] as const,
 };
+
+export function useEspaciosParaReserva() {
+  return useQuery({
+    queryKey: reservasKeys.espacios(),
+    queryFn: reservasApi.espaciosDisponibles,
+  });
+}
+
+export function useDisponibilidadEspacio(
+  espacioId: number | null,
+  desde: string,
+  hasta: string,
+) {
+  return useQuery({
+    queryKey: reservasKeys.disponibilidad(espacioId ?? 0, desde, hasta),
+    queryFn: () => reservasApi.disponibilidad(espacioId!, desde, hasta),
+    enabled: espacioId !== null && Boolean(desde) && Boolean(hasta),
+  });
+}
+
+export function usePresupuestoReserva(input: SolicitudPresupuestoInput | null) {
+  return useQuery({
+    queryKey: reservasKeys.presupuesto(input),
+    queryFn: () => reservasApi.presupuesto(input!),
+    enabled: input !== null,
+  });
+}
+
+export const useSolicitarReserva = () =>
+  useAccion((input: CreateReservaInput) => reservasApi.solicitar(input));
 
 export function useSolicitudesReserva(estados: EstadoReserva[], busqueda = '') {
   return useQuery({
@@ -21,7 +61,7 @@ export function useMisReservas() {
 }
 
 /** Cualquier acción cambia la bandeja y «Mis Reservas». */
-function useAccion<V>(fn: (v: V) => Promise<{ mensaje: string }>) {
+function useAccion<V, R extends { mensaje: string } = { mensaje: string }>(fn: (v: V) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,

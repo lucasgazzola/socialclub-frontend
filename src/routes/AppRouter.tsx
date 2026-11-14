@@ -24,6 +24,7 @@ import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPag
 import { MisCuotasPage } from '@/features/pagos/pages/MisCuotasPage';
 import { ResultadoPagoPage } from '@/features/pasarela/pages/ResultadoPagoPage';
 import { MisReservasPage } from '@/features/reservas/pages/MisReservasPage';
+import { SolicitarReservaPage } from '@/features/reservas/pages/SolicitarReservaPage';
 import { SolicitudesReservaPage } from '@/features/reservas/pages/SolicitudesReservaPage';
 import { SimuladorPagoPage } from '@/features/pasarela/pages/SimuladorPagoPage';
 import { RegistrarPagoDeportivoPage } from '@/features/pagos/pages/RegistrarPagoDeportivoPage';
@@ -62,6 +63,7 @@ export function AppRouter() {
           <Route path={ROUTES.cambiarContrasena} element={<CambiarContrasenaPage />} />
           <Route path={ROUTES.misCuotas} element={<MisCuotasPage />} />
           <Route path={ROUTES.misEntradas} element={<MisEntradasPage />} />
+          <Route path={ROUTES.solicitarReserva} element={<SolicitarReservaPage />} />
           <Route path={ROUTES.misReservas} element={<MisReservasPage />} />
           <Route path={ROUTES.resultadoPago} element={<ResultadoPagoPage />} />
           <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />

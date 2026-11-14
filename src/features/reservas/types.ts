@@ -71,6 +71,69 @@ export interface ResultadoAccion {
 
 export type MetodoPagoSena = 'EFECTIVO' | 'TRANSFERENCIA' | 'DEBITO' | 'CREDITO' | 'OTRO';
 
+/** US-59: espacio disponible para solicitar reserva. */
+export interface EspacioParaReserva {
+  id: number;
+  nombre: string;
+  tipo: string;
+  capacidadMaxima: number;
+  modalidad: 'POR_HORA' | 'DIA_COMPLETO';
+  ubicacion: string | null;
+  descripcion: string | null;
+  espacioPadreId: number | null;
+  espacioPadre: { id: number; nombre: string } | null;
+  subespacios: { id: number; nombre: string }[];
+  precio: number;
+  descuentoSocio: number;
+  precioSocio: number | null;
+  montoSena: number;
+  disciplinas: { id: number; nombre: string }[];
+}
+
+export interface IntervaloOcupado {
+  tipo: 'RESERVA' | 'BLOQUEO';
+  inicio: string;
+  fin: string;
+  detalle: string;
+}
+
+export interface DisponibilidadEspacio {
+  espacioId: number;
+  modalidad: 'POR_HORA' | 'DIA_COMPLETO';
+  desde: string;
+  hasta: string;
+  ocupados: IntervaloOcupado[];
+}
+
+export interface SolicitudPresupuestoInput {
+  espacioId: number;
+  fecha: string;
+  horaInicio?: string;
+  horaFin?: string;
+}
+
+export type CreateReservaInput = SolicitudPresupuestoInput;
+
+export interface PresupuestoReserva {
+  disponible: boolean;
+  conflictos: IntervaloOcupado[];
+  inicio: string;
+  fin: string;
+  modalidad: 'POR_HORA' | 'DIA_COMPLETO';
+  cantidad: number;
+  esSocio: boolean;
+  alDia: boolean;
+  aplicaTarifaSocio: boolean;
+  cuotasAdeudadas: number;
+  precioRegularUnitario: number;
+  precioSocioUnitario: number;
+  descuentoSocioPct: number;
+  montoRegular: number;
+  descuentoAplicado: number;
+  montoTotal: number;
+  montoSena: number;
+}
+
 export function formatearPesos(n: number): string {
   return `$${n.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
 }
