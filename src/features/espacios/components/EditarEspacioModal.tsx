@@ -76,6 +76,459 @@ interface EditarEspacioModalProps {
   onSuccess?: () => void;
 }
 
+// Componente interno para gestionar bloqueos inline de un subespacio
+interface SubespacioBloqueosInlineProps {
+  subespacio: SubespacioResumen;
+  disciplinasClub: { id: number; nombre: string }[];
+  onVolver: () => void;
+}
+
+function SubespacioBloqueosInline({
+  subespacio,
+  disciplinasClub,
+  onVolver,
+}: SubespacioBloqueosInlineProps) {
+  const { data: subDetalle, refetch: refetchSub } = useEspacio(subespacio.id);
+  const agregarBloqueo = useAgregarBloqueo();
+  const actualizarBloqueo = useActualizarBloqueo();
+  const eliminarBloqueo = useEliminarBloqueo();
+
+  const [mostrandoFormBloqueo, setMostrandoFormBloqueo] = useState(false);
+  const [bloqueoEnEdicion, setBloqueoEnEdicion] = useState<BloqueoAgenda | null>(null);
+  const [bloqueoAEliminar, setBloqueoAEliminar] = useState<number | null>(null);
+  const [errorConflictoBloqueo, setErrorConflictoBloqueo] = useState<string | null>(null);
+
+  // Form fields
+  const [bloqTipo, setBloqTipo] = useState<'RECURRENTE' | 'PUNTUAL'>('RECURRENTE');
+  const [bloqDias, setBloqDias] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [bloqFecha, setBloqFecha] = useState('');
+  const [bloqHoraInicio, setBloqHoraInicio] = useState('18:00');
+  const [bloqHoraFin, setBloqHoraFin] = useState('20:00');
+  const [bloqVigenteDesde, setBloqVigenteDesde] = useState('');
+  const [bloqVigenteHasta, setBloqVigenteHasta] = useState('');
+  const [bloqDisciplinaId, setBloqDisciplinaId] = useState<number | ''>('');
+  const [bloqMotivo, setBloqMotivo] = useState('');
+
+  const bloqueos = subDetalle?.bloqueos ?? [];
+
+  const handleAbrirNuevoBloqueo = () => {
+    setBloqueoEnEdicion(null);
+    setBloqTipo('RECURRENTE');
+    setBloqDias([1, 2, 3, 4, 5]);
+    setBloqFecha('');
+    setBloqHoraInicio('18:00');
+    setBloqHoraFin('20:00');
+    setBloqVigenteDesde('');
+    setBloqVigenteHasta('');
+    setBloqDisciplinaId('');
+    setBloqMotivo('');
+    setErrorConflictoBloqueo(null);
+    setMostrandoFormBloqueo(true);
+  };
+
+  const handleAbrirEditarBloqueo = (b: BloqueoAgenda) => {
+    setBloqueoEnEdicion(b);
+    setBloqTipo(b.tipo);
+    setBloqDias(b.diasSemana ?? []);
+    setBloqFecha(b.fecha ? b.fecha.split('T')[0] : '');
+    setBloqHoraInicio(b.horaInicio ?? '18:00');
+    setBloqHoraFin(b.horaFin ?? '20:00');
+    setBloqVigenteDesde(b.vigenteDesde ? b.vigenteDesde.split('T')[0] : '');
+    setBloqVigenteHasta(b.vigenteHasta ? b.vigenteHasta.split('T')[0] : '');
+    setBloqDisciplinaId(b.disciplinaId ?? '');
+    setBloqMotivo(b.motivo ?? '');
+    setErrorConflictoBloqueo(null);
+    setMostrandoFormBloqueo(true);
+  };
+
+  const handleGuardarBloqueo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorConflictoBloqueo(null);
+
+    try {
+      if (bloqueoEnEdicion) {
+        const payload: UpdateBloqueoPayload = {
+          tipo: bloqTipo,
+          diasSemana: bloqTipo === 'RECURRENTE' ? bloqDias : [],
+          fecha: bloqTipo === 'PUNTUAL' && bloqFecha ? bloqFecha : undefined,
+          horaInicio: bloqHoraInicio,
+          horaFin: bloqHoraFin,
+          vigenteDesde: bloqVigenteDesde || undefined,
+          vigenteHasta: bloqVigenteHasta || undefined,
+          disciplinaId: bloqDisciplinaId !== '' ? Number(bloqDisciplinaId) : undefined,
+          motivo: bloqMotivo.trim() || undefined,
+        };
+
+        await actualizarBloqueo.mutateAsync({
+          espacioId: subespacio.id,
+          bloqueoId: bloqueoEnEdicion.id,
+          payload,
+        });
+      } else {
+        const payload: CreateBloqueoPayload = {
+          tipo: bloqTipo,
+          diasSemana: bloqTipo === 'RECURRENTE' ? bloqDias : [],
+          fecha: bloqTipo === 'PUNTUAL' && bloqFecha ? bloqFecha : undefined,
+          horaInicio: bloqHoraInicio,
+          horaFin: bloqHoraFin,
+          vigenteDesde: bloqVigenteDesde || undefined,
+          vigenteHasta: bloqVigenteHasta || undefined,
+          disciplinaId: bloqDisciplinaId !== '' ? Number(bloqDisciplinaId) : undefined,
+          motivo: bloqMotivo.trim() || undefined,
+        };
+
+        await agregarBloqueo.mutateAsync({
+          espacioId: subespacio.id,
+          payload,
+        });
+      }
+
+      await refetchSub();
+      setMostrandoFormBloqueo(false);
+      setBloqueoEnEdicion(null);
+    } catch (err: unknown) {
+      const errorObj = err as {
+        status?: number;
+        message?: string;
+        response?: { status?: number; data?: { message?: string } };
+      };
+      if (errorObj?.status === 409 || errorObj?.response?.status === 409) {
+        const msj =
+          errorObj?.response?.data?.message ||
+          errorObj?.message ||
+          'El bloqueo entra en conflicto con una reserva aprobada.';
+        setErrorConflictoBloqueo(msj);
+      }
+    }
+  };
+
+  const handleEliminarBloqueo = async (bloqueoId: number) => {
+    try {
+      await eliminarBloqueo.mutateAsync({
+        espacioId: subespacio.id,
+        bloqueoId,
+      });
+      await refetchSub();
+      setBloqueoAEliminar(null);
+    } catch {
+      setBloqueoAEliminar(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Encabezado con botón de cerrar/volver */}
+      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div className="flex items-center gap-2">
+          <CalendarClock className="text-brand-600" size={18} aria-hidden="true" />
+          <h4 className="text-sm font-semibold text-slate-900">
+            Bloqueos de agenda · {subespacio.nombre}
+          </h4>
+        </div>
+        <button
+          type="button"
+          onClick={onVolver}
+          className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          title="Volver a sub-espacios"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {errorConflictoBloqueo && (
+        <div
+          role="alert"
+          data-testid="alerta-conflicto-bloqueo"
+          className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs text-rose-900"
+        >
+          <AlertTriangle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+          <div>
+            <strong className="font-semibold">Conflicto con reserva aprobada:</strong>
+            <p className="mt-0.5">{errorConflictoBloqueo}</p>
+          </div>
+        </div>
+      )}
+
+      {!mostrandoFormBloqueo ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-500">
+                Horarios reservados específicamente para {subespacio.nombre}.
+              </p>
+            </div>
+            <Button size="sm" onClick={handleAbrirNuevoBloqueo}>
+              <Plus size={14} aria-hidden="true" />
+              Nuevo bloqueo
+            </Button>
+          </div>
+
+          {bloqueos.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-xs text-slate-500">
+              <CalendarClock className="mx-auto mb-2 text-slate-300" size={28} />
+              Este sub-espacio no tiene bloqueos de agenda vigentes.
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200/80 bg-white shadow-xs">
+              {bloqueos.map((b) => {
+                const diasTexto =
+                  b.diasSemana && b.diasSemana.length > 0
+                    ? b.diasSemana
+                        .map((d) => DIAS_SEMANA.find((dia) => dia.valor === d)?.etiqueta)
+                        .filter(Boolean)
+                        .join(', ')
+                    : null;
+
+                return (
+                  <div
+                    key={b.id}
+                    className="flex items-center justify-between p-3 hover:bg-slate-50/60 transition-colors"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={b.tipo === 'RECURRENTE' ? 'default' : 'secondary'}>
+                          {b.tipo}
+                        </Badge>
+                        {b.disciplina && (
+                          <Badge variant="outline" className="font-medium">
+                            {b.disciplina.nombre}
+                          </Badge>
+                        )}
+                        <span className="text-xs font-semibold text-slate-800">
+                          {b.horaInicio ?? '—'} - {b.horaFin ?? '—'}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-slate-500">
+                        {b.tipo === 'RECURRENTE' && diasTexto && (
+                          <span>Días: {diasTexto} · </span>
+                        )}
+                        {b.tipo === 'PUNTUAL' && b.fecha && (
+                          <span>Fecha: {b.fecha.split('T')[0]} · </span>
+                        )}
+                        {b.motivo && <span className="italic">{b.motivo}</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleAbrirEditarBloqueo(b)}
+                        title="Editar bloqueo"
+                      >
+                        <Pencil size={13} aria-hidden="true" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-rose-600 hover:bg-rose-50"
+                        onClick={() => setBloqueoAEliminar(b.id)}
+                        title="Eliminar bloqueo"
+                      >
+                        <Trash2 size={13} aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2 border-t border-slate-100">
+            <Button type="button" variant="secondary" size="sm" onClick={onVolver}>
+              Volver a sub-espacios
+            </Button>
+          </div>
+        </div>
+      ) : (
+        /* Sub-formulario de Creación / Edición de Bloqueo para Sub-espacio */
+        <form
+          onSubmit={handleGuardarBloqueo}
+          className="space-y-3.5 rounded-xl border border-slate-200 bg-slate-50/75 p-4 text-xs"
+        >
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h4 className="font-semibold text-slate-900">
+              {bloqueoEnEdicion ? 'Modificar bloqueo de agenda' : 'Nuevo bloqueo de agenda'}
+            </h4>
+            <button
+              type="button"
+              onClick={() => setMostrandoFormBloqueo(false)}
+              className="text-slate-400 hover:text-slate-600"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="sub-bloq-tipo" className="block font-medium text-slate-700">
+                Tipo de bloqueo
+              </label>
+              <Select
+                id="sub-bloq-tipo"
+                value={bloqTipo}
+                onChange={(e) => setBloqTipo(e.target.value as 'RECURRENTE' | 'PUNTUAL')}
+                className="mt-1"
+              >
+                <option value="RECURRENTE">Recurrente semanal</option>
+                <option value="PUNTUAL">Puntual (fecha específica)</option>
+              </Select>
+            </div>
+
+            <div>
+              <label htmlFor="sub-bloq-disciplina" className="block font-medium text-slate-700">
+                Disciplina asociada
+              </label>
+              <Select
+                id="sub-bloq-disciplina"
+                value={bloqDisciplinaId}
+                onChange={(e) =>
+                  setBloqDisciplinaId(e.target.value ? Number(e.target.value) : '')
+                }
+                className="mt-1"
+              >
+                <option value="">Ninguna / Mantenimiento general</option>
+                {disciplinasClub.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.nombre}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            {bloqTipo === 'RECURRENTE' ? (
+              <div className="sm:col-span-2">
+                <label className="block font-medium text-slate-700">
+                  Días de la semana aplicables
+                </label>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {DIAS_SEMANA.map((dia) => {
+                    const activo = bloqDias.includes(dia.valor);
+                    return (
+                      <button
+                        key={dia.valor}
+                        type="button"
+                        onClick={() => {
+                          if (activo) {
+                            setBloqDias(bloqDias.filter((v) => v !== dia.valor));
+                          } else {
+                            setBloqDias([...bloqDias, dia.valor]);
+                          }
+                        }}
+                        className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                          activo
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {dia.etiqueta}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="sub-bloq-fecha" className="block font-medium text-slate-700">
+                  Fecha específica
+                </label>
+                <Input
+                  id="sub-bloq-fecha"
+                  type="date"
+                  value={bloqFecha}
+                  onChange={(e) => setBloqFecha(e.target.value)}
+                  className="mt-1"
+                  required
+                />
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="sub-bloq-hora-inicio" className="block font-medium text-slate-700">
+                Hora de inicio
+              </label>
+              <Input
+                id="sub-bloq-hora-inicio"
+                type="time"
+                value={bloqHoraInicio}
+                onChange={(e) => setBloqHoraInicio(e.target.value)}
+                className="mt-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="sub-bloq-hora-fin" className="block font-medium text-slate-700">
+                Hora de fin
+              </label>
+              <Input
+                id="sub-bloq-hora-fin"
+                type="time"
+                value={bloqHoraFin}
+                onChange={(e) => setBloqHoraFin(e.target.value)}
+                className="mt-1"
+                required
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="sub-bloq-motivo" className="block font-medium text-slate-700">
+                Motivo del bloqueo
+              </label>
+              <Input
+                id="sub-bloq-motivo"
+                value={bloqMotivo}
+                onChange={(e) => setBloqMotivo(e.target.value)}
+                placeholder="Ej: Entrenamiento o mantenimiento particular"
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setMostrandoFormBloqueo(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={actualizarBloqueo.isPending || agregarBloqueo.isPending}
+            >
+              <Save size={13} aria-hidden="true" />
+              {bloqueoEnEdicion ? 'Actualizar bloqueo' : 'Crear bloqueo'}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {/* Diálogo de Confirmación para dar de baja Bloqueo del Subespacio */}
+      <ConfirmDialog
+        open={bloqueoAEliminar !== null}
+        title="Dar de baja bloqueo de agenda"
+        confirmLabel="Dar de baja"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={eliminarBloqueo.isPending}
+        onConfirm={() => bloqueoAEliminar !== null && handleEliminarBloqueo(bloqueoAEliminar)}
+        onCancel={() => setBloqueoAEliminar(null)}
+      >
+        <p className="text-sm text-slate-600">
+          ¿Estás seguro de que deseás dar de baja este bloqueo de agenda de{' '}
+          <strong>"{subespacio.nombre}"</strong>?
+        </p>
+      </ConfirmDialog>
+    </div>
+  );
+}
+
 export function EditarEspacioModal({
   espacio,
   open,
@@ -92,6 +545,7 @@ export function EditarEspacioModal({
   const [subEnEdicion, setSubEnEdicion] = useState<SubespacioResumen | null>(null);
   const [subAEliminar, setSubAEliminar] = useState<SubespacioResumen | null>(null);
   const [subAReactivar, setSubAReactivar] = useState<SubespacioResumen | null>(null);
+  const [subBloqueosGestion, setSubBloqueosGestion] = useState<SubespacioResumen | null>(null);
   const [bloqueoAEliminar, setBloqueoAEliminar] = useState<number | null>(null);
   const [mostrandoFormSub, setMostrandoFormSub] = useState(false);
   const [subNombre, setSubNombre] = useState('');
@@ -168,6 +622,7 @@ export function EditarEspacioModal({
       setTabActiva('datos');
       setMostrandoFormSub(false);
       setSubEnEdicion(null);
+      setSubBloqueosGestion(null);
       setErrorSubespacio(null);
     } else {
       setTabActiva(initialTab);
@@ -789,7 +1244,13 @@ export function EditarEspacioModal({
               </div>
             )}
 
-            {!mostrandoFormSub ? (
+            {subBloqueosGestion ? (
+              <SubespacioBloqueosInline
+                subespacio={subBloqueosGestion}
+                disciplinasClub={disciplinasClub}
+                onVolver={() => setSubBloqueosGestion(null)}
+              />
+            ) : !mostrandoFormSub ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -854,8 +1315,9 @@ export function EditarEspacioModal({
                             size="sm"
                             className="w-24 justify-center"
                             onClick={() => {
-                              setEspacioHijoId(sub.id);
-                              setTabActiva('bloqueos');
+                              setMostrandoFormSub(false);
+                              setSubEnEdicion(null);
+                              setSubBloqueosGestion(sub);
                             }}
                             title="Gestionar bloqueos individuales de este sub-espacio"
                           >
