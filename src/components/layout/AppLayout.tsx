@@ -168,6 +168,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.solicitudesReserva]: 'Solicitudes de Reserva',
   [ROUTES.espacios]: 'Espacios Físicos',
   [ROUTES.solicitarInscripcion]: 'Solicitar Inscripción',
+  [ROUTES.misSolicitudesInscripcion]: 'Mis Solicitudes de Inscripción',
   [ROUTES.miDocumentacion]: 'Mi Documentación',
   [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { renderWithProviders } from '@/test/test-utils';
 import { SolicitarInscripcionPage } from './SolicitarInscripcionPage';
@@ -213,7 +214,35 @@ describe('US-63 — Solicitar inscripción a una disciplina', () => {
     expect(await screen.findByTestId('tabla-mis-solicitudes')).toBeInTheDocument();
     expect(screen.getByText('Básquet')).toBeInTheDocument();
     expect(screen.getByText('Primera Masculino')).toBeInTheDocument();
-    expect(screen.getByTestId('badge-estado-pendiente')).toHaveTextContent('Pendiente');
+    expect(screen.getByTestId('badge-estado-pendiente')).toHaveTextContent('En revisión');
+  });
+
+  it('actualiza la ruta y vuelve a consultar los datos al cambiar de pestaña', async () => {
+    const user = userEvent.setup();
+    function RutaActual() {
+      return <output data-testid="ruta-actual">{useLocation().pathname}</output>;
+    }
+
+    renderWithProviders(
+      <>
+        <SolicitarInscripcionPage />
+        <RutaActual />
+      </>,
+    );
+
+    await screen.findByText('Básquet');
+    expect(api.obtenerMisSolicitudesInscripcion).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('tab', { name: /Mis solicitudes/i }));
+    await waitFor(() => {
+      expect(api.obtenerMisSolicitudesInscripcion).toHaveBeenCalledTimes(2);
+      expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/inscripcion/mis-solicitudes');
+    });
+
+    await user.click(screen.getByRole('tab', { name: /Catálogo de disciplinas/i }));
+    await waitFor(() => {
+      expect(api.obtenerCatalogoInscripcion).toHaveBeenCalledTimes(3);
+      expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/inscripcion/solicitar');
+    });
   });
 });
-

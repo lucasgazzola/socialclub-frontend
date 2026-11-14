@@ -14,6 +14,7 @@ import type {
   RequisitosInscripcion,
   SolicitarInscripcionPayload,
   SolicitudInscripcion,
+  EstadoSolicitudInscripcion,
 } from '../types';
 import type {
   CrearHabilitacionExcepcionalPayload,
@@ -148,8 +149,13 @@ export async function solicitarInscripcion(
   return data;
 }
 
-/** US-63: listar solicitudes de inscripción del socio autenticado. */
-export async function obtenerMisSolicitudesInscripcion(): Promise<SolicitudInscripcion[]> {
-  const { data } = await apiClient.get<SolicitudInscripcion[]>('/inscripcion/mis-solicitudes');
+/** US-63 / US-64: listar solicitudes de inscripción del socio autenticado con filtro opcional por estado. */
+export async function obtenerMisSolicitudesInscripcion(
+  estado?: EstadoSolicitudInscripcion,
+): Promise<SolicitudInscripcion[]> {
+  const { data } = await apiClient.get<SolicitudInscripcion[]>(
+    '/inscripcion/mis-solicitudes',
+    estado ? { params: { estado } } : undefined,
+  );
   return data;
 }

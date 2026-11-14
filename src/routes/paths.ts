@@ -45,6 +45,8 @@ export const ROUTES = {
   simuladorPago: '/pagos/simulador',
   /** US-63: postulación / solicitud de inscripción a disciplina. */
   solicitarInscripcion: '/inscripcion/solicitar',
+  /** US-64: consulta de mis solicitudes de inscripción. */
+  misSolicitudesInscripcion: '/inscripcion/mis-solicitudes',
   /** DT-28: consulta de propia documentación para socio/participante. */
   miDocumentacion: '/mi-documentacion',
   cobrarCuotaDeportiva: '/cuotas/deportiva/cobrar',

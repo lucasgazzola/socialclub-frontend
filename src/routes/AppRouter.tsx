@@ -67,6 +67,7 @@ export function AppRouter() {
           <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />
           <Route path={ROUTES.miDocumentacion} element={<MiDocumentacionPage />} />
           <Route path={ROUTES.solicitarInscripcion} element={<SolicitarInscripcionPage />} />
+          <Route path={ROUTES.misSolicitudesInscripcion} element={<SolicitarInscripcionPage />} />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />

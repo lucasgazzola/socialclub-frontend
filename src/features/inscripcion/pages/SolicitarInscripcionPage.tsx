@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Spinner, StatusTabs, type StatusTabItem } from '@/components/ui';
+import { ROUTES } from '@/routes/paths';
 import {
   useCatalogoInscripcion,
   useMisSolicitudesInscripcion,
@@ -12,11 +14,40 @@ import type { DisciplinaCatalogo } from '../types';
 type TabView = 'catalogo' | 'solicitudes';
 
 export function SolicitarInscripcionPage() {
-  const [tabActual, setTabActual] = useState<TabView>('catalogo');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const esTabSolicitudes =
+    location.pathname === ROUTES.misSolicitudesInscripcion || searchParams.get('tab') === 'solicitudes';
+
+  const tabActual: TabView = esTabSolicitudes ? 'solicitudes' : 'catalogo';
   const [disciplinaSeleccionada, setDisciplinaSeleccionada] = useState<DisciplinaCatalogo | null>(null);
 
-  const { data: catalogo, isLoading: cargandoCatalogo, error: errorCatalogo } = useCatalogoInscripcion();
-  const { data: solicitudes = [], isLoading: cargandoSolicitudes } = useMisSolicitudesInscripcion();
+  const {
+    data: catalogo,
+    isLoading: cargandoCatalogo,
+    error: errorCatalogo,
+    refetch: recargarCatalogo,
+  } = useCatalogoInscripcion();
+  const {
+    data: solicitudes = [],
+    isLoading: cargandoSolicitudes,
+    refetch: recargarSolicitudes,
+  } = useMisSolicitudesInscripcion();
+  const ultimaRuta = useRef(location.pathname);
+
+  useEffect(() => {
+    if (ultimaRuta.current === location.pathname) {
+      return;
+    }
+
+    ultimaRuta.current = location.pathname;
+    void Promise.all([recargarCatalogo(), recargarSolicitudes()]);
+  }, [location.pathname, recargarCatalogo, recargarSolicitudes]);
+
+  const cambiarTab = (tab: TabView) => {
+    navigate(tab === 'solicitudes' ? ROUTES.misSolicitudesInscripcion : ROUTES.solicitarInscripcion);
+  };
 
   const tabs: StatusTabItem<TabView>[] = [
     {
@@ -46,7 +77,7 @@ export function SolicitarInscripcionPage() {
         <StatusTabs<TabView>
           tabs={tabs}
           value={tabActual}
-          onChange={setTabActual}
+          onChange={cambiarTab}
         />
       </div>
 
