@@ -152,94 +152,91 @@ export function PortalSocioLayout() {
         </div>
       </header>
 
-      {/* Contenedor principal con scroll propio (evita rebote blanco del body) */}
-      <div className="relative z-10 flex-1 overflow-y-auto overscroll-none">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 lg:py-10">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-10">
-            {/* Menú lateral izquierdo estilo lista limpia */}
-            <aside
-              className={cn(
-                'lg:block',
-                menuMovilAbierto ? 'block' : 'hidden',
-              )}
-            >
-              <nav aria-label="Menú del socio" className="divide-y divide-white/10">
-                {itemsVisibles.map(({ to, label, icon: Icon }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    end={to === ROUTES.dashboard}
-                    onClick={() => setMenuMovilAbierto(false)}
-                    className={({ isActive }) =>
-                      cn(
-                        'group flex items-center justify-between py-3.5 px-2.5 text-sm transition-colors',
-                        isActive
-                          ? 'border-l-2 border-brand-400 bg-white/[0.06] font-semibold text-white'
-                          : 'text-slate-300 hover:bg-white/[0.04] hover:text-white',
-                      )
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <span className="flex items-center gap-3 min-w-0">
-                          <Icon
-                            size={17}
-                            strokeWidth={1.8}
-                            className={cn(
-                              'shrink-0 transition-colors',
-                              isActive
-                                ? 'text-brand-400'
-                                : 'text-slate-400 group-hover:text-brand-300',
-                            )}
-                          />
-                          <span className="truncate">{label}</span>
-                        </span>
-                        <ChevronRight
-                          size={15}
-                          className={cn(
-                            'shrink-0 transition-transform duration-150 group-hover:translate-x-0.5',
-                            isActive ? 'text-brand-400' : 'text-slate-500 group-hover:text-slate-300',
-                          )}
-                        />
-                      </>
-                    )}
-                  </NavLink>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={() => void logout()}
-                  title="Cerrar sesión"
-                  className="group flex w-full items-center justify-between py-3.5 px-2.5 text-sm text-slate-300 transition-colors hover:bg-rose-500/10 hover:text-rose-300 cursor-pointer"
-                >
-                  <span className="flex items-center gap-3">
-                    <LogOut
-                      size={17}
-                      strokeWidth={1.8}
-                      className="shrink-0 text-slate-400 group-hover:text-rose-400 transition-colors"
+      {/* Cuerpo principal con geometría fija: aside fijo a la izquierda y contenedor derecho de tamaño constante */}
+      <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-6 px-4 pt-6 sm:px-8 lg:flex-row lg:items-stretch lg:gap-10 lg:pt-8">
+        {/* Menú lateral izquierdo fijo (nunca se deforma ni scrollea con el contenido derecho) */}
+        <aside
+          className={cn(
+            'w-full shrink-0 lg:block lg:w-[260px] lg:overflow-y-auto lg:pb-8',
+            menuMovilAbierto ? 'block' : 'hidden',
+          )}
+        >
+          <nav aria-label="Menú del socio" className="divide-y divide-white/10">
+            {itemsVisibles.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === ROUTES.dashboard}
+                onClick={() => setMenuMovilAbierto(false)}
+                className={({ isActive }) =>
+                  cn(
+                    'group flex items-center justify-between py-3.5 px-2.5 text-sm transition-colors',
+                    isActive
+                      ? 'border-l-2 border-brand-400 bg-white/[0.06] font-semibold text-white'
+                      : 'text-slate-300 hover:bg-white/[0.04] hover:text-white',
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span className="flex items-center gap-3 min-w-0">
+                      <Icon
+                        size={17}
+                        strokeWidth={1.8}
+                        className={cn(
+                          'shrink-0 transition-colors',
+                          isActive
+                            ? 'text-brand-400'
+                            : 'text-slate-400 group-hover:text-brand-300',
+                        )}
+                      />
+                      <span className="truncate">{label}</span>
+                    </span>
+                    <ChevronRight
+                      size={15}
+                      className={cn(
+                        'shrink-0 transition-transform duration-150 group-hover:translate-x-0.5',
+                        isActive ? 'text-brand-400' : 'text-slate-500 group-hover:text-slate-300',
+                      )}
                     />
-                    <span>Cerrar sesión</span>
-                  </span>
-                  <ChevronRight
-                    size={15}
-                    className="shrink-0 text-slate-500 group-hover:text-rose-300 transition-transform duration-150 group-hover:translate-x-0.5"
-                  />
-                </button>
-              </nav>
-            </aside>
+                  </>
+                )}
+              </NavLink>
+            ))}
 
-            {/* Área de contenido principal */}
-            <main
-              className={cn(
-                'min-w-0',
-                !esRutaInicio &&
-                  'rounded-2xl border border-white/10 bg-white p-5 text-slate-900 shadow-xl sm:p-8',
-              )}
+            <button
+              type="button"
+              onClick={() => void logout()}
+              title="Cerrar sesión"
+              className="group flex w-full items-center justify-between py-3.5 px-2.5 text-sm text-slate-300 transition-colors hover:bg-rose-500/10 hover:text-rose-300 cursor-pointer"
             >
-              <Outlet />
-            </main>
-          </div>
-        </div>
+              <span className="flex items-center gap-3">
+                <LogOut
+                  size={17}
+                  strokeWidth={1.8}
+                  className="shrink-0 text-slate-400 group-hover:text-rose-400 transition-colors"
+                />
+                <span>Cerrar sesión</span>
+              </span>
+              <ChevronRight
+                size={15}
+                className="shrink-0 text-slate-500 group-hover:text-rose-300 transition-transform duration-150 group-hover:translate-x-0.5"
+              />
+            </button>
+          </nav>
+        </aside>
+
+        {/* Área de contenido principal con ancho y alto fijos y scroll interno propio */}
+        <main
+          className={cn(
+            'min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-none',
+            esRutaInicio
+              ? 'pb-8'
+              : 'mb-6 rounded-2xl border border-white/10 bg-white p-6 text-slate-900 shadow-2xl sm:p-8 lg:mb-8',
+          )}
+        >
+          <Outlet />
+        </main>
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export function PerfilSocioPage() {
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="w-full space-y-6">
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Mi Perfil</h1>
         <p className="mt-1 text-sm text-slate-500">
