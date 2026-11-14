@@ -104,11 +104,12 @@ export function CalendarioDisponibilidad({
     }
 
     let bloquesLibres = 0;
+    const limiteAnticipacionMs = ahoraMs + 30 * MS_MINUTO;
     for (let i = 0; i < HORAS_INICIO.length; i++) {
       const sInicio = instanteClubDesdeIso(fechaIso, HORAS_INICIO[i]).getTime();
       const sFin = instanteClubDesdeIso(fechaIso, HORAS_FIN[i]).getTime();
-      const yaPaso = sInicio <= ahoraMs;
-      if (!yaPaso && !conflictoEnRango(sInicio, sFin)) {
+      const sinAnticipacion = sInicio <= limiteAnticipacionMs;
+      if (!sinAnticipacion && !conflictoEnRango(sInicio, sFin)) {
         bloquesLibres++;
       }
     }
@@ -134,11 +135,18 @@ export function CalendarioDisponibilidad({
           const sFin = instanteClubDesdeIso(fechaSeleccionada, hFin).getTime();
           const conflicto = conflictoEnRango(sInicio, sFin);
           const yaPaso = sInicio <= ahoraMs;
+          const sinAnticipacion = !yaPaso && sInicio <= ahoraMs + 30 * MS_MINUTO;
           return {
             hIni,
             hFin,
-            ocupado: Boolean(conflicto) || yaPaso,
-            detalle: conflicto?.detalle ?? (yaPaso ? 'Horario pasado' : ''),
+            ocupado: Boolean(conflicto) || yaPaso || sinAnticipacion,
+            detalle:
+              conflicto?.detalle ??
+              (yaPaso
+                ? 'Horario pasado'
+                : sinAnticipacion
+                  ? 'Requiere al menos 30 min de anticipación'
+                  : ''),
           };
         })
       : [];

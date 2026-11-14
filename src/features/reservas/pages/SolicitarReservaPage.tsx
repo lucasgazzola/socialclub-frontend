@@ -401,8 +401,8 @@ export function SolicitarReservaPage() {
                       Seña obligatoria: {formatearPesos(presupuesto.montoSena)}
                     </p>
                     <p className="mt-1 text-indigo-800">
-                      No abonás nada ahora. Si se acepta tu solicitud, tendrás que
-                      pagar esta seña para confirmar.
+                      No abonás nada ahora. Si se acepta tu solicitud, tendrás que pagar esta seña
+                      hasta 30 minutos antes del inicio de la reserva para confirmarla.
                     </p>
                   </div>
 
