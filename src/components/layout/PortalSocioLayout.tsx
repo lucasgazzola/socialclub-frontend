@@ -82,20 +82,21 @@ export function PortalSocioLayout() {
   const esRutaInicio = location.pathname === ROUTES.dashboard;
 
   return (
-    <div className="relative min-h-screen bg-[#060d1f] text-slate-100 selection:bg-brand-500/30">
-      {/* Fondo atmosférico sutil con los colores institucionales de SocialClub */}
+    <div
+      className="relative min-h-screen bg-[#060d1f] text-slate-100 selection:bg-brand-500/30"
+      style={{
+        backgroundImage:
+          'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 95, 194, 0.22), transparent), radial-gradient(ellipse 50% 40% at 95% 100%, rgba(249, 115, 22, 0.08), transparent)',
+      }}
+    >
+      {/* Franja sutil lateral derecha en color institucional */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 overflow-hidden"
-      >
-        <div className="absolute -top-40 left-1/2 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-brand-600/20 blur-[130px]" />
-        <div className="absolute bottom-0 right-0 h-[360px] w-[480px] rounded-full bg-accent-500/10 blur-[140px]" />
-        {/* Franja sutil lateral derecha en color institucional */}
-        <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-b from-brand-500 via-brand-600 to-accent-500" />
-      </div>
+        className="pointer-events-none fixed inset-y-0 right-0 z-20 w-1 bg-gradient-to-b from-brand-500 via-brand-600 to-accent-500"
+      />
 
       {/* Header superior */}
-      <header className="relative z-30 border-b border-white/10 bg-[#060d1f]/80 backdrop-blur-md">
+      <header className="relative z-30 border-b border-white/10 bg-[#060d1f]">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
           {/* Izquierda: botón menú móvil + Marca */}
           <div className="flex items-center gap-3">
@@ -127,7 +128,7 @@ export function PortalSocioLayout() {
 
           {/* Esquina superior derecha: Nombre y Rol del socio/participante */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 rounded-full border border-white/15 bg-white/[0.06] py-1.5 pl-4 pr-2 backdrop-blur-sm shadow-sm">
+            <div className="flex items-center gap-3 rounded-full border border-white/15 bg-white/[0.06] py-1.5 pl-4 pr-2 shadow-sm">
               <div className="flex flex-col items-end leading-tight">
                 <span className="max-w-[160px] truncate text-sm font-semibold text-white sm:max-w-[240px]">
                   {nombreCompleto}
@@ -227,14 +228,14 @@ export function PortalSocioLayout() {
           </aside>
 
           {/* Área de contenido principal */}
-          <main className="min-w-0">
-            {esRutaInicio ? (
-              <Outlet />
-            ) : (
-              <div className="rounded-2xl border border-white/10 bg-white p-5 text-slate-900 shadow-2xl sm:p-8">
-                <Outlet />
-              </div>
+          <main
+            className={cn(
+              'min-w-0',
+              !esRutaInicio &&
+                'rounded-2xl border border-white/10 bg-white p-5 text-slate-900 shadow-xl sm:p-8',
             )}
+          >
+            <Outlet />
           </main>
         </div>
       </div>
