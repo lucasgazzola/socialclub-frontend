@@ -1,10 +1,15 @@
 import {
   ArrowRight,
+  CalendarClock,
   CalendarDays,
   CreditCard,
+  Dumbbell,
+  KeyRound,
+  Pencil,
   ScrollText,
   ShieldCheck,
   Sparkles,
+  Ticket,
   User,
   UserPlus,
   Users,
@@ -13,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
 import { formatearDni } from '@/lib/utils/dni';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { GENERO_PERSONA_LABELS } from '@/features/auth/types';
 import { AlertasDocumentacion } from '@/features/documentacion/components/AlertasDocumentacion';
 import { ROUTES } from '@/routes/paths';
 
@@ -186,7 +192,6 @@ function PanelDelegado() {
 /** Pantalla principal del socio */
 function PanelSocio() {
   const { usuario } = useAuth();
-  const navigate = useNavigate();
   const persona = usuario?.persona;
   const membresiaActiva = persona?.membresias?.find((m) => m.activo);
 
@@ -195,82 +200,247 @@ function PanelSocio() {
     return <PantallaNeutra />;
   }
 
-  return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/15 mb-2">
-            Membresía Activa
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Hola, {usuario?.nombre ?? usuario?.email} 👋
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Bienvenido a tu espacio personal en SocialClub.
-          </p>
-        </div>
-        <Button onClick={() => navigate(ROUTES.perfil)}>
-          <User size={16} />
-          Editar mis datos
-        </Button>
-      </header>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-5">
-          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
-            <Users size={20} />
-          </div>
-          <h2 className="font-semibold text-slate-900">Categoría</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">{membresiaActiva.categoria?.nombre ?? '—'}</p>
-        </Card>
-
-        <Card className="p-5">
-          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
-            <CalendarDays size={20} />
-          </div>
-          <h2 className="font-semibold text-slate-900">Socio desde</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">{formatearFecha(membresiaActiva.fechaAlta)}</p>
-        </Card>
-
-        <Card className="p-5">
-          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
-            <CreditCard size={20} />
-          </div>
-          <h2 className="font-semibold text-slate-900">DNI</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">{formatearDni(persona.dni)}</p>
-        </Card>
-      </div>
-    </div>
-  );
+  return <VistaPortalIdentidad esSocio />;
 }
 
-/** Pantalla para usuarios autenticados sin roles/Persona. */
+/** Pantalla para participantes y usuarios autenticados sin membresía activa. */
 function PantallaNeutra() {
+  return <VistaPortalIdentidad esSocio={false} />;
+}
+
+interface FilaDatoPortal {
+  etiqueta: string;
+  valor: string;
+  editable?: boolean;
+}
+
+/**
+ * Vista principal del Portal SocialClub ID (para Socios y Participantes).
+ * Presenta la tarjeta blanca de carnet/identidad a la izquierda y la ficha
+ * de datos personales sobre fondo oscuro a la derecha.
+ */
+function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
   const { usuario } = useAuth();
   const navigate = useNavigate();
 
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          Hola, {usuario?.nombre ?? usuario?.email}
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">Bienvenido a SocialClub.</p>
-      </header>
+  if (!usuario) return null;
 
-      <Card className="max-w-xl p-6">
-        <div className="mb-3 inline-flex rounded-lg bg-brand-50 p-2 text-brand-700">
-          <UserPlus size={20} />
+  const persona = usuario.persona;
+  const membresiaActiva = esSocio ? persona?.membresias?.find((m) => m.activo) : undefined;
+
+  const nombre = usuario.nombre ?? persona?.nombre ?? '';
+  const apellido = usuario.apellido ?? persona?.apellido ?? '';
+  const nombreMostrado =
+    apellido && nombre
+      ? `${apellido}, ${nombre}`
+      : nombre || usuario.email;
+
+  const iniciales =
+    `${nombre?.[0] ?? ''}${apellido?.[0] ?? ''}`.toUpperCase() ||
+    usuario.email[0]?.toUpperCase() ||
+    'SC';
+
+  const filasDatos: FilaDatoPortal[] = [
+    { etiqueta: 'Nombre', valor: nombre || '—' },
+    { etiqueta: 'Apellido', valor: apellido || '—' },
+    {
+      etiqueta: 'Documento',
+      valor: persona?.dni ? formatearDni(persona.dni) : 'Sin DNI registrado',
+    },
+    ...(membresiaActiva
+      ? [
+          {
+            etiqueta: 'Categoría',
+            valor: membresiaActiva.categoria?.nombre ?? 'Socio activo',
+          },
+          {
+            etiqueta: 'Socio desde',
+            valor: formatearFecha(membresiaActiva.fechaAlta),
+          },
+        ]
+      : []),
+    {
+      etiqueta: 'Género',
+      valor: persona?.genero ? GENERO_PERSONA_LABELS[persona.genero] : '—',
+    },
+    {
+      etiqueta: 'Fecha de nacimiento',
+      valor: persona?.fechaNacimiento ? formatearFecha(persona.fechaNacimiento) : '—',
+    },
+    {
+      etiqueta: 'Teléfono',
+      valor: persona?.telefono || 'No registrado',
+      editable: true,
+    },
+    {
+      etiqueta: 'Mail',
+      valor: usuario.email,
+      editable: true,
+    },
+  ];
+
+  const accionesRapidas = membresiaActiva
+    ? [
+        {
+          label: 'VER MIS CUOTAS',
+          icon: CreditCard,
+          to: ROUTES.misCuotas,
+          className: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm',
+        },
+        {
+          label: 'RESERVAR ESPACIO',
+          icon: CalendarClock,
+          to: ROUTES.misReservas,
+          className: 'bg-accent-500 hover:bg-accent-600 text-white shadow-sm',
+        },
+        {
+          label: 'MIS ENTRADAS',
+          icon: Ticket,
+          to: ROUTES.misEntradas,
+          className: 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm',
+        },
+      ]
+    : [
+        {
+          label: 'QUIERO HACERME SOCIO',
+          icon: UserPlus,
+          to: ROUTES.hacermeSocio,
+          className: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm',
+        },
+        {
+          label: 'INSCRIBIRME A DISCIPLINA',
+          icon: Dumbbell,
+          to: ROUTES.solicitarInscripcion,
+          className: 'bg-accent-500 hover:bg-accent-600 text-white shadow-sm',
+        },
+        {
+          label: 'EXPLORAR EVENTOS',
+          icon: CalendarDays,
+          to: ROUTES.eventos,
+          className: 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm',
+        },
+      ];
+
+  return (
+    <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[310px_minmax(0,1fr)]">
+      {/* Tarjeta Blanca Central: Carnet Digital y Acciones Rápidas */}
+      <section
+        aria-label="Tarjeta de identidad del socio"
+        className="flex flex-col items-center rounded-2xl bg-white p-7 text-center text-slate-900 shadow-2xl ring-1 ring-white/15"
+      >
+        <div className="relative">
+          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-slate-200 text-3xl font-bold text-slate-500 ring-4 ring-brand-50">
+            {iniciales}
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.perfil)}
+            title="Editar mis datos"
+            aria-label="Ir a editar mis datos"
+            className="absolute left-0 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-transform hover:scale-105 hover:bg-brand-600 cursor-pointer"
+          >
+            <Pencil size={13} />
+          </button>
         </div>
-        <h2 className="text-lg font-medium text-slate-900">Sumate al club</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Hacete socio y accedé a los beneficios de la membresía del club.
+
+        <h1 className="mt-5 text-lg font-bold tracking-tight text-brand-700">
+          {nombreMostrado}
+        </h1>
+
+        <p className="mt-1 text-sm font-medium text-slate-500">
+          {membresiaActiva
+            ? `Socio · ${membresiaActiva.categoria?.nombre ?? 'Activo'}`
+            : 'Participante'}
         </p>
-        <Button className="mt-4" onClick={() => navigate(ROUTES.hacermeSocio)}>
-          <UserPlus size={16} />
-          Hacerme socio
-        </Button>
-      </Card>
+
+        {membresiaActiva ? (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Membresía Activa
+          </div>
+        ) : (
+          <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Sumate al club
+          </p>
+        )}
+
+        <div className="mt-6 w-full space-y-2.5">
+          {accionesRapidas.map(({ label, icon: Icon, to, className }) => (
+            <button
+              key={to}
+              type="button"
+              onClick={() => navigate(to)}
+              className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold tracking-wide transition-all cursor-pointer ${className}`}
+            >
+              <Icon size={15} aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Ficha Derecha: Datos Personales sobre fondo oscuro */}
+      <section aria-label="Datos personales" className="space-y-5">
+        <p className="text-xs leading-relaxed text-slate-300 sm:text-sm">
+          Tus datos personales se utilizan para tu carnet digital, inscripciones a disciplinas y
+          reservas en SocialClub. En caso de que necesites actualizar algún dato, hacé{' '}
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.perfil)}
+            className="font-semibold text-brand-400 underline decoration-brand-400/60 underline-offset-2 transition-colors hover:text-brand-300 cursor-pointer"
+          >
+            click aquí
+          </button>{' '}
+          para actualizarlos en tu perfil.
+        </p>
+
+        <dl className="divide-y divide-white/15 border-t border-b border-white/15">
+          {filasDatos.map(({ etiqueta, valor, editable }) => (
+            <div
+              key={etiqueta}
+              className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"
+            >
+              <div className="flex flex-wrap items-baseline gap-2">
+                <dt className="font-semibold text-slate-300">{etiqueta}:</dt>
+                <dd className="font-medium text-white">{valor}</dd>
+              </div>
+
+              {editable && (
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.perfil)}
+                  className="text-xs font-semibold text-brand-400 transition-colors hover:text-brand-300 cursor-pointer"
+                >
+                  Editar
+                </button>
+              )}
+            </div>
+          ))}
+        </dl>
+
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(ROUTES.perfil)}
+            className="border-white/20 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+          >
+            <User size={15} />
+            Editar mis datos
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(ROUTES.cambiarContrasena)}
+            className="text-slate-300 hover:bg-white/10 hover:text-white"
+          >
+            <KeyRound size={15} />
+            Cambiar contraseña
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

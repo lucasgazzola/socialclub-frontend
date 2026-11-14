@@ -168,4 +168,40 @@ describe('AppLayout', () => {
     renderWithProviders(<AppLayout />);
     expect(screen.queryByRole('link', { name: /^Dashboard$/i })).not.toBeInTheDocument();
   });
+
+  it('renderiza el portal exclusivo SOCIALCLUB ID con nombre y rol en la cabecera para SOCIO y Participante', () => {
+    mockUsuario = {
+      id: 10,
+      nombre: 'Lucia',
+      apellido: 'Vazquez',
+      email: 'lucia@club.local',
+      roles: ['SOCIO'],
+      persona: {
+        membresias: [{ id: 1, activo: true, categoria: { nombre: 'Pleno' } }],
+      },
+    };
+
+    const { unmount } = renderWithProviders(<AppLayout />);
+    expect(screen.getByText('SOCIALCLUB')).toBeInTheDocument();
+    expect(screen.getByText('ID')).toBeInTheDocument();
+    expect(screen.getByText('Lucia Vazquez')).toBeInTheDocument();
+    expect(screen.getByText('Socio · Pleno')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Mis cuotas/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Panel de gestión/i)).not.toBeInTheDocument();
+    unmount();
+
+    mockUsuario = {
+      id: 11,
+      nombre: 'Juan',
+      apellido: 'Perez',
+      email: 'juan@club.local',
+      roles: [],
+      persona: null,
+    };
+
+    renderWithProviders(<AppLayout />);
+    expect(screen.getByText('Juan Perez')).toBeInTheDocument();
+    expect(screen.getByText('Participante')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Hacerme socio/i })).toBeInTheDocument();
+  });
 });

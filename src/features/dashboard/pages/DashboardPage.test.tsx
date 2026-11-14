@@ -80,11 +80,13 @@ describe('DashboardPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/perfil');
   });
 
-  it('renderiza panel de socio cuando tiene membresía activa', async () => {
+  it('renderiza panel de socio con tarjeta de identidad y ficha personal cuando tiene membresía activa', async () => {
     const user = userEvent.setup();
     mockUsuario = {
       id: 2,
       nombre: 'Martin',
+      apellido: 'Gomez',
+      email: 'martin@club.com',
       roles: ['SOCIO'],
       persona: {
         dni: '38111222',
@@ -102,11 +104,12 @@ describe('DashboardPage', () => {
     renderWithProviders(<DashboardPage />);
 
     expect(screen.getByText('Membresía Activa')).toBeInTheDocument();
-    expect(screen.getByText(/Hola, Martin/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Gomez, Martin' })).toBeInTheDocument();
     expect(screen.getByText('Pleno')).toBeInTheDocument();
     expect(screen.getByText('38.111.222')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /VER MIS CUOTAS/i })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Editar mis datos/i }));
+    await user.click(screen.getByRole('button', { name: /^Editar mis datos$/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/perfil');
   });
 

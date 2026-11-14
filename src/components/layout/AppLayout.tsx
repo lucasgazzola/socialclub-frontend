@@ -32,6 +32,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { RolNombre } from '@/features/auth/types';
 import { ROUTES } from '@/routes/paths';
 import { cn } from '@/lib/utils/cn';
+import { PortalSocioLayout } from './PortalSocioLayout';
+import { esUsuarioPortalSocio } from '@/features/auth/utils/roles';
 
 interface NavItem {
   to: string;
@@ -277,6 +279,10 @@ export function AppLayout() {
       .flatMap((s) => s.items)
       .find((i) => i.to === location.pathname)?.label ??
     'SocialClub';
+
+  if (esUsuarioPortalSocio(usuario)) {
+    return <PortalSocioLayout />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50/70">
