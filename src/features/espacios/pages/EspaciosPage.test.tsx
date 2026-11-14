@@ -221,9 +221,7 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
       });
 
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith(
-          expect.stringContaining('Cancha de Fútbol 5 Norte'),
-        );
+        expect(toast.success).toHaveBeenCalledWith('Espacio físico dado de baja correctamente');
       });
     });
 
@@ -303,9 +301,7 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
       });
 
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith(
-          expect.stringContaining('Cancha 3 Inactiva'),
-        );
+        expect(toast.success).toHaveBeenCalledWith('Espacio físico reactivado correctamente');
       });
     });
   });

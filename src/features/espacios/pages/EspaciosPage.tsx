@@ -242,18 +242,9 @@ export function EspaciosPage() {
   );
 
   const handleCrear = async (payload: CreateEspacioPayload) => {
-    const creado = await crearEspacio.mutateAsync(payload);
+    await crearEspacio.mutateAsync(payload);
     setModalCrearAbierto(false);
     setPagina(1);
-    const cantSubs =
-      creado?.subespacios?.length ??
-      payload.cantidadSubespacios ??
-      payload.subespacios?.length ??
-      0;
-    const sufijo = cantSubs > 0 ? ` con ${cantSubs} sub-espacios asociados` : '';
-    toast.success(
-      `El espacio físico "${creado?.nombre ?? payload.nombre}"${sufijo} se registró correctamente.`,
-    );
   };
 
   const handleAgregarBloqueo = async (espacioId: number, payload: CreateBloqueoPayload) => {
@@ -271,9 +262,6 @@ export function EspaciosPage() {
 
     try {
       await eliminarEspacio.mutateAsync(espacioAEliminar.id);
-      toast.success(
-        `El espacio "${espacioAEliminar.nombre}" fue dado de baja correctamente.`,
-      );
       setEspacioAEliminar(null);
       setErrorBajaEspacio(null);
     } catch (err: unknown) {
@@ -293,9 +281,6 @@ export function EspaciosPage() {
     if (!espacioAReactivar) return;
     try {
       await reactivarEspacio.mutateAsync(espacioAReactivar.id);
-      toast.success(
-        `El espacio "${espacioAReactivar.nombre}" fue reactivado exitosamente.`,
-      );
       setEspacioAReactivar(null);
     } catch (err: unknown) {
       const errorObj = err as { message?: string; response?: { data?: { message?: string | string[] } } };
@@ -355,11 +340,6 @@ export function EspaciosPage() {
         onClose={() => {
           setEspacioEditando(null);
           setTabInicialEdicion('datos');
-        }}
-        onSuccess={() => {
-          toast.success(
-            `El espacio "${espacioEditando?.nombre}" fue actualizado exitosamente.`,
-          );
         }}
       />
 
