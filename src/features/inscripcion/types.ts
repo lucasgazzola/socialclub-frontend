@@ -211,9 +211,14 @@ export interface PersonaActualizada {
   activo: boolean;
 }
 
-// ── US-63: Solicitud de inscripción ──────────────────────────────────
+// ── US-63 / US-64: Solicitud de inscripción ──────────────────────────
 
-export type EstadoSolicitudInscripcion = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'CANCELADA';
+export type EstadoSolicitudInscripcion =
+  | 'PENDIENTE'
+  | 'PENDIENTE_DOCUMENTACION'
+  | 'APROBADA'
+  | 'RECHAZADA'
+  | 'CANCELADA';
 
 export interface DocumentoRequeridoCatalogo {
   tipoDocumento: TipoDocumentacionDisciplina;

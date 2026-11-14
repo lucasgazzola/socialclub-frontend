@@ -7,6 +7,7 @@ import {
 } from '../api/inscripcion.api';
 import type {
   CatalogoInscripcionResponse,
+  EstadoSolicitudInscripcion,
   SolicitarInscripcionPayload,
   SolicitudInscripcion,
 } from '../types';
@@ -14,20 +15,28 @@ import type {
 export const solicitudesInscripcionKeys = {
   all: ['inscripcion', 'solicitudes'] as const,
   catalogo: ['inscripcion', 'catalogo'] as const,
-  misSolicitudes: ['inscripcion', 'mis-solicitudes'] as const,
+  misSolicitudes: (estado?: EstadoSolicitudInscripcion) =>
+    ['inscripcion', 'mis-solicitudes', estado ?? 'TODOS'] as const,
 };
 
-export function useCatalogoInscripcion() {
+export function useCatalogoInscripcion(enabled = true) {
   return useQuery<CatalogoInscripcionResponse, Error>({
     queryKey: solicitudesInscripcionKeys.catalogo,
     queryFn: obtenerCatalogoInscripcion,
+    enabled,
+    refetchOnMount: 'always',
   });
 }
 
-export function useMisSolicitudesInscripcion() {
+export function useMisSolicitudesInscripcion(
+  estado?: EstadoSolicitudInscripcion,
+  enabled = true,
+) {
   return useQuery<SolicitudInscripcion[], Error>({
-    queryKey: solicitudesInscripcionKeys.misSolicitudes,
-    queryFn: obtenerMisSolicitudesInscripcion,
+    queryKey: solicitudesInscripcionKeys.misSolicitudes(estado),
+    queryFn: () => obtenerMisSolicitudesInscripcion(estado),
+    enabled,
+    refetchOnMount: 'always',
   });
 }
 
@@ -42,7 +51,7 @@ export function useSolicitarInscripcion({
     mutationFn: (payload) => solicitarInscripcion(payload),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: solicitudesInscripcionKeys.catalogo });
-      qc.invalidateQueries({ queryKey: solicitudesInscripcionKeys.misSolicitudes });
+      qc.invalidateQueries({ queryKey: ['inscripcion', 'mis-solicitudes'] });
       toast.success('Solicitud de inscripción registrada con éxito. Estado: Pendiente.');
       onSuccess?.(data);
     },

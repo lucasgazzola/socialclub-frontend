@@ -7,7 +7,8 @@ interface Props {
 }
 
 const CONFIG: Record<EstadoSolicitudInscripcion, { label: string; variant: BadgeVariant }> = {
-  PENDIENTE: { label: 'Pendiente', variant: 'warning' },
+  PENDIENTE: { label: 'En revisión', variant: 'warning' },
+  PENDIENTE_DOCUMENTACION: { label: 'Pendiente de documentación', variant: 'warning' },
   APROBADA: { label: 'Aprobada', variant: 'success' },
   RECHAZADA: { label: 'Rechazada', variant: 'danger' },
   CANCELADA: { label: 'Cancelada', variant: 'secondary' },
