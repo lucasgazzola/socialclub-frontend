@@ -83,7 +83,7 @@ export function PortalSocioLayout() {
 
   return (
     <div
-      className="relative min-h-screen bg-[#060d1f] text-slate-100 selection:bg-brand-500/30"
+      className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-[#060d1f] text-slate-100 selection:bg-brand-500/30"
       style={{
         backgroundImage:
           'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 95, 194, 0.22), transparent), radial-gradient(ellipse 50% 40% at 95% 100%, rgba(249, 115, 22, 0.08), transparent)',
@@ -95,8 +95,8 @@ export function PortalSocioLayout() {
         className="pointer-events-none fixed inset-y-0 right-0 z-20 w-1 bg-gradient-to-b from-brand-500 via-brand-600 to-accent-500"
       />
 
-      {/* Header superior */}
-      <header className="relative z-30 border-b border-white/10 bg-[#060d1f]">
+      {/* Header superior fijo */}
+      <header className="relative z-30 shrink-0 border-b border-white/10 bg-[#060d1f]">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
           {/* Izquierda: botón menú móvil + Marca */}
           <div className="flex items-center gap-3">
@@ -152,91 +152,93 @@ export function PortalSocioLayout() {
         </div>
       </header>
 
-      {/* Contenedor principal */}
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-8 lg:py-10">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-10">
-          {/* Menú lateral izquierdo estilo lista limpia */}
-          <aside
-            className={cn(
-              'lg:block',
-              menuMovilAbierto ? 'block' : 'hidden',
-            )}
-          >
-            <nav aria-label="Menú del socio" className="divide-y divide-white/10">
-              {itemsVisibles.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === ROUTES.dashboard}
-                  onClick={() => setMenuMovilAbierto(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      'group flex items-center justify-between py-3.5 px-2.5 text-sm transition-colors',
-                      isActive
-                        ? 'border-l-2 border-brand-400 bg-white/[0.06] font-semibold text-white'
-                        : 'text-slate-300 hover:bg-white/[0.04] hover:text-white',
-                    )
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span className="flex items-center gap-3 min-w-0">
-                        <Icon
-                          size={17}
-                          strokeWidth={1.8}
+      {/* Contenedor principal con scroll propio (evita rebote blanco del body) */}
+      <div className="relative z-10 flex-1 overflow-y-auto overscroll-none">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 lg:py-10">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-10">
+            {/* Menú lateral izquierdo estilo lista limpia */}
+            <aside
+              className={cn(
+                'lg:block',
+                menuMovilAbierto ? 'block' : 'hidden',
+              )}
+            >
+              <nav aria-label="Menú del socio" className="divide-y divide-white/10">
+                {itemsVisibles.map(({ to, label, icon: Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={to === ROUTES.dashboard}
+                    onClick={() => setMenuMovilAbierto(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        'group flex items-center justify-between py-3.5 px-2.5 text-sm transition-colors',
+                        isActive
+                          ? 'border-l-2 border-brand-400 bg-white/[0.06] font-semibold text-white'
+                          : 'text-slate-300 hover:bg-white/[0.04] hover:text-white',
+                      )
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <span className="flex items-center gap-3 min-w-0">
+                          <Icon
+                            size={17}
+                            strokeWidth={1.8}
+                            className={cn(
+                              'shrink-0 transition-colors',
+                              isActive
+                                ? 'text-brand-400'
+                                : 'text-slate-400 group-hover:text-brand-300',
+                            )}
+                          />
+                          <span className="truncate">{label}</span>
+                        </span>
+                        <ChevronRight
+                          size={15}
                           className={cn(
-                            'shrink-0 transition-colors',
-                            isActive
-                              ? 'text-brand-400'
-                              : 'text-slate-400 group-hover:text-brand-300',
+                            'shrink-0 transition-transform duration-150 group-hover:translate-x-0.5',
+                            isActive ? 'text-brand-400' : 'text-slate-500 group-hover:text-slate-300',
                           )}
                         />
-                        <span className="truncate">{label}</span>
-                      </span>
-                      <ChevronRight
-                        size={15}
-                        className={cn(
-                          'shrink-0 transition-transform duration-150 group-hover:translate-x-0.5',
-                          isActive ? 'text-brand-400' : 'text-slate-500 group-hover:text-slate-300',
-                        )}
-                      />
-                    </>
-                  )}
-                </NavLink>
-              ))}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
 
-              <button
-                type="button"
-                onClick={() => void logout()}
-                title="Cerrar sesión"
-                className="group flex w-full items-center justify-between py-3.5 px-2.5 text-sm text-slate-300 transition-colors hover:bg-rose-500/10 hover:text-rose-300 cursor-pointer"
-              >
-                <span className="flex items-center gap-3">
-                  <LogOut
-                    size={17}
-                    strokeWidth={1.8}
-                    className="shrink-0 text-slate-400 group-hover:text-rose-400 transition-colors"
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  title="Cerrar sesión"
+                  className="group flex w-full items-center justify-between py-3.5 px-2.5 text-sm text-slate-300 transition-colors hover:bg-rose-500/10 hover:text-rose-300 cursor-pointer"
+                >
+                  <span className="flex items-center gap-3">
+                    <LogOut
+                      size={17}
+                      strokeWidth={1.8}
+                      className="shrink-0 text-slate-400 group-hover:text-rose-400 transition-colors"
+                    />
+                    <span>Cerrar sesión</span>
+                  </span>
+                  <ChevronRight
+                    size={15}
+                    className="shrink-0 text-slate-500 group-hover:text-rose-300 transition-transform duration-150 group-hover:translate-x-0.5"
                   />
-                  <span>Cerrar sesión</span>
-                </span>
-                <ChevronRight
-                  size={15}
-                  className="shrink-0 text-slate-500 group-hover:text-rose-300 transition-transform duration-150 group-hover:translate-x-0.5"
-                />
-              </button>
-            </nav>
-          </aside>
+                </button>
+              </nav>
+            </aside>
 
-          {/* Área de contenido principal */}
-          <main
-            className={cn(
-              'min-w-0',
-              !esRutaInicio &&
-                'rounded-2xl border border-white/10 bg-white p-5 text-slate-900 shadow-xl sm:p-8',
-            )}
-          >
-            <Outlet />
-          </main>
+            {/* Área de contenido principal */}
+            <main
+              className={cn(
+                'min-w-0',
+                !esRutaInicio &&
+                  'rounded-2xl border border-white/10 bg-white p-5 text-slate-900 shadow-xl sm:p-8',
+              )}
+            >
+              <Outlet />
+            </main>
+          </div>
         </div>
       </div>
     </div>
