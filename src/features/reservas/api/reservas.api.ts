@@ -1,14 +1,49 @@
 import { apiClient } from '@/lib/api/client';
 import type { OrdenPago } from '@/features/pasarela/types';
 import type {
+  CreateReservaInput,
+  DisponibilidadEspacio,
+  EspacioParaReserva,
   EstadoReserva,
   MetodoPagoSena,
   MiReserva,
+  PresupuestoReserva,
   ResultadoAccion,
+  SolicitudPresupuestoInput,
   SolicitudReserva,
 } from '../types';
 
 export const reservasApi = {
+  /** US-59: espacios activos disponibles para reservar. */
+  async espaciosDisponibles(): Promise<EspacioParaReserva[]> {
+    const { data } = await apiClient.get<EspacioParaReserva[]>('/reservas/espacios');
+    return data;
+  },
+
+  /** US-59: bloqueos y reservas ocupantes en un rango de fechas. */
+  async disponibilidad(
+    espacioId: number,
+    desde: string,
+    hasta: string,
+  ): Promise<DisponibilidadEspacio> {
+    const { data } = await apiClient.get<DisponibilidadEspacio>('/reservas/disponibilidad', {
+      params: { espacioId, desde, hasta },
+    });
+    return data;
+  },
+
+  /** US-59: presupuesto en tiempo real + verificación de disponibilidad. */
+  async presupuesto(input: SolicitudPresupuestoInput): Promise<PresupuestoReserva> {
+    const { data } = await apiClient.post<PresupuestoReserva>('/reservas/presupuesto', input);
+    return data;
+  },
+
+  /** US-59: registra solicitud en PENDIENTE_APROBACION y emite código RES-XXXXXX. */
+  async solicitar(input: CreateReservaInput): Promise<ResultadoAccion> {
+    const { data } = await apiClient.post<ResultadoAccion>('/reservas', input);
+    return data;
+  },
+
   /** US-60: bandeja de la administración. */
   async solicitudes(estados: EstadoReserva[], busqueda?: string): Promise<SolicitudReserva[]> {
     const { data } = await apiClient.get<SolicitudReserva[]>('/reservas/solicitudes', {
