@@ -83,7 +83,6 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
           key={esEdicion ? (usuario?.id ?? 'editar') : 'crear'}
           modo={modo}
           usuarioInicial={esEdicion ? usuario : null}
-          mostrarPasswordField={!esEdicion}
           onSubmit={handleSubmit}
           onCancel={handleClose}
           disciplinas={disciplinas}

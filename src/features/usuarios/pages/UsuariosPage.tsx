@@ -8,6 +8,7 @@ import { useActivateUsuario } from '../hooks/useActivateUsuario';
 import { useCreateUsuario } from '../hooks/useCreateUsuario';
 import { useDeactivateUsuario } from '../hooks/useDeactivateUsuario';
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario';
+import { useReenviarVerificacion } from '../hooks/useReenviarVerificacion';
 import { useUsers } from '../hooks/useUsers';
 import { UsuariosGrid } from '../components/UsuariosGrid';
 import type { CreateUsuarioDto, Usuario, UpdateUsuarioDto, CriterioOrden, SentidoOrden } from '../types';
@@ -81,6 +82,7 @@ export function UsuariosPage() {
   const updateUsuario = useUpdateUsuario();
   const deactivateUsuario = useDeactivateUsuario();
   const activateUsuario = useActivateUsuario();
+  const reenviarVerificacion = useReenviarVerificacion();
 
   const cambioDeEstadoEnCurso = deactivateUsuario.isPending || activateUsuario.isPending;
 
@@ -209,9 +211,10 @@ export function UsuariosPage() {
       return;
     }
 
+    // DT-54: la confirmación viaja solo si se escribió (cuando cambia el email).
     const resto = Object.fromEntries(
-      Object.entries(values as UsuarioEditFormValues & { password?: string }).filter(
-        ([key]) => key !== 'password',
+      Object.entries(values as UsuarioEditFormValues).filter(
+        ([key, valor]) => key !== 'confirmarEmail' || Boolean(valor),
       ),
     ) as UpdateUsuarioDto;
 
@@ -398,6 +401,7 @@ export function UsuariosPage() {
             onOrdenar={handleOrdenar}
             onEditar={abrirEdicion}
             onCambiarEstado={setUsuarioAConfirmar}
+            onReenviarVerificacion={(usuario) => reenviarVerificacion.mutate(usuario.id)}
           />
 
           {hayResultados && (

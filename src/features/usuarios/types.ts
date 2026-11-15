@@ -11,6 +11,8 @@ export interface Usuario {
     nombre: string;
     apellido: string;
     activo: boolean;
+    /** DT-54: false mientras la persona no use el enlace del email (no puede iniciar sesión). */
+    emailVerificado?: boolean;
     ultimoLogin?: string | null;
     creadoEn: string;
     actualizadoEn?: string;
@@ -22,7 +24,8 @@ export interface Usuario {
 export interface CreateUsuarioDto {
     dni: string;
     email: string;
-    password: string;
+    /** DT-54: el email escrito por segunda vez. */
+    confirmarEmail: string;
     nombre: string;
     apellido: string;
     roles: string[];
@@ -33,10 +36,10 @@ export interface CreateUsuarioDto {
 export interface UpdateUsuarioDto {
     dni?: string;
     email?: string;
+    /** DT-54: solo si cambia el email. */
+    confirmarEmail?: string;
     nombre?: string;
     apellido?: string;
-    password?: string;
-    currentPassword?: string;
     roles?: string[];
     disciplinasIds?: number[];
     activo?: boolean;

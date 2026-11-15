@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, UserCheck, UserMinus } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, MailWarning, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { cn } from '@/lib/utils/cn';
 import { formatearDni } from '@/lib/utils/dni';
@@ -81,6 +81,13 @@ interface UsuariosGridProps {
   onOrdenar?: (campo: CriterioOrden) => void;
   onEditar: (usuario: Usuario) => void;
   onCambiarEstado: (usuario: Usuario) => void;
+  /** DT-54: reenviar el enlace a un usuario que no verificó su email. */
+  onReenviarVerificacion?: (usuario: Usuario) => void;
+}
+
+/** DT-54: la API manda `emailVerificado: false` mientras falte usar el enlace. */
+function pendienteDeVerificacion(usuario: Usuario): boolean {
+  return usuario.emailVerificado === false;
 }
 
 /**
@@ -95,6 +102,7 @@ export function UsuariosGrid({
   onOrdenar,
   onEditar,
   onCambiarEstado,
+  onReenviarVerificacion,
 }: UsuariosGridProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
@@ -212,15 +220,37 @@ export function UsuariosGrid({
                     )}
                   </td>
                   <td className="px-5 py-3.5">
-                    <Badge variant={usuario.activo ? 'success' : 'danger'}>
-                      {usuario.activo ? 'Activo' : 'Inactivo'}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant={usuario.activo ? 'success' : 'danger'}>
+                        {usuario.activo ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                      {pendienteDeVerificacion(usuario) && (
+                        <Badge
+                          variant="warning"
+                          title="Todavía no usó el enlace del email: no puede iniciar sesión."
+                        >
+                          Pendiente de verificación
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-5 py-3.5 font-mono text-xs text-slate-500 tabular-nums">
                     {formatearFecha(usuario.creadoEn)}
                   </td>
                   <td className="px-5 py-3.5 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
+                      {pendienteDeVerificacion(usuario) && usuario.activo && onReenviarVerificacion && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                          disabled={accionesDeshabilitadas}
+                          onClick={() => onReenviarVerificacion(usuario)}
+                        >
+                          <MailWarning size={14} className="shrink-0" />
+                          Reenviar enlace
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" onClick={() => onEditar(usuario)}>
                         <Pencil size={14} className="shrink-0" />
                         Editar

@@ -1,21 +1,17 @@
 import { useEffect } from 'react';
-import { useForm, type FieldErrors } from 'react-hook-form';
-
-function hasPasswordFieldError(
-  errors: FieldErrors<UsuarioCreateFormValues | UsuarioEditFormValues>,
-): errors is FieldErrors<UsuarioCreateFormValues> {
-  return 'password' in errors;
-}
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { MailCheck } from 'lucide-react';
 import { Button, Input, ModalActions } from '@/components/ui';
 import {
   ROL_DELEGADO,
+  crearUsuarioEditSchema,
   usuarioCreateSchema,
-  usuarioEditSchema,
   type UsuarioCreateFormValues,
   type UsuarioEditFormValues,
 } from '../schemas/usuario.schema';
 import type { Usuario } from '../types';
+import { mismoEmail } from '@/lib/utils/email';
 
 interface UsuarioFormProps {
   modo: 'crear' | 'editar';
@@ -23,7 +19,6 @@ interface UsuarioFormProps {
   onSubmit: (values: UsuarioCreateFormValues | UsuarioEditFormValues) => Promise<void>;
   /** Cancelar dentro del modal (DT-20). */
   onCancel?: () => void;
-  mostrarPasswordField?: boolean;
   /** DT-42: disciplinas activas que se le pueden asignar a un delegado. */
   disciplinas?: { id: number; nombre: string }[];
   /** DT-46: error retornado por la API al intentar guardar/crear. */
@@ -34,19 +29,19 @@ export function UsuarioForm({
   modo,
   usuarioInicial,
   onSubmit,
-  mostrarPasswordField = true,
   onCancel,
   disciplinas = [],
   errorServidor,
 }: UsuarioFormProps) {
-  const schema = modo === 'crear' ? usuarioCreateSchema : usuarioEditSchema;
+  const schema =
+    modo === 'crear' ? usuarioCreateSchema : crearUsuarioEditSchema(usuarioInicial?.email);
   const defaultValues = usuarioInicial
     ? {
         dni: usuarioInicial.dni ?? '',
         nombre: usuarioInicial.nombre ?? '',
         apellido: usuarioInicial.apellido ?? '',
         email: usuarioInicial.email ?? '',
-        password: '',
+        confirmarEmail: '',
         roles: usuarioInicial.roles.map((rol) => rol.rol.nombre),
         disciplinasIds: (usuarioInicial.disciplinas ?? []).map((d) => String(d.id)),
       }
@@ -55,6 +50,7 @@ export function UsuarioForm({
         nombre: '',
         apellido: '',
         email: '',
+        confirmarEmail: '',
         roles: ['ADMIN'],
         disciplinasIds: [],
       };
@@ -77,26 +73,26 @@ export function UsuarioForm({
       setError('apellido', { message: errorServidor });
     } else if (/nombre/i.test(errorServidor)) {
       setError('nombre', { message: errorServidor });
+    } else if (/coinciden|confirm/i.test(errorServidor)) {
+      setError('confirmarEmail', { message: errorServidor });
     } else if (/email|correo/i.test(errorServidor)) {
       setError('email', { message: errorServidor });
     } else if (/dni/i.test(errorServidor)) {
       setError('dni', { message: errorServidor });
-    } else if (/contrase[ñn]a|password/i.test(errorServidor)) {
-      setError('password', { message: errorServidor });
     }
   }, [errorServidor, setError]);
 
   const esErrorDeCampo = Boolean(
-    errorServidor && /apellido|nombre|email|correo|dni|contrase[ñn]a|password/i.test(errorServidor),
+    errorServidor && /apellido|nombre|email|correo|dni/i.test(errorServidor),
   );
 
   const dniRegistration = register('dni', {
     setValueAs: (value) => String(value ?? '').replace(/\D/g, '').slice(0, 8),
   });
 
-  const passwordError = hasPasswordFieldError(errors)
-    ? errors.password?.message
-    : undefined;
+  // DT-54: el email se escribe dos veces. En la edición, solo si cambia.
+  const emailActual = watch('email');
+  const pideConfirmacion = modo === 'crear' || !mismoEmail(emailActual, usuarioInicial?.email);
 
   const rolesError =
     typeof errors.roles?.message === 'string' ? errors.roles.message : undefined;
@@ -148,24 +144,28 @@ export function UsuarioForm({
         {...register('email')}
       />
 
-      {mostrarPasswordField && modo === 'crear' ? (
+      {pideConfirmacion && (
         <Input
-          id="password"
-          type="password"
-          label="Contraseña"
-          error={passwordError}
-          {...register('password')}
+          id="confirmarEmail"
+          type="email"
+          label="Repetí el email"
+          autoComplete="off"
+          error={
+            typeof errors.confirmarEmail?.message === 'string'
+              ? errors.confirmarEmail.message
+              : undefined
+          }
+          {...register('confirmarEmail')}
         />
-      ) : mostrarPasswordField && modo === 'editar' ? (
-        <Input
-          id="password"
-          type="password"
-          label="Nueva contraseña"
-          error={passwordError}
-          placeholder="Dejar en blanco para mantener la actual"
-          {...register('password')}
-        />
-      ) : null}
+      )}
+
+      {modo === 'crear' && (
+        <p className="flex items-start gap-2 rounded-lg border border-brand-100 bg-brand-50/60 px-3 py-2 text-sm text-brand-800">
+          <MailCheck size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+          Le vamos a enviar un email con un enlace para que elija su contraseña y verifique su
+          email. El enlace vence en 24 horas.
+        </p>
+      )}
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Roles</legend>
