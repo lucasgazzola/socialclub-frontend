@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Button, Card, Spinner } from '@/components/ui';
 import { QRScanner } from '../components/QRScanner';
 import { useValidarEntrada } from '../hooks/useEntradas';
-import { useEventos } from '@/features/eventos/hooks/useEventos';
+import { useEvento, useEventos } from '@/features/eventos/hooks/useEventos';
 
 // Categorías mockeadas — se reemplazarán cuando el modelo Evento tenga el campo.
 const CATEGORIAS_MOCK = [
@@ -22,7 +22,16 @@ interface ScanHistoryItem {
   id: string;
   token: string;
   timestamp: string;
-  status: 'PERMITIDO' | 'EVENTO_INCORRECTO' | 'YA_USADA' | 'INVALIDA' | 'EXPIRADA';
+  status:
+    | 'PERMITIDO'
+    | 'EVENTO_INCORRECTO'
+    | 'YA_USADA'
+    | 'INVALIDA'
+    | 'EXPIRADA'
+    /** H05: el acceso al evento todavía no abrió. */
+    | 'NO_HABILITADA'
+    /** El evento fue cancelado. */
+    | 'EVENTO_CANCELADO';
   eventoId?: number;
   eventoNombre?: string;
   mensaje: string;
@@ -152,12 +161,20 @@ export function ValidarAccesoPage() {
       } else if (statusHttp === 400 && errorMsg.toLowerCase().includes('expirada')) {
         scanStatus = 'EXPIRADA';
         toast.error(errorMsg);
+      } else if (statusHttp === 400 && errorMsg.toLowerCase().includes('todavía no se habilitó')) {
+        scanStatus = 'NO_HABILITADA';
+        toast.error(errorMsg);
+      } else if (statusHttp === 400 && errorMsg.toLowerCase().includes('cancelado')) {
+        scanStatus = 'EVENTO_CANCELADO';
+        toast.error(errorMsg);
       } else {
         toast.error(errorMsg);
       }
 
       const currentEvtId = eventoIdActivo;
-      const currentEvtNombre = currentEvtId ? eventosItems.find((e) => e.id === currentEvtId)?.nombre : undefined;
+      const currentEvtNombre = currentEvtId
+        ? (eventosItems.find((e) => e.id === currentEvtId)?.nombre ?? eventoPorId?.nombre)
+        : undefined;
 
       const item: ScanHistoryItem = {
         id: Math.random().toString(36).substring(2, 9),
@@ -178,8 +195,11 @@ export function ValidarAccesoPage() {
     setCurrentResult(null);
   };
 
+  // H05: si el evento elegido no está en la página del listado (p. ej. al entrar
+  // por /admin/eventos/:id/validar), se trae por id para mostrar su nombre.
+  const { data: eventoPorId } = useEvento(selectedEventoId ? Number(selectedEventoId) : 0);
   const eventoSeleccionado = selectedEventoId
-    ? eventosItems.find((e) => e.id === Number(selectedEventoId))
+    ? (eventosItems.find((e) => e.id === Number(selectedEventoId)) ?? eventoPorId ?? null)
     : null;
 
   // Filtrar historial según el evento seleccionado
@@ -476,6 +496,22 @@ export function ValidarAccesoPage() {
                     </p>
                     <div className="mt-3 rounded-md bg-red-100 p-2 text-xs text-red-900 font-semibold">
                       ⛔ Posible intento de reingreso no autorizado.
+                    </div>
+                  </>
+                )}
+
+                {(currentResult.status === 'NO_HABILITADA' ||
+                  currentResult.status === 'EVENTO_CANCELADO') && (
+                  <>
+                    <AlertTriangle size={56} className="text-amber-600 mb-2" />
+                    <h2 className="text-xl font-bold text-amber-900">
+                      {currentResult.status === 'NO_HABILITADA'
+                        ? '¡ACCESO TODAVÍA NO HABILITADO!'
+                        : '¡EVENTO CANCELADO!'}
+                    </h2>
+                    <p className="text-sm font-medium text-amber-800 mt-2">{currentResult.mensaje}</p>
+                    <div className="mt-3 rounded-md bg-amber-100 p-2 text-xs text-amber-900 font-semibold">
+                      La entrada no se usó: sigue siendo de su dueño.
                     </div>
                   </>
                 )}
