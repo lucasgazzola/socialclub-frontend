@@ -5,22 +5,25 @@ interface GraficoAsistenciaEventosProps {
   eventos: EventoReporteItem[];
 }
 
+type LimiteVisualizacion = 5 | 10 | 'todos';
+
 /**
- * US-36 — Gráfico comparativo de barras de asistencia y ocupación por evento.
+ * US-36 — Gráfico comparativo de barras horizontales de asistencia y ocupación por evento.
  * Muestra por cada evento:
- * - Capacidad máxima (guía tenue)
- * - Entradas vendidas (azul institucional)
- * - Asistentes reales validados (verde esmeralda)
+ * - Capacidad máxima (barra gris de fondo/guía)
+ * - Entradas vendidas (barra azul institucional)
+ * - Asistentes reales validados (barra verde esmeralda)
  */
 export function GraficoAsistenciaEventos({ eventos }: GraficoAsistenciaEventosProps) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [limite, setLimite] = useState<LimiteVisualizacion>(10);
 
   // Filtrar eventos con al menos capacidad o entradas para la gráfica
-  const eventosGraficables = eventos.filter(
+  const eventosGraficablesTotal = eventos.filter(
     (e) => (e.capacidadMaxima && e.capacidadMaxima > 0) || e.totalEntradas > 0,
   );
 
-  if (eventosGraficables.length === 0) {
+  if (eventosGraficablesTotal.length === 0) {
     return (
       <div className="flex h-56 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
         No hay datos suficientes para graficar en el período seleccionado.
@@ -28,40 +31,47 @@ export function GraficoAsistenciaEventos({ eventos }: GraficoAsistenciaEventosPr
     );
   }
 
-  // Dimensiones del canvas SVG
-  const width = 800;
-  const height = 260;
-  const paddingLeft = 45;
-  const paddingRight = 20;
-  const paddingTop = 25;
-  const paddingBottom = 55;
+  // Aplicar límite de visualización
+  const eventosGraficables =
+    limite === 'todos' ? eventosGraficablesTotal : eventosGraficablesTotal.slice(0, limite);
 
+  // Dimensiones del canvas SVG horizontal
+  const width = 850;
+  const paddingLeft = 250; // Espacio generoso para nombres completos de eventos
+  const paddingRight = 45;
+  const paddingTop = 20;
+  const paddingBottom = 40;
+
+  const rowHeight = 44; // Altura por cada evento
+  const barThickness = 8; // Grosor de cada barra individual
+  const barGap = 2; // Espacio entre las barras de un mismo evento
+
+  const chartHeight = eventosGraficables.length * rowHeight;
+  const height = paddingTop + chartHeight + paddingBottom;
   const chartWidth = width - paddingLeft - paddingRight;
-  const chartHeight = height - paddingTop - paddingBottom;
 
-  // Valor máximo en el eje Y
+  // Valor máximo en el eje X
   const maxVal = Math.max(
-    ...eventosGraficables.map((e) => Math.max(e.capacidadMaxima ?? 0, e.totalEntradas, e.ingresosValidados)),
+    ...eventosGraficables.map((e) =>
+      Math.max(e.capacidadMaxima ?? 0, e.totalEntradas, e.ingresosValidados),
+    ),
     10,
   );
-  // Redondear techo al múltiplo de 20 superior
-  const yMax = Math.ceil((maxVal * 1.15) / 20) * 20;
+  // Techo redondeado al múltiplo superior
+  const xMax = Math.ceil((maxVal * 1.15) / 20) * 20;
 
-  const numGridLines = 4;
-  const gridSteps = Array.from({ length: numGridLines + 1 }, (_, i) => Math.round((yMax / numGridLines) * i));
-
-  // Ancho y separación de grupos
-  const groupWidth = chartWidth / eventosGraficables.length;
-  const barWidth = Math.min(22, groupWidth * 0.28);
-  const barGap = 4;
+  const numGridLines = 5;
+  const gridSteps = Array.from({ length: numGridLines + 1 }, (_, i) =>
+    Math.round((xMax / numGridLines) * i),
+  );
 
   return (
     <div className="space-y-4">
-      {/* Leyenda interactiva */}
+      {/* Controles superiores: Leyenda y Selector de límite */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-xs bg-slate-200" />
+            <span className="h-3 w-3 rounded-xs bg-slate-300" />
             <span>Capacidad total</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -73,35 +83,55 @@ export function GraficoAsistenciaEventos({ eventos }: GraficoAsistenciaEventosPr
             <span className="font-medium text-slate-700">Asistentes validados</span>
           </div>
         </div>
-        <span className="text-slate-400">Pasa el cursor sobre una columna para ver detalles</span>
+
+        {/* Selector de cantidad visible */}
+        {eventosGraficablesTotal.length > 5 && (
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+            <span className="text-slate-500 px-1 text-[11px] font-medium">Mostrar:</span>
+            {( [5, 10, 'todos'] as const ).map((opcion) => (
+              <button
+                key={opcion}
+                type="button"
+                onClick={() => setLimite(opcion)}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                  limite === opcion
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                {opcion === 'todos' ? `Todos (${eventosGraficablesTotal.length})` : opcion}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* SVG del Gráfico */}
-      <div className="relative w-full overflow-x-auto">
+      {/* SVG del Gráfico Horizontal */}
+      <div className="relative w-full overflow-x-auto rounded-lg border border-slate-100 bg-white p-2">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="h-auto w-full select-none font-sans"
           role="img"
           aria-label="Gráfico de barras de asistencia a eventos"
         >
-          {/* Líneas horizontales de guía */}
+          {/* Líneas verticales de guía (Eje X) */}
           {gridSteps.map((step) => {
-            const y = paddingTop + chartHeight - (step / yMax) * chartHeight;
+            const x = paddingLeft + (step / xMax) * chartWidth;
             return (
               <g key={step}>
                 <line
-                  x1={paddingLeft}
-                  y1={y}
-                  x2={width - paddingRight}
-                  y2={y}
-                  stroke="#e2e8f0"
+                  x1={x}
+                  y1={paddingTop}
+                  x2={x}
+                  y2={paddingTop + chartHeight}
+                  stroke="#f1f5f9"
                   strokeDasharray="4 4"
                   strokeWidth="1"
                 />
                 <text
-                  x={paddingLeft - 8}
-                  y={y + 3.5}
-                  textAnchor="end"
+                  x={x}
+                  y={paddingTop + chartHeight + 18}
+                  textAnchor="middle"
                   fontSize="10"
                   fill="#94a3b8"
                   className="tabular-nums"
@@ -112,26 +142,35 @@ export function GraficoAsistenciaEventos({ eventos }: GraficoAsistenciaEventosPr
             );
           })}
 
-          {/* Columnas por cada evento */}
+          {/* Línea base vertical izquierda */}
+          <line
+            x1={paddingLeft}
+            y1={paddingTop}
+            x2={paddingLeft}
+            y2={paddingTop + chartHeight}
+            stroke="#cbd5e1"
+            strokeWidth="1"
+          />
+
+          {/* Filas por cada evento */}
           {eventosGraficables.map((ev, index) => {
-            const groupX = paddingLeft + index * groupWidth + (groupWidth - (barWidth * 3 + barGap * 2)) / 2;
-
-            const hCap = ((ev.capacidadMaxima ?? 0) / yMax) * chartHeight;
-            const hVend = (ev.totalEntradas / yMax) * chartHeight;
-            const hAsist = (ev.ingresosValidados / yMax) * chartHeight;
-
-            const yCap = paddingTop + chartHeight - hCap;
-            const yVend = paddingTop + chartHeight - hVend;
-            const yAsist = paddingTop + chartHeight - hAsist;
-
-            const xCap = groupX;
-            const xVend = groupX + barWidth + barGap;
-            const xAsist = groupX + (barWidth + barGap) * 2;
-
+            const rowY = paddingTop + index * rowHeight;
             const isHovered = hoverIndex === index;
 
-            // Formato de nombre abreviado
-            const nombreCorto = ev.nombre.length > 14 ? `${ev.nombre.slice(0, 13)}…` : ev.nombre;
+            const wCap = ((ev.capacidadMaxima ?? 0) / xMax) * chartWidth;
+            const wVend = (ev.totalEntradas / xMax) * chartWidth;
+            const wAsist = (ev.ingresosValidados / xMax) * chartWidth;
+
+            const yCap = rowY + 8;
+            const yVend = yCap + barThickness + barGap;
+            const yAsist = yVend + barThickness + barGap;
+
+            // Nombre completo del evento y fecha
+            const nombreCompleto = ev.nombre;
+            const fechaFormateada = new Date(ev.fechaEvento).toLocaleDateString('es-AR', {
+              day: '2-digit',
+              month: '2-digit',
+            });
 
             return (
               <g
@@ -144,70 +183,70 @@ export function GraficoAsistenciaEventos({ eventos }: GraficoAsistenciaEventosPr
                 {/* Zona de foco hover de fondo */}
                 {isHovered && (
                   <rect
-                    x={paddingLeft + index * groupWidth + 2}
-                    y={paddingTop - 5}
-                    width={groupWidth - 4}
-                    height={chartHeight + 10}
-                    fill="#f1f5f9"
-                    rx="4"
-                    opacity="0.6"
+                    x={4}
+                    y={rowY + 2}
+                    width={width - 8}
+                    height={rowHeight - 4}
+                    fill="#f8fafc"
+                    rx="6"
                   />
                 )}
 
-                {/* Barra Capacidad */}
+                {/* Etiqueta Eje Y: Nombre completo del evento */}
+                <text
+                  x={paddingLeft - 12}
+                  y={rowY + 18}
+                  textAnchor="end"
+                  fontSize="10.5"
+                  fontWeight={isHovered ? '600' : '500'}
+                  fill={isHovered ? '#0f172a' : '#334155'}
+                >
+                  {nombreCompleto}
+                </text>
+
+                {/* Subetiqueta Eje Y: Fecha del evento */}
+                <text
+                  x={paddingLeft - 12}
+                  y={rowY + 30}
+                  textAnchor="end"
+                  fontSize="9"
+                  fill="#94a3b8"
+                  className="tabular-nums"
+                >
+                  {fechaFormateada}
+                </text>
+
+                {/* Barra 1: Capacidad Máxima */}
                 {ev.capacidadMaxima && (
                   <rect
-                    x={xCap}
+                    x={paddingLeft}
                     y={yCap}
-                    width={barWidth}
-                    height={Math.max(2, hCap)}
+                    width={Math.max(2, wCap)}
+                    height={barThickness}
                     fill="#cbd5e1"
-                    rx="2"
+                    rx={barThickness / 2}
                   />
                 )}
 
-                {/* Barra Vendidas */}
+                {/* Barra 2: Entradas Vendidas */}
                 <rect
-                  x={xVend}
+                  x={paddingLeft}
                   y={yVend}
-                  width={barWidth}
-                  height={Math.max(2, hVend)}
+                  width={Math.max(2, wVend)}
+                  height={barThickness}
                   fill="#2563eb"
-                  rx="2"
+                  rx={barThickness / 2}
                 />
 
-                {/* Barra Asistentes Validados */}
+                {/* Barra 3: Asistentes Validados */}
                 <rect
-                  x={xAsist}
+                  x={paddingLeft}
                   y={yAsist}
-                  width={barWidth}
-                  height={Math.max(2, hAsist)}
+                  width={Math.max(2, wAsist)}
+                  height={barThickness}
                   fill="#059669"
-                  rx="2"
+                  rx={barThickness / 2}
                 />
-
-                {/* Etiqueta Eje X (Nombre de Evento) */}
-                <text
-                  x={paddingLeft + index * groupWidth + groupWidth / 2}
-                  y={paddingTop + chartHeight + 16}
-                  textAnchor="middle"
-                  fontSize="10"
-                  fontWeight={isHovered ? '600' : '400'}
-                  fill={isHovered ? '#0f172a' : '#64748b'}
-                >
-                  {nombreCorto}
-                </text>
-
-                {/* Subetiqueta (Fecha día/mes) */}
-                <text
-                  x={paddingLeft + index * groupWidth + groupWidth / 2}
-                  y={paddingTop + chartHeight + 28}
-                  textAnchor="middle"
-                  fontSize="8.5"
-                  fill="#94a3b8"
-                >
-                  {new Date(ev.fechaEvento).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })}
-                </text>
               </g>
             );
           })}
@@ -218,11 +257,11 @@ export function GraficoAsistenciaEventos({ eventos }: GraficoAsistenciaEventosPr
           <div
             className="pointer-events-none absolute z-20 rounded-lg border border-slate-200 bg-white p-3 shadow-lg"
             style={{
-              left: `${Math.min(
-                Math.max(paddingLeft + hoverIndex * groupWidth, 10),
-                width - 240,
+              left: `${paddingLeft + 15}px`,
+              top: `${Math.min(
+                paddingTop + hoverIndex * rowHeight,
+                Math.max(10, height - 190),
               )}px`,
-              top: '8px',
             }}
           >
             <div className="font-semibold text-slate-900">

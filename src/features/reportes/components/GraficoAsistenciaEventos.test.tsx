@@ -78,7 +78,7 @@ describe('US-36 · GraficoAsistenciaEventos', () => {
     fireEvent.mouseEnter(barGroups[0]);
 
     // Verificar que aparece el tooltip con cifras exactas y desglose
-    expect(screen.getByText('Torneo Apertura de Pádel')).toBeInTheDocument();
+    expect(screen.getAllByText('Torneo Apertura de Pádel').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Capacidad máxima:')).toBeInTheDocument();
     expect(screen.getByText('Entradas vendidas:')).toBeInTheDocument();
     expect(screen.getByText('Asistentes validados:')).toBeInTheDocument();

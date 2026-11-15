@@ -27,5 +27,15 @@ describe('QRCode', () => {
       }),
     );
   });
+
+  it('usa width por defecto 160 si no se especifica size', () => {
+    render(<QRCode value="default-size" />);
+    const canvas = screen.getByLabelText('QR: default-size');
+    expect(QRCodeLib.toCanvas).toHaveBeenCalledWith(
+      canvas,
+      'default-size',
+      expect.objectContaining({ width: 160 }),
+    );
+  });
 });
 

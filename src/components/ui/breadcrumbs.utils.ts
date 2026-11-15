@@ -21,6 +21,7 @@ export const RUTAS_BREADCRUMBS: Record<string, RutaMeta> = {
   [ROUTES.resultadoPago]: { label: 'Resultado del Pago', parent: ROUTES.dashboard },
   [ROUTES.misReservas]: { label: 'Mis Reservas', parent: ROUTES.dashboard },
   [ROUTES.solicitudesReserva]: { label: 'Solicitudes de Reserva', parent: ROUTES.dashboard },
+  [ROUTES.espacios]: { label: 'Espacios Físicos', parent: ROUTES.dashboard },
   [ROUTES.simuladorPago]: { label: 'Simulador de Pago', parent: ROUTES.dashboard },
   [ROUTES.miDocumentacion]: { label: 'Mi Documentación', parent: ROUTES.dashboard },
   [ROUTES.hacermeSocio]: { label: 'Hacerme Socio', parent: ROUTES.dashboard },

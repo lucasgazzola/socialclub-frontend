@@ -47,11 +47,16 @@ export function MisReservasPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Mis reservas</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Seguí el estado de tus solicitudes de alquiler de espacios.
-        </p>
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Mis reservas</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Seguí el estado de tus solicitudes de alquiler de espacios.
+          </p>
+        </div>
+        <Button type="button" onClick={() => navigate(ROUTES.solicitarReserva)}>
+          Solicitar reserva
+        </Button>
       </header>
 
       {isLoading ? (

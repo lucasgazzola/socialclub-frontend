@@ -135,7 +135,17 @@ describe('inscripcion.api', () => {
     const listaMock = [{ id: 1, estado: 'PENDIENTE' }];
     vi.mocked(apiClient.get).mockResolvedValueOnce({ data: listaMock });
     const res = await obtenerMisSolicitudesInscripcion();
-    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/mis-solicitudes');
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/mis-solicitudes', undefined);
+    expect(res).toEqual(listaMock);
+  });
+
+  it('obtenerMisSolicitudesInscripcion(estado) envía get con params', async () => {
+    const listaMock = [{ id: 2, estado: 'RECHAZADA' }];
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: listaMock });
+    const res = await obtenerMisSolicitudesInscripcion('RECHAZADA');
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/mis-solicitudes', {
+      params: { estado: 'RECHAZADA' },
+    });
     expect(res).toEqual(listaMock);
   });
 });

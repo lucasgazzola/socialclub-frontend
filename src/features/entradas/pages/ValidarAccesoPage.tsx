@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, History, ArrowRight, Trash2, ArrowLeft, QrCode, Search, Filter } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button, Card, Spinner } from '@/components/ui';
 import { QRScanner } from '../components/QRScanner';
 import { useValidarEntrada } from '../hooks/useEntradas';
@@ -97,20 +98,21 @@ export function ValidarAccesoPage() {
   const handleScan = async (token: string) => {
     if (validarMutation.isPending) return;
 
+    const eventoIdActivo = selectedEventoId ? Number(selectedEventoId) : undefined;
+
+    if (!eventoIdActivo) {
+      toast.error('Debés seleccionar un evento antes de validar entradas.');
+      return;
+    }
+
     try {
-      const res = await validarMutation.mutateAsync(token);
+      const res = await validarMutation.mutateAsync({ token, eventoId: eventoIdActivo });
 
       const eventoEscaneadoId = res.entrada.eventoId;
       const eventoEscaneadoNombre = res.entrada.eventoNombre;
 
-      let scanStatus: ScanHistoryItem['status'] = 'PERMITIDO';
-      let mensajeStatus = `Acceso concedido para "${eventoEscaneadoNombre}"`;
-
-      if (selectedEventoId && Number(selectedEventoId) !== eventoEscaneadoId) {
-        scanStatus = 'EVENTO_INCORRECTO';
-        const eventoSeleccionadoNombre = eventosItems.find((e) => e.id === Number(selectedEventoId))?.nombre || 'evento seleccionado';
-        mensajeStatus = `Entrada para "${eventoEscaneadoNombre}", pero se está controlando "${eventoSeleccionadoNombre}".`;
-      }
+      const scanStatus: ScanHistoryItem['status'] = 'PERMITIDO';
+      const mensajeStatus = `Acceso concedido para "${eventoEscaneadoNombre}"`;
 
       const item: ScanHistoryItem = {
         id: Math.random().toString(36).substring(2, 9),
@@ -133,17 +135,27 @@ export function ValidarAccesoPage() {
         message?: string;
       };
       const statusHttp = error?.status ?? error?.response?.status;
-      const errorMsg =
+      const rawErrorMsg =
         error?.response?.data?.message || error?.message || 'Error al validar la entrada.';
+      const errorMsg = Array.isArray(rawErrorMsg) ? rawErrorMsg.join(', ') : rawErrorMsg;
 
       let scanStatus: ScanHistoryItem['status'] = 'INVALIDA';
       if (statusHttp === 409) {
-        scanStatus = 'YA_USADA';
+        if (errorMsg.toLowerCase().includes('otro evento')) {
+          scanStatus = 'EVENTO_INCORRECTO';
+          toast.error(errorMsg);
+        } else {
+          scanStatus = 'YA_USADA';
+          toast.error(errorMsg);
+        }
       } else if (statusHttp === 400 && errorMsg.toLowerCase().includes('expirada')) {
         scanStatus = 'EXPIRADA';
+        toast.error(errorMsg);
+      } else {
+        toast.error(errorMsg);
       }
 
-      const currentEvtId = selectedEventoId ? Number(selectedEventoId) : undefined;
+      const currentEvtId = eventoIdActivo;
       const currentEvtNombre = currentEvtId ? eventosItems.find((e) => e.id === currentEvtId)?.nombre : undefined;
 
       const item: ScanHistoryItem = {
@@ -153,7 +165,7 @@ export function ValidarAccesoPage() {
         status: scanStatus,
         eventoId: currentEvtId,
         eventoNombre: currentEvtNombre,
-        mensaje: Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg,
+        mensaje: errorMsg,
       };
 
       setCurrentResult(item);

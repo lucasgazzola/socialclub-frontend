@@ -8,6 +8,7 @@ export const ROUTES = {
   /** DT-54: pantalla pública del enlace del email (la API arma el link con esta ruta). */
   verificarEmail: '/verificar-email',
   dashboard: '/',
+  dashboardGestion: '/dashboard',
   hacermeSocio: '/hacerme-socio',
   socios: '/socios',
   /** DT-20: las ediciones son modales sobre el listado (?editar=<id>). */
@@ -39,12 +40,16 @@ export const ROUTES = {
   misEntradas: '/mis-entradas',
   /** TASK-51: vuelta de la pasarela de pagos y simulador (sin credenciales de Mercado Pago). */
   resultadoPago: '/pagos/resultado',
-  /** US-62 y US-60. */
+  /** US-59, US-62, US-60 y US-55. */
+  solicitarReserva: '/reservas/solicitar',
   misReservas: '/mis-reservas',
   solicitudesReserva: '/reservas/solicitudes',
+  espacios: '/espacios',
   simuladorPago: '/pagos/simulador',
   /** US-63: postulación / solicitud de inscripción a disciplina. */
   solicitarInscripcion: '/inscripcion/solicitar',
+  /** US-64: consulta de mis solicitudes de inscripción. */
+  misSolicitudesInscripcion: '/inscripcion/mis-solicitudes',
   /** DT-28: consulta de propia documentación para socio/participante. */
   miDocumentacion: '/mi-documentacion',
   cobrarCuotaDeportiva: '/cuotas/deportiva/cobrar',
