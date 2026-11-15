@@ -49,6 +49,9 @@ import { PortalDocumentacionPage } from '@/features/portal-socio/pages/PortalDoc
 import { PortalPerfilPage } from '@/features/portal-socio/pages/PortalPerfilPage';
 import { PortalHacermeSocioPage } from '@/features/portal-socio/pages/PortalHacermeSocioPage';
 import { PortalCambiarContrasenaPage } from '@/features/portal-socio/pages/PortalCambiarContrasenaPage';
+import { PortalComprarEntradasPage } from '@/features/portal-socio/pages/PortalComprarEntradasPage';
+import { PortalSimuladorPagoPage } from '@/features/portal-socio/pages/PortalSimuladorPagoPage';
+import { PortalResultadoPagoPage } from '@/features/portal-socio/pages/PortalResultadoPagoPage';
 import { ROUTES } from './paths';
 
 function SocioOStaff({ socio, staff }: { socio: ReactNode; staff: ReactNode }) {
@@ -111,8 +114,24 @@ export function AppRouter() {
             path={ROUTES.misReservas}
             element={<SocioOStaff socio={<PortalReservasPage />} staff={<MisReservasPage />} />}
           />
-          <Route path={ROUTES.resultadoPago} element={<ResultadoPagoPage />} />
-          <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />
+          <Route
+            path={ROUTES.resultadoPago}
+            element={
+              <SocioOStaff
+                socio={<PortalResultadoPagoPage />}
+                staff={<ResultadoPagoPage />}
+              />
+            }
+          />
+          <Route
+            path={ROUTES.simuladorPago}
+            element={
+              <SocioOStaff
+                socio={<PortalSimuladorPagoPage />}
+                staff={<SimuladorPagoPage />}
+              />
+            }
+          />
           <Route
             path={ROUTES.miDocumentacion}
             element={
@@ -163,7 +182,15 @@ export function AppRouter() {
 
           {/* Compra de entradas: cualquier usuario autenticado */}
           <Route>
-            <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
+            <Route
+              path="eventos/:eventoId/entradas"
+              element={
+                <SocioOStaff
+                  socio={<PortalComprarEntradasPage />}
+                  staff={<ComprarEntradasPage />}
+                />
+              }
+            />
           </Route>
 
           {/* Control operativo: ADMIN y COLABORADOR */}

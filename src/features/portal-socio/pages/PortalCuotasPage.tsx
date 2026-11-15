@@ -1,26 +1,29 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Check, CheckCircle2, CreditCard, History, Square } from 'lucide-react';
+import { Check, CheckCircle2, CreditCard, History } from 'lucide-react';
 import { toast } from 'sonner';
-import { Spinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useMisCuotas } from '@/features/pagos/hooks/useMisCuotas';
 import { useIniciarPagoCuotas } from '@/features/pagos/hooks/useIniciarPagoCuotas';
 import { useHistorialPagos } from '@/features/pagos/hooks/useHistorialPagos';
-import { ConfirmarPagoModal } from '@/features/pasarela/components/ConfirmarPagoModal';
 import { irAPagar } from '@/features/pasarela/hooks/usePasarela';
 import { etiquetaMetodoPago } from '@/features/pasarela/types';
 import { ROUTES } from '@/routes/paths';
 import { cn } from '@/lib/utils/cn';
+import { PortalConfirmarPagoModal } from '../components/PortalModals';
 import {
   PortalButton,
   PortalEmptyState,
-  PortalPageHeader,
-  PortalPanel,
-  PortalSegmentedTabs,
-  PortalStatusPill,
+  PortalSegmentedSwitch,
+  PortalSpinner,
+  PortalSurface,
+  PortalTag,
+  PortalTitleBar,
 } from '../components/PortalUI';
 
+/**
+ * Gestión de cuotas para socios: selección con acentos azules y comprobantes en lista cronológica (cero tabla admin).
+ */
 export function PortalCuotasPage() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
@@ -77,22 +80,22 @@ export function PortalCuotasPage() {
 
   if (isLoadingCuotas) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner className="h-7 w-7 text-zinc-400" />
+      <div className="flex h-56 items-center justify-center">
+        <PortalSpinner />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <PortalPanel className="border-rose-500/25 bg-rose-500/10 p-6 text-rose-200">
-        <h2 className="text-base font-semibold">No pudimos cargar tus cuotas</h2>
-        <p className="mt-1 text-sm text-rose-300/90">
+      <PortalSurface className="border-rose-500/30 bg-rose-500/10 p-5 text-rose-200">
+        <h2 className="text-sm font-semibold">No pudimos cargar tus cuotas</h2>
+        <p className="mt-1 text-xs text-rose-300">
           {error instanceof Error
             ? error.message
-            : 'No se pudo obtener el estado de cuotas. Verificá tu membresía activa.'}
+            : 'No se pudo obtener el estado de tus cuotas. Verificá tu membresía activa.'}
         </p>
-      </PortalPanel>
+      </PortalSurface>
     );
   }
 
@@ -100,11 +103,11 @@ export function PortalCuotasPage() {
 
   return (
     <div className="space-y-6">
-      <PortalPageHeader
+      <PortalTitleBar
         title="Mis cuotas"
-        subtitle={`Categoría ${resumen?.categoria ?? 'Socio'} · Consultá tus períodos pendientes y comprobantes abonados.`}
+        summary={`Categoría ${resumen?.categoria ?? 'Socio'} · Estado de períodos y comprobantes`}
         actions={
-          <PortalStatusPill
+          <PortalTag
             tone={
               estadoFinanciero === 'AL_DIA'
                 ? 'active'
@@ -119,11 +122,37 @@ export function PortalCuotasPage() {
               : estadoFinanciero === 'MOROSO'
                 ? `Moroso (${cuotasPendientes.length})`
                 : `${cuotasPendientes.length} pendiente(s)`}
-          </PortalStatusPill>
+          </PortalTag>
         }
       />
 
-      <PortalSegmentedTabs<'pendientes' | 'historial'>
+      {/* Resumen financiero en banda compacta */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <PortalSurface variant="muted" className="px-4 py-3.5">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            Categoría
+          </p>
+          <p className="mt-1 text-base font-semibold text-white">{resumen?.categoria ?? '—'}</p>
+        </PortalSurface>
+        <PortalSurface variant="muted" className="px-4 py-3.5">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            Períodos pendientes
+          </p>
+          <p className="mt-1 text-base font-semibold text-blue-400 tabular-nums">
+            {cuotasPendientes.length}
+          </p>
+        </PortalSurface>
+        <PortalSurface variant="muted" className="px-4 py-3.5">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            Saldo adeudado
+          </p>
+          <p className="mt-1 text-base font-semibold text-white tabular-nums">
+            ${(resumen?.totalAdeudado ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+          </p>
+        </PortalSurface>
+      </div>
+
+      <PortalSegmentedSwitch<'pendientes' | 'historial'>
         ariaLabel="Secciones de cuotas"
         value={activeTab}
         onChange={setActiveTab}
@@ -136,59 +165,57 @@ export function PortalCuotasPage() {
       {activeTab === 'pendientes' ? (
         cuotasPendientes.length === 0 ? (
           <PortalEmptyState
-            icon={<CheckCircle2 size={22} className="text-emerald-400" />}
+            icon={<CheckCircle2 size={20} />}
             title="Estás al día con tus cuotas"
-            description="No registrás períodos pendientes de pago. Tu acceso y membresía se encuentran habilitados."
+            description="No registrás períodos pendientes de pago. Tu membresía y acceso están completamente habilitados."
           />
         ) : (
-          <div className="space-y-4">
-            {/* Barra superior de selección */}
-            <PortalPanel className="flex flex-wrap items-center justify-between gap-4 px-5 py-3.5">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedPeriodos(
-                      allSelected ? [] : cuotasPendientes.map((c) => c.periodo),
-                    )
-                  }
-                  className="inline-flex items-center gap-2 text-xs font-medium text-zinc-200 transition-colors hover:text-white cursor-pointer"
-                >
-                  {allSelected ? (
-                    <span className="flex h-4 w-4 items-center justify-center rounded bg-white text-zinc-950">
-                      <Check size={12} strokeWidth={3} />
-                    </span>
-                  ) : (
-                    <Square size={16} className="text-zinc-500" />
+          <div className="space-y-3">
+            {/* Barra de selección y total a abonar */}
+            <PortalSurface className="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedPeriodos(
+                    allSelected ? [] : cuotasPendientes.map((c) => c.periodo),
+                  )
+                }
+                className="inline-flex items-center gap-2.5 text-xs font-medium text-slate-200 hover:text-white cursor-pointer"
+              >
+                <span
+                  className={cn(
+                    'flex h-4 w-4 items-center justify-center rounded-[3px] border transition-colors',
+                    allSelected
+                      ? 'border-blue-500 bg-blue-600 text-white'
+                      : 'border-slate-500/60 bg-transparent',
                   )}
-                  {allSelected ? 'Desmarcar todas' : 'Seleccionar todas'}
-                </button>
-                <span className="text-xs text-zinc-500 tabular-nums">
-                  {selectedPeriodos.length} de {cuotasPendientes.length} seleccionadas
+                >
+                  {allSelected && <Check size={11} strokeWidth={3} />}
                 </span>
-              </div>
+                <span>{allSelected ? 'Deseleccionar todas' : 'Seleccionar todas las cuotas'}</span>
+              </button>
 
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="text-right">
-                  <span className="block text-[11px] text-zinc-400">Total a pagar</span>
-                  <span className="text-lg font-semibold tabular-nums text-white">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs text-slate-400">
+                  Seleccionadas:{' '}
+                  <strong className="font-semibold text-blue-400 tabular-nums">
                     ${totalSeleccionado.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
+                  </strong>
+                </span>
                 <PortalButton
                   variant="primary"
                   size="sm"
-                  disabled={selectedPeriodos.length === 0}
+                  disabled={selectedPeriodos.length === 0 || iniciarPago.isPending}
                   onClick={() => setIsModalOpen(true)}
                 >
                   <CreditCard size={14} />
-                  Pagar seleccionadas
+                  Pagar seleccionadas ({selectedPeriodos.length})
                 </PortalButton>
               </div>
-            </PortalPanel>
+            </PortalSurface>
 
-            {/* Lista oscura de cuotas */}
-            <div className="space-y-2.5">
+            {/* Filas afiladas de cuotas */}
+            <PortalSurface className="divide-y divide-slate-300/[0.08] overflow-hidden">
               {cuotasPendientes.map((cuota) => {
                 const selected = selectedPeriodos.includes(cuota.periodo);
                 return (
@@ -197,102 +224,89 @@ export function PortalCuotasPage() {
                     type="button"
                     onClick={() => togglePeriodo(cuota.periodo)}
                     className={cn(
-                      'flex w-full items-center justify-between gap-4 rounded-2xl border p-4 text-left',
-                      'transition-[transform,background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.995] cursor-pointer',
-                      selected
-                        ? 'border-white/30 bg-[#141822]'
-                        : 'border-white/[0.08] bg-[#0d1016] hover:border-white/[0.15] hover:bg-[#11151e]',
+                      'flex w-full flex-wrap items-center justify-between gap-4 px-4 py-3.5 text-left transition-colors cursor-pointer',
+                      selected ? 'bg-blue-500/[0.08]' : 'hover:bg-white/[0.02]',
                     )}
                   >
-                    <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex min-w-0 items-center gap-3">
                       <span
                         className={cn(
-                          'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+                          'flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border transition-colors',
                           selected
-                            ? 'border-white bg-white text-zinc-950'
-                            : 'border-white/20 bg-transparent',
+                            ? 'border-blue-500 bg-blue-600 text-white'
+                            : 'border-slate-500/60 bg-transparent',
                         )}
                       >
-                        {selected && <Check size={13} strokeWidth={3} />}
+                        {selected && <Check size={11} strokeWidth={3} />}
                       </span>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-white tabular-nums">
                           Período {cuota.periodo}
                         </p>
-                        <p className="mt-0.5 text-xs text-zinc-400">
-                          {cuota.categoriaNombre}
-                        </p>
+                        <p className="mt-0.5 text-xs text-slate-400">{cuota.categoriaNombre}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                      <PortalStatusPill tone="pending">Pendiente</PortalStatusPill>
-                      <span className="min-w-[90px] text-right text-base font-semibold tabular-nums text-white">
+                    <div className="flex shrink-0 items-center gap-3">
+                      <PortalTag tone="pending">Pendiente</PortalTag>
+                      <span className="min-w-[92px] text-right text-sm font-semibold text-white tabular-nums">
                         ${cuota.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </button>
                 );
               })}
-            </div>
+            </PortalSurface>
           </div>
         )
       ) : isLoadingHistorial ? (
-        <div className="flex h-48 items-center justify-center">
-          <Spinner className="h-7 w-7 text-zinc-400" />
+        <div className="flex h-44 items-center justify-center">
+          <PortalSpinner />
         </div>
       ) : !historial || historial.length === 0 ? (
         <PortalEmptyState
-          icon={<History size={22} />}
+          icon={<History size={20} />}
           title="Sin pagos registrados"
-          description="Cuando abones una cuota social online o en secretaría, verás el comprobante aquí."
+          description="Cuando abones una cuota social online o en secretaría, verás el comprobante en esta lista."
         />
       ) : (
-        <PortalPanel className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-white/[0.07] bg-white/[0.02] text-xs font-medium uppercase tracking-wider text-zinc-400">
-                <tr>
-                  <th className="px-5 py-3.5">Pago</th>
-                  <th className="px-5 py-3.5">Período</th>
-                  <th className="px-5 py-3.5">Fecha</th>
-                  <th className="px-5 py-3.5">Método</th>
-                  <th className="px-5 py-3.5 text-right">Monto</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.06]">
-                {historial.map((pago) => (
-                  <tr key={pago.id} className="transition-colors hover:bg-white/[0.02]">
-                    <td className="px-5 py-3.5 font-mono text-xs text-zinc-500 tabular-nums">
-                      #{pago.id}
-                    </td>
-                    <td className="px-5 py-3.5 font-medium text-white tabular-nums">
-                      {pago.periodo}
-                    </td>
-                    <td className="px-5 py-3.5 text-zinc-400 tabular-nums">
-                      {new Date(pago.fechaPago).toLocaleString('es-AR')}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <PortalStatusPill tone="active">
-                        {etiquetaMetodoPago(pago.metodoPago)}
-                      </PortalStatusPill>
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-semibold text-white tabular-nums">
-                      ${pago.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </PortalPanel>
+        /* Historial cronológico de comprobantes — cero tabla de administración */
+        <PortalSurface className="divide-y divide-slate-300/[0.08] overflow-hidden">
+          {historial.map((pago) => (
+            <div
+              key={pago.id}
+              className="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5 hover:bg-white/[0.02]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] border border-blue-400/25 bg-blue-500/10 text-xs font-semibold text-blue-300 tabular-nums">
+                  {pago.periodo.slice(5)}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white tabular-nums">
+                    Cuota {pago.periodo}
+                  </p>
+                  <p className="text-xs text-slate-400 tabular-nums">
+                    Abonada el {new Date(pago.fechaPago).toLocaleDateString('es-AR')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <PortalTag tone="info">{etiquetaMetodoPago(pago.metodoPago)}</PortalTag>
+                <span className="min-w-[88px] text-right text-sm font-semibold text-white tabular-nums">
+                  ${pago.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          ))}
+        </PortalSurface>
       )}
 
-      <ConfirmarPagoModal
-        isOpen={isModalOpen}
+      <PortalConfirmarPagoModal
+        open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        titulo={`Períodos a pagar (${selectedCuotasObjects.length})`}
-        detalle={selectedCuotasObjects.map((c) => c.periodo).join(', ')}
+        titulo={`Cuotas seleccionadas (${selectedPeriodos.length})`}
+        detalle={selectedPeriodos.join(' · ')}
         total={totalSeleccionado}
         onConfirmar={() => void handleConfirmPago()}
         isLoading={iniciarPago.isPending}

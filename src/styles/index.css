@@ -104,22 +104,34 @@ body {
 }
 
 /* ==========================================================================
-   Portal Socios / Participantes — Sistema Visual Propio (Global Fan × Craft)
-   Completamente desacoplado del backoffice administrativo.
+   Portal Socios / Participantes — Sistema Visual Propio (Obsidian & Azul)
+   Completamente independiente del backoffice administrativo.
    ========================================================================== */
+@keyframes portal-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .portal-socio {
   --ease-portal-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-portal-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-portal-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: dark;
-  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  scrollbar-color: rgba(96, 165, 250, 0.25) transparent;
   scrollbar-width: thin;
 }
 
 .portal-socio ::selection {
-  background-color: rgba(74, 222, 128, 0.22);
-  color: #ffffff;
+  background-color: rgba(59, 130, 246, 0.32);
+  color: #f8fafc;
 }
 
 .portal-socio *::-webkit-scrollbar {
@@ -132,54 +144,35 @@ body {
 }
 
 .portal-socio *::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.14);
-  border-radius: 9999px;
+  background-color: rgba(96, 165, 250, 0.22);
+  border-radius: 3px;
 }
 
 .portal-socio *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.24);
+  background-color: rgba(96, 165, 250, 0.42);
 }
 
-/* Adaptación aislada únicamente para widgets de solo lectura embebidos desde módulos compartidos */
-.portal-socio-embed .bg-white {
-  background-color: #0d1016;
+.portal-modal-panel {
+  animation: portal-modal-in 160ms var(--ease-portal-out);
 }
-.portal-socio-embed .bg-slate-50,
-.portal-socio-embed .bg-slate-100 {
-  background-color: rgba(255, 255, 255, 0.04);
+
+.portal-socio select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
 }
-.portal-socio-embed .border-slate-200,
-.portal-socio-embed .border-slate-300 {
-  border-color: rgba(255, 255, 255, 0.09);
+
+.portal-socio select::-ms-expand {
+  display: none;
 }
-.portal-socio-embed .text-slate-900,
-.portal-socio-embed .text-slate-800 {
-  color: #fafafa;
+
+.portal-socio select::picker-icon {
+  display: none;
 }
-.portal-socio-embed .text-slate-700,
-.portal-socio-embed .text-slate-600,
-.portal-socio-embed .text-slate-500 {
-  color: #a1a1aa;
-}
-.portal-socio-embed .bg-emerald-50 {
-  background-color: rgba(52, 211, 153, 0.12);
-}
-.portal-socio-embed .text-emerald-700,
-.portal-socio-embed .text-emerald-800 {
-  color: #6ee7b7;
-}
-.portal-socio-embed .bg-amber-50 {
-  background-color: rgba(251, 191, 36, 0.12);
-}
-.portal-socio-embed .text-amber-700,
-.portal-socio-embed .text-amber-800 {
-  color: #fcd34d;
-}
-.portal-socio-embed .bg-red-50,
-.portal-socio-embed .bg-rose-50 {
-  background-color: rgba(244, 63, 94, 0.12);
-}
-.portal-socio-embed .text-red-700,
-.portal-socio-embed .text-rose-700 {
-  color: #fda4af;
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-modal-panel {
+    animation: none;
+  }
 }

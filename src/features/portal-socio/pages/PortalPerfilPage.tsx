@@ -5,22 +5,25 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, CheckCircle2, KeyRound, Lock, UserCheck, UserX } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { GENERO_PERSONA_LABELS } from '@/features/auth/types';
-import { ModalConfirmarBajaSocio } from '@/features/socios/components/ModalConfirmarBajaSocio';
 import { useDarseDeBajaSocio } from '@/features/socios/hooks/useDarseDeBajaSocio';
 import { useReactivarmeSocio } from '@/features/socios/hooks/useReactivarmeSocio';
 import { useUpdatePerfilSocio } from '@/features/socios/hooks/useSocios';
 import { perfilSocioSchema, type PerfilSocioFormData } from '@/features/socios/schemas';
 import { formatearDni } from '@/lib/utils/dni';
 import { ROUTES } from '@/routes/paths';
+import { PortalBajaSocioModal } from '../components/PortalModals';
 import {
   PortalButton,
-  PortalInput,
-  PortalPageHeader,
-  PortalPanel,
-  PortalSelect,
-  PortalStatusPill,
+  PortalFieldInput,
+  PortalFieldSelect,
+  PortalSurface,
+  PortalTag,
+  PortalTitleBar,
 } from '../components/PortalUI';
 
+/**
+ * Edición de datos personales + gestión de membresía nativa del Portal de Socios (sin componentes admin).
+ */
 export function PortalPerfilPage() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
@@ -79,9 +82,9 @@ export function PortalPerfilPage() {
 
   return (
     <div className="space-y-6">
-      <PortalPageHeader
+      <PortalTitleBar
         title="Editar mis datos"
-        subtitle="Mantené actualizados tu información personal y tus datos de contacto en SocialClub."
+        summary="Actualizá tu nombre, email y teléfono de contacto."
         actions={
           <PortalButton
             variant="secondary"
@@ -96,12 +99,12 @@ export function PortalPerfilPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-8">
-          <PortalPanel className="p-6">
+          <PortalSurface className="p-5 sm:p-6">
             <form className="space-y-5" onSubmit={onSubmit} noValidate>
               {mensajeExito && (
                 <div
                   role="status"
-                  className="flex items-center gap-3 rounded-xl border border-emerald-400/25 bg-emerald-400/10 p-3.5 text-sm text-emerald-200"
+                  className="flex items-center gap-3 rounded-[5px] border border-emerald-400/25 bg-emerald-500/10 p-3.5 text-sm text-emerald-200"
                 >
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
                   <span>{mensajeExito}</span>
@@ -111,7 +114,7 @@ export function PortalPerfilPage() {
               {mensajeError && (
                 <div
                   role="alert"
-                  className="flex items-center gap-3 rounded-xl border border-rose-500/25 bg-rose-500/10 p-3.5 text-sm text-rose-200"
+                  className="flex items-center gap-3 rounded-[5px] border border-rose-500/30 bg-rose-500/10 p-3.5 text-sm text-rose-200"
                 >
                   <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
                   <span>{mensajeError}</span>
@@ -119,21 +122,21 @@ export function PortalPerfilPage() {
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <PortalInput
+                <PortalFieldInput
                   id="nombre"
                   label="Nombre *"
                   placeholder="Ingresá tu nombre"
                   error={errors.nombre?.message}
                   {...register('nombre')}
                 />
-                <PortalInput
+                <PortalFieldInput
                   id="apellido"
                   label="Apellido *"
                   placeholder="Ingresá tu apellido"
                   error={errors.apellido?.message}
                   {...register('apellido')}
                 />
-                <PortalInput
+                <PortalFieldInput
                   id="email"
                   type="email"
                   label="Correo electrónico *"
@@ -141,7 +144,7 @@ export function PortalPerfilPage() {
                   error={errors.email?.message}
                   {...register('email')}
                 />
-                <PortalInput
+                <PortalFieldInput
                   id="telefono"
                   type="tel"
                   label="Teléfono"
@@ -149,7 +152,7 @@ export function PortalPerfilPage() {
                   error={errors.telefono?.message}
                   {...register('telefono')}
                 />
-                <PortalInput
+                <PortalFieldInput
                   id="fechaNacimiento"
                   type="date"
                   label="Fecha de nacimiento"
@@ -158,7 +161,7 @@ export function PortalPerfilPage() {
                   disabled
                   hint="La fecha de nacimiento no se puede modificar."
                 />
-                <PortalSelect
+                <PortalFieldSelect
                   id="genero"
                   label="Género"
                   value={persona?.genero ?? ''}
@@ -173,49 +176,48 @@ export function PortalPerfilPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3 border-t border-white/[0.07] pt-5">
+              <div className="flex items-center gap-3 border-t border-slate-300/[0.08] pt-5">
                 <PortalButton type="submit" variant="primary" disabled={isPending}>
                   {isPending ? 'Guardando cambios…' : 'Guardar cambios'}
                 </PortalButton>
               </div>
             </form>
-          </PortalPanel>
+          </PortalSurface>
         </div>
 
-        {/* Columna derecha: estado de membresía y baja/reactivación */}
         <div className="space-y-4 lg:col-span-4">
           {membresiaActiva && (
-            <PortalPanel className="space-y-4 p-5">
+            <PortalSurface className="space-y-4 p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-white">Membresía</h2>
-                <PortalStatusPill tone="active" dot>
+                <PortalTag tone="info" dot>
                   Activo
-                </PortalStatusPill>
+                </PortalTag>
               </div>
 
-              <dl className="space-y-3 border-t border-white/[0.07] pt-3 text-sm">
+              <dl className="space-y-3 border-t border-slate-300/[0.08] pt-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <dt className="flex items-center gap-1.5 text-zinc-400">
-                    <Lock size={13} /> DNI
+                  <dt className="flex items-center gap-1.5 text-slate-400">
+                    <Lock size={13} className="text-blue-400" /> DNI
                   </dt>
-                  <dd className="font-mono text-zinc-100 tabular-nums">
+                  <dd className="font-mono text-white tabular-nums">
                     {formatearDni(persona?.dni)}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between">
-                  <dt className="text-zinc-400">Categoría</dt>
-                  <dd className="font-medium text-zinc-100">
+                  <dt className="text-slate-400">Categoría</dt>
+                  <dd className="font-medium text-white">
                     {membresiaActiva.categoria?.nombre || 'Socio'}
                   </dd>
                 </div>
               </dl>
 
-              <div className="border-t border-white/[0.07] pt-4">
+              <div className="border-t border-slate-300/[0.08] pt-4">
                 <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
                   <UserX size={14} />
                   <span>Darme de baja</span>
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
                   Tu usuario y tus registros se conservarán, pero dejarás de acceder a los beneficios
                   de socio activo.
                 </p>
@@ -228,18 +230,18 @@ export function PortalPerfilPage() {
                   Solicitar baja como socio
                 </PortalButton>
               </div>
-            </PortalPanel>
+            </PortalSurface>
           )}
 
           {esExSocio && (
-            <PortalPanel className="space-y-3 border-emerald-400/20 p-5">
+            <PortalSurface className="space-y-3 border-blue-400/25 p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-white">Ex-socio</h2>
-                <PortalStatusPill tone="pending">Inactivo</PortalStatusPill>
+                <PortalTag tone="pending">Inactivo</PortalTag>
               </div>
-              <p className="text-xs leading-relaxed text-zinc-400">
-                Podés reactivar tu membresía en cualquier momento para recuperar el acceso completo
-                al club.
+              <p className="text-xs leading-relaxed text-slate-400">
+                Podés reactivar tu membresía cuando quieras para recuperar el acceso completo y
+                beneficios del club.
               </p>
               <PortalButton
                 variant="primary"
@@ -257,12 +259,12 @@ export function PortalPerfilPage() {
                 <UserCheck size={14} />
                 {isReactivando ? 'Reactivando…' : 'Reactivar mi membresía'}
               </PortalButton>
-            </PortalPanel>
+            </PortalSurface>
           )}
 
-          <PortalPanel className="space-y-2.5 p-5">
+          <PortalSurface variant="muted" className="space-y-2.5 p-5">
             <h2 className="text-sm font-semibold text-white">Seguridad de la cuenta</h2>
-            <p className="text-xs leading-relaxed text-zinc-400">
+            <p className="text-xs leading-relaxed text-slate-400">
               Actualizá tu contraseña de acceso confirmando la actual.
             </p>
             <PortalButton
@@ -273,11 +275,11 @@ export function PortalPerfilPage() {
             >
               Cambiar contraseña
             </PortalButton>
-          </PortalPanel>
+          </PortalSurface>
         </div>
       </div>
 
-      <ModalConfirmarBajaSocio
+      <PortalBajaSocioModal
         open={modalBajaAbierto}
         onClose={() => setModalBajaAbierto(false)}
         onConfirm={async () => {

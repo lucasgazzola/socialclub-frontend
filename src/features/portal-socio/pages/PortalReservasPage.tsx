@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlarmClock, CalendarX2, CreditCard } from 'lucide-react';
+import { AlarmClock, CalendarClock, CalendarX2, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
-import { ConfirmDialog, Spinner } from '@/components/ui';
 import { irAPagar } from '@/features/pasarela/hooks/usePasarela';
 import {
   useCancelarMiReserva,
@@ -13,10 +12,12 @@ import { formatearPesos, type MiReserva } from '@/features/reservas/types';
 import { ROUTES } from '@/routes/paths';
 import {
   PortalButton,
+  PortalConfirmModal,
   PortalEmptyState,
-  PortalPageHeader,
-  PortalPanel,
-  PortalStatusPill,
+  PortalSpinner,
+  PortalSurface,
+  PortalTag,
+  PortalTitleBar,
 } from '../components/PortalUI';
 
 const errorDe = (e: unknown) => (e instanceof Error ? e.message : 'No se pudo completar la acción.');
@@ -34,6 +35,9 @@ const ESTADO_RESERVA_TONE: Record<
   CANCELADA_INSTITUCION: { label: 'Cancelada por el club', tone: 'neutral' },
 };
 
+/**
+ * Reservas del socio/participante como feed cronológico de tickets (cero tabla administrativa).
+ */
 export function PortalReservasPage() {
   const navigate = useNavigate();
   const { data: reservas, isLoading, isError, error } = useMisReservas();
@@ -65,46 +69,47 @@ export function PortalReservasPage() {
 
   return (
     <div className="space-y-6">
-      <PortalPageHeader
+      <PortalTitleBar
         title="Mis reservas"
-        subtitle="Seguí el estado de tus solicitudes de alquiler de espacios y aboná señas aprobadas."
+        summary="Seguí el estado de tus solicitudes de espacios del club y aboná señas pendientes."
       />
 
       {isLoading ? (
         <div className="flex h-48 items-center justify-center">
-          <Spinner className="h-7 w-7 text-zinc-400" />
+          <PortalSpinner />
         </div>
       ) : isError ? (
-        <PortalPanel className="border-rose-500/25 bg-rose-500/10 p-6 text-sm text-rose-200">
+        <PortalSurface className="border-rose-500/30 bg-rose-500/10 p-5 text-sm text-rose-200">
           {errorDe(error)}
-        </PortalPanel>
+        </PortalSurface>
       ) : !reservas?.length ? (
         <PortalEmptyState
           testId="sin-reservas"
-          icon={<CalendarX2 size={22} />}
+          icon={<CalendarX2 size={20} />}
           title="Todavía no hiciste ninguna solicitud de reserva"
-          description="Cuando solicites el uso de un espacio del club, vas a poder hacer seguimiento y pagar tu seña desde acá."
+          description="Cuando solicites un espacio del club, podrás hacer el seguimiento y pagar tu seña aquí."
         />
       ) : (
         <div className="space-y-5">
           {conSenaPendiente.map((r) => (
-            <PortalPanel
+            <PortalSurface
               key={r.id}
-              className="flex flex-wrap items-center justify-between gap-4 border-amber-400/25 bg-amber-400/[0.06] p-5"
+              className="flex flex-wrap items-center justify-between gap-4 border-blue-400/35 bg-blue-500/[0.08] p-4 sm:p-5"
             >
-              <div className="flex items-start gap-3.5" data-testid={`sena-pendiente-${r.codigo}`}>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-400/25 bg-amber-400/15 text-amber-300">
-                  <AlarmClock size={18} />
+              <div className="flex items-start gap-3" data-testid={`sena-pendiente-${r.codigo}`}>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-blue-400/30 bg-blue-500/15 text-blue-300">
+                  <AlarmClock size={17} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-amber-200 tabular-nums">
+                  <p className="text-sm font-semibold text-blue-200 tabular-nums">
                     Pagá la seña de {formatearPesos(r.montoSena)} antes del {r.limitePagoSenaTexto}
                   </p>
-                  <p className="mt-0.5 text-xs text-amber-200/80">
-                    Reserva {r.codigo} · {r.espacio.nombre} · {r.turno}
+                  <p className="mt-0.5 text-xs text-slate-300">
+                    Reserva <span className="font-mono">{r.codigo}</span> · {r.espacio.nombre} ·{' '}
+                    {r.turno}
                   </p>
                   {r.instruccionesSena && (
-                    <p className="mt-1 text-xs text-amber-200/70">{r.instruccionesSena}</p>
+                    <p className="mt-1 text-xs text-slate-400">{r.instruccionesSena}</p>
                   )}
                 </div>
               </div>
@@ -119,86 +124,95 @@ export function PortalReservasPage() {
                   Pagar seña online
                 </PortalButton>
               )}
-            </PortalPanel>
+            </PortalSurface>
           ))}
 
-          <PortalPanel className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-white/[0.07] bg-white/[0.02] text-xs font-medium uppercase tracking-wider text-zinc-400">
-                  <tr>
-                    <th className="px-5 py-3.5">Código</th>
-                    <th className="px-5 py-3.5">Espacio</th>
-                    <th className="px-5 py-3.5">Turno</th>
-                    <th className="px-5 py-3.5 text-right">Monto</th>
-                    <th className="px-5 py-3.5">Estado</th>
-                    <th className="px-5 py-3.5 text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.06]">
-                  {reservas.map((r) => {
-                    const meta = ESTADO_RESERVA_TONE[r.estado] ?? {
-                      label: r.estado,
-                      tone: 'neutral' as const,
-                    };
-                    return (
-                      <tr
-                        key={r.id}
-                        data-testid={`mi-reserva-${r.codigo}`}
-                        className="transition-colors hover:bg-white/[0.02]"
-                      >
-                        <td className="px-5 py-3.5 font-mono text-xs text-zinc-400 tabular-nums">
-                          {r.codigo}
-                        </td>
-                        <td className="px-5 py-3.5 font-medium text-white">{r.espacio.nombre}</td>
-                        <td className="px-5 py-3.5 text-zinc-300 tabular-nums">{r.turno}</td>
-                        <td className="px-5 py-3.5 text-right font-medium text-white tabular-nums">
-                          {formatearPesos(r.montoTotal)}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <PortalStatusPill tone={meta.tone} dot>
+          {/* Lista de tickets de reserva (no tabla CRUD) */}
+          <div className="space-y-3">
+            {reservas.map((r) => {
+              const meta = ESTADO_RESERVA_TONE[r.estado] ?? {
+                label: r.estado,
+                tone: 'neutral' as const,
+              };
+              return (
+                <PortalSurface
+                  key={r.id}
+                  className="p-4 transition-colors hover:border-blue-400/30 sm:p-5"
+                >
+                  <div
+                    data-testid={`mi-reserva-${r.codigo}`}
+                    className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
+                  >
+                    <div className="flex items-start gap-3.5 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] border border-blue-400/20 bg-blue-500/10 text-blue-400">
+                        <CalendarClock size={18} />
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="text-base font-semibold tracking-[-0.015em] text-white">
+                            {r.espacio.nombre}
+                          </h2>
+                          <span className="rounded-[3px] border border-slate-300/[0.12] bg-[#070b14] px-1.5 py-0.5 font-mono text-[11px] text-slate-300 tabular-nums">
+                            {r.codigo}
+                          </span>
+                          <PortalTag tone={meta.tone} dot>
                             {meta.label}
-                          </PortalStatusPill>
-                          {r.motivoRechazo && (
-                            <p className="mt-1 text-xs text-rose-400">Motivo: {r.motivoRechazo}</p>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <div className="inline-flex items-center gap-2">
-                            {r.puedePagarSena && (
-                              <PortalButton
-                                variant="primary"
-                                size="sm"
-                                onClick={() => void pagar(r)}
-                                disabled={pagarSena.isPending}
-                              >
-                                Pagar seña
-                              </PortalButton>
-                            )}
-                            {r.puedeCancelar && (
-                              <PortalButton
-                                variant="danger"
-                                size="sm"
-                                onClick={() => setACancelar(r)}
-                              >
-                                Cancelar
-                              </PortalButton>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </PortalPanel>
+                          </PortalTag>
+                        </div>
+
+                        <p className="text-xs text-slate-300 tabular-nums">{r.turno}</p>
+
+                        {r.motivoRechazo && (
+                          <p className="text-xs font-medium text-rose-400">
+                            Motivo: {r.motivoRechazo}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-300/[0.08] pt-3 sm:justify-end sm:border-t-0 sm:pt-0">
+                      <div className="text-left sm:text-right">
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                          Monto total
+                        </p>
+                        <p className="text-base font-semibold text-white tabular-nums">
+                          {formatearPesos(r.montoTotal)}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {r.puedePagarSena && (
+                          <PortalButton
+                            variant="primary"
+                            size="sm"
+                            onClick={() => void pagar(r)}
+                            disabled={pagarSena.isPending}
+                          >
+                            Pagar seña
+                          </PortalButton>
+                        )}
+                        {r.puedeCancelar && (
+                          <PortalButton
+                            variant="danger"
+                            size="sm"
+                            onClick={() => setACancelar(r)}
+                          >
+                            Cancelar
+                          </PortalButton>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </PortalSurface>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      <ConfirmDialog
+      <PortalConfirmModal
         open={Boolean(aCancelar)}
-        variant="danger"
+        danger
         title="Cancelar reserva"
         description={
           aCancelar

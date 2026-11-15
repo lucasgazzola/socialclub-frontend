@@ -12,9 +12,9 @@ import {
 import { ROUTES } from '@/routes/paths';
 import {
   PortalButton,
-  PortalInput,
-  PortalPageHeader,
-  PortalPanel,
+  PortalFieldInput,
+  PortalSurface,
+  PortalTitleBar,
 } from '../components/PortalUI';
 
 export function PortalCambiarContrasenaPage() {
@@ -57,17 +57,17 @@ export function PortalCambiarContrasenaPage() {
 
   return (
     <div className="space-y-6">
-      <PortalPageHeader
+      <PortalTitleBar
         title="Cambiar contraseña"
-        subtitle="Actualizá tu clave de acceso confirmando tu contraseña actual. Al finalizar se cerrará la sesión."
+        summary="Actualizá tu clave confirmando la contraseña actual. Al guardar se cerrará la sesión."
       />
 
-      <PortalPanel className="max-w-xl p-6 sm:p-7">
+      <PortalSurface className="max-w-xl p-5 sm:p-6">
         <form className="space-y-4" onSubmit={onSubmit} noValidate>
           {mensajeExito && (
             <div
               role="status"
-              className="flex items-center gap-3 rounded-xl border border-emerald-400/25 bg-emerald-400/10 p-3.5 text-sm text-emerald-200"
+              className="flex items-center gap-3 rounded-[5px] border border-emerald-400/25 bg-emerald-500/10 p-3.5 text-sm text-emerald-200"
             >
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
               <span>{mensajeExito}</span>
@@ -77,14 +77,14 @@ export function PortalCambiarContrasenaPage() {
           {mensajeError && (
             <div
               role="alert"
-              className="flex items-center gap-3 rounded-xl border border-rose-500/25 bg-rose-500/10 p-3.5 text-sm text-rose-200"
+              className="flex items-center gap-3 rounded-[5px] border border-rose-500/30 bg-rose-500/10 p-3.5 text-sm text-rose-200"
             >
               <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
               <span>{mensajeError}</span>
             </div>
           )}
 
-          <PortalInput
+          <PortalFieldInput
             id="passwordActual"
             type="password"
             label="Contraseña actual"
@@ -94,7 +94,7 @@ export function PortalCambiarContrasenaPage() {
             {...register('passwordActual')}
           />
 
-          <PortalInput
+          <PortalFieldInput
             id="nuevaContrasena"
             type="password"
             label="Nueva contraseña"
@@ -104,7 +104,7 @@ export function PortalCambiarContrasenaPage() {
             {...register('nuevaContrasena')}
           />
 
-          <PortalInput
+          <PortalFieldInput
             id="confirmarNuevaContrasena"
             type="password"
             label="Confirmar nueva contraseña"
@@ -114,17 +114,17 @@ export function PortalCambiarContrasenaPage() {
             {...register('confirmarNuevaContrasena')}
           />
 
-          <div className="flex flex-wrap items-center gap-3 border-t border-white/[0.07] pt-5">
+          <div className="flex flex-wrap items-center gap-3 border-t border-slate-300/[0.08] pt-5">
             <PortalButton type="submit" variant="primary" disabled={isPending}>
               <KeyRound size={15} />
               {isPending ? 'Actualizando…' : 'Actualizar contraseña'}
             </PortalButton>
             <PortalButton variant="ghost" onClick={() => navigate(ROUTES.perfil)}>
-              Volver a mi perfil
+              Cancelar
             </PortalButton>
           </div>
         </form>
-      </PortalPanel>
+      </PortalSurface>
     </div>
   );
 }

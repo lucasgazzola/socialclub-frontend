@@ -16,10 +16,10 @@ import { formatearDni } from '@/lib/utils/dni';
 import { ROUTES } from '@/routes/paths';
 import {
   PortalButton,
-  PortalInput,
-  PortalPageHeader,
-  PortalPanel,
-  PortalSelect,
+  PortalFieldInput,
+  PortalFieldSelect,
+  PortalSurface,
+  PortalTitleBar,
 } from '../components/PortalUI';
 
 export function PortalHacermeSocioPage() {
@@ -30,7 +30,6 @@ export function PortalHacermeSocioPage() {
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
 
   const tieneMembresia = usuario?.persona?.membresias?.some((m) => m.activo);
-
   const dniExistente = Boolean(usuario?.persona?.dni && usuario.persona.dni.trim() !== '');
 
   const {
@@ -69,22 +68,22 @@ export function PortalHacermeSocioPage() {
 
   return (
     <div className="space-y-6">
-      <PortalPageHeader
+      <PortalTitleBar
         title="Hacerme socio"
-        subtitle="Asociate a SocialClub en segundos para acceder a descuentos, reservas y carnet digital."
+        summary="Asociate en segundos para acceder a descuentos en eventos, disciplinas y carnet digital."
       />
 
-      <PortalPanel className="max-w-2xl p-6 sm:p-7">
+      <PortalSurface className="max-w-2xl p-5 sm:p-6">
         <form className="space-y-5" onSubmit={onFormSubmit} noValidate>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <PortalInput
+            <PortalFieldInput
               id="nombre"
               label="Nombre"
               value={usuario.nombre ?? ''}
               readOnly
               aria-readonly="true"
             />
-            <PortalInput
+            <PortalFieldInput
               id="apellido"
               label="Apellido"
               value={usuario.apellido ?? ''}
@@ -92,7 +91,7 @@ export function PortalHacermeSocioPage() {
               aria-readonly="true"
             />
             <div className="sm:col-span-2">
-              <PortalInput
+              <PortalFieldInput
                 id="email"
                 label="Email"
                 type="email"
@@ -103,7 +102,7 @@ export function PortalHacermeSocioPage() {
             </div>
 
             {dniExistente ? (
-              <PortalInput
+              <PortalFieldInput
                 id="dni-readonly"
                 label="DNI"
                 value={formatearDni(usuario.persona?.dni)}
@@ -111,7 +110,7 @@ export function PortalHacermeSocioPage() {
                 disabled
               />
             ) : (
-              <PortalInput
+              <PortalFieldInput
                 id="dni"
                 label="DNI"
                 placeholder="Ej: 12345678"
@@ -120,41 +119,44 @@ export function PortalHacermeSocioPage() {
               />
             )}
 
-            <PortalSelect
+            <PortalFieldSelect
               id="categoriaId"
-              label="Categoría de socio"
+              label="Categoría de socio *"
               disabled={cargandoCategorias}
-              placeholder={
-                cargandoCategorias ? 'Cargando categorías…' : 'Seleccioná una categoría'
-              }
-              options={(categorias ?? []).map((c) => ({ value: c.id, label: c.nombre }))}
               error={errors.categoriaId?.message}
+              options={[
+                {
+                  value: '',
+                  label: cargandoCategorias ? 'Cargando categorías…' : 'Seleccioná una categoría',
+                },
+                ...(categorias?.map((c) => ({ value: c.id, label: c.nombre })) ?? []),
+              ]}
               {...register('categoriaId')}
             />
           </div>
 
-          <p className="text-xs leading-relaxed text-zinc-400">
-            Al confirmar se vincula tu ficha de socio y se habilita tu membresía digital en la
-            plataforma.
+          <p className="text-xs leading-relaxed text-slate-400">
+            Al confirmar se vincula tu perfil de socio y se habilitan tus beneficios inmediatos en
+            SocialClub.
           </p>
 
           {errorServidor && (
-            <p
+            <div
               role="alert"
-              className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
+              className="rounded-[5px] border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-sm text-rose-200"
             >
               {errorServidor}
-            </p>
+            </div>
           )}
 
-          <div className="border-t border-white/[0.07] pt-5">
+          <div className="flex items-center gap-3 border-t border-slate-300/[0.08] pt-5">
             <PortalButton type="submit" variant="primary" disabled={isSubmitting}>
               <UserPlus size={15} />
               {isSubmitting ? 'Registrando…' : 'Hacerme socio'}
             </PortalButton>
           </div>
         </form>
-      </PortalPanel>
+      </PortalSurface>
     </div>
   );
 }

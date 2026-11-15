@@ -1,161 +1,189 @@
-import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import {
+  useEffect,
+  useState,
+  type ButtonHTMLAttributes,
+  type HTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+} from 'react';
+import { X, ChevronDown } from 'lucide-react';
+import logoPng from '@/assets/Logo SocialClub 2.png';
 import { cn } from '@/lib/utils/cn';
 
-/** Encabezado de página nativo del Portal de Socios (sin kickers/eyebrows ni estilos de backoffice). */
-export function PortalPageHeader({
+/**
+ * Escudo / marca propia dentro del Portal de Socios (cero dependencia de @/components/ui).
+ */
+export function PortalBrandLogo({
+  size = 28,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <div
+      style={{ width: size, height: size }}
+      className={cn(
+        'relative flex shrink-0 select-none items-center justify-center overflow-hidden rounded-[4px] border border-blue-400/20 bg-blue-500/[0.08] p-0.5',
+        className,
+      )}
+    >
+      <img src={logoPng} alt="Logo SocialClub" className="h-full w-full object-contain" loading="eager" />
+    </div>
+  );
+}
+
+/**
+ * Indicador de carga propio del Portal de Socios con detalle azul.
+ */
+export function PortalSpinner({ className }: { className?: string }) {
+  return (
+    <span
+      role="status"
+      aria-label="Cargando"
+      className={cn(
+        'inline-block h-6 w-6 animate-spin rounded-full border-2 border-slate-700 border-t-blue-400 motion-reduce:animate-none',
+        className,
+      )}
+    />
+  );
+}
+
+/**
+ * Cabecera limpia de vista del Portal de Socios (sin subtítulos plantilla admin).
+ */
+export function PortalTitleBar({
   title,
-  subtitle,
+  summary,
   actions,
 }: {
   title: string;
-  subtitle?: string;
+  summary?: string;
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-4 border-b border-white/[0.07] pb-6 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-[-0.03em] text-white sm:text-[28px]">
+    <header className="flex flex-col gap-3 border-b border-slate-300/[0.10] pb-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 className="text-[22px] font-semibold tracking-[-0.025em] text-slate-50 sm:text-[26px]">
           {title}
         </h1>
-        {subtitle && (
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-zinc-400">
-            {subtitle}
-          </p>
-        )}
+        {summary && <p className="mt-1 text-sm text-slate-400">{summary}</p>}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2.5 shrink-0">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2.5">{actions}</div>}
     </header>
   );
 }
 
-/** Contenedor oscuro estilo Global Fan con bordes de pelo y sombreado direccional. */
-export function PortalPanel({
-  children,
-  variant = 'default',
-  className,
-}: {
-  children: ReactNode;
-  variant?: 'default' | 'elevated' | 'pass';
-  className?: string;
-}) {
-  const styles = {
-    default: 'border-white/[0.08] bg-[#0d1016]',
-    elevated: 'border-white/[0.11] bg-[#131720]',
-    pass: 'border-white/[0.12] bg-gradient-to-br from-[#141923] via-[#0d1016] to-[#080a0e]',
-  }[variant];
+interface PortalSurfaceProps extends HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'pass' | 'muted';
+}
 
+/**
+ * Superficie arquitectónica oscura con bordes afilados (6px) y tintes sutiles azul pizarra.
+ */
+export function PortalSurface({
+  children,
+  className,
+  variant = 'default',
+  ...props
+}: PortalSurfaceProps) {
   return (
     <div
       className={cn(
-        'rounded-2xl border shadow-[0_12px_32px_-12px_rgba(0,0,0,0.75)]',
-        styles,
+        'rounded-md border transition-[border-color,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
+        variant === 'default' && 'border-slate-300/[0.10] bg-[#0a101b]',
+        variant === 'muted' && 'border-slate-300/[0.08] bg-[#070b14]',
+        variant === 'pass' &&
+          'border-blue-400/[0.22] bg-gradient-to-b from-[#0f1a2e] via-[#0b1322] to-[#080d18] shadow-[0_16px_40px_-22px_rgba(37,99,235,0.35)]',
         className,
       )}
+      {...props}
     >
       {children}
     </div>
   );
 }
 
-type PortalButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type PortalButtonSize = 'sm' | 'md';
-
 interface PortalButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: PortalButtonVariant;
-  size?: PortalButtonSize;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md';
 }
 
-/** Botón táctil con feedback físico (`scale(0.97)`) y curva `ease-out` de Design Engineering. */
-export const PortalButton = forwardRef<HTMLButtonElement, PortalButtonProps>(
-  ({ variant = 'primary', size = 'md', className, children, type = 'button', ...props }, ref) => {
-    const variantClasses: Record<PortalButtonVariant, string> = {
-      primary:
-        'bg-white text-zinc-950 hover:bg-zinc-200 font-medium shadow-xs disabled:bg-zinc-700 disabled:text-zinc-400',
-      secondary:
-        'border border-white/[0.11] bg-white/[0.05] text-zinc-100 hover:bg-white/[0.09] hover:border-white/[0.18] font-medium disabled:opacity-45',
-      ghost:
-        'text-zinc-400 hover:bg-white/[0.06] hover:text-white font-medium disabled:opacity-45',
-      danger:
-        'border border-rose-500/25 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:border-rose-500/40 font-medium disabled:opacity-45',
-    };
-
-    const sizeClasses: Record<PortalButtonSize, string> = {
-      sm: 'h-9 px-3.5 text-xs gap-1.5 rounded-full',
-      md: 'h-10 px-5 text-sm gap-2 rounded-full',
-    };
-
-    return (
-      <button
-        ref={ref}
-        type={type}
-        className={cn(
-          'inline-flex items-center justify-center whitespace-nowrap select-none cursor-pointer',
-          'transition-[transform,background-color,border-color,color,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
-          'active:scale-[0.97] disabled:active:scale-100 disabled:cursor-not-allowed',
-          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400/75',
-          variantClasses[variant],
-          sizeClasses[size],
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </button>
-    );
-  },
-);
-PortalButton.displayName = 'PortalButton';
-
-export interface PortalTabOption<T extends string> {
-  value: T;
-  label: string;
-  count?: number;
+export function PortalButton({
+  variant = 'primary',
+  size = 'md',
+  className,
+  type = 'button',
+  ...props
+}: PortalButtonProps) {
+  return (
+    <button
+      type={type}
+      className={cn(
+        'inline-flex items-center justify-center gap-2 rounded-[5px] font-medium select-none cursor-pointer',
+        'transition-[transform,background-color,border-color,color,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
+        'active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#05080f]',
+        size === 'sm' ? 'h-8 px-3 text-xs' : 'h-10 px-4 text-sm',
+        variant === 'primary' &&
+          'border border-blue-400/35 bg-blue-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:border-blue-300/45 hover:bg-blue-500',
+        variant === 'secondary' &&
+          'border border-slate-300/[0.16] bg-[#101827] text-slate-100 hover:border-blue-400/40 hover:bg-[#152035] hover:text-white',
+        variant === 'ghost' &&
+          'border border-transparent bg-transparent text-slate-300 hover:bg-blue-500/[0.10] hover:text-blue-300',
+        variant === 'danger' &&
+          'border border-rose-500/35 bg-rose-500/12 text-rose-300 hover:border-rose-400/50 hover:bg-rose-500/20 hover:text-rose-200',
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
-/** Control segmentado estilo cápsula oscura (reemplaza el StatusTabs claro del backoffice). */
-export function PortalSegmentedTabs<T extends string>({
+/**
+ * Selector segmentado con geometría rectangular afilada y selección azul eléctrico.
+ */
+export function PortalSegmentedSwitch<T extends string>({
   tabs,
   value,
   onChange,
-  ariaLabel = 'Opciones de vista',
+  ariaLabel,
 }: {
-  tabs: PortalTabOption<T>[];
+  tabs: { value: T; label: string; count?: number }[];
   value: T;
-  onChange: (value: T) => void;
-  ariaLabel?: string;
+  onChange: (next: T) => void;
+  ariaLabel: string;
 }) {
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="inline-flex flex-wrap items-center gap-1 rounded-full border border-white/[0.08] bg-[#0d1016] p-1"
+      className="inline-flex flex-wrap items-center gap-1 rounded-[5px] border border-slate-300/[0.12] bg-[#070b14] p-1"
     >
       {tabs.map((tab) => {
         const active = tab.value === value;
         return (
           <button
             key={tab.value}
-            type="button"
             role="tab"
+            type="button"
             aria-selected={active}
             onClick={() => onChange(tab.value)}
             className={cn(
-              'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium select-none cursor-pointer',
-              'transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400/75',
+              'inline-flex items-center gap-2 rounded-[4px] px-3 py-1.5 text-xs font-medium cursor-pointer',
+              'transition-[background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
               active
-                ? 'bg-white text-zinc-950 shadow-xs'
-                : 'text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100',
+                ? 'bg-blue-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]'
+                : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-100',
             )}
           >
             <span>{tab.label}</span>
-            {typeof tab.count === 'number' && (
+            {tab.count !== undefined && (
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
-                  active
-                    ? 'bg-zinc-900/12 text-zinc-950'
-                    : 'bg-white/[0.07] text-zinc-400',
+                  'rounded-[3px] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+                  active ? 'bg-blue-950/50 text-blue-100' : 'bg-white/[0.06] text-slate-400',
                 )}
               >
                 {tab.count}
@@ -168,44 +196,44 @@ export function PortalSegmentedTabs<T extends string>({
   );
 }
 
-type PillTone = 'active' | 'pending' | 'danger' | 'info' | 'neutral';
+type TagTone = 'active' | 'pending' | 'danger' | 'info' | 'neutral';
 
-export function PortalStatusPill({
+export function PortalTag({
   tone = 'neutral',
   dot = false,
   children,
   className,
 }: {
-  tone?: PillTone;
+  tone?: TagTone;
   dot?: boolean;
   children: ReactNode;
   className?: string;
 }) {
-  const toneClasses: Record<PillTone, string> = {
-    active: 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300',
-    pending: 'border-amber-400/25 bg-amber-400/10 text-amber-300',
-    danger: 'border-rose-400/25 bg-rose-400/10 text-rose-300',
-    info: 'border-sky-400/25 bg-sky-400/10 text-sky-300',
-    neutral: 'border-white/10 bg-white/[0.05] text-zinc-300',
+  const toneClasses: Record<TagTone, string> = {
+    active: 'border-emerald-400/25 bg-emerald-500/12 text-emerald-300',
+    pending: 'border-amber-400/25 bg-amber-500/12 text-amber-200',
+    danger: 'border-rose-400/30 bg-rose-500/12 text-rose-300',
+    info: 'border-blue-400/30 bg-blue-500/14 text-blue-300',
+    neutral: 'border-slate-400/20 bg-slate-500/10 text-slate-300',
   };
 
-  const dotClasses: Record<PillTone, string> = {
+  const dotColors: Record<TagTone, string> = {
     active: 'bg-emerald-400',
-    pending: 'bg-amber-400',
+    pending: 'bg-amber-300',
     danger: 'bg-rose-400',
-    info: 'bg-sky-400',
-    neutral: 'bg-zinc-400',
+    info: 'bg-blue-400',
+    neutral: 'bg-slate-400',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium whitespace-nowrap',
+        'inline-flex items-center gap-1.5 rounded-[4px] border px-2 py-0.5 text-[11px] font-medium tracking-tight',
         toneClasses[tone],
         className,
       )}
     >
-      {dot && <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', dotClasses[tone])} />}
+      {dot && <span className={cn('h-1.5 w-1.5 rounded-full', dotColors[tone])} aria-hidden="true" />}
       {children}
     </span>
   );
@@ -217,89 +245,103 @@ interface PortalInputProps extends InputHTMLAttributes<HTMLInputElement> {
   hint?: string;
 }
 
-export const PortalInput = forwardRef<HTMLInputElement, PortalInputProps>(
-  ({ label, error, hint, id, className, ...props }, ref) => (
+export function PortalFieldInput({
+  id,
+  label,
+  error,
+  hint,
+  className,
+  readOnly,
+  disabled,
+  ...props
+}: PortalInputProps) {
+  return (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-xs font-medium text-zinc-300">
+        <label htmlFor={id} className="block text-xs font-medium text-slate-300">
           {label}
         </label>
       )}
       <input
-        ref={ref}
         id={id}
+        readOnly={readOnly}
+        disabled={disabled}
         className={cn(
-          'w-full rounded-xl border bg-[#07090d] px-3.5 py-2.5 text-sm text-white placeholder:text-zinc-500',
-          'transition-[border-color,box-shadow,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
-          'focus:border-white/35 focus:outline-none focus:ring-2 focus:ring-white/10',
-          'disabled:cursor-not-allowed disabled:bg-white/[0.03] disabled:text-zinc-500 disabled:border-white/[0.06]',
-          'read-only:bg-white/[0.03] read-only:text-zinc-400 read-only:border-white/[0.06]',
-          error ? 'border-rose-500/60 focus:border-rose-400 focus:ring-rose-500/15' : 'border-white/[0.11]',
+          'block h-10 w-full rounded-[5px] border bg-[#070b14] px-3 text-sm text-slate-100 placeholder:text-slate-500',
+          'transition-[border-color,background-color,box-shadow] duration-150',
+          'focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
+          (disabled || readOnly) && 'cursor-not-allowed border-slate-300/[0.07] bg-[#060911] text-slate-400',
+          error
+            ? 'border-rose-500/60 focus:border-rose-400 focus:ring-rose-500/20'
+            : 'border-slate-300/[0.15]',
           className,
         )}
         {...props}
       />
-      {error ? (
-        <p className="text-xs text-rose-400" role="alert">{error}</p>
-      ) : hint ? (
-        <p className="text-xs text-zinc-500">{hint}</p>
-      ) : null}
+      {error && <p className="text-xs text-rose-400">{error}</p>}
+      {!error && hint && <p className="text-[11px] text-slate-500">{hint}</p>}
     </div>
-  ),
-);
-PortalInput.displayName = 'PortalInput';
+  );
+}
 
 interface PortalSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
   hint?: string;
   options: { value: string | number; label: string }[];
-  placeholder?: string;
 }
 
-export const PortalSelect = forwardRef<HTMLSelectElement, PortalSelectProps>(
-  ({ label, error, hint, id, options, placeholder, className, ...props }, ref) => (
+export function PortalFieldSelect({
+  id,
+  label,
+  error,
+  hint,
+  options,
+  className,
+  disabled,
+  ...props
+}: PortalSelectProps) {
+  return (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-xs font-medium text-zinc-300">
+        <label htmlFor={id} className="block text-xs font-medium text-slate-300">
           {label}
         </label>
       )}
-      <select
-        ref={ref}
-        id={id}
-        className={cn(
-          'w-full rounded-xl border bg-[#07090d] px-3.5 py-2.5 text-sm text-white',
-          'transition-[border-color,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
-          'focus:border-white/35 focus:outline-none focus:ring-2 focus:ring-white/10',
-          'disabled:cursor-not-allowed disabled:bg-white/[0.03] disabled:text-zinc-500',
-          error ? 'border-rose-500/60' : 'border-white/[0.11]',
-          className,
-        )}
-        {...props}
-      >
-        {placeholder && (
-          <option value="" className="bg-[#0d1016] text-zinc-400">
-            {placeholder}
-          </option>
-        )}
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value} className="bg-[#0d1016] text-white">
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      {error ? (
-        <p className="text-xs text-rose-400" role="alert">{error}</p>
-      ) : hint ? (
-        <p className="text-xs text-zinc-500">{hint}</p>
-      ) : null}
+      <div className="relative">
+        <select
+          id={id}
+          disabled={disabled}
+          className={cn(
+            'flex h-10 w-full cursor-pointer appearance-none items-center rounded-[5px] border bg-[#070b14] pl-3 pr-9 text-sm text-slate-100',
+            'transition-[border-color,background-color,box-shadow] duration-150',
+            'focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
+            disabled && 'cursor-not-allowed border-slate-300/[0.07] bg-[#060911] text-slate-400',
+            error
+              ? 'border-rose-500/60 focus:border-rose-400 focus:ring-rose-500/20'
+              : 'border-slate-300/[0.15]',
+            className,
+          )}
+          {...props}
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value} className="bg-[#0a101b] text-slate-100">
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          size={15}
+          aria-hidden="true"
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+        />
+      </div>
+      {error && <p className="text-xs text-rose-400">{error}</p>}
+      {!error && hint && <p className="text-[11px] text-slate-500">{hint}</p>}
     </div>
-  ),
-);
-PortalSelect.displayName = 'PortalSelect';
+  );
+}
 
-/** Estado vacío que orienta al usuario hacia su próxima acción disponible. */
 export function PortalEmptyState({
   icon,
   title,
@@ -314,15 +356,193 @@ export function PortalEmptyState({
   testId?: string;
 }) {
   return (
-    <PortalPanel className="px-6 py-12 text-center" >
-      <div data-testid={testId} className="mx-auto flex max-w-md flex-col items-center">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-zinc-400">
-          {icon}
-        </div>
-        <h2 className="text-base font-semibold text-white">{title}</h2>
-        <p className="mt-1.5 text-sm leading-relaxed text-zinc-400">{description}</p>
-        {action && <div className="mt-5">{action}</div>}
+    <PortalSurface
+      className="flex flex-col items-center justify-center px-6 py-12 text-center"
+      variant="muted"
+    >
+      <div
+        data-testid={testId}
+        className="flex h-11 w-11 items-center justify-center rounded-[5px] border border-blue-400/20 bg-blue-500/[0.08] text-blue-400"
+      >
+        {icon}
       </div>
-    </PortalPanel>
+      <h2 className="mt-4 text-base font-semibold tracking-[-0.02em] text-slate-100">{title}</h2>
+      <p className="mt-1.5 max-w-md text-sm text-slate-400">{description}</p>
+      {action && <div className="mt-5">{action}</div>}
+    </PortalSurface>
+  );
+}
+
+/**
+ * Modal oscuro propio del Portal de Socios (sin reutilizar Modal ni ConfirmDialog de Admin).
+ */
+export function PortalModal({
+  open,
+  onClose,
+  title,
+  description,
+  icon,
+  size = 'md',
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  icon?: ReactNode;
+  size?: 'sm' | 'md' | 'lg';
+  children: ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const widthClass =
+    size === 'sm' ? 'max-w-md' : size === 'lg' ? 'max-w-2xl' : 'max-w-lg';
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-[2px]"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
+      <div
+        className={cn(
+          'portal-modal-panel relative max-h-[90vh] w-full overflow-y-auto rounded-md border border-slate-300/[0.16] bg-[#0a101b] text-slate-100 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.8)]',
+          widthClass,
+        )}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-slate-300/[0.10] px-5 py-4">
+          <div className="flex items-start gap-3">
+            {icon && (
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[5px] border border-blue-400/25 bg-blue-500/12 text-blue-400">
+                {icon}
+              </span>
+            )}
+            <div>
+              <h2 className="text-base font-semibold tracking-[-0.02em] text-white">{title}</h2>
+              {description && <p className="mt-0.5 text-xs text-slate-400">{description}</p>}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar diálogo"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] border border-slate-300/[0.12] bg-white/[0.03] text-slate-400 transition-colors hover:border-blue-400/35 hover:text-white cursor-pointer"
+          >
+            <X size={15} />
+          </button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Diálogo de confirmación oscuro propio del Portal de Socios.
+ */
+export function PortalConfirmModal({
+  open,
+  title,
+  description,
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar',
+  danger = false,
+  loading = false,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  danger?: boolean;
+  loading?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <PortalModal open={open} onClose={loading ? () => {} : onCancel} title={title} size="sm">
+      <div className="space-y-5">
+        <p className="text-sm leading-relaxed text-slate-300">{description}</p>
+        <div className="flex justify-end gap-2.5 border-t border-slate-300/[0.10] pt-4">
+          <PortalButton variant="secondary" size="sm" onClick={onCancel} disabled={loading}>
+            {cancelLabel}
+          </PortalButton>
+          <PortalButton
+            variant={danger ? 'danger' : 'primary'}
+            size="sm"
+            onClick={onConfirm}
+            disabled={loading}
+          >
+            {loading ? 'Procesando…' : confirmLabel}
+          </PortalButton>
+        </div>
+      </div>
+    </PortalModal>
+  );
+}
+
+/**
+ * Portada / miniatura de evento para tarjetas y modales del Portal de Socios.
+ * Si no hay fotografía válida o falla la carga, muestra una lámina obsidian con el escudo del club.
+ */
+export function PortalEventoVisual({
+  nombre,
+  imageUrl,
+  tempImageUrl,
+  className,
+  logoSize = 52,
+}: {
+  nombre: string;
+  imageUrl?: string | null;
+  tempImageUrl?: string | null;
+  className?: string;
+  logoSize?: number;
+}) {
+  const src = tempImageUrl || imageUrl || '';
+  const esPlaceholder = !src || src.includes('favicon-blanco.png') || src.includes('favicon.png');
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const mostrarFallback = esPlaceholder || failedSrc === src;
+
+  return (
+    <div
+      className={cn(
+        'relative flex items-center justify-center overflow-hidden bg-[#070b14]',
+        className,
+      )}
+    >
+      {mostrarFallback ? (
+        <>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(59,130,246,0.16),transparent_68%)]"
+          />
+          <div className="relative flex items-center justify-center p-4">
+            <PortalBrandLogo size={logoSize} className="border-blue-400/25 bg-[#0a101b]/90 p-1.5" />
+          </div>
+        </>
+      ) : (
+        <img
+          src={src}
+          alt={nombre}
+          onError={() => setFailedSrc(src)}
+          className="h-full w-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105"
+        />
+      )}
+    </div>
   );
 }

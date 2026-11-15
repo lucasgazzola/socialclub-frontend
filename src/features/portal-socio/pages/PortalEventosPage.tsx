@@ -10,10 +10,7 @@ import {
   Search,
   Ticket,
 } from 'lucide-react';
-import { Spinner } from '@/components/ui';
-import faviconBlanco from '@/assets/favicon-blanco.png';
 import type { FiltrarEventosParams } from '@/features/eventos/api/eventos.api';
-import { EventoDetalleModal } from '@/features/eventos/components/EventoDetalleModal';
 import {
   formatFechaEvento,
   formatPrecio,
@@ -24,18 +21,24 @@ import {
 import { useEventos } from '@/features/eventos/hooks/useEventos';
 import type { Evento } from '@/features/eventos/types';
 import { ROUTES } from '@/routes/paths';
+import { PortalEventoDetalleModal } from '../components/PortalModals';
 import {
   PortalButton,
   PortalEmptyState,
-  PortalInput,
-  PortalPageHeader,
-  PortalPanel,
-  PortalSelect,
-  PortalStatusPill,
+  PortalEventoVisual,
+  PortalFieldInput,
+  PortalFieldSelect,
+  PortalSpinner,
+  PortalSurface,
+  PortalTag,
+  PortalTitleBar,
 } from '../components/PortalUI';
 
 const POR_PAGINA = 6;
 
+/**
+ * Catálogo de eventos exclusivo del Portal de Socios y Participantes.
+ */
 export function PortalEventosPage() {
   const [eventoDetalle, setEventoDetalle] = useState<Evento | null>(null);
   const [pagina, setPagina] = useState(1);
@@ -70,23 +73,22 @@ export function PortalEventosPage() {
 
   return (
     <div className="space-y-6">
-      <PortalPageHeader
+      <PortalTitleBar
         title="Eventos del club"
-        subtitle="Explorá los próximos encuentros, torneos y actividades para adquirir tus entradas digitales."
+        summary="Explorá torneos, encuentros y actividades con descuento para socios."
       />
 
-      {/* Filtros oscuros compactos */}
-      <PortalPanel className="p-4 sm:p-5">
+      <PortalSurface className="p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="relative">
             <Search
-              size={15}
-              className="pointer-events-none absolute left-3.5 top-3 text-zinc-500"
+              size={14}
+              className="pointer-events-none absolute left-3 top-3 text-slate-500"
             />
-            <PortalInput
+            <PortalFieldInput
               id="buscar-evento"
               value={search}
-              placeholder="Buscar por nombre o lugar…"
+              placeholder="Buscar evento o sede…"
               className="pl-9"
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -95,7 +97,7 @@ export function PortalEventosPage() {
             />
           </div>
 
-          <PortalInput
+          <PortalFieldInput
             id="evento-desde"
             type="date"
             aria-label="Desde fecha"
@@ -106,7 +108,7 @@ export function PortalEventosPage() {
             }}
           />
 
-          <PortalInput
+          <PortalFieldInput
             id="evento-hasta"
             type="date"
             aria-label="Hasta fecha"
@@ -119,7 +121,7 @@ export function PortalEventosPage() {
 
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <PortalSelect
+              <PortalFieldSelect
                 id="ordenar-evento"
                 aria-label="Ordenar eventos"
                 value={ordenar}
@@ -141,19 +143,19 @@ export function PortalEventosPage() {
             )}
           </div>
         </div>
-      </PortalPanel>
+      </PortalSurface>
 
       {isLoading ? (
         <div className="flex h-48 items-center justify-center">
-          <Spinner className="h-7 w-7 text-zinc-400" />
+          <PortalSpinner />
         </div>
       ) : isError ? (
-        <PortalPanel className="border-rose-500/25 bg-rose-500/10 p-6 text-sm text-rose-200">
+        <PortalSurface className="border-rose-500/30 bg-rose-500/10 p-5 text-sm text-rose-200">
           No se pudo cargar el calendario de eventos.
-        </PortalPanel>
+        </PortalSurface>
       ) : eventos.length === 0 ? (
         <PortalEmptyState
-          icon={<CalendarPlus size={22} />}
+          icon={<CalendarPlus size={20} />}
           title="No encontramos eventos"
           description={
             tieneFiltrosActivos
@@ -176,81 +178,63 @@ export function PortalEventosPage() {
               const habilitadoComprar = ventaAbierta(evento);
               const precioTexto = formatPrecio(evento.precio);
               const precioSocioTexto = formatPrecioSocio(evento.precio, evento.descuentoSocio);
-              const esDefaultImage =
-                !evento.tempImageUrl &&
-                (!evento.imageUrl || evento.imageUrl.includes('favicon-blanco.png'));
-              const imageSrc = evento.tempImageUrl
-                ? evento.tempImageUrl
-                : esDefaultImage
-                  ? faviconBlanco
-                  : evento.imageUrl;
 
               return (
-                <PortalPanel
+                <PortalSurface
                   key={evento.id}
-                  className="group flex flex-col justify-between overflow-hidden transition-[border-color,background-color] duration-150 hover:border-white/[0.16] hover:bg-[#11151e]"
+                  className="group flex flex-col justify-between overflow-hidden hover:border-blue-400/35 hover:bg-[#0e1627]"
                 >
-                  <div className="flex flex-col sm:flex-row">
-                    <div
-                      className={`relative shrink-0 overflow-hidden sm:w-40 ${
-                        esDefaultImage
-                          ? 'flex min-h-[120px] items-center justify-center bg-[#07090d] p-5'
-                          : 'aspect-4/3 bg-[#07090d] sm:aspect-auto'
-                      }`}
-                    >
-                      <img
-                        src={imageSrc}
-                        alt={evento.nombre}
-                        className={
-                          esDefaultImage
-                            ? 'max-h-14 max-w-14 object-contain opacity-85'
-                            : 'h-full w-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-105'
-                        }
-                      />
-                    </div>
+                  <div className="flex flex-1 flex-col sm:flex-row">
+                    <PortalEventoVisual
+                      nombre={evento.nombre}
+                      imageUrl={evento.imageUrl}
+                      tempImageUrl={evento.tempImageUrl}
+                      logoSize={52}
+                      className="aspect-4/3 w-full shrink-0 border-b border-slate-300/[0.08] sm:aspect-auto sm:min-h-[168px] sm:w-44 sm:border-b-0 sm:border-r"
+                    />
 
-                    <div className="flex flex-1 flex-col justify-between p-5">
+                    <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
                       <div>
                         <div className="flex items-start justify-between gap-2">
                           <h2 className="text-base font-semibold tracking-[-0.02em] text-white">
                             {evento.nombre}
                           </h2>
-                          <PortalStatusPill
-                            tone={habilitadoComprar ? 'active' : 'neutral'}
+                          <PortalTag
+                            tone={habilitadoComprar ? 'info' : 'neutral'}
                             dot={habilitadoComprar}
                           >
                             {estadoVisual.label}
-                          </PortalStatusPill>
+                          </PortalTag>
                         </div>
 
-                        <div className="mt-2.5 space-y-1 text-xs text-zinc-400">
+                        <div className="mt-2.5 space-y-1 text-xs text-slate-400">
                           <div className="flex items-center gap-1.5 tabular-nums">
-                            <Calendar size={13} className="text-zinc-500 shrink-0" />
+                            <Calendar size={13} className="shrink-0 text-blue-400" />
                             <span>{formatFechaEvento(evento.fechaEvento)}</span>
                           </div>
                           {evento.lugarAcreditacion && (
                             <div className="flex items-center gap-1.5">
-                              <MapPin size={13} className="text-zinc-500 shrink-0" />
+                              <MapPin size={13} className="shrink-0 text-blue-400" />
                               <span className="truncate">{evento.lugarAcreditacion}</span>
                             </div>
                           )}
                         </div>
 
                         {evento.descripcion && (
-                          <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-zinc-400">
+                          <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-slate-400">
                             {evento.descripcion}
                           </p>
                         )}
                       </div>
 
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-3.5">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-300/[0.08] pt-3.5">
                         <div>
-                          <span className="text-sm font-semibold tabular-nums text-white">
+                          <span className="text-sm font-semibold text-white tabular-nums">
                             {precioTexto}
                           </span>
                           {precioSocioTexto && (
-                            <span className="ml-2 text-[11px] font-medium text-emerald-400 tabular-nums">
-                              Socios {precioSocioTexto}
+                            <span className="ml-2 text-[11px] font-medium text-blue-400 tabular-nums">
+                              {precioSocioTexto}
                             </span>
                           )}
                         </div>
@@ -267,7 +251,7 @@ export function PortalEventosPage() {
                           {habilitadoComprar && (
                             <Link
                               to={ROUTES.comprarEntradas(evento.id)}
-                              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white px-3.5 text-xs font-medium text-zinc-950 transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-zinc-200 active:scale-[0.97]"
+                              className="inline-flex h-8 items-center gap-1.5 rounded-[5px] border border-blue-400/35 bg-blue-600 px-3 text-xs font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-blue-500 active:scale-[0.97]"
                             >
                               <Ticket size={13} />
                               Entradas
@@ -277,14 +261,13 @@ export function PortalEventosPage() {
                       </div>
                     </div>
                   </div>
-                </PortalPanel>
+                </PortalSurface>
               );
             })}
           </div>
 
-          {/* Paginación */}
           {totalPaginas > 1 && (
-            <div className="flex items-center justify-between pt-2 text-xs text-zinc-400">
+            <div className="flex items-center justify-between pt-2 text-xs text-slate-400">
               <span className="tabular-nums">
                 Página {pagina} de {totalPaginas} · {total} eventos
               </span>
@@ -314,7 +297,7 @@ export function PortalEventosPage() {
       )}
 
       {eventoDetalle && (
-        <EventoDetalleModal
+        <PortalEventoDetalleModal
           evento={eventoDetalle}
           open={Boolean(eventoDetalle)}
           onClose={() => setEventoDetalle(null)}
