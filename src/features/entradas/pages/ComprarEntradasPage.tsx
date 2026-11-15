@@ -9,6 +9,8 @@ import { ConfirmarPagoModal } from '@/features/pasarela/components/ConfirmarPago
 import { irAPagar } from '@/features/pasarela/hooks/usePasarela';
 import { ROUTES } from '@/routes/paths';
 import { useIniciarCompraEntradas } from '../hooks/useEntradas';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { aplicaDescuentoSocio, precioUnitarioEntrada, totalCompraEntradas } from '../utils/precioEntrada';
 
 export function ComprarEntradasPage() {
   const { eventoId } = useParams<{ eventoId: string }>();
@@ -20,7 +22,12 @@ export function ComprarEntradasPage() {
   const [cantidad, setCantidad] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
 
-  const precio = Number(evento?.precio ?? 0);
+  const { usuario } = useAuth();
+  const precioLista = Number(evento?.precio ?? 0);
+  // H02: al socio se le muestra el mismo precio que cobra la pasarela.
+  const descuento = aplicaDescuentoSocio(usuario) ? (evento?.descuentoSocio ?? 0) : 0;
+  const precio = precioUnitarioEntrada(precioLista, descuento);
+  const total = totalCompraEntradas(precio, cantidad);
   const maxCantidad = evento?.entradasDisponibles ?? 0;
   const ventaHabilitada = !!evento && ventaAbierta(evento);
 
@@ -63,7 +70,17 @@ export function ComprarEntradasPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <span className="text-xs text-slate-500">Precio unitario</span>
-                  <p className="font-semibold">${precio.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+                  <p className="font-semibold" data-testid="precio-unitario">
+                    ${precio.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  </p>
+                  {descuento > 0 && (
+                    <p className="text-xs text-emerald-700" data-testid="descuento-socio">
+                      <span className="text-slate-400 line-through">
+                        ${precioLista.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </span>{' '}
+                      · {descuento}% de descuento por ser socio
+                    </p>
+                  )}
                 </div>
                 <div>
                   <span className="text-xs text-slate-500">Disponibles</span>
@@ -71,8 +88,8 @@ export function ComprarEntradasPage() {
                 </div>
                 <div>
                   <span className="text-xs text-slate-500">Total</span>
-                  <p className="font-semibold text-brand-700">
-                    ${(cantidad * precio).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  <p className="font-semibold text-brand-700" data-testid="total-compra">
+                    ${total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
@@ -105,7 +122,7 @@ export function ComprarEntradasPage() {
             onClose={() => setModalAbierto(false)}
             titulo={`${cantidad} entrada(s)`}
             detalle={evento.nombre}
-            total={cantidad * precio}
+            total={total}
             onConfirmar={() => void confirmarPago()}
             isLoading={comprar.isPending}
           />
