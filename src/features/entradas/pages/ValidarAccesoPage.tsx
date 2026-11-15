@@ -1,3 +1,4 @@
+import { ROUTES } from '@/routes/paths';
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, History, ArrowRight, Trash2, ArrowLeft, QrCode, Search, Filter } from 'lucide-react';
@@ -362,7 +363,7 @@ export function ValidarAccesoPage() {
           size="sm"
           onClick={() => {
             if (routeEventoId) {
-              navigate('/entradas/validar');
+              navigate(ROUTES.validarAcceso);
             }
             setSelectedEventoId(null);
           }}

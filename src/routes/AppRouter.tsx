@@ -1,12 +1,17 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { RedirigirAEdicion } from './RedirigirAEdicion';
+import { RedirigirRutaVieja } from './RedirigirRutaVieja';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PortalLayout } from '@/components/layout/PortalLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { VerificarEmailPage } from '@/features/auth/pages/VerificarEmailPage';
+import { LandingPage } from '@/features/landing/pages/LandingPage';
+import { AsociarmePage } from '@/features/socios/pages/AsociarmePage';
+import { MiClubInicioPage } from '@/features/mi-club/pages/MiClubInicioPage';
+import { SeccionDisciplinas } from '@/features/mi-club/components/SeccionDisciplinas';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { DashboardGestionPage } from '@/features/dashboard/pages/DashboardGestionPage';
-import { HacermeSocioPage } from '@/features/socios/pages/HacermeSocioPage';
 import { PerfilSocioPage } from '@/features/socios/pages/PerfilSocioPage';
 import { CambiarContrasenaPage } from '@/features/auth/pages/CambiarContrasenaPage';
 import { SociosPage } from '@/features/socios/pages/SociosPage';
@@ -41,44 +46,58 @@ import { MiDocumentacionPage } from '@/features/documentacion/pages/MiDocumentac
 import { SolicitarInscripcionPage } from '@/features/inscripcion/pages/SolicitarInscripcionPage';
 import { ROUTES } from './paths';
 
+/**
+ * TASK-60: tres zonas.
+ * - Pública: landing (`/`), alta de socio y acceso.
+ * - Mi club (`/mi-club`): autogestión personal de cualquier usuario con sesión.
+ * - Panel (`/admin`): gestión del club, solo ADMIN, COLABORADOR y DELEGADO.
+ */
 export function AppRouter() {
   return (
     <Routes>
+      {/* ── Públicas ─────────────────────────────────────────────────────── */}
+      <Route index element={<LandingPage />} />
       <Route path={ROUTES.login} element={<LoginPage />} />
       <Route path={ROUTES.register} element={<RegisterPage />} />
       <Route path={ROUTES.verificarEmail} element={<VerificarEmailPage />} />
+      <Route path={ROUTES.hacermeSocio} element={<AsociarmePage />} />
 
-      {/* Catálogo público de eventos (US-53) */}
-      <Route element={<AppLayout />}>
-        <Route path="eventos" element={<EventosPage />} />
+      {/* ── Mi club ──────────────────────────────────────────────────────── */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<PortalLayout />}>
+          <Route path="mi-club">
+            <Route index element={<MiClubInicioPage />} />
+            <Route path="entradas" element={<MisEntradasPage />} />
+            <Route path="eventos" element={<EventosPage modo="socio" />} />
+            <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
+            <Route path="cuotas" element={<MisCuotasPage />} />
+            <Route path="disciplinas" element={<SeccionDisciplinas />}>
+              <Route index element={<Navigate to={ROUTES.misSolicitudesInscripcion} replace />} />
+              <Route path="solicitar" element={<SolicitarInscripcionPage />} />
+              <Route path="solicitudes" element={<SolicitarInscripcionPage />} />
+              <Route path="documentacion" element={<MiDocumentacionPage />} />
+            </Route>
+            <Route path="reservas" element={<MisReservasPage />} />
+            <Route path="reservas/solicitar" element={<SolicitarReservaPage />} />
+            <Route path="perfil" element={<PerfilSocioPage />} />
+            <Route path="perfil/cambiar-contrasena" element={<CambiarContrasenaPage />} />
+          </Route>
+          {/* La API arma estas rutas en los links de la pasarela: no se mueven. */}
+          <Route path={ROUTES.resultadoPago} element={<ResultadoPagoPage />} />
+          <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />
+        </Route>
       </Route>
 
-      <Route element={<ProtectedRoute />}>
+      {/* ── Panel de gestión ─────────────────────────────────────────────── */}
+      <Route path="admin" element={<ProtectedRoute soloGestion />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="dashboard" element={<DashboardGestionPage />} />
-
-          {/* Cualquier usuario autenticado */}
-          <Route path={ROUTES.hacermeSocio} element={<HacermeSocioPage />} />
-          <Route path={ROUTES.perfil} element={<PerfilSocioPage />} />
-          <Route path="mi-perfil" element={<PerfilSocioPage />} />
-          <Route path={ROUTES.cambiarContrasena} element={<CambiarContrasenaPage />} />
-          <Route path={ROUTES.misCuotas} element={<MisCuotasPage />} />
-          <Route path={ROUTES.misEntradas} element={<MisEntradasPage />} />
-          <Route path={ROUTES.solicitarReserva} element={<SolicitarReservaPage />} />
-          <Route path={ROUTES.misReservas} element={<MisReservasPage />} />
-          <Route path={ROUTES.resultadoPago} element={<ResultadoPagoPage />} />
-          <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />
-          <Route path={ROUTES.miDocumentacion} element={<MiDocumentacionPage />} />
-          <Route path={ROUTES.solicitarInscripcion} element={<SolicitarInscripcionPage />} />
-          <Route path={ROUTES.misSolicitudesInscripcion} element={<SolicitarInscripcionPage />} />
+          <Route path="eventos" element={<EventosPage modo="gestion" />} />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />
-            <Route
-              path="socios/:id/editar"
-              element={<RedirigirAEdicion a={ROUTES.editarSocio} />}
-            />
+            <Route path="socios/:id/editar" element={<RedirigirAEdicion a={ROUTES.editarSocio} />} />
             <Route path="disciplinas" element={<DisciplinasPage />} />
             <Route path="disciplinas/:id/categorias" element={<CategoriasDisciplinaPage />} />
             <Route path="cuotas/social/morosos" element={<MorososCuotaSocialPage />} />
@@ -87,8 +106,10 @@ export function AppRouter() {
             <Route path="cuotas/deportiva/morosos" element={<MorososCuotaDeportivaPage />} />
             <Route path="reportes/estado-financiero" element={<EstadoFinancieroPage />} />
             <Route path="reportes/asistencia-eventos" element={<ReporteAsistenciaPage />} />
-            <Route path={ROUTES.solicitudesReserva} element={<SolicitudesReservaPage />} />
-            <Route path={ROUTES.espacios} element={<EspaciosPage />} />
+            <Route path="reservas/solicitudes" element={<SolicitudesReservaPage />} />
+            <Route path="espacios" element={<EspaciosPage />} />
+            <Route path="eventos/:eventoId/validar" element={<ValidarAccesoPage />} />
+            <Route path="entradas/validar" element={<ValidarAccesoPage />} />
           </Route>
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
@@ -100,34 +121,16 @@ export function AppRouter() {
               path="cuotas/social/:id/editar"
               element={<RedirigirAEdicion a={ROUTES.editarCuotaSocial} />}
             />
-          </Route>
-
-          {/* Compra de entradas: cualquier usuario autenticado */}
-          <Route>
-            <Route path="eventos/:eventoId/entradas" element={<ComprarEntradasPage />} />
-          </Route>
-
-          {/* Control operativo: ADMIN y COLABORADOR */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
-            <Route path="eventos/:eventoId/validar" element={<ValidarAccesoPage />} />
-            <Route path="entradas/validar" element={<ValidarAccesoPage />} />
-          </Route>
-
-          {/* Auditoría y tareas automáticas: solo ADMIN */}
-          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN']} />}>
             <Route path="auditoria" element={<AuditoriaPage />} />
             <Route path="tareas" element={<TareasPage />} />
           </Route>
 
-          {/* Participantes (US-08): búsqueda y filtrado — ADMIN, COLABORADOR y DELEGADO
-              (desde US-07 el delegado necesita el listado para dar de baja) */}
-          <Route
-            element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR', 'DELEGADO']} />}
-          >
+          {/* Participantes (US-08): ADMIN, COLABORADOR y DELEGADO (US-07: el delegado da de baja). */}
+          <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR', 'DELEGADO']} />}>
             <Route path="participantes" element={<ParticipantesPage />} />
           </Route>
 
-          {/* Inscripción: ADMIN y DELEGADO (alineado con los guards del backend) */}
+          {/* Inscripción: ADMIN y DELEGADO (alineado con los guards del backend). */}
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'DELEGADO']} />}>
             {/* DT-11: inscripción y documentación viven dentro de Participantes. */}
             <Route path="inscripcion" element={<Navigate to={ROUTES.nuevaInscripcion} replace />} />
@@ -140,7 +143,7 @@ export function AppRouter() {
         </Route>
       </Route>
 
-      <Route path="*" element={<Navigate to={ROUTES.dashboard} replace />} />
+      <Route path="*" element={<RedirigirRutaVieja />} />
     </Routes>
   );
 }

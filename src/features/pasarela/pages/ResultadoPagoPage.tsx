@@ -84,7 +84,7 @@ export function ResultadoPagoPage() {
           texto="El enlace no tiene la referencia de una orden de pago."
         />
         <Acciones>
-          <Link to={ROUTES.dashboard}>
+          <Link to={ROUTES.miClub}>
             <Button variant="outline">Ir al inicio</Button>
           </Link>
         </Acciones>

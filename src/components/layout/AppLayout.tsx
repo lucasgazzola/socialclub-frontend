@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   CalendarDays,
-  CalendarClock,
   CalendarCheck2,
   ChartColumn,
   BarChart3,
@@ -15,16 +14,13 @@ import {
   ShieldCheck,
   User,
   Users,
-  UserPlus,
   UserRound,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   Dumbbell,
   Building2,
-  Ticket,
   Timer,
-  FileText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Breadcrumbs, ClubLogo } from '@/components/ui';
@@ -62,27 +58,12 @@ const navSections: NavSection[] = [
         icon: BarChart3,
         roles: ['ADMIN', 'COLABORADOR'],
       },
-      { to: ROUTES.perfil, label: 'Mi perfil', icon: User },
     ],
   },
   {
     title: 'Gestión Social',
     items: [
       { to: ROUTES.socios, label: 'Socios', icon: Users, roles: ['ADMIN', 'COLABORADOR'] },
-      // US-09: autoservicio del usuario. La secretaría da de alta socios desde Socios (US-12).
-      {
-        to: ROUTES.hacermeSocio,
-        label: 'Hacerme socio',
-        icon: UserPlus,
-        soloSinMembresia: true,
-        ocultarParaRoles: ['ADMIN', 'COLABORADOR', 'DELEGADO'],
-      },
-      { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
-      { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
-      { to: ROUTES.solicitarReserva, label: 'Solicitar reserva', icon: CalendarClock },
-      { to: ROUTES.misReservas, label: 'Mis reservas', icon: CalendarClock },
-      { to: ROUTES.solicitarInscripcion, label: 'Inscribirme a disciplina', icon: Dumbbell },
-      { to: ROUTES.miDocumentacion, label: 'Mi documentación', icon: FileText },
       {
         to: ROUTES.participantes,
         label: 'Participantes',
@@ -95,7 +76,7 @@ const navSections: NavSection[] = [
   {
     title: 'Operaciones',
     items: [
-      { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays },
+      { to: ROUTES.eventosAdmin, label: 'Eventos', icon: CalendarDays },
       { to: ROUTES.validarAcceso, label: 'Validar QR', icon: QrCode, roles: ['ADMIN', 'COLABORADOR'] },
       {
         to: ROUTES.solicitudesReserva,
@@ -161,19 +142,10 @@ const navSections: NavSection[] = [
 const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.dashboard]: 'Panel de Inicio',
   [ROUTES.dashboardGestion]: 'Dashboard de Gestión',
-  [ROUTES.perfil]: 'Mi Perfil',
-  [ROUTES.cambiarContrasena]: 'Cambiar Contraseña',
-  [ROUTES.misCuotas]: 'Mis Cuotas',
-  [ROUTES.misEntradas]: 'Mis Entradas',
-  [ROUTES.misReservas]: 'Mis Reservas',
   [ROUTES.solicitudesReserva]: 'Solicitudes de Reserva',
   [ROUTES.espacios]: 'Espacios Físicos',
-  [ROUTES.solicitarInscripcion]: 'Solicitar Inscripción',
-  [ROUTES.misSolicitudesInscripcion]: 'Mis Solicitudes de Inscripción',
-  [ROUTES.miDocumentacion]: 'Mi Documentación',
-  [ROUTES.hacermeSocio]: 'Hacerme Socio',
   [ROUTES.socios]: 'Socios del Club',
-  [ROUTES.eventos]: 'Eventos y Actividades',
+  [ROUTES.eventosAdmin]: 'Eventos y Actividades',
   [ROUTES.validarAcceso]: 'Control de Acceso QR',
   [ROUTES.usuarios]: 'Usuarios',
   [ROUTES.cuotas]: 'Configuración de Cuotas',
@@ -196,6 +168,7 @@ const ROUTE_TITLES: Record<string, string> = {
 export function AppLayout() {
   const { usuario, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [colapsado, setColapsado] = useState(() => {
     try {
@@ -423,7 +396,11 @@ export function AppLayout() {
               {usuario ? (
                 <button
                   type="button"
-                  onClick={() => void logout()}
+                  onClick={() => {
+                    // TASK-60: a la landing antes de salir (el login no recuerda la ruta anterior).
+                    navigate(ROUTES.inicio, { replace: true });
+                    void logout();
+                  }}
                   title="Cerrar sesión"
                   className="rounded-lg p-1.5 text-slate-400 hover:bg-sidebar-border hover:text-rose-400 transition-colors"
                 >
@@ -454,10 +431,14 @@ export function AppLayout() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 px-3 py-1 text-xs font-medium text-slate-600 shadow-2xs">
-              <span className="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
-              <span>SocialClub</span>
-            </div>
+            {/* TASK-60: lo personal (perfil, cuotas, entradas…) vive en Mi club. */}
+            <NavLink
+              to={ROUTES.miClub}
+              className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-xs font-semibold text-brand-700 shadow-2xs transition-colors hover:bg-brand-100"
+            >
+              <UserRound size={14} aria-hidden />
+              Mi club
+            </NavLink>
 
             <div className="h-4 w-px bg-slate-200" />
 
