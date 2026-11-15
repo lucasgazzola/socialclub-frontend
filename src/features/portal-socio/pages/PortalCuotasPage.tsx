@@ -238,6 +238,8 @@ export function PortalCuotasPage() {
                   <button
                     key={cuota.periodo}
                     type="button"
+                    // Funciona como casilla: anuncia si la cuota está elegida para pagar.
+                    aria-pressed={selected}
                     onClick={() => togglePeriodo(cuota.periodo)}
                     className={cn(
                       'flex w-full flex-wrap items-center justify-between gap-4 border-l-2 px-4 py-3.5 text-left transition-colors cursor-pointer',

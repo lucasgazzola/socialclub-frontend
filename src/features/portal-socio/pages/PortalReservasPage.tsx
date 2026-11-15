@@ -100,9 +100,10 @@ export function PortalReservasPage() {
           {conSenaPendiente.map((r) => (
             <PortalSurface
               key={r.id}
+              data-testid={`sena-pendiente-${r.codigo}`}
               className="flex flex-wrap items-center justify-between gap-4 border-blue-400/35 bg-blue-500/[0.08] p-4 sm:p-5"
             >
-              <div className="flex items-start gap-3" data-testid={`sena-pendiente-${r.codigo}`}>
+              <div className="flex items-start gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[2px] border border-blue-400/30 bg-blue-500/15 text-blue-300">
                   <AlarmClock size={17} />
                 </div>
