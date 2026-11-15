@@ -123,6 +123,17 @@ export async function ok<T = unknown>(respuesta: Awaited<ReturnType<APIRequestCo
   return (await respuesta.json()) as T;
 }
 
+/** Lo único del cliente Prisma del backend que usa `enlaceDeVerificacion`. */
+type ClientePrismaMinimo = new (opciones: { datasources: { db: { url: string } } }) => {
+  notificacion: {
+    findFirst(args: {
+      where: { tipo: string; usuario: { email: string } };
+      orderBy: { id: 'desc' };
+    }): Promise<{ contenido: unknown } | null>;
+  };
+  $disconnect(): Promise<void>;
+};
+
 /**
  * DT-54 — Enlace de verificación que recibió una cuenta por email. En las
  * pruebas no hay SMTP: el email queda en el outbox (`notificaciones`), así que
@@ -131,7 +142,8 @@ export async function ok<T = unknown>(respuesta: Awaited<ReturnType<APIRequestCo
  */
 export async function enlaceDeVerificacion(email: string): Promise<string> {
   const requerir = createRequire(path.join(BACKEND_DIR, 'package.json'));
-  const { PrismaClient } = requerir('@prisma/client') as typeof import('@prisma/client');
+  // El front no depende de @prisma/client: se tipa solo lo que se usa acá.
+  const { PrismaClient } = requerir('@prisma/client') as { PrismaClient: ClientePrismaMinimo };
   const prisma = new PrismaClient({ datasources: { db: { url: DATABASE_URL } } });
   try {
     const notificacion = await prisma.notificacion.findFirst({
