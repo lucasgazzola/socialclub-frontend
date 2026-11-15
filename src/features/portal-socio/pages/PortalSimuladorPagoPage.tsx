@@ -43,13 +43,13 @@ export function PortalSimuladorPagoPage() {
           </div>
         ) : isError || !orden ? (
           <p className="text-center text-sm text-rose-400">
-            {error instanceof Error ? error.message : 'No se encontrÃ³ la orden de pago.'}
+            {error instanceof Error ? error.message : 'No se encontró la orden de pago.'}
           </p>
         ) : (
           <div className="space-y-5">
             <div className="flex items-start gap-3 rounded-[2px] border border-amber-400/25 bg-amber-500/10 p-3 text-xs text-amber-200">
               <FlaskConical size={16} className="mt-0.5 shrink-0 text-amber-300" />
-              <span>SimulaciÃ³n: elegÃ­ el resultado del pago. No se cobra dinero real.</span>
+              <span>Simulación: elegí el resultado del pago. No se cobra dinero real.</span>
             </div>
 
             <div className="rounded-[2px] border border-slate-300/[0.10] bg-[#070b14] p-4">
@@ -67,7 +67,7 @@ export function PortalSimuladorPagoPage() {
 
             {orden.estado !== 'PENDIENTE' ? (
               <p className="text-center text-sm text-slate-400">
-                Esta orden ya no estÃ¡ pendiente ({orden.estado.toLowerCase()}).
+                Esta orden ya no está pendiente ({orden.estado.toLowerCase()}).
               </p>
             ) : (
               <div className="flex flex-wrap justify-end gap-3 border-t border-slate-300/[0.08] pt-4">

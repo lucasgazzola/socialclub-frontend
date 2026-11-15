@@ -67,7 +67,7 @@ const HABILITACION_TONE: Record<
 };
 
 /**
- * DocumentaciÃ³n 100% nativa en tema oscuro + azul para Socios y Participantes.
+ * Documentación 100% nativa en tema oscuro + azul para Socios y Participantes.
  * No reutiliza ni envuelve DocumentacionParticipante ni hacks CSS.
  */
 export function PortalDocumentacionPage() {
@@ -123,7 +123,7 @@ export function PortalDocumentacionPage() {
       return;
     }
     if (!archivo) {
-      setErrorArchivo('SeleccionÃ¡ un archivo PDF o imagen.');
+      setErrorArchivo('Seleccioná un archivo PDF o imagen.');
       return;
     }
 
@@ -136,26 +136,26 @@ export function PortalDocumentacionPage() {
         },
         archivo,
       });
-      toast.success('DocumentaciÃ³n cargada correctamente.');
+      toast.success('Documentación cargada correctamente.');
       cancelarCarga();
       setFileKey((k) => k + 1);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo cargar la documentaciÃ³n.');
+      toast.error(error instanceof Error ? error.message : 'No se pudo cargar la documentación.');
     }
   }
 
   return (
     <div className="space-y-6">
       <PortalTitleBar
-        title="Mi documentaciÃ³n"
-        summary="ControlÃ¡ requisitos mÃ©dicos o federativos exigidos por disciplina y renovÃ¡ certificados."
+        title="Mi documentación"
+        summary="Controlá requisitos médicos o federativos exigidos por disciplina y renová certificados."
       />
 
       {!personaId ? (
         <PortalEmptyState
           icon={<FolderOpen size={20} />}
-          title="TodavÃ­a no registrÃ¡s inscripciones ni documentaciÃ³n"
-          description="Cuando te asocies o te inscribas a una disciplina deportiva, aquÃ­ verÃ¡s tus requisitos documentales."
+          title="Todavía no registrás inscripciones ni documentación"
+          description="Cuando te asocies o te inscribas a una disciplina deportiva, aquí verás tus requisitos documentales."
         />
       ) : isLoading ? (
         <div className="flex h-48 items-center justify-center">
@@ -164,7 +164,7 @@ export function PortalDocumentacionPage() {
       ) : isError || !estado ? (
         <PortalSurface className="space-y-4 p-5">
           <p className="text-sm text-slate-300">
-            No tenÃ©s documentaciÃ³n pendiente ni inscripciones activas.
+            No tenés documentación pendiente ni inscripciones activas.
           </p>
           {historial && historial.length > 0 && (
             <div className="space-y-2 border-t border-slate-300/[0.08] pt-4">
@@ -208,7 +208,7 @@ export function PortalDocumentacionPage() {
             <PortalEmptyState
               icon={<FileCheck2 size={20} />}
               title="Sin inscripciones activas"
-              description="No estÃ¡s inscripto en ninguna disciplina que exija documentaciÃ³n en este momento."
+              description="No estás inscripto en ninguna disciplina que exija documentación en este momento."
             />
           ) : (
             <div className="space-y-4">
@@ -223,7 +223,7 @@ export function PortalDocumentacionPage() {
                           {insc.categoriaDisciplina && (
                             <span className="font-normal text-slate-400">
                               {' '}
-                              Â· {insc.categoriaDisciplina.nombre}
+                              · {insc.categoriaDisciplina.nombre}
                             </span>
                           )}
                         </h2>
@@ -241,7 +241,7 @@ export function PortalDocumentacionPage() {
                         >
                           <AlertTriangle size={15} className="mt-0.5 shrink-0 text-rose-400" />
                           <div>
-                            <p className="font-semibold">InscripciÃ³n bloqueada por documentaciÃ³n:</p>
+                            <p className="font-semibold">Inscripción bloqueada por documentación:</p>
                             <ul className="mt-1 list-disc pl-4 space-y-0.5 text-rose-300">
                               {insc.motivos.map((m) => (
                                 <li key={m}>{m}</li>
@@ -262,7 +262,7 @@ export function PortalDocumentacionPage() {
                       )}
 
                       {insc.documentos.length === 0 ? (
-                        <p className="text-xs text-slate-400">Esta disciplina no exige documentaciÃ³n.</p>
+                        <p className="text-xs text-slate-400">Esta disciplina no exige documentación.</p>
                       ) : (
                         <ul className="divide-y divide-slate-300/[0.08] rounded-[2px] border border-slate-300/[0.10] bg-[#070b14]">
                           {insc.documentos.map((doc) => {
@@ -279,7 +279,7 @@ export function PortalDocumentacionPage() {
                                     {doc.etiqueta}
                                     {doc.origen === 'CATEGORIA' && (
                                       <span className="ml-1.5 text-xs font-normal text-slate-400">
-                                        (por categorÃ­a)
+                                        (por categoría)
                                       </span>
                                     )}
                                   </p>
@@ -315,7 +315,7 @@ export function PortalDocumentacionPage() {
             </div>
           )}
 
-          {/* Formulario inline nativo oscuro para carga o renovaciÃ³n */}
+          {/* Formulario inline nativo oscuro para carga o renovación */}
           {docSeleccionado && (
             <PortalSurface className="border-blue-400/35 bg-[#0b1322] p-5">
               <div className="mb-4 flex items-center justify-between gap-3 border-b border-blue-400/15 pb-3">
@@ -373,7 +373,7 @@ export function PortalDocumentacionPage() {
                   </PortalButton>
                   <PortalButton type="submit" variant="primary" size="sm" disabled={crear.isPending}>
                     <Upload size={14} />
-                    {crear.isPending ? 'Subiendo archivoâ€¦' : 'Cargar documentaciÃ³n'}
+                    {crear.isPending ? 'Subiendo archivo…' : 'Cargar documentación'}
                   </PortalButton>
                 </div>
               </form>

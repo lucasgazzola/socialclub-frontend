@@ -20,14 +20,14 @@ import {
   PortalTitleBar,
 } from '../components/PortalUI';
 
-const errorDe = (e: unknown) => (e instanceof Error ? e.message : 'No se pudo completar la acciÃ³n.');
+const errorDe = (e: unknown) => (e instanceof Error ? e.message : 'No se pudo completar la acción.');
 
 const ESTADO_RESERVA_TONE: Record<
   MiReserva['estado'],
   { label: string; tone: 'active' | 'pending' | 'danger' | 'info' | 'neutral' }
 > = {
   PENDIENTE_APROBACION: { label: 'Pendiente', tone: 'pending' },
-  APROBADA_PENDIENTE_PAGO: { label: 'SeÃ±a pendiente', tone: 'info' },
+  APROBADA_PENDIENTE_PAGO: { label: 'Seña pendiente', tone: 'info' },
   CONFIRMADA: { label: 'Confirmada', tone: 'active' },
   RECHAZADA: { label: 'Rechazada', tone: 'danger' },
   CANCELADA_USUARIO: { label: 'Cancelada', tone: 'neutral' },
@@ -36,7 +36,7 @@ const ESTADO_RESERVA_TONE: Record<
 };
 
 /**
- * Reservas del socio/participante como feed cronolÃ³gico de tickets (cero tabla administrativa).
+ * Reservas del socio/participante como feed cronológico de tickets (cero tabla administrativa).
  */
 export function PortalReservasPage() {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ export function PortalReservasPage() {
     <div className="space-y-6">
       <PortalTitleBar
         title="Mis reservas"
-        summary="SeguÃ­ el estado de tus solicitudes de espacios del club y abonÃ¡ seÃ±as pendientes."
+        summary="Seguí el estado de tus solicitudes de espacios del club y aboná señas pendientes."
       />
 
       {isLoading ? (
@@ -86,8 +86,8 @@ export function PortalReservasPage() {
         <PortalEmptyState
           testId="sin-reservas"
           icon={<CalendarX2 size={20} />}
-          title="TodavÃ­a no hiciste ninguna solicitud de reserva"
-          description="Cuando solicites un espacio del club, podrÃ¡s hacer el seguimiento y pagar tu seÃ±a aquÃ­."
+          title="Todavía no hiciste ninguna solicitud de reserva"
+          description="Cuando solicites un espacio del club, podrás hacer el seguimiento y pagar tu seña aquí."
         />
       ) : (
         <div className="space-y-5">
@@ -102,10 +102,10 @@ export function PortalReservasPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-blue-200 tabular-nums">
-                    PagÃ¡ la seÃ±a de {formatearPesos(r.montoSena)} antes del {r.limitePagoSenaTexto}
+                    Pagá la seña de {formatearPesos(r.montoSena)} antes del {r.limitePagoSenaTexto}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-300">
-                    Reserva <span className="font-mono">{r.codigo}</span> Â· {r.espacio.nombre} Â·{' '}
+                    Reserva <span className="font-mono">{r.codigo}</span> · {r.espacio.nombre} ·{' '}
                     {r.turno}
                   </p>
                   {r.instruccionesSena && (
@@ -121,7 +121,7 @@ export function PortalReservasPage() {
                   disabled={pagarSena.isPending}
                 >
                   <CreditCard size={14} />
-                  Pagar seÃ±a online
+                  Pagar seña online
                 </PortalButton>
               )}
             </PortalSurface>
@@ -188,7 +188,7 @@ export function PortalReservasPage() {
                             onClick={() => void pagar(r)}
                             disabled={pagarSena.isPending}
                           >
-                            Pagar seÃ±a
+                            Pagar seña
                           </PortalButton>
                         )}
                         {r.puedeCancelar && (
@@ -216,10 +216,10 @@ export function PortalReservasPage() {
         title="Cancelar reserva"
         description={
           aCancelar
-            ? `Â¿ConfirmÃ¡s la cancelaciÃ³n de la reserva ${aCancelar.codigo} (${aCancelar.espacio.nombre} â€” ${aCancelar.turno})?`
+            ? `¿Confirmás la cancelación de la reserva ${aCancelar.codigo} (${aCancelar.espacio.nombre} — ${aCancelar.turno})?`
             : ''
         }
-        confirmLabel="SÃ­, cancelar reserva"
+        confirmLabel="Sí, cancelar reserva"
         onConfirm={() => void confirmarCancelacion()}
         onCancel={() => setACancelar(null)}
         loading={cancelar.isPending}

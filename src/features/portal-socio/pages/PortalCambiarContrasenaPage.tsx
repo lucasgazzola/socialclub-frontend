@@ -45,12 +45,12 @@ export function PortalCambiarContrasenaPage() {
     try {
       await cambiarContrasena(valores);
       reset();
-      setMensajeExito('Tu contraseÃ±a fue actualizada correctamente. Cerrando sesiÃ³nâ€¦');
+      setMensajeExito('Tu contraseña fue actualizada correctamente. Cerrando sesión…');
       await logout();
       navigate(ROUTES.login, { replace: true });
     } catch (error) {
       setMensajeError(
-        error instanceof Error ? error.message : 'OcurriÃ³ un error al cambiar la contraseÃ±a.',
+        error instanceof Error ? error.message : 'Ocurrió un error al cambiar la contraseña.',
       );
     }
   });
@@ -58,8 +58,8 @@ export function PortalCambiarContrasenaPage() {
   return (
     <div className="space-y-6">
       <PortalTitleBar
-        title="Cambiar contraseÃ±a"
-        summary="ActualizÃ¡ tu clave confirmando la contraseÃ±a actual. Al guardar se cerrarÃ¡ la sesiÃ³n."
+        title="Cambiar contraseña"
+        summary="Actualizá tu clave confirmando la contraseña actual. Al guardar se cerrará la sesión."
       />
 
       <PortalSurface className="max-w-xl p-5 sm:p-6">
@@ -87,8 +87,8 @@ export function PortalCambiarContrasenaPage() {
           <PortalFieldInput
             id="passwordActual"
             type="password"
-            label="ContraseÃ±a actual"
-            placeholder="Tu contraseÃ±a actual"
+            label="Contraseña actual"
+            placeholder="Tu contraseña actual"
             autoComplete="current-password"
             error={errors.passwordActual?.message}
             {...register('passwordActual')}
@@ -97,8 +97,8 @@ export function PortalCambiarContrasenaPage() {
           <PortalFieldInput
             id="nuevaContrasena"
             type="password"
-            label="Nueva contraseÃ±a"
-            placeholder="MÃ­nimo 8 caracteres"
+            label="Nueva contraseña"
+            placeholder="Mínimo 8 caracteres"
             autoComplete="new-password"
             error={errors.nuevaContrasena?.message}
             {...register('nuevaContrasena')}
@@ -107,8 +107,8 @@ export function PortalCambiarContrasenaPage() {
           <PortalFieldInput
             id="confirmarNuevaContrasena"
             type="password"
-            label="Confirmar nueva contraseÃ±a"
-            placeholder="RepetÃ­ la nueva contraseÃ±a"
+            label="Confirmar nueva contraseña"
+            placeholder="Repetí la nueva contraseña"
             autoComplete="new-password"
             error={errors.confirmarNuevaContrasena?.message}
             {...register('confirmarNuevaContrasena')}
@@ -117,7 +117,7 @@ export function PortalCambiarContrasenaPage() {
           <div className="flex flex-wrap items-center gap-3 border-t border-slate-300/[0.08] pt-5">
             <PortalButton type="submit" variant="primary" disabled={isPending}>
               <KeyRound size={15} />
-              {isPending ? 'Actualizandoâ€¦' : 'Actualizar contraseÃ±a'}
+              {isPending ? 'Actualizando…' : 'Actualizar contraseña'}
             </PortalButton>
             <PortalButton variant="ghost" onClick={() => navigate(ROUTES.perfil)}>
               Cancelar

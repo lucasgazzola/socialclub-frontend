@@ -57,11 +57,11 @@ export function PortalHacermeSocioPage() {
       });
       await authApi.refresh();
       await refrescar();
-      toast.success('Â¡Felicitaciones! Te registraste como socio correctamente.');
+      toast.success('¡Felicitaciones! Te registraste como socio correctamente.');
       navigate(ROUTES.dashboard, { replace: true });
     } catch (error) {
       setErrorServidor(
-        error instanceof Error ? error.message : 'OcurriÃ³ un error inesperado. IntentÃ¡ nuevamente.',
+        error instanceof Error ? error.message : 'Ocurrió un error inesperado. Intentá nuevamente.',
       );
     }
   });
@@ -121,13 +121,13 @@ export function PortalHacermeSocioPage() {
 
             <PortalFieldSelect
               id="categoriaId"
-              label="CategorÃ­a de socio *"
+              label="Categoría de socio *"
               disabled={cargandoCategorias}
               error={errors.categoriaId?.message}
               options={[
                 {
                   value: '',
-                  label: cargandoCategorias ? 'Cargando categorÃ­asâ€¦' : 'SeleccionÃ¡ una categorÃ­a',
+                  label: cargandoCategorias ? 'Cargando categorías…' : 'Seleccioná una categoría',
                 },
                 ...(categorias?.map((c) => ({ value: c.id, label: c.nombre })) ?? []),
               ]}
@@ -152,7 +152,7 @@ export function PortalHacermeSocioPage() {
           <div className="flex items-center gap-3 border-t border-slate-300/[0.08] pt-5">
             <PortalButton type="submit" variant="primary" disabled={isSubmitting}>
               <UserPlus size={15} />
-              {isSubmitting ? 'Registrandoâ€¦' : 'Hacerme socio'}
+              {isSubmitting ? 'Registrando…' : 'Hacerme socio'}
             </PortalButton>
           </div>
         </form>
