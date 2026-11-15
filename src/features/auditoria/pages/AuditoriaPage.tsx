@@ -11,11 +11,12 @@ import { AuditoriaTable } from '../components/AuditoriaTable';
 import { AuditoriaFilters } from '../components/AuditoriaFilters';
 import type { AuditoriaFiltrosFormValues } from '../schemas/auditoria-filtros.schema';
 import type { AccionAuditoria } from '../constants';
+import { formatearFechaHora24 } from '@/lib/utils/fecha';
 
 const POR_PAGINA_DEFAULT = 10;
 
 const COLUMNAS_EXPORT_AUDITORIA: ExportColumn<RegistroAuditoria>[] = [
-  { header: 'Fecha y hora', accessor: (r) => new Date(r.fechaHora).toLocaleString('es-AR') },
+  { header: 'Fecha y hora', accessor: (r) => formatearFechaHora24(r.fechaHora) },
   { header: 'Acción', accessor: (r) => r.accion },
   { header: 'Entidad', accessor: (r) => r.entidad },
   { header: 'ID', accessor: (r) => r.idEntidad ?? '—' },

@@ -3,6 +3,7 @@ import { HeaderOrdenable } from '@/components/ui';
 import { createPortal } from 'react-dom';
 import type { RegistroAuditoria } from '../types';
 import type { AccionAuditoria } from '../constants';
+import { formatearFechaHora24 } from '@/lib/utils/fecha';
 
 interface Props {
   registros: RegistroAuditoria[];
@@ -160,7 +161,7 @@ export function AuditoriaTable({ registros, isFetching, ordenarPor, orden, onOrd
                 className="border-b border-slate-100 last:border-b-0 transition-[background-color] duration-150 hover:bg-slate-50"
               >
                 <td className="px-5 py-3.5 whitespace-nowrap">
-                  {new Date(r.fechaHora).toLocaleString('es-AR')}
+                  {formatearFechaHora24(r.fechaHora)}
                 </td>
                 <td className="px-5 py-3.5">
                   <span
