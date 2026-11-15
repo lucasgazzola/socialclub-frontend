@@ -53,7 +53,7 @@ export function PortalLayout() {
             </span>
           </Link>
 
-          <nav aria-label="Secciones de Mi club" className="hidden items-center gap-1 md:flex">
+          <nav aria-label="Secciones de Mi club" className="hidden items-center gap-1 lg:flex">
             {items.map((item) => {
               const activo = estaActivo(item, pathname);
               return (
@@ -79,13 +79,13 @@ export function PortalLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 md:pb-12">
+      <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:pb-12">
         <Outlet />
       </main>
 
       <nav
         aria-label="Secciones de Mi club"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-md md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur-md lg:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <ul className="mx-auto grid max-w-lg grid-cols-5">
