@@ -58,7 +58,7 @@ test(
       '1. Como administrador, abrir Cuota social y «Configurar cuota social»',
       async () => {
         await iniciarSesion(page, USUARIOS.admin);
-        await page.goto('/cuotas/social');
+        await page.goto('/admin/cuotas/social');
         await page.getByRole('button', { name: 'Configurar cuota social' }).click();
       },
     );
@@ -93,7 +93,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como colaborador, abrir «Cobrar cuota deportiva»', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
-      await page.goto('/cuotas/deportiva/cobrar');
+      await page.goto('/admin/cuotas/deportiva/cobrar');
       await expect(
         page.getByRole('heading', { name: 'Registrar pago de cuota deportiva' }),
       ).toBeVisible();
@@ -125,7 +125,7 @@ test(
       '1. Como colaborador, buscar al participante y marcar el período adeudado',
       async () => {
         await iniciarSesion(page, USUARIOS.colaborador);
-        await page.goto('/cuotas/deportiva/cobrar');
+        await page.goto('/admin/cuotas/deportiva/cobrar');
         await page.getByLabel('Buscar participante por DNI').fill(participante.dni);
         await page.getByRole('button', { name: 'Buscar' }).click();
         await page.getByRole('checkbox', { name: periodoActual }).check();
@@ -148,7 +148,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como delegado, abrir «Cobrar cuota deportiva» por URL', async () => {
       await iniciarSesion(page, USUARIOS.delegado);
-      await page.goto('/cuotas/deportiva/cobrar');
+      await page.goto('/admin/cuotas/deportiva/cobrar');
       const aviso = page.getByText('No tenés permisos para acceder a esta sección.');
       await expect(aviso).toBeVisible();
       await resaltar(aviso);

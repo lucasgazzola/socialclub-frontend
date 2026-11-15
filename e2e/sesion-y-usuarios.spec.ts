@@ -63,7 +63,7 @@ test(
 test('TC-001 · Registrar un usuario válido', { tag: ['@US-01'] }, async ({ page, paso }) => {
   await paso('1. Como administrador, abrir Usuarios y «Nuevo usuario»', async () => {
     await iniciarSesion(page, USUARIOS.admin);
-    await page.goto('/usuarios');
+    await page.goto('/admin/usuarios');
     await page.getByRole('button', { name: 'Nuevo usuario' }).click();
   });
 
@@ -125,7 +125,7 @@ test(
 
     await paso('1. Como administrador, buscar al usuario en Usuarios', async () => {
       await iniciarSesion(page, USUARIOS.admin);
-      await page.goto('/usuarios');
+      await page.goto('/admin/usuarios');
       await page.getByPlaceholder(/Buscar por nombre/).fill(colaborador.apellido);
       await expect(fila).toContainText('Activo');
     });
@@ -167,10 +167,11 @@ test('TC-088 · Cerrar sesión correctamente', { tag: ['@US-40'] }, async ({ pag
     await iniciarSesion(page, USUARIOS.admin);
   });
 
-  await paso('2. Elegir «Cerrar sesión»: vuelve a la pantalla de ingreso', async () => {
+  await paso('2. Elegir «Cerrar sesión»: vuelve al sitio del club, sin sesión', async () => {
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
-    await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole('button', { name: 'Ingresar' })).toBeVisible();
+    // TASK-60: al salir se vuelve a la landing pública, que ofrece ingresar de nuevo.
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole('link', { name: 'Ingresar', exact: true })).toBeVisible();
   });
 });
 
@@ -181,11 +182,11 @@ test(
     await paso('1. Iniciar sesión y cerrarla', async () => {
       await iniciarSesion(page, USUARIOS.admin);
       await page.getByRole('button', { name: 'Cerrar sesión' }).click();
-      await expect(page).toHaveURL(/\/login/);
+      await expect(page.getByRole('link', { name: 'Ingresar', exact: true })).toBeVisible();
     });
 
     await paso('2. Abrir Usuarios por URL: redirige al ingreso', async () => {
-      await page.goto('/usuarios');
+      await page.goto('/admin/usuarios');
       await expect(page).toHaveURL(/\/login/);
       const r = await page.request.get('http://localhost:3101/api/v1/auth/me');
       expect(r.status()).toBe(401);

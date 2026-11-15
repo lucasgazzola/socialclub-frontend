@@ -25,7 +25,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como administrador, abrir Eventos y «Nuevo evento»', async () => {
       await iniciarSesion(page, USUARIOS.admin);
-      await page.goto('/eventos');
+      await page.goto('/admin/eventos');
       await page.getByRole('button', { name: 'Nuevo evento' }).click();
     });
 
@@ -61,7 +61,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como socio, abrir el evento y elegir 2 entradas', async () => {
       await iniciarSesion(page, USUARIOS.socio);
-      await page.goto('/eventos');
+      await page.goto('/mi-club/eventos');
       await page.getByPlaceholder('buscar por nombre o descripción…').fill(evento.nombre);
       const tarjeta = page.getByRole('article').filter({ hasText: evento.nombre });
       await tarjeta.getByRole('button', { name: 'Comprar entradas' }).click();
@@ -87,16 +87,21 @@ test(
       await resaltar(aprobado);
     });
 
-    await paso('4. En «Mis entradas» hay dos entradas nuevas, cada una con su QR y su token', async () => {
+    await paso('4. En «Mis entradas» las dos entradas nuevas están agrupadas, cada una con su QR y su token', async () => {
       await page.getByRole('button', { name: 'Ver mis entradas' }).click();
       await expect(page.getByRole('heading', { name: 'Mis entradas', exact: true })).toBeVisible();
-      const delEvento = page
-        .locator('.grid > *')
-        .filter({ has: page.getByRole('heading', { name: evento.nombre, exact: true }) });
-      await expect(delEvento).toHaveCount(2);
-      tokens = await delEvento.locator('p.font-mono').allInnerTexts();
+      // TASK-60: las entradas de un mismo evento van en una tarjeta con carrusel de QR.
+      await page.getByTestId('buscar-entradas-input').fill(evento.nombre);
+      const tarjeta = page.getByRole('article', { name: `Entradas para ${evento.nombre}` });
+      await expect(tarjeta).toContainText('2 entradas');
+      await expect(tarjeta).toContainText('Válida');
+      const token = tarjeta.locator('p.font-mono');
+      tokens = [await token.innerText()];
+      await tarjeta.getByRole('button', { name: 'Entrada siguiente' }).click();
+      await expect(tarjeta).toContainText('2 de 2');
+      tokens.push(await token.innerText());
       expect(new Set(tokens).size).toBe(2);
-      await resaltar(delEvento.first());
+      await resaltar(tarjeta);
     });
   },
 );
@@ -107,7 +112,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como colaborador, abrir Validar QR y elegir el evento', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
-      await page.goto('/entradas/validar');
+      await page.goto('/admin/entradas/validar');
       await page.getByPlaceholder('Buscar evento por nombre o descripción...').fill(evento.nombre);
       await page.getByRole('heading', { name: evento.nombre }).click();
     });
@@ -129,7 +134,7 @@ test(
 test('TC-199 · Rechazar una entrada ya utilizada', { tag: ['@US-31'] }, async ({ page, paso }) => {
   await paso('1. Como colaborador, volver a validar la misma entrada', async () => {
     await iniciarSesion(page, USUARIOS.colaborador);
-    await page.goto('/entradas/validar');
+    await page.goto('/admin/entradas/validar');
     await page.getByPlaceholder('Buscar evento por nombre o descripción...').fill(evento.nombre);
     await page.getByRole('heading', { name: evento.nombre }).click();
     await page.getByRole('button', { name: /Ingreso Manual/ }).click();
@@ -146,3 +151,34 @@ test('TC-199 · Rechazar una entrada ya utilizada', { tag: ['@US-31'] }, async (
     await resaltar(resultado);
   });
 });
+
+test(
+  'TASK-60 · La entrada usada pasa al historial del socio con su fecha de uso',
+  { tag: ['@TASK-60', '@US-52'] },
+  async ({ page, paso }) => {
+    await paso('1. Como socio, abrir Mis entradas en Mi club', async () => {
+      await iniciarSesion(page, USUARIOS.socio);
+      await page.goto('/mi-club/entradas');
+      await expect(page.getByRole('heading', { name: 'Mis entradas', exact: true })).toBeVisible();
+    });
+
+    await paso('2. En Próximas queda solo la entrada que no se usó', async () => {
+      await page.getByTestId('buscar-entradas-input').fill(evento.nombre);
+      const tarjeta = page.getByRole('article', { name: `Entradas para ${evento.nombre}` });
+      await expect(tarjeta).toContainText('Válida');
+      await expect(tarjeta).not.toContainText('2 entradas');
+      await expect(tarjeta.locator('p.font-mono')).toHaveText(tokens[1]);
+      await resaltar(tarjeta);
+    });
+
+    await paso('3. En Historial aparece la usada, en gris, con su fecha y sin descarga', async () => {
+      await page.getByRole('tab', { name: /Historial/ }).click();
+      const tarjeta = page.getByRole('article', { name: `Entradas para ${evento.nombre}` });
+      await expect(tarjeta).toContainText('Usada');
+      await expect(tarjeta).toContainText(/Usada el /);
+      await expect(tarjeta.getByText('USADA', { exact: true })).toBeVisible();
+      await expect(tarjeta.getByRole('button', { name: /PDF|Mostrar en la puerta/ })).toHaveCount(0);
+      await resaltar(tarjeta);
+    });
+  },
+);

@@ -20,7 +20,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como colaborador, abrir «Solicitudes de reserva»: las pendientes, por fecha del turno', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
-      await page.goto('/reservas/solicitudes');
+      await page.goto('/admin/reservas/solicitudes');
       await expect(fila(page, 'RES-SEED01')).toContainText('Lucía Vázquez');
       await expect(fila(page, 'RES-SEED01')).toContainText('Socio');
       await resaltar(fila(page, 'RES-SEED01'), fila(page, 'RES-SEED02'));
@@ -49,7 +49,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. RES-SEED02 avisa que su turno se superpone con RES-SEED01', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
-      await page.goto('/reservas/solicitudes');
+      await page.goto('/admin/reservas/solicitudes');
       await expect(fila(page, 'RES-SEED02')).toContainText('Turno ocupado: Reserva RES-SEED01');
       await resaltar(fila(page, 'RES-SEED02'));
     });
@@ -75,7 +75,7 @@ test(
 
     await paso('1. Rechazar RES-SEED02 sin motivo: el sistema lo exige', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
-      await page.goto('/reservas/solicitudes');
+      await page.goto('/admin/reservas/solicitudes');
       await fila(page, 'RES-SEED02').getByRole('button', { name: /Rechazar/ }).click();
       await dialogo.getByRole('button', { name: 'Rechazar solicitud' }).click();
       await expect(dialogo.getByText('El motivo es obligatorio (al menos 5 caracteres).')).toBeVisible();
@@ -99,7 +99,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. En «Pendientes de pago», RES-SEED06 muestra la seña vencida', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
-      await page.goto('/reservas/solicitudes');
+      await page.goto('/admin/reservas/solicitudes');
       await page.getByText('Pendientes de pago', { exact: true }).click();
       await expect(fila(page, 'RES-SEED06')).toContainText(/Seña vencida el/);
       await resaltar(fila(page, 'RES-SEED06'));
@@ -120,9 +120,9 @@ test(
   'TC-286 · Consultar «Mis Reservas» con el estado y el detalle de cada solicitud',
   { tag: ['@US-62'] },
   async ({ page, paso }) => {
-    await paso('1. Como socia, abrir «Mis reservas» desde el menú', async () => {
+    await paso('1. Como socia, abrir «Reservas» desde el menú de Mi club', async () => {
       await iniciarSesion(page, USUARIOS.socio);
-      await page.getByRole('link', { name: 'Mis reservas' }).click();
+      await page.getByRole('navigation', { name: 'Secciones de Mi club' }).first().getByRole('link', { name: 'Reservas' }).click();
       await expect(page.getByRole('heading', { name: 'Mis reservas', exact: true })).toBeVisible();
     });
 
@@ -145,7 +145,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. En «Mis reservas», la reserva aprobada destaca el límite y cómo pagar la seña', async () => {
       await iniciarSesion(page, USUARIOS.socio);
-      await page.goto('/mis-reservas');
+      await page.goto('/mi-club/reservas');
       const aviso = page.getByTestId('sena-pendiente-RES-SEED03');
       await expect(aviso).toContainText('Pagá la seña de $15.000,00 antes del');
       await expect(aviso).toContainText('Mercado Pago o en la secretaría del club');
@@ -161,7 +161,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Pagar la seña de RES-SEED03: redirige a la pasarela', async () => {
       await iniciarSesion(page, USUARIOS.socio);
-      await page.goto('/mis-reservas');
+      await page.goto('/mi-club/reservas');
       await page.getByTestId('sena-pendiente-RES-SEED03').getByRole('button', { name: /Pagar seña con Mercado Pago/ }).click();
       await expect(page).toHaveURL(/\/pagos\/simulador\?referencia=/);
       await expect(page.getByText('Seña de la reserva RES-SEED03 (Quincho)')).toBeVisible();
@@ -192,7 +192,7 @@ test(
 
     await paso('1. En «Mis reservas», elegir «Cancelar» en RES-SEED04', async () => {
       await iniciarSesion(page, USUARIOS.socio);
-      await page.goto('/mis-reservas');
+      await page.goto('/mi-club/reservas');
       await reserva.getByRole('button', { name: 'Cancelar' }).click();
       const dialogo = page.getByRole('dialog', { name: 'Cancelar reserva' });
       await resaltar(dialogo);

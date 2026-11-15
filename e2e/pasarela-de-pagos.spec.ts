@@ -19,7 +19,7 @@ test(
 
     await paso('1. Como socia, elegir la cuota pendiente más antigua y confirmar el pago', async () => {
       await iniciarSesion(page, USUARIOS.socio);
-      await page.goto('/mis-cuotas');
+      await page.goto('/mi-club/cuotas');
       const primera = page.getByRole('checkbox').nth(1);
       await primera.check();
       periodo = (await primera.locator('xpath=ancestor::tr').innerText()).match(/\d{4}-\d{2}/)![0];

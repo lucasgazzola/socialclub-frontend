@@ -44,7 +44,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como colaborador, abrir el detalle del moroso', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
-      await page.goto('/cuotas/deportiva/morosos');
+      await page.goto('/admin/cuotas/deportiva/morosos');
       await page.getByRole('button', { name: `Ver detalle de ${VALERIA.nombre}` }).click();
     });
 
@@ -69,7 +69,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como colaborador, elegir «Cobrar» en la fila del moroso', async () => {
       await iniciarSesion(page, USUARIOS.colaborador);
-      await page.goto('/cuotas/deportiva/morosos');
+      await page.goto('/admin/cuotas/deportiva/morosos');
       const fila = page.getByRole('row', { name: new RegExp(VALERIA.nombre) });
       await fila.getByRole('button', { name: 'Cobrar' }).click();
     });
@@ -92,7 +92,7 @@ test(
     await paso('1. Como delegado, abrir el listado por URL', async () => {
       await iniciarSesion(page, USUARIOS.delegado);
       await expect(page.getByRole('link', { name: 'Morosos cuota deportiva' })).toHaveCount(0);
-      await page.goto('/cuotas/deportiva/morosos');
+      await page.goto('/admin/cuotas/deportiva/morosos');
       const aviso = page.getByText('No tenés permisos para acceder a esta sección.');
       await expect(aviso).toBeVisible();
       await resaltar(aviso);

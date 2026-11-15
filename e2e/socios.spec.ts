@@ -33,7 +33,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como administrador, abrir Socios y «Nuevo Socio»', async () => {
       await iniciarSesion(page, USUARIOS.admin);
-      await page.goto('/socios');
+      await page.goto('/admin/socios');
       await page.getByRole('button', { name: 'Nuevo Socio' }).click();
     });
 
@@ -64,7 +64,7 @@ test(
 test('TC-039 · Validar la baja lógica de un socio', { tag: ['@US-14'] }, async ({ page, paso }) => {
   await paso('1. Como administrador, buscar al socio en Socios', async () => {
     await iniciarSesion(page, USUARIOS.admin);
-    await page.goto('/socios');
+    await page.goto('/admin/socios');
     const fila = await buscarSocio(page);
     await expect(fila).toContainText('Activo');
   });
@@ -89,7 +89,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Como administrador, filtrar Socios por «Activos»', async () => {
       await iniciarSesion(page, USUARIOS.admin);
-      await page.goto('/socios');
+      await page.goto('/admin/socios');
       await page.getByRole('tab', { name: /Activos/ }).click();
       await page.getByPlaceholder('Buscar por nombre, apellido o DNI...').fill(socio.dni);
       await expect(page.getByRole('row').filter({ hasText: socio.apellido })).toHaveCount(0);
