@@ -15,11 +15,12 @@ import {
 } from '@/features/disciplinas/types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import {
-  useCrearDocumentacion,
+  useSubirMiDocumentacion,
   useDocumentacionPorPersona,
   useEstadoDocumental,
 } from '@/features/documentacion/hooks/useDocumentacion';
 import type {
+  Documentacion,
   EstadoDeDocumento,
   EstadoDocumento,
   EstadoHabilitacion,
@@ -76,7 +77,13 @@ export function PortalDocumentacionPage() {
 
   const { data: estado, isLoading, isError } = useEstadoDocumental(personaId);
   const { data: historial } = useDocumentacionPorPersona(personaId);
-  const crear = useCrearDocumentacion();
+  const crear = useSubirMiDocumentacion();
+  // TASK-60: tipos que el titular ya mandó y esperan revisión (no se vuelven a pedir).
+  const enRevision = new Set(
+    (historial ?? [])
+      .filter((d) => d.estadoRevision === 'PENDIENTE_REVISION' && d.tipoDocumento)
+      .map((d) => d.tipoDocumento as TipoDocumentacionDisciplina),
+  );
 
   const [archivo, setArchivo] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
@@ -128,15 +135,15 @@ export function PortalDocumentacionPage() {
     }
 
     try {
+      // TASK-60: lo que sube el titular queda en revisión hasta que el club lo apruebe.
       await crear.mutateAsync({
         payload: {
           tipoDocumento: docSeleccionado.tipoDocumento,
           ...(fechaVencimiento ? { fechaVencimiento } : {}),
-          personaId,
         },
         archivo,
       });
-      toast.success('Documentación cargada correctamente.');
+      toast.success('Lo enviamos al club: queda en revisión hasta que lo aprueben.');
       cancelarCarga();
       setFileKey((k) => k + 1);
     } catch (error) {
@@ -191,7 +198,8 @@ export function PortalDocumentacionPage() {
                         </a>
                       )}
                     </span>
-                    <span className="text-slate-400 tabular-nums">
+                    <span className="flex flex-wrap items-center gap-2 text-slate-400 tabular-nums">
+                      <EstadoRevision doc={doc} />
                       {doc.fechaVencimiento
                         ? `Vence: ${isoADisplay(doc.fechaVencimiento)}`
                         : 'Sin vencimiento'}
@@ -292,7 +300,11 @@ export function PortalDocumentacionPage() {
                                   <PortalTag tone={docMeta.tone} dot>
                                     {docMeta.label}
                                   </PortalTag>
-                                  {doc.estado !== 'VIGENTE' && (
+                                  {doc.estado !== 'VIGENTE' && enRevision.has(doc.tipoDocumento) ? (
+                                    <PortalTag tone="pending" dot>
+                                      En revisión
+                                    </PortalTag>
+                                  ) : doc.estado !== 'VIGENTE' && (
                                     <PortalButton
                                       variant={isSelected ? 'primary' : 'secondary'}
                                       size="sm"
@@ -406,7 +418,8 @@ export function PortalDocumentacionPage() {
                         </a>
                       )}
                     </span>
-                    <span className="text-slate-400 tabular-nums">
+                    <span className="flex flex-wrap items-center gap-2 text-slate-400 tabular-nums">
+                      <EstadoRevision doc={doc} />
                       {doc.fechaVencimiento
                         ? `Vence: ${isoADisplay(doc.fechaVencimiento)}`
                         : 'Sin vencimiento'}
@@ -420,4 +433,26 @@ export function PortalDocumentacionPage() {
       )}
     </div>
   );
+}
+
+/** TASK-60: estado de revisión de un documento que subió el titular. */
+function EstadoRevision({ doc }: { doc: Documentacion }) {
+  if (doc.estadoRevision === 'PENDIENTE_REVISION') {
+    return (
+      <PortalTag tone="pending" dot>
+        En revisión
+      </PortalTag>
+    );
+  }
+  if (doc.estadoRevision === 'RECHAZADO') {
+    return (
+      <span className="inline-flex flex-wrap items-center gap-1.5" title={doc.motivoRechazo ?? undefined}>
+        <PortalTag tone="danger" dot>
+          Rechazado
+        </PortalTag>
+        {doc.motivoRechazo && <span className="text-rose-300/90">{doc.motivoRechazo}</span>}
+      </span>
+    );
+  }
+  return null;
 }

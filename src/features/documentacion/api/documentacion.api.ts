@@ -3,7 +3,9 @@ import type {
   AlertaDocumentacion,
   CrearDocumentacionPayload,
   Documentacion,
+  DocumentoPendienteRevision,
   EstadoDocumentalPersona,
+  SubirMiDocumentacionPayload,
 } from '../types';
 
 export const documentacionApi = {
@@ -17,6 +19,34 @@ export const documentacionApi = {
     const { data } = await apiClient.post<Documentacion>('/documentacion', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return data;
+  },
+
+  /** TASK-60: el titular sube su documento; queda en revisión. */
+  async subirMiDocumentacion(payload: SubirMiDocumentacionPayload, archivo: File): Promise<Documentacion> {
+    const form = new FormData();
+    form.append('tipoDocumento', payload.tipoDocumento);
+    if (payload.fechaVencimiento) form.append('fechaVencimiento', payload.fechaVencimiento);
+    form.append('archivo', archivo);
+    const { data } = await apiClient.post<Documentacion>('/documentacion/mi-documentacion', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
+
+  /** TASK-60: documentos que subieron los titulares y esperan revisión. */
+  async pendientesRevision(): Promise<DocumentoPendienteRevision[]> {
+    const { data } = await apiClient.get<DocumentoPendienteRevision[]>('/documentacion/pendientes-revision');
+    return data;
+  },
+
+  async aprobar(id: number): Promise<Documentacion> {
+    const { data } = await apiClient.patch<Documentacion>(`/documentacion/${id}/aprobar`);
+    return data;
+  },
+
+  async rechazar(id: number, motivo: string): Promise<Documentacion> {
+    const { data } = await apiClient.patch<Documentacion>(`/documentacion/${id}/rechazar`, { motivo });
     return data;
   },
 

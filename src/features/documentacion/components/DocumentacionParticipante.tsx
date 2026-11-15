@@ -7,7 +7,7 @@ import { requiereVencimiento, type TipoDocumentacionDisciplina } from '@/feature
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCrearDocumentacion, useDocumentacionPorPersona, useEstadoDocumental } from '../hooks/useDocumentacion';
 import type { EstadoDeDocumento, EstadoDocumentalInscripcion } from '../types';
-import { EstadoDocumentoBadge, EstadoHabilitacionBadge } from './EstadoBadges';
+import { EstadoDocumentoBadge, EstadoHabilitacionBadge, EstadoRevisionBadge } from './EstadoBadges';
 import { ModalHabilitacionExcepcional } from './ModalHabilitacionExcepcional';
 
 /** Fecha local de hoy (YYYY-MM-DD) como mínimo del calendario. */
@@ -146,6 +146,7 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                         (ver archivo)
                       </a>
                     )}
+                    <EstadoRevisionBadge doc={doc} />
                   </span>
                   <span className="shrink-0 text-slate-500">
                     {doc.fechaVencimiento ? `Vence: ${isoADisplay(doc.fechaVencimiento)}` : 'Sin vencimiento'}
@@ -323,6 +324,7 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                       (ver archivo)
                     </a>
                   )}
+                  <EstadoRevisionBadge doc={doc} />
                 </span>
                 <span className="shrink-0 text-slate-500">
                   {doc.fechaVencimiento ? `Vence: ${isoADisplay(doc.fechaVencimiento)}` : 'Sin vencimiento'}

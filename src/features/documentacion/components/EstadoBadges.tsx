@@ -1,5 +1,5 @@
 import { Badge, type BadgeVariant } from '@/components/ui';
-import type { EstadoDocumento, EstadoHabilitacion } from '../types';
+import type { Documentacion, EstadoDocumento, EstadoHabilitacion } from '../types';
 
 const HABILITACION: Record<EstadoHabilitacion, { texto: string; variante: BadgeVariant }> = {
   HABILITADO: { texto: 'Habilitado', variante: 'success' },
@@ -28,4 +28,26 @@ export function EstadoHabilitacionBadge({ estado, title }: { estado: EstadoHabil
 export function EstadoDocumentoBadge({ estado }: { estado: EstadoDocumento }) {
   const { texto, variante } = DOCUMENTO[estado];
   return <Badge variant={variante}>{texto}</Badge>;
+}
+
+/**
+ * TASK-60: lo que subió el titular desde Mi club. Mientras está en revisión o
+ * si fue rechazado no cuenta para la habilitación.
+ */
+export function EstadoRevisionBadge({ doc }: { doc: Pick<Documentacion, 'estadoRevision' | 'motivoRechazo'> }) {
+  if (doc.estadoRevision === 'PENDIENTE_REVISION') {
+    return (
+      <Badge variant="warning" className="ml-2">
+        En revisión
+      </Badge>
+    );
+  }
+  if (doc.estadoRevision === 'RECHAZADO') {
+    return (
+      <Badge variant="danger" className="ml-2" title={doc.motivoRechazo ?? undefined}>
+        Rechazado
+      </Badge>
+    );
+  }
+  return null;
 }

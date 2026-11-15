@@ -11,6 +11,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { AlertasDocumentacion } from '@/features/documentacion/components/AlertasDocumentacion';
+import { DocumentosParaRevisar } from '@/features/documentacion/components/DocumentosParaRevisar';
 import { ROUTES } from '@/routes/paths';
 
 const modulos = [
@@ -94,6 +95,8 @@ function PanelAdministracion() {
         </div>
       </div>
 
+      {/* TASK-60: lo que subieron los titulares desde Mi club (ADMIN). */}
+      {veAlertas && <DocumentosParaRevisar />}
       {veAlertas && <AlertasDocumentacion />}
 
       {/* Grid de módulos con estilo Apex */}
@@ -166,6 +169,8 @@ function PanelDelegado() {
         </Button>
       </div>
 
+      {/* TASK-60: lo que subieron los titulares de sus disciplinas. */}
+      <DocumentosParaRevisar />
       <AlertasDocumentacion />
     </div>
   );
