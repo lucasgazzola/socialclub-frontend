@@ -55,7 +55,10 @@ interface CeldaDatoSocio {
 export function PortalInicioPage() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
-  const { data: eventosData } = useEventos({ pagina: 1, porPagina: 2, ordenar: 'fecha' });
+  // TASK-60: «Agenda del club» muestra el próximo evento, no uno ya realizado.
+  const hoy = new Date();
+  const desde = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  const { data: eventosData } = useEventos({ pagina: 1, porPagina: 2, ordenar: 'fecha', fechaDesde: desde });
 
   if (!usuario) return null;
 

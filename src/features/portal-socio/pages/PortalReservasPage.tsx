@@ -72,6 +72,12 @@ export function PortalReservasPage() {
       <PortalTitleBar
         title="Mis reservas"
         summary="Seguí el estado de tus solicitudes de espacios del club y aboná señas pendientes."
+        actions={
+          // US-59: la solicitud usa la pantalla de reservas existente.
+          <PortalButton variant="primary" size="sm" onClick={() => navigate(ROUTES.solicitarReserva)}>
+            Solicitar reserva
+          </PortalButton>
+        }
       />
 
       {isLoading ? (

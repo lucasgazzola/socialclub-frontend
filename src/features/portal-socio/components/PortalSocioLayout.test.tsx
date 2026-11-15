@@ -54,7 +54,7 @@ describe('PortalSocioLayout', () => {
     expect(screen.getByText('Lucía Vázquez')).toBeInTheDocument();
     expect(screen.getByText('Socio · Cuota General')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: /Menú del portal de socio/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Mi perfil/i })).toHaveAttribute('href', ROUTES.dashboard);
+    expect(screen.getByRole('link', { name: /^Inicio$/i })).toHaveAttribute('href', ROUTES.miClub);
     expect(screen.getByRole('link', { name: /Mis cuotas/i })).toHaveAttribute('href', ROUTES.misCuotas);
     expect(screen.getByRole('link', { name: /Eventos/i })).toHaveAttribute('href', ROUTES.eventos);
     expect(screen.getByRole('link', { name: /Disciplinas/i })).toHaveAttribute('href', ROUTES.solicitarInscripcion);
@@ -68,6 +68,7 @@ describe('PortalSocioLayout', () => {
     await user.click(screen.getByRole('button', { name: /Cerrar sesión/i }));
 
     expect(mockLogout).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.login);
+    // TASK-60: al salir se vuelve a la landing (el login no recuerda la ruta anterior).
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.inicio, { replace: true });
   });
 });

@@ -82,7 +82,7 @@ export function PortalResultadoPagoPage() {
         />
         <Acciones>
           <Link
-            to={ROUTES.dashboard}
+            to={ROUTES.miClub}
             className="inline-flex h-9 items-center rounded-[2px] border border-slate-300/[0.16] bg-[#101827] px-4 text-sm font-medium text-slate-100 hover:border-blue-400/40"
           >
             Ir al inicio

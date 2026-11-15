@@ -18,6 +18,8 @@ import {
   PortalTag,
   PortalTitleBar,
 } from '../components/PortalUI';
+import { useLocation } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 
 type TabView = 'catalogo' | 'solicitudes';
 
@@ -26,6 +28,7 @@ const ESTADO_SOLICITUD_TONE: Record<
   { label: string; tone: 'active' | 'pending' | 'danger' | 'neutral' }
 > = {
   PENDIENTE: { label: 'Pendiente', tone: 'pending' },
+  PENDIENTE_DOCUMENTACION: { label: 'Falta documentación', tone: 'pending' },
   APROBADA: { label: 'Aprobada', tone: 'active' },
   RECHAZADA: { label: 'Rechazada', tone: 'danger' },
   CANCELADA: { label: 'Cancelada', tone: 'neutral' },
@@ -35,7 +38,11 @@ const ESTADO_SOLICITUD_TONE: Record<
  * Disciplinas e inscripción propias del portal de socios: tarjetas afiladas + lista de postulaciones sin tabla admin.
  */
 export function PortalInscripcionPage() {
-  const [tabActual, setTabActual] = useState<TabView>('catalogo');
+  const { pathname } = useLocation();
+  // TASK-60: /mi-club/disciplinas/solicitudes abre directo en «Mis solicitudes».
+  const [tabActual, setTabActual] = useState<TabView>(
+    pathname === ROUTES.misSolicitudesInscripcion ? 'solicitudes' : 'catalogo',
+  );
   const [disciplinaSeleccionada, setDisciplinaSeleccionada] =
     useState<DisciplinaCatalogo | null>(null);
 

@@ -7,7 +7,9 @@ import {
   CreditCard,
   Dumbbell,
   FileText,
+  Globe,
   KeyRound,
+  LayoutDashboard,
   LogOut,
   Menu,
   Ticket,
@@ -18,7 +20,8 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ROUTES } from '@/routes/paths';
+import { ROUTES, esDeGestion } from '@/routes/paths';
+import { CLUB } from '@/config/club';
 import { cn } from '@/lib/utils/cn';
 import { PortalBrandLogo } from './PortalUI';
 
@@ -32,7 +35,7 @@ interface AsideNavItem {
 }
 
 const PORTAL_ASIDE_LINKS: AsideNavItem[] = [
-  { to: ROUTES.dashboard, label: 'Mi perfil', icon: User, end: true },
+  { to: ROUTES.miClub, label: 'Inicio', icon: User, end: true },
   { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
   { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays },
@@ -109,9 +112,19 @@ export function PortalSocioLayout() {
 
   async function handleLogout() {
     setDrawerAbierto(false);
+    // TASK-60: primero a la landing, así el login no «recuerda» la página del usuario que salió.
+    navigate(ROUTES.inicio, { replace: true });
     await logout();
-    navigate(ROUTES.login);
   }
+
+  // TASK-60: quien además tiene un rol de gestión puede ir al panel; todos, al sitio del club.
+  const linksCuenta: AsideNavItem[] = [
+    ...PORTAL_ACCOUNT_LINKS,
+    ...(esDeGestion(usuario?.roles)
+      ? [{ to: ROUTES.dashboard, label: 'Panel de gestión', icon: LayoutDashboard }]
+      : []),
+    { to: ROUTES.inicio, label: 'Sitio del club', icon: Globe },
+  ];
 
   function renderAsideContent(onNavigate?: () => void) {
     return (
@@ -181,7 +194,7 @@ export function PortalSocioLayout() {
             </NavLink>
           ))}
 
-          {PORTAL_ACCOUNT_LINKS.map(({ to, label, icon: Icon }) => (
+          {linksCuenta.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -264,10 +277,10 @@ export function PortalSocioLayout() {
               <Menu size={16} />
             </button>
 
-            <NavLink to={ROUTES.dashboard} className="flex items-center gap-2.5">
+            <NavLink to={ROUTES.miClub} className="flex items-center gap-2.5">
               <PortalBrandLogo size={28} />
               <span className="text-[15px] font-semibold tracking-[-0.02em] text-white">
-                SocialClub
+                {CLUB.nombreCorto}
               </span>
             </NavLink>
           </div>
@@ -294,7 +307,7 @@ export function PortalSocioLayout() {
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <PortalBrandLogo size={24} />
-                  <span className="text-sm font-semibold text-white">SocialClub</span>
+                  <span className="text-sm font-semibold text-white">{CLUB.nombreCorto}</span>
                 </div>
                 <button
                   type="button"
@@ -326,7 +339,7 @@ export function PortalSocioLayout() {
       <footer className="border-t border-white/[0.07] bg-[#03060c]">
         <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-slate-500 sm:px-6 lg:px-8">
           <span className="font-medium text-slate-400">Club Digital</span>
-          <span className="tabular-nums">© {new Date().getFullYear()} SocialClub · Todos los derechos reservados</span>
+          <span className="tabular-nums">© {new Date().getFullYear()} {CLUB.nombre} · Plataforma SocialClub</span>
         </div>
       </footer>
     </div>
