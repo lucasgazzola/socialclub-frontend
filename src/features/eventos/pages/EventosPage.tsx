@@ -11,7 +11,15 @@ import type { Evento } from '../types';
 
 const POR_PAGINA = 5;
 
-export function EventosPage() {
+interface EventosPageProps {
+  /**
+   * TASK-60: «gestion» en el panel (alta, edición y borradores para ADMIN);
+   * «socio» en Mi club, donde solo se exploran eventos y se compran entradas.
+   */
+  modo?: 'gestion' | 'socio';
+}
+
+export function EventosPage({ modo = 'gestion' }: EventosPageProps) {
   const [modalCrearAbierto, setModalCrearAbierto] = useState(false);
   const [eventoEditando, setEventoEditando] = useState<Evento | null>(null);
   const [eventoDetalle, setEventoDetalle] = useState<Evento | null>(null);
@@ -23,7 +31,7 @@ export function EventosPage() {
   const [incluirBorradores, setIncluirBorradores] = useState(false);
 
   const { usuario } = useAuth();
-  const esAdmin = usuario?.roles.includes('ADMIN') ?? false;
+  const esAdmin = modo === 'gestion' && (usuario?.roles.includes('ADMIN') ?? false);
 
   const params: FiltrarEventosParams = {
     pagina,
@@ -84,7 +92,11 @@ export function EventosPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Eventos</h1>
-          <p className="mt-1 text-sm text-slate-500">Gestioná y explorá los eventos del club.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {modo === 'gestion'
+              ? 'Gestioná y explorá los eventos del club.'
+              : 'Elegí un evento y comprá tus entradas online.'}
+          </p>
         </div>
         {puedeCrearEvento && (
           <Button onClick={() => setModalCrearAbierto(true)} className="self-start shadow-xs sm:self-auto">
