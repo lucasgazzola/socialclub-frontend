@@ -48,16 +48,10 @@ describe('TASK-51 · API de la pasarela', () => {
   });
 });
 
-describe('TASK-51 · breadcrumbs de las páginas de pago', () => {
-  it('resultado y simulador cuelgan del inicio (no de una ruta /pagos inexistente)', async () => {
-    const { resolverBreadcrumbs } = await import('@/components/ui/breadcrumbs.utils');
-    expect(resolverBreadcrumbs('/pagos/resultado').map((b) => b.label)).toEqual([
-      'Inicio',
-      'Resultado del Pago',
-    ]);
-    expect(resolverBreadcrumbs('/pagos/simulador').map((b) => b.label)).toEqual([
-      'Inicio',
-      'Simulador de Pago',
-    ]);
+describe('TASK-51 · TASK-60 · rutas de las páginas de pago', () => {
+  it('resultado y simulador siguen en /pagos (la API arma esos links), fuera del panel', async () => {
+    const { ROUTES } = await import('@/routes/paths');
+    expect(ROUTES.resultadoPago).toBe('/pagos/resultado');
+    expect(ROUTES.simuladorPago).toBe('/pagos/simulador');
   });
 });

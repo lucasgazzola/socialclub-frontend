@@ -236,13 +236,13 @@ describe('US-63 — Solicitar inscripción a una disciplina', () => {
     await user.click(screen.getByRole('tab', { name: /Mis solicitudes/i }));
     await waitFor(() => {
       expect(api.obtenerMisSolicitudesInscripcion).toHaveBeenCalledTimes(2);
-      expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/inscripcion/mis-solicitudes');
+      expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/mi-club/disciplinas/solicitudes');
     });
 
     await user.click(screen.getByRole('tab', { name: /Catálogo de disciplinas/i }));
     await waitFor(() => {
       expect(api.obtenerCatalogoInscripcion).toHaveBeenCalledTimes(3);
-      expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/inscripcion/solicitar');
+      expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/mi-club/disciplinas/solicitar');
     });
   });
 });

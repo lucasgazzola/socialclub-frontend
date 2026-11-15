@@ -10,6 +10,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    Navigate: ({ to }: { to: string }) => <div data-testid="navigate-mock">{to}</div>,
   };
 });
 
@@ -53,7 +54,7 @@ describe('DashboardPage', () => {
     expect(screen.queryByRole('button', { name: /Hacerme socio/i })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Ver participantes/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/participantes');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/participantes');
   });
 
   it('renderiza panel de administración para usuario ADMIN y permite navegar a módulos', async () => {
@@ -74,57 +75,18 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Participantes')).toBeInTheDocument();
 
     await user.click(screen.getByText('Socios'));
-    expect(mockNavigate).toHaveBeenCalledWith('/socios');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/socios');
 
     await user.click(screen.getByRole('button', { name: /Mi cuenta/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/perfil');
+    expect(mockNavigate).toHaveBeenCalledWith('/mi-club/perfil');
   });
 
-  it('renderiza panel de socio cuando tiene membresía activa', async () => {
-    const user = userEvent.setup();
-    mockUsuario = {
-      id: 2,
-      nombre: 'Martin',
-      roles: ['SOCIO'],
-      persona: {
-        dni: '38111222',
-        membresias: [
-          {
-            id: 10,
-            activo: true,
-            categoria: { nombre: 'Pleno' },
-            fechaAlta: '2026-01-15T00:00:00Z',
-          },
-        ],
-      },
-    };
-
+  it.each([
+    ['un socio con membresía activa', { id: 2, nombre: 'Martin', roles: ['SOCIO'], persona: { membresias: [{ id: 10, activo: true }] } }],
+    ['un participante o usuario sin roles', { id: 3, nombre: 'Lucia', roles: [], persona: null }],
+  ])('TASK-60 · %s tiene su inicio en Mi club', (_caso, usuario) => {
+    mockUsuario = usuario;
     renderWithProviders(<DashboardPage />);
-
-    expect(screen.getByText('Membresía Activa')).toBeInTheDocument();
-    expect(screen.getByText(/Hola, Martin/i)).toBeInTheDocument();
-    expect(screen.getByText('Pleno')).toBeInTheDocument();
-    expect(screen.getByText('38.111.222')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /Editar mis datos/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/perfil');
-  });
-
-  it('renderiza pantalla neutra con invitación a ser socio si no tiene roles ni membresía', async () => {
-    const user = userEvent.setup();
-    mockUsuario = {
-      id: 3,
-      nombre: 'Lucia',
-      roles: ['USUARIO'],
-      persona: null,
-    };
-
-    renderWithProviders(<DashboardPage />);
-
-    expect(screen.getByText('Sumate al club')).toBeInTheDocument();
-
-    const hacermeSocioBtn = screen.getByRole('button', { name: /Hacerme socio/i });
-    await user.click(hacermeSocioBtn);
-    expect(mockNavigate).toHaveBeenCalledWith('/hacerme-socio');
+    expect(screen.getByTestId('navigate-mock')).toHaveTextContent('/mi-club');
   });
 });

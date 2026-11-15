@@ -144,7 +144,7 @@ describe('EditarParticipanteModal', () => {
 
     const btnSocio = screen.getByRole('button', { name: /Ir a editar socio/i });
     await user.click(btnSocio);
-    expect(mockNavigate).toHaveBeenCalledWith('/socios?editar=5');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/socios?editar=5');
   });
 
   it('permite cambiar a la pestaña de documentación', async () => {

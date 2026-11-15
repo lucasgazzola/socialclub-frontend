@@ -66,7 +66,7 @@ describe('TASK-51 · ResultadoPagoPage', () => {
     expect(await screen.findByTestId('pago-aprobado')).toBeInTheDocument();
     expect(mockConfirmar).toHaveBeenCalledWith(REF, '999');
     expect(screen.getByText(/Cuota social 2026-10 · \$12\.000,00/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Ver mis cuotas' })).toHaveAttribute('href', '/mis-cuotas');
+    expect(screen.getByRole('link', { name: 'Ver mis cuotas' })).toHaveAttribute('href', '/mi-club/cuotas');
   });
 
   it('una compra de entradas aprobada lleva a «Mis entradas»', async () => {
@@ -76,7 +76,7 @@ describe('TASK-51 · ResultadoPagoPage', () => {
 
     expect(await screen.findByRole('link', { name: 'Ver mis entradas' })).toHaveAttribute(
       'href',
-      '/mis-entradas',
+      '/mi-club/entradas',
     );
     // Sin payment_id (o con "null", como manda MP al desistir) busca por la referencia.
     expect(mockConfirmar).toHaveBeenCalledWith(REF, undefined);

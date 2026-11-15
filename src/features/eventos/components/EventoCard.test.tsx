@@ -37,7 +37,7 @@ describe('EventoCard', () => {
     expect(screen.getByText('Gratis')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /comprar entradas/i })).toHaveAttribute(
       'href',
-      '/eventos/42/entradas',
+      '/mi-club/eventos/42/entradas',
     );
   });
 

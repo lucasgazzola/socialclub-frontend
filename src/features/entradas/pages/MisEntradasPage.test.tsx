@@ -1,259 +1,199 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/test-utils';
 import { MisEntradasPage } from './MisEntradasPage';
+import type { Entrada, FiltrosMisEntradas } from '../types';
 
 const mockUseMisEntradas = vi.fn();
 vi.mock('../hooks/useEntradas', () => ({
-  useMisEntradas: (params?: unknown) => mockUseMisEntradas(params),
+  useMisEntradas: (params?: FiltrosMisEntradas) => mockUseMisEntradas(params),
 }));
 
 vi.mock('../components/QRCode', () => ({
   QRCode: ({ value }: { value: string }) => <div data-testid="qr-code">{value}</div>,
 }));
 
-vi.mock('qrcode', () => ({
-  default: {
-    toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,mockqrdata'),
-  },
+const mockDescargarPdf = vi.fn();
+const mockDescargarTodas = vi.fn();
+const mockDescargarQr = vi.fn();
+vi.mock('../utils/descargarEntradaPdf', () => ({
+  descargarEntradaPdf: (...args: unknown[]) => mockDescargarPdf(...args),
+  descargarTodasEntradasPdf: (...args: unknown[]) => mockDescargarTodas(...args),
+  descargarQR: (...args: unknown[]) => mockDescargarQr(...args),
 }));
 
-const mockSave = vi.fn();
-vi.mock('jspdf', () => {
-  class MockJsPDF {
-    save = mockSave;
-    addPage = vi.fn();
-    text = vi.fn();
-    addImage = vi.fn();
-    roundedRect = vi.fn();
-    line = vi.fn();
-    setFont = vi.fn();
-    setFontSize = vi.fn();
-    setTextColor = vi.fn();
-    setDrawColor = vi.fn();
-    setFillColor = vi.fn();
-    setLineDashPattern = vi.fn();
-    splitTextToSize = vi.fn((text: string) => [text]);
-  }
-  return {
-    jsPDF: MockJsPDF,
-  };
-});
+const MAÑANA = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+const SEMANA_PASADA = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-describe('MisEntradasPage', () => {
+function entrada(id: number, extra: Partial<Entrada> = {}, evento: Partial<NonNullable<Entrada['evento']>> = {}): Entrada {
+  return {
+    id,
+    token: `token-${id}-abcdef`,
+    eventoId: 7,
+    estado: 'VALIDA',
+    creadoEn: SEMANA_PASADA,
+    ...extra,
+    evento: {
+      id: 7,
+      nombre: 'Peña aniversario',
+      entradasDisponibles: 10,
+      entradasVendidas: 2,
+      creadoEn: SEMANA_PASADA,
+      actualizadoEn: SEMANA_PASADA,
+      estado: 'PUBLICADO',
+      fechaEvento: MAÑANA,
+      lugarAcreditacion: 'Salón del club',
+      ...evento,
+    },
+  } as Entrada;
+}
+
+function pagina(items: Entrada[], total = items.length) {
+  return { data: { items, total, pagina: 1, porPagina: 50, totalPaginas: 1 }, isLoading: false, isError: false, isFetching: false };
+}
+
+/** Responde distinto según la pestaña que pide el hook. */
+function mockPorVigencia(proximas: ReturnType<typeof pagina>, historial: ReturnType<typeof pagina>) {
+  mockUseMisEntradas.mockImplementation((params?: FiltrosMisEntradas) =>
+    params?.vigencia === 'HISTORIAL' ? historial : proximas,
+  );
+}
+
+describe('US-52 · TASK-60 · MisEntradasPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('muestra spinner cuando está cargando', () => {
-    mockUseMisEntradas.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-    });
-
-    const { container } = renderWithProviders(<MisEntradasPage />);
-
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
-  });
-
-  it('muestra mensaje de error si falla la consulta', () => {
-    mockUseMisEntradas.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-    });
+  it('pide las próximas y el historial por separado y muestra cuántas hay en cada pestaña', () => {
+    mockPorVigencia(pagina([entrada(1)]), pagina([], 4));
 
     renderWithProviders(<MisEntradasPage />);
 
-    expect(screen.getByText('No se pudieron cargar tus entradas.')).toBeInTheDocument();
+    expect(mockUseMisEntradas).toHaveBeenCalledWith(expect.objectContaining({ vigencia: 'PROXIMAS', limit: 50 }));
+    expect(mockUseMisEntradas).toHaveBeenCalledWith(expect.objectContaining({ vigencia: 'HISTORIAL' }));
+    expect(screen.getByRole('tab', { name: /Próximas/ })).toHaveTextContent('1');
+    expect(screen.getByRole('tab', { name: /Historial/ })).toHaveTextContent('4');
   });
 
-  it('muestra estado vacío si el usuario no tiene entradas', () => {
-    mockUseMisEntradas.mockReturnValue({
-      data: { items: [], total: 0, pagina: 1, porPagina: 10, totalPaginas: 1 },
-      isLoading: false,
-      isError: false,
-    });
+  it('muestra un esqueleto mientras carga', () => {
+    mockUseMisEntradas.mockReturnValue({ data: undefined, isLoading: true, isError: false });
 
     renderWithProviders(<MisEntradasPage />);
 
-    expect(screen.getByText('Todavía no tenés entradas adquiridas.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Cargando entradas')).toHaveAttribute('aria-busy', 'true');
   });
 
-  it('renderiza la lista de entradas válidas con badges y permite descargar QR en PNG y en PDF', async () => {
+  it('muestra un error si falla la consulta', () => {
+    mockUseMisEntradas.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+
+    renderWithProviders(<MisEntradasPage />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('No se pudieron cargar tus entradas');
+  });
+
+  it('sin entradas próximas invita a ver los eventos', () => {
+    mockPorVigencia(pagina([]), pagina([]));
+
+    renderWithProviders(<MisEntradasPage />);
+
+    expect(screen.getByText('No tenés entradas para próximos eventos')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver eventos' })).toHaveAttribute('href', '/mi-club/eventos');
+  });
+
+  it('agrupa las entradas del mismo evento en una tarjeta con carrusel de QR', async () => {
     const user = userEvent.setup();
-    const mockData = {
-      items: [
-        {
-          id: 1,
-          token: 'token-12345678-abcd',
-          estado: 'VALIDA',
-          evento: { nombre: 'Torneo Apertura' },
-        },
-        {
-          id: 2,
-          token: 'token-87654321-efgh',
-          estado: 'VALIDA',
-          evento: null,
-        },
-      ],
-      total: 2,
-      pagina: 1,
-      porPagina: 10,
-      totalPaginas: 1,
-    };
-
-    mockUseMisEntradas.mockReturnValue({
-      data: mockData,
-      isLoading: false,
-      isError: false,
-    });
-
-    const clickSpy = vi.fn();
-    const createElementOriginal = document.createElement.bind(document);
-    vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
-      const el = createElementOriginal(tagName);
-      if (tagName === 'a') {
-        el.click = clickSpy;
-      }
-      return el;
-    });
+    mockPorVigencia(pagina([entrada(1), entrada(2)]), pagina([]));
 
     renderWithProviders(<MisEntradasPage />);
 
-    expect(screen.getByText('Torneo Apertura')).toBeInTheDocument();
-    expect(screen.getByText('Evento')).toBeInTheDocument();
-    expect(screen.getAllByText('Válida')).toHaveLength(2);
-    expect(screen.getAllByText('token-12345678-abcd').length).toBeGreaterThan(0);
+    const tarjeta = screen.getByTestId('entradas-evento-7');
+    expect(within(tarjeta).getByText('2 entradas')).toBeInTheDocument();
+    expect(within(tarjeta).getByTestId('qr-code')).toHaveTextContent('token-1-abcdef');
 
-    const downloadQrButtons = screen.getAllByRole('button', { name: /Descargar QR/i });
-    expect(downloadQrButtons).toHaveLength(2);
-    expect(downloadQrButtons[0]).not.toBeDisabled();
-
-    await user.click(downloadQrButtons[0]);
-
-    await waitFor(() => {
-      expect(clickSpy).toHaveBeenCalled();
-    });
-
-    const downloadPdfButtons = screen.getAllByRole('button', { name: /Descargar PDF/i });
-    expect(downloadPdfButtons).toHaveLength(2);
-    expect(downloadPdfButtons[0]).not.toBeDisabled();
-
-    await user.click(downloadPdfButtons[0]);
-
-    await waitFor(() => {
-      expect(mockSave).toHaveBeenCalledWith('entrada-token-12.pdf');
-    });
+    await user.click(within(tarjeta).getByRole('button', { name: 'Entrada siguiente' }));
+    expect(within(tarjeta).getByTestId('qr-code')).toHaveTextContent('token-2-abcdef');
+    expect(within(tarjeta).getByText('2 de 2')).toBeInTheDocument();
   });
 
-  it('renderiza en gris y deshabilita los botones de descarga para entradas USADA y EXPIRADA (Vencida)', () => {
-    const mockData = {
-      items: [
-        {
-          id: 10,
-          token: 'token-usada-1111',
-          estado: 'USADA',
-          evento: { nombre: 'Fiesta de Fin de Año' },
-        },
-        {
-          id: 11,
-          token: 'token-expirada-2222',
-          estado: 'EXPIRADA',
-          evento: { nombre: 'Torneo Pasado' },
-        },
-      ],
-      total: 2,
-      pagina: 1,
-      porPagina: 10,
-      totalPaginas: 1,
-    };
-
-    mockUseMisEntradas.mockReturnValue({
-      data: mockData,
-      isLoading: false,
-      isError: false,
-    });
-
-    renderWithProviders(<MisEntradasPage />);
-
-    expect(screen.getByText('Usada')).toBeInTheDocument();
-    expect(screen.getByText('Vencida')).toBeInTheDocument();
-
-    const cardUsada = screen.getByTestId('entrada-card-10');
-    expect(cardUsada).toHaveClass('grayscale');
-
-    const cardExpirada = screen.getByTestId('entrada-card-11');
-    expect(cardExpirada).toHaveClass('grayscale');
-
-    const btnPdfUsada = screen.getByTestId('btn-descargar-pdf-10');
-    const btnQrUsada = screen.getByTestId('btn-descargar-qr-10');
-    expect(btnPdfUsada).toBeDisabled();
-    expect(btnQrUsada).toBeDisabled();
-
-    const btnPdfExpirada = screen.getByTestId('btn-descargar-pdf-11');
-    const btnQrExpirada = screen.getByTestId('btn-descargar-qr-11');
-    expect(btnPdfExpirada).toBeDisabled();
-    expect(btnQrExpirada).toBeDisabled();
-  });
-
-  it('permite buscar entradas por nombre de evento con debounce', async () => {
+  it('una entrada válida se ve como tal y se puede descargar (PDF con todas y QR)', async () => {
     const user = userEvent.setup();
-    mockUseMisEntradas.mockReturnValue({
-      data: { items: [], total: 0, pagina: 1, porPagina: 10, totalPaginas: 1 },
-      isLoading: false,
-      isError: false,
-    });
+    const e1 = entrada(1);
+    const e2 = entrada(2);
+    mockPorVigencia(pagina([e1, e2]), pagina([]));
 
     renderWithProviders(<MisEntradasPage />);
 
-    const searchInput = screen.getByTestId('buscar-entradas-input');
-    await user.type(searchInput, 'Pádel');
+    expect(screen.getByTestId('entrada-badge-1')).toHaveTextContent('Válida');
+    expect(screen.getByText('Lista para presentar en la puerta')).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(mockUseMisEntradas).toHaveBeenCalledWith(
-        expect.objectContaining({ search: 'Pádel' }),
-      );
-    });
+    await user.click(screen.getByRole('button', { name: /PDF con todas/ }));
+    expect(mockDescargarTodas).toHaveBeenCalledWith([e1, e2]);
+
+    await user.click(screen.getByRole('button', { name: 'Descargar el QR como imagen' }));
+    expect(mockDescargarQr).toHaveBeenCalledWith(e1);
   });
 
-  it('permite cambiar de página y de cantidad por página en TablePagination', async () => {
+  it('«Mostrar en la puerta» abre el QR en pantalla completa y Escape lo cierra', async () => {
     const user = userEvent.setup();
-    mockUseMisEntradas.mockReturnValue({
-      data: {
-        items: [
-          { id: 1, token: 'tok-1', estado: 'VALIDA', evento: { nombre: 'Torneo 1' } },
-        ],
-        total: 25,
-        pagina: 1,
-        porPagina: 10,
-        totalPaginas: 3,
-      },
-      isLoading: false,
-      isError: false,
-      isFetching: false,
-    });
+    mockPorVigencia(pagina([entrada(1), entrada(2)]), pagina([]));
 
     renderWithProviders(<MisEntradasPage />);
 
-    const btnSiguiente = screen.getByRole('button', { name: /Siguiente/i });
-    await user.click(btnSiguiente);
+    await user.click(screen.getByRole('button', { name: /Mostrar en la puerta/ }));
+    const dialogo = screen.getByRole('dialog', { name: /Peña aniversario/ });
+    expect(within(dialogo).getByText('Entrada 1 de 2')).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(mockUseMisEntradas).toHaveBeenCalledWith(
-        expect.objectContaining({ page: 2 }),
-      );
-    });
+    await user.click(within(dialogo).getByRole('button', { name: 'Entrada siguiente' }));
+    expect(within(dialogo).getByText('Entrada 2 de 2')).toBeInTheDocument();
 
-    const selectorFilas = screen.getByRole('combobox', { name: /Filas por página/i });
-    await user.selectOptions(selectorFilas, '20');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
 
-    await waitFor(() => {
-      expect(mockUseMisEntradas).toHaveBeenCalledWith(
-        expect.objectContaining({ limit: 20 }),
-      );
-    });
+  it('en el historial, usadas, vencidas y canceladas se diferencian y no se pueden descargar', async () => {
+    const user = userEvent.setup();
+    mockPorVigencia(
+      pagina([]),
+      pagina([
+        entrada(10, { estado: 'USADA', usadaEn: SEMANA_PASADA }, { id: 8, nombre: 'Cena', fechaEvento: SEMANA_PASADA }),
+        entrada(11, { estado: 'EXPIRADA', eventoId: 9 }, { id: 9, nombre: 'Torneo', fechaEvento: SEMANA_PASADA }),
+        entrada(12, { estado: 'EXPIRADA', eventoId: 10 }, { id: 10, nombre: 'Recital', estado: 'CANCELADO' }),
+      ]),
+    );
+    // Cada entrada es de un evento distinto.
+    renderWithProviders(<MisEntradasPage />);
+    await user.click(screen.getByRole('tab', { name: /Historial/ }));
+
+    expect(screen.getByTestId('entrada-badge-10')).toHaveTextContent('Usada');
+    expect(screen.getByText(/^Usada el /)).toBeInTheDocument();
+    expect(screen.getByTestId('entrada-badge-11')).toHaveTextContent('Vencida');
+    expect(screen.getByText('El evento ya terminó')).toBeInTheDocument();
+    expect(screen.getByTestId('entrada-badge-12')).toHaveTextContent('Cancelada');
+    expect(screen.getByText('El evento fue cancelado')).toBeInTheDocument();
+
+    // Sello sobre el QR y sin acciones de descarga ni pantalla completa.
+    expect(screen.getByText('USADA')).toBeInTheDocument();
+    expect(screen.getByText('VENCIDA')).toBeInTheDocument();
+    expect(screen.getByText('CANCELADA')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Mostrar en la puerta/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /PDF/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Descargar el QR como imagen' })).not.toBeInTheDocument();
+  });
+
+  it('busca por evento en la pestaña activa', async () => {
+    const user = userEvent.setup();
+    mockPorVigencia(pagina([entrada(1)]), pagina([]));
+
+    renderWithProviders(<MisEntradasPage />);
+    await user.type(screen.getByTestId('buscar-entradas-input'), 'Peña');
+
+    expect(
+      await vi.waitFor(() => {
+        const llamada = mockUseMisEntradas.mock.calls.find(([p]) => p?.search === 'Peña');
+        if (!llamada) throw new Error('todavía no buscó');
+        return llamada[0];
+      }),
+    ).toEqual(expect.objectContaining({ vigencia: 'PROXIMAS', search: 'Peña' }));
   });
 });

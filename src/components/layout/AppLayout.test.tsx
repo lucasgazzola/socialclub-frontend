@@ -39,7 +39,7 @@ describe('AppLayout', () => {
   });
 
   it('renderiza encabezado, usuario y enlaces de administración para ADMIN', () => {
-    renderWithProviders(<AppLayout />);
+    renderWithProviders(<AppLayout />, { ruta: '/admin' });
 
     expect(screen.getAllByText('SocialClub').length).toBeGreaterThan(0);
     expect(screen.getByText('Administrador Club')).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('AppLayout', () => {
 
   it('permite colapsar y expandir el sidebar', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<AppLayout />);
+    renderWithProviders(<AppLayout />, { ruta: '/admin' });
 
     const collapseBtn = screen.getByTitle(/Contraer menú/i);
     expect(collapseBtn).toBeInTheDocument();
@@ -73,7 +73,7 @@ describe('AppLayout', () => {
 
   it('permite colapsar una sección de navegación del menú', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<AppLayout />);
+    renderWithProviders(<AppLayout />, { ruta: '/admin' });
 
     const seccionBtn = screen.getByRole('button', { name: /Gestión Social/i });
     expect(screen.getByRole('link', { name: /Socios/i })).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('AppLayout', () => {
 
   it('ejecuta logout al hacer clic en el botón de cerrar sesión', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<AppLayout />);
+    renderWithProviders(<AppLayout />, { ruta: '/admin' });
 
     const logoutBtn = screen.getByTitle('Cerrar sesión');
     await user.click(logoutBtn);
@@ -95,20 +95,14 @@ describe('AppLayout', () => {
     expect(mockLogout).toHaveBeenCalled();
   });
 
-  it('muestra la opción "Hacerme socio" a un usuario sin membresía ni roles de gestión', () => {
-    mockUsuario = {
-      id: 2,
-      nombre: 'Usuario',
-      apellido: 'Comun',
-      email: 'user@club.com',
-      roles: ['USUARIO'],
-      persona: null,
-    };
+  it('TASK-60 · lo personal vive en Mi club: el menú no lo lista y el encabezado lleva a Mi club', () => {
+    renderWithProviders(<AppLayout />, { ruta: '/admin' });
 
-    renderWithProviders(<AppLayout />);
-
-    expect(screen.getByRole('link', { name: /Hacerme socio/i })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Auditoría/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^Mi club$/i })).toHaveAttribute('href', '/mi-club');
+    for (const personal of [/Mis cuotas/i, /Mis entradas/i, /Mis reservas/i, /Mi perfil/i, /Hacerme socio/i]) {
+      expect(screen.queryByRole('link', { name: personal })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole('link', { name: /^Eventos$/i })).toHaveAttribute('href', '/admin/eventos');
   });
 
   it('US-34 · muestra la entrada "Dashboard" en el menú lateral para ADMIN y COLABORADOR', () => {
@@ -121,10 +115,10 @@ describe('AppLayout', () => {
       persona: null,
     };
 
-    const { unmount } = renderWithProviders(<AppLayout />);
+    const { unmount } = renderWithProviders(<AppLayout />, { ruta: '/admin' });
     const linkAdmin = screen.getByRole('link', { name: /^Dashboard$/i });
     expect(linkAdmin).toBeInTheDocument();
-    expect(linkAdmin).toHaveAttribute('href', '/dashboard');
+    expect(linkAdmin).toHaveAttribute('href', '/admin/dashboard');
     unmount();
 
     mockUsuario = {
@@ -136,10 +130,10 @@ describe('AppLayout', () => {
       persona: null,
     };
 
-    renderWithProviders(<AppLayout />);
+    renderWithProviders(<AppLayout />, { ruta: '/admin' });
     const linkColab = screen.getByRole('link', { name: /^Dashboard$/i });
     expect(linkColab).toBeInTheDocument();
-    expect(linkColab).toHaveAttribute('href', '/dashboard');
+    expect(linkColab).toHaveAttribute('href', '/admin/dashboard');
   });
 
   it('US-34 · oculta la entrada "Dashboard" para DELEGADO y SOCIO', () => {
@@ -152,7 +146,7 @@ describe('AppLayout', () => {
       persona: null,
     };
 
-    const { unmount } = renderWithProviders(<AppLayout />);
+    const { unmount } = renderWithProviders(<AppLayout />, { ruta: '/admin' });
     expect(screen.queryByRole('link', { name: /^Dashboard$/i })).not.toBeInTheDocument();
     unmount();
 
@@ -165,7 +159,7 @@ describe('AppLayout', () => {
       persona: { membresias: [{ id: 1, activo: true }] },
     };
 
-    renderWithProviders(<AppLayout />);
+    renderWithProviders(<AppLayout />, { ruta: '/admin' });
     expect(screen.queryByRole('link', { name: /^Dashboard$/i })).not.toBeInTheDocument();
   });
 });

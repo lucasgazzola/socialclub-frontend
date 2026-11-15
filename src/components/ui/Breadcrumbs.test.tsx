@@ -6,13 +6,13 @@ import { ROUTES } from '@/routes/paths';
 
 describe('Breadcrumbs & resolverBreadcrumbs', () => {
   describe('resolverBreadcrumbs', () => {
-    it('no genera migas de pan en la ruta raíz (Dashboard)', () => {
-      const items = resolverBreadcrumbs('/');
-      expect(items).toEqual([]);
+    it('no genera migas de pan en el inicio del panel', () => {
+      expect(resolverBreadcrumbs('/admin')).toEqual([]);
+      expect(resolverBreadcrumbs('/')).toEqual([]);
     });
 
-    it('resuelve rutas de un solo nivel (ej. /socios)', () => {
-      const items = resolverBreadcrumbs('/socios');
+    it('resuelve rutas de un solo nivel (ej. /admin/socios)', () => {
+      const items = resolverBreadcrumbs('/admin/socios');
       expect(items).toEqual([
         { label: 'Inicio', to: ROUTES.dashboard },
         { label: 'Socios' },
@@ -20,7 +20,7 @@ describe('Breadcrumbs & resolverBreadcrumbs', () => {
     });
 
     it('resuelve jerarquía anidada de cuotas (ej. /cuotas/social/morosos)', () => {
-      const items = resolverBreadcrumbs('/cuotas/social/morosos');
+      const items = resolverBreadcrumbs('/admin/cuotas/social/morosos');
       expect(items).toEqual([
         { label: 'Inicio', to: ROUTES.dashboard },
         { label: 'Cuotas', to: ROUTES.cuotas },
@@ -30,7 +30,7 @@ describe('Breadcrumbs & resolverBreadcrumbs', () => {
     });
 
     it('resuelve jerarquía anidada de cuotas deportivas (ej. /cuotas/deportiva/cobrar)', () => {
-      const items = resolverBreadcrumbs('/cuotas/deportiva/cobrar');
+      const items = resolverBreadcrumbs('/admin/cuotas/deportiva/cobrar');
       expect(items).toEqual([
         { label: 'Inicio', to: ROUTES.dashboard },
         { label: 'Cuotas', to: ROUTES.cuotas },
@@ -40,7 +40,7 @@ describe('Breadcrumbs & resolverBreadcrumbs', () => {
     });
 
     it('resuelve rutas dinámicas con IDs (ej. /disciplinas/5/categorias)', () => {
-      const items = resolverBreadcrumbs('/disciplinas/5/categorias');
+      const items = resolverBreadcrumbs('/admin/disciplinas/5/categorias');
       expect(items).toEqual([
         { label: 'Inicio', to: ROUTES.dashboard },
         { label: 'Disciplinas', to: ROUTES.disciplinas },
@@ -48,17 +48,17 @@ describe('Breadcrumbs & resolverBreadcrumbs', () => {
       ]);
     });
 
-    it('resuelve compra de entradas a eventos dinámicos (ej. /eventos/12/entradas)', () => {
-      const items = resolverBreadcrumbs('/eventos/12/entradas');
+    it('resuelve la validación de QR de un evento (ej. /admin/eventos/12/validar)', () => {
+      const items = resolverBreadcrumbs('/admin/eventos/12/validar');
       expect(items).toEqual([
         { label: 'Inicio', to: ROUTES.dashboard },
-        { label: 'Eventos', to: ROUTES.eventos },
-        { label: 'Comprar Entradas' },
+        { label: 'Eventos', to: ROUTES.eventosAdmin },
+        { label: 'Validar QR' },
       ]);
     });
 
     it('genera fallback formateado para rutas no mapeadas explícitamente', () => {
-      const items = resolverBreadcrumbs('/modulo-nuevo');
+      const items = resolverBreadcrumbs('/admin/modulo-nuevo');
       expect(items).toEqual([
         { label: 'Inicio', to: ROUTES.dashboard },
         { label: 'Modulo Nuevo' },
@@ -79,7 +79,7 @@ describe('Breadcrumbs & resolverBreadcrumbs', () => {
 
     it('renderiza enlaces para ancestros y texto plano para la página activa', () => {
       render(
-        <MemoryRouter initialEntries={['/socios']}>
+        <MemoryRouter initialEntries={['/admin/socios']}>
           <Breadcrumbs />
         </MemoryRouter>,
       );
@@ -88,7 +88,7 @@ describe('Breadcrumbs & resolverBreadcrumbs', () => {
       expect(nav).toBeInTheDocument();
 
       const linkInicio = screen.getByRole('link', { name: /Inicio/i });
-      expect(linkInicio).toHaveAttribute('href', '/');
+      expect(linkInicio).toHaveAttribute('href', '/admin');
 
       const itemSocios = screen.getByText('Socios');
       expect(itemSocios.closest('[aria-current="page"]')).toBeInTheDocument();
@@ -97,16 +97,16 @@ describe('Breadcrumbs & resolverBreadcrumbs', () => {
 
     it('renderiza jerarquía completa para rutas multinivel', () => {
       render(
-        <MemoryRouter initialEntries={['/cuotas/social/morosos']}>
+        <MemoryRouter initialEntries={['/admin/cuotas/social/morosos']}>
           <Breadcrumbs />
         </MemoryRouter>,
       );
 
-      expect(screen.getByRole('link', { name: /Inicio/i })).toHaveAttribute('href', '/');
-      expect(screen.getByRole('link', { name: /Cuotas/i })).toHaveAttribute('href', '/cuotas');
+      expect(screen.getByRole('link', { name: /Inicio/i })).toHaveAttribute('href', '/admin');
+      expect(screen.getByRole('link', { name: /Cuotas/i })).toHaveAttribute('href', '/admin/cuotas');
       expect(screen.getByRole('link', { name: /Cuota Social/i })).toHaveAttribute(
         'href',
-        '/cuotas/social',
+        '/admin/cuotas/social',
       );
 
       const itemMorosos = screen.getByText('Morosos');
