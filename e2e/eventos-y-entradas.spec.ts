@@ -62,9 +62,9 @@ test(
     await paso('1. Como socio, abrir el evento y elegir 2 entradas', async () => {
       await iniciarSesion(page, USUARIOS.socio);
       await page.goto('/mi-club/eventos');
-      await page.getByPlaceholder('buscar por nombre o descripción…').fill(evento.nombre);
-      const tarjeta = page.getByRole('article').filter({ hasText: evento.nombre });
-      await tarjeta.getByRole('button', { name: 'Comprar entradas' }).click();
+      await page.getByPlaceholder('Buscar evento o sede…').fill(evento.nombre);
+      await expect(page.getByText(evento.nombre)).toBeVisible();
+      await page.getByRole('link', { name: 'Entradas', exact: true }).click();
       await expect(page.getByRole('heading', { name: 'Comprar entradas' })).toBeVisible();
       await page.getByLabel('Cantidad').fill('2');
     });
@@ -88,10 +88,12 @@ test(
     });
 
     await paso('4. En «Mis entradas» las dos entradas nuevas están agrupadas, cada una con su QR y su token', async () => {
-      await page.getByRole('button', { name: 'Ver mis entradas' }).click();
+      await page.getByTestId('pago-ir-a-destino').click();
       await expect(page.getByRole('heading', { name: 'Mis entradas', exact: true })).toBeVisible();
       // TASK-60: las entradas de un mismo evento van en una tarjeta con carrusel de QR.
       await page.getByTestId('buscar-entradas-input').fill(evento.nombre);
+      // El buscador filtra con un pequeño retardo: esperar a que solo queden las 2 del evento.
+      await expect(page.getByRole('tab', { name: /Próximas/ })).toContainText('2');
       const tarjeta = page.getByRole('article', { name: `Entradas para ${evento.nombre}` });
       await expect(tarjeta).toContainText('2 entradas');
       await expect(tarjeta).toContainText('Válida');

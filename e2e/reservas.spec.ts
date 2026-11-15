@@ -120,9 +120,9 @@ test(
   'TC-286 · Consultar «Mis Reservas» con el estado y el detalle de cada solicitud',
   { tag: ['@US-62'] },
   async ({ page, paso }) => {
-    await paso('1. Como socia, abrir «Reservas» desde el menú de Mi club', async () => {
+    await paso('1. Como socia, abrir «Mis reservas» desde el menú de Mi club', async () => {
       await iniciarSesion(page, USUARIOS.socio);
-      await page.getByRole('navigation', { name: 'Secciones de Mi club' }).first().getByRole('link', { name: 'Reservas' }).click();
+      await page.getByRole('navigation', { name: 'Menú del portal de socio' }).getByRole('link', { name: 'Mis reservas' }).click();
       await expect(page.getByRole('heading', { name: 'Mis reservas', exact: true })).toBeVisible();
     });
 
@@ -130,7 +130,7 @@ test(
       const aprobada = page.getByTestId('mi-reserva-RES-SEED01');
       const rechazada = page.getByTestId('mi-reserva-RES-SEED05');
       await expect(aprobada).toContainText('Cancha de fútbol 5');
-      await expect(aprobada).toContainText('Aprobada · pendiente de pago');
+      await expect(aprobada).toContainText('Seña pendiente');
       await expect(rechazada).toContainText('Rechazada');
       await expect(rechazada).toContainText('Motivo: La cancha estaba reservada para un torneo oficial.');
       await expect(page.getByTestId('mi-reserva-RES-SEED04')).toContainText('Confirmada');
@@ -149,7 +149,7 @@ test(
       const aviso = page.getByTestId('sena-pendiente-RES-SEED03');
       await expect(aviso).toContainText('Pagá la seña de $15.000,00 antes del');
       await expect(aviso).toContainText('Mercado Pago o en la secretaría del club');
-      await expect(aviso.getByRole('button', { name: /Pagar seña con Mercado Pago/ })).toBeVisible();
+      await expect(aviso.getByRole('button', { name: /Pagar seña/ })).toBeVisible();
       await resaltar(aviso);
     });
   },
@@ -162,7 +162,7 @@ test(
     await paso('1. Pagar la seña de RES-SEED03: redirige a la pasarela', async () => {
       await iniciarSesion(page, USUARIOS.socio);
       await page.goto('/mi-club/reservas');
-      await page.getByTestId('sena-pendiente-RES-SEED03').getByRole('button', { name: /Pagar seña con Mercado Pago/ }).click();
+      await page.getByTestId('sena-pendiente-RES-SEED03').getByRole('button', { name: /Pagar seña/ }).click();
       await expect(page).toHaveURL(/\/pagos\/simulador\?referencia=/);
       await expect(page.getByText('Seña de la reserva RES-SEED03 (Quincho)')).toBeVisible();
     });
@@ -175,7 +175,7 @@ test(
     });
 
     await paso('3. En «Mis reservas» la reserva quedó confirmada', async () => {
-      await page.getByRole('button', { name: 'Ver mis reservas' }).click();
+      await page.getByTestId('pago-ir-a-destino').click();
       const reserva = page.getByTestId('mi-reserva-RES-SEED03');
       await expect(reserva).toContainText('Confirmada');
       await expect(page.getByTestId('sena-pendiente-RES-SEED03')).toHaveCount(0);
@@ -201,7 +201,7 @@ test(
 
     await paso('2. La reserva queda cancelada por el usuario y el turno libre', async () => {
       await expect(page.getByText('Cancelaste la reserva RES-SEED04. El turno quedó libre.')).toBeVisible();
-      await expect(reserva).toContainText('Cancelada por el usuario');
+      await expect(reserva).toContainText('Cancelada');
       await expect(reserva.getByRole('button', { name: 'Cancelar' })).toHaveCount(0);
       await resaltar(reserva);
     });
