@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { errorConfirmacionEmail } from '@/lib/utils/email';
 
 /** Validación del registro público (US-38), alineada con el backend. */
 const fechaNacimientoSchema = z
@@ -24,6 +25,8 @@ export const registerSchema = z
     nombre: z.string().min(1, 'El nombre es obligatorio'),
     apellido: z.string().min(1, 'El apellido es obligatorio'),
     email: z.string().email('Ingresá un email válido'),
+    /** DT-54: el email escrito por segunda vez. */
+    confirmarEmail: z.string(),
     password: z
       .string()
       .min(8, 'La contraseña debe tener al menos 8 caracteres')
@@ -37,9 +40,35 @@ export const registerSchema = z
       message: 'Seleccioná un género',
     }),
   })
+  .superRefine((values, ctx) => {
+    const errorEmail = errorConfirmacionEmail(values.email, values.confirmarEmail);
+    if (errorEmail) ctx.addIssue({ code: 'custom', path: ['confirmarEmail'], message: errorEmail });
+    if (values.password !== values.confirmarPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['confirmarPassword'],
+        message: 'Las contraseñas no coinciden',
+      });
+    }
+  });
+
+/** DT-54: contraseña elegida desde el enlace del email (mismas reglas que el registro). */
+export const elegirContrasenaSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'La contraseña debe tener al menos 8 caracteres')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/,
+        'Debe incluir mayúscula, minúscula, número y un carácter especial',
+      ),
+    confirmarPassword: z.string().min(1, 'Confirmá la contraseña'),
+  })
   .refine((values) => values.password === values.confirmarPassword, {
     path: ['confirmarPassword'],
     message: 'Las contraseñas no coinciden',
   });
+
+export type ElegirContrasenaFormValues = z.infer<typeof elegirContrasenaSchema>;
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
