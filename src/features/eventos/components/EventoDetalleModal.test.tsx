@@ -5,6 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { EventoDetalleModal } from './EventoDetalleModal';
 import type { Evento } from '../types';
 
+const DIA = 24 * 60 * 60 * 1000;
+
 describe('US-53 · EventoDetalleModal', () => {
   const eventoMock: Evento = {
     id: 10,
@@ -17,10 +19,11 @@ describe('US-53 · EventoDetalleModal', () => {
     precio: 1500,
     descuentoSocio: 20,
     estado: 'PUBLICADO',
-    fechaEvento: '2026-11-15T18:00:00.000Z',
-    fechaFin: '2026-11-15T23:00:00.000Z',
-    inicioVenta: '2026-10-01T00:00:00.000Z',
-    finVenta: '2026-11-15T17:00:00.000Z',
+    // Fechas relativas a hoy: con fechas fijas el evento «terminaba» y el test fallaba según el día.
+    fechaEvento: new Date(Date.now() + 30 * DIA).toISOString(),
+    fechaFin: new Date(Date.now() + 30 * DIA + 5 * 60 * 60 * 1000).toISOString(),
+    inicioVenta: new Date(Date.now() - 30 * DIA).toISOString(),
+    finVenta: new Date(Date.now() + 29 * DIA).toISOString(),
     lugarAcreditacion: 'Gimnasio Principal',
     imageUrl: 'https://ejemplo.com/evento.jpg',
   };

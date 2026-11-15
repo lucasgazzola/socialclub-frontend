@@ -24,6 +24,8 @@ vi.mock('@/features/auth/hooks/useAuth', () => ({
 const mockAlertas = vi.fn();
 vi.mock('@/features/documentacion/hooks/useDocumentacion', () => ({
   useAlertasDocumentacion: () => mockAlertas(),
+  usePendientesRevision: () => ({ data: [], isLoading: false, isError: false }),
+  useRevisarDocumento: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
 }));
 
 describe('DashboardPage', () => {

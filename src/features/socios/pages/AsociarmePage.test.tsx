@@ -70,7 +70,8 @@ describe('TASK-60 · US-09 · Asociarme', () => {
     mockRegistrarme.mockResolvedValue({});
     renderWithProviders(<AsociarmePage />, { ruta: '/asociarme?plan=2' });
 
-    expect(screen.getByLabelText('Categoría de socio')).toHaveValue('2');
+    // El plan elegido se muestra como dato del alta; solo se pide el DNI.
+    expect(screen.getByLabelText('Plan')).toHaveDisplayValue(/Cuota General · \$\s10\.000 \/ mes/);
     await user.type(screen.getByLabelText('DNI'), '40123456');
     await user.click(screen.getByRole('button', { name: 'Confirmar y asociarme' }));
 
