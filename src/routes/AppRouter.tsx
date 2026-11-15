@@ -1,6 +1,9 @@
+import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { RedirigirAEdicion } from './RedirigirAEdicion';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { esUsuarioPortalSocio } from '@/features/auth/utils/roles';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
@@ -37,7 +40,21 @@ import { CategoriasDisciplinaPage } from '@/features/disciplinas/pages/Categoria
 import { EspaciosPage } from '@/features/espacios/pages/EspaciosPage';
 import { MiDocumentacionPage } from '@/features/documentacion/pages/MiDocumentacionPage';
 import { SolicitarInscripcionPage } from '@/features/inscripcion/pages/SolicitarInscripcionPage';
+import { PortalCuotasPage } from '@/features/portal-socio/pages/PortalCuotasPage';
+import { PortalEntradasPage } from '@/features/portal-socio/pages/PortalEntradasPage';
+import { PortalReservasPage } from '@/features/portal-socio/pages/PortalReservasPage';
+import { PortalInscripcionPage } from '@/features/portal-socio/pages/PortalInscripcionPage';
+import { PortalEventosPage } from '@/features/portal-socio/pages/PortalEventosPage';
+import { PortalDocumentacionPage } from '@/features/portal-socio/pages/PortalDocumentacionPage';
+import { PortalPerfilPage } from '@/features/portal-socio/pages/PortalPerfilPage';
+import { PortalHacermeSocioPage } from '@/features/portal-socio/pages/PortalHacermeSocioPage';
+import { PortalCambiarContrasenaPage } from '@/features/portal-socio/pages/PortalCambiarContrasenaPage';
 import { ROUTES } from './paths';
+
+function SocioOStaff({ socio, staff }: { socio: ReactNode; staff: ReactNode }) {
+  const { usuario } = useAuth();
+  return <>{esUsuarioPortalSocio(usuario) ? socio : staff}</>;
+}
 
 export function AppRouter() {
   return (
@@ -47,7 +64,10 @@ export function AppRouter() {
 
       {/* Catálogo público de eventos (US-53) */}
       <Route element={<AppLayout />}>
-        <Route path="eventos" element={<EventosPage />} />
+        <Route
+          path="eventos"
+          element={<SocioOStaff socio={<PortalEventosPage />} staff={<EventosPage />} />}
+        />
       </Route>
 
       <Route element={<ProtectedRoute />}>
@@ -56,17 +76,61 @@ export function AppRouter() {
           <Route path="dashboard" element={<DashboardGestionPage />} />
 
           {/* Cualquier usuario autenticado */}
-          <Route path={ROUTES.hacermeSocio} element={<HacermeSocioPage />} />
-          <Route path={ROUTES.perfil} element={<PerfilSocioPage />} />
-          <Route path="mi-perfil" element={<PerfilSocioPage />} />
-          <Route path={ROUTES.cambiarContrasena} element={<CambiarContrasenaPage />} />
-          <Route path={ROUTES.misCuotas} element={<MisCuotasPage />} />
-          <Route path={ROUTES.misEntradas} element={<MisEntradasPage />} />
-          <Route path={ROUTES.misReservas} element={<MisReservasPage />} />
+          <Route
+            path={ROUTES.hacermeSocio}
+            element={
+              <SocioOStaff socio={<PortalHacermeSocioPage />} staff={<HacermeSocioPage />} />
+            }
+          />
+          <Route
+            path={ROUTES.perfil}
+            element={<SocioOStaff socio={<PortalPerfilPage />} staff={<PerfilSocioPage />} />}
+          />
+          <Route
+            path="mi-perfil"
+            element={<SocioOStaff socio={<PortalPerfilPage />} staff={<PerfilSocioPage />} />}
+          />
+          <Route
+            path={ROUTES.cambiarContrasena}
+            element={
+              <SocioOStaff
+                socio={<PortalCambiarContrasenaPage />}
+                staff={<CambiarContrasenaPage />}
+              />
+            }
+          />
+          <Route
+            path={ROUTES.misCuotas}
+            element={<SocioOStaff socio={<PortalCuotasPage />} staff={<MisCuotasPage />} />}
+          />
+          <Route
+            path={ROUTES.misEntradas}
+            element={<SocioOStaff socio={<PortalEntradasPage />} staff={<MisEntradasPage />} />}
+          />
+          <Route
+            path={ROUTES.misReservas}
+            element={<SocioOStaff socio={<PortalReservasPage />} staff={<MisReservasPage />} />}
+          />
           <Route path={ROUTES.resultadoPago} element={<ResultadoPagoPage />} />
           <Route path={ROUTES.simuladorPago} element={<SimuladorPagoPage />} />
-          <Route path={ROUTES.miDocumentacion} element={<MiDocumentacionPage />} />
-          <Route path={ROUTES.solicitarInscripcion} element={<SolicitarInscripcionPage />} />
+          <Route
+            path={ROUTES.miDocumentacion}
+            element={
+              <SocioOStaff
+                socio={<PortalDocumentacionPage />}
+                staff={<MiDocumentacionPage />}
+              />
+            }
+          />
+          <Route
+            path={ROUTES.solicitarInscripcion}
+            element={
+              <SocioOStaff
+                socio={<PortalInscripcionPage />}
+                staff={<SolicitarInscripcionPage />}
+              />
+            }
+          />
 
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'COLABORADOR']} />}>
             <Route path="socios" element={<SociosPage />} />

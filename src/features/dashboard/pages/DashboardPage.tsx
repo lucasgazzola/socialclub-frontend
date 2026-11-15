@@ -1,25 +1,17 @@
 import {
   ArrowRight,
-  CalendarClock,
-  CalendarDays,
-  CreditCard,
-  Dumbbell,
-  KeyRound,
-  Pencil,
   ScrollText,
   ShieldCheck,
   Sparkles,
-  Ticket,
   User,
   UserPlus,
   Users,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
-import { formatearDni } from '@/lib/utils/dni';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { GENERO_PERSONA_LABELS } from '@/features/auth/types';
 import { AlertasDocumentacion } from '@/features/documentacion/components/AlertasDocumentacion';
+import { PortalInicioPage } from '@/features/portal-socio/pages/PortalInicioPage';
 import { ROUTES } from '@/routes/paths';
 
 const modulos = [
@@ -53,17 +45,11 @@ const modulos = [
   },
 ];
 
-function formatearFecha(iso?: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
-}
-
 /**
  * Pantalla principal segun el rol del usuario:
  * - ADMIN/COLABORADOR: panel de administración (ADMIN ve además las alertas de documentación).
  * - DELEGADO: alertas de documentación (US-26) y acceso a participantes.
- * - SOCIO: pantalla principal de socio.
- * - Sin roles: pantalla neutra con la opción 'Hacerme socio'.
+ * - SOCIO / Participante: portal exclusivo Global Fan (`PortalInicioPage`).
  */
 export function DashboardPage() {
   const { usuario } = useAuth();
@@ -76,11 +62,7 @@ export function DashboardPage() {
     return <PanelDelegado />;
   }
 
-  if (usuario?.roles.includes('SOCIO')) {
-    return <PanelSocio />;
-  }
-
-  return <PantallaNeutra />;
+  return <PortalInicioPage />;
 }
 
 function PanelAdministracion() {
@@ -185,293 +167,6 @@ function PanelDelegado() {
       </div>
 
       <AlertasDocumentacion />
-    </div>
-  );
-}
-
-/** Pantalla principal del socio */
-function PanelSocio() {
-  const { usuario } = useAuth();
-  const persona = usuario?.persona;
-  const membresiaActiva = persona?.membresias?.find((m) => m.activo);
-
-  if (!persona || !membresiaActiva) {
-    // Por consistencia: rol SOCIO sin membresía activa (estado transitorio).
-    return <PantallaNeutra />;
-  }
-
-  return <VistaPortalIdentidad esSocio />;
-}
-
-/** Pantalla para participantes y usuarios autenticados sin membresía activa. */
-function PantallaNeutra() {
-  return <VistaPortalIdentidad esSocio={false} />;
-}
-
-interface FilaDatoPortal {
-  etiqueta: string;
-  valor: string;
-  editable?: boolean;
-}
-
-/**
- * Vista principal del Portal SocialClub ID (para Socios y Participantes).
- * Diseño oscuro estilo Global Fan: carnet digital en bento card oscura a la izquierda
- * y ficha de datos personales sobre superficie mate a la derecha.
- */
-function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
-  const { usuario } = useAuth();
-  const navigate = useNavigate();
-
-  if (!usuario) return null;
-
-  const persona = usuario.persona;
-  const membresiaActiva = esSocio ? persona?.membresias?.find((m) => m.activo) : undefined;
-
-  const nombre = usuario.nombre ?? persona?.nombre ?? '';
-  const apellido = usuario.apellido ?? persona?.apellido ?? '';
-  const nombreMostrado =
-    apellido && nombre
-      ? `${apellido}, ${nombre}`
-      : nombre || usuario.email;
-
-  const iniciales =
-    `${nombre?.[0] ?? ''}${apellido?.[0] ?? ''}`.toUpperCase() ||
-    usuario.email[0]?.toUpperCase() ||
-    'SC';
-
-  const filasDatos: FilaDatoPortal[] = [
-    { etiqueta: 'Nombre', valor: nombre || '—' },
-    { etiqueta: 'Apellido', valor: apellido || '—' },
-    {
-      etiqueta: 'Documento',
-      valor: persona?.dni ? formatearDni(persona.dni) : 'Sin DNI registrado',
-    },
-    ...(membresiaActiva
-      ? [
-          {
-            etiqueta: 'Categoría',
-            valor: membresiaActiva.categoria?.nombre ?? 'Socio activo',
-          },
-          {
-            etiqueta: 'Socio desde',
-            valor: formatearFecha(membresiaActiva.fechaAlta),
-          },
-        ]
-      : []),
-    {
-      etiqueta: 'Género',
-      valor: persona?.genero ? GENERO_PERSONA_LABELS[persona.genero] : '—',
-    },
-    {
-      etiqueta: 'Fecha de nacimiento',
-      valor: persona?.fechaNacimiento ? formatearFecha(persona.fechaNacimiento) : '—',
-    },
-    {
-      etiqueta: 'Teléfono',
-      valor: persona?.telefono || 'No registrado',
-      editable: true,
-    },
-    {
-      etiqueta: 'Mail',
-      valor: usuario.email,
-      editable: true,
-    },
-  ];
-
-  const accionesRapidas = membresiaActiva
-    ? [
-        {
-          label: 'VER MIS CUOTAS',
-          icon: CreditCard,
-          to: ROUTES.misCuotas,
-          className:
-            'bg-white text-zinc-950 hover:bg-zinc-200 shadow-sm',
-          iconClassName: 'text-zinc-950',
-        },
-        {
-          label: 'RESERVAR ESPACIO',
-          icon: CalendarClock,
-          to: ROUTES.misReservas,
-          className:
-            'border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15 text-zinc-100',
-          iconClassName: 'text-emerald-400',
-        },
-        {
-          label: 'MIS ENTRADAS',
-          icon: Ticket,
-          to: ROUTES.misEntradas,
-          className:
-            'border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15 text-zinc-100',
-          iconClassName: 'text-zinc-300',
-        },
-      ]
-    : [
-        {
-          label: 'QUIERO HACERME SOCIO',
-          icon: UserPlus,
-          to: ROUTES.hacermeSocio,
-          className:
-            'bg-white text-zinc-950 hover:bg-zinc-200 shadow-sm',
-          iconClassName: 'text-zinc-950',
-        },
-        {
-          label: 'INSCRIBIRME A DISCIPLINA',
-          icon: Dumbbell,
-          to: ROUTES.solicitarInscripcion,
-          className:
-            'border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15 text-zinc-100',
-          iconClassName: 'text-emerald-400',
-        },
-        {
-          label: 'EXPLORAR EVENTOS',
-          icon: CalendarDays,
-          to: ROUTES.eventos,
-          className:
-            'border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15 text-zinc-100',
-          iconClassName: 'text-zinc-300',
-        },
-      ];
-
-  return (
-    <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[310px_minmax(0,1fr)]">
-      {/* Bento Card Oscura: Carnet Digital y Acciones Rápidas (Global Fan style) */}
-      <section
-        aria-label="Tarjeta de identidad del socio"
-        className="relative flex flex-col items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0d11] p-7 text-center text-zinc-100 shadow-2xl"
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.12),transparent_72%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent"
-        />
-
-        <span className="relative z-10 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
-          Carnet Digital
-        </span>
-
-        <div className="relative z-10 mt-4">
-          <div className="flex h-22 w-22 items-center justify-center rounded-full bg-zinc-900 text-2xl font-semibold tracking-tight text-white ring-1 ring-white/15">
-            {iniciales}
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate(ROUTES.perfil)}
-            title="Editar mis datos"
-            aria-label="Ir a editar mis datos"
-            className="absolute -right-0.5 bottom-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-zinc-900 text-zinc-200 shadow-lg transition-all hover:scale-105 hover:bg-white hover:text-zinc-950 cursor-pointer"
-          >
-            <Pencil size={12} />
-          </button>
-        </div>
-
-        <h1 className="relative z-10 mt-4 text-lg font-semibold tracking-[-0.02em] text-white">
-          {nombreMostrado}
-        </h1>
-
-        <p className="relative z-10 mt-1 text-sm text-zinc-400">
-          {membresiaActiva
-            ? `Socio · ${membresiaActiva.categoria?.nombre ?? 'Activo'}`
-            : 'Participante'}
-        </p>
-
-        {membresiaActiva ? (
-          <div className="relative z-10 mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            Membresía Activa
-          </div>
-        ) : (
-          <p className="relative z-10 mt-3.5 inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-zinc-300">
-            Sumate al club
-          </p>
-        )}
-
-        <div className="relative z-10 mt-6 w-full space-y-2.5 border-t border-white/[0.07] pt-6">
-          {accionesRapidas.map(({ label, icon: Icon, to, className, iconClassName }) => (
-            <button
-              key={to}
-              type="button"
-              onClick={() => navigate(to)}
-              className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold tracking-wide transition-all cursor-pointer ${className}`}
-            >
-              <Icon size={15} className={iconClassName} aria-hidden="true" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Bento Card Derecha: Datos Personales */}
-      <section
-        aria-label="Datos personales"
-        className="space-y-5 rounded-2xl border border-white/[0.07] bg-[#0b0d11]/95 p-6 shadow-2xl sm:p-8"
-      >
-        <div className="space-y-1.5">
-          <h2 className="text-lg font-semibold tracking-[-0.02em] text-white">Datos personales</h2>
-          <p className="text-xs leading-relaxed text-zinc-400 sm:text-sm">
-            Tus datos personales se utilizan para tu carnet digital, inscripciones a disciplinas y
-            reservas en SocialClub. En caso de que necesites actualizar algún dato, hacé{' '}
-            <button
-              type="button"
-              onClick={() => navigate(ROUTES.perfil)}
-              className="font-medium text-emerald-400 underline decoration-emerald-400/50 underline-offset-2 transition-colors hover:text-emerald-300 cursor-pointer"
-            >
-              click aquí
-            </button>{' '}
-            para actualizarlos en tu perfil.
-          </p>
-        </div>
-
-        <dl className="divide-y divide-white/[0.07] border-y border-white/[0.07]">
-          {filasDatos.map(({ etiqueta, valor, editable }) => (
-            <div
-              key={etiqueta}
-              className="flex flex-wrap items-center justify-between gap-3 px-1 py-3.5 text-sm transition-colors hover:bg-white/[0.02]"
-            >
-              <div className="flex flex-wrap items-baseline gap-2">
-                <dt className="font-normal text-zinc-400">{etiqueta}:</dt>
-                <dd className="font-medium text-zinc-100">{valor}</dd>
-              </div>
-
-              {editable && (
-                <button
-                  type="button"
-                  onClick={() => navigate(ROUTES.perfil)}
-                  className="text-xs font-medium text-emerald-400 transition-colors hover:text-emerald-300 cursor-pointer"
-                >
-                  Editar
-                </button>
-              )}
-            </div>
-          ))}
-        </dl>
-
-        <div className="flex flex-wrap items-center gap-3 pt-1">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(ROUTES.perfil)}
-            className="rounded-full border-white/15 bg-white/[0.04] text-zinc-100 hover:bg-white/[0.1] hover:text-white"
-          >
-            <User size={15} />
-            Editar mis datos
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(ROUTES.cambiarContrasena)}
-            className="rounded-full text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100"
-          >
-            <KeyRound size={15} />
-            Cambiar contraseña
-          </Button>
-        </div>
-      </section>
     </div>
   );
 }

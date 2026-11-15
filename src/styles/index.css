@@ -104,205 +104,82 @@ body {
 }
 
 /* ==========================================================================
-   Portal Socios / Participantes — Tema Oscuro estilo Global Fan (.portal-dark)
-   Aislado exclusivamente al portal de socios para no afectar Backoffice Admin.
+   Portal Socios / Participantes — Sistema Visual Propio (Global Fan × Craft)
+   Completamente desacoplado del backoffice administrativo.
    ========================================================================== */
-.portal-dark {
+.portal-socio {
+  --ease-portal-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-portal-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  scrollbar-width: thin;
 }
 
-.portal-dark main h1,
-.portal-dark main h2,
-.portal-dark main h3 {
-  letter-spacing: -0.025em;
-}
-
-.portal-dark main .bg-white {
-  background-color: #11141b;
-}
-
-.portal-dark main .bg-slate-50,
-.portal-dark main .bg-slate-50\/50,
-.portal-dark main .bg-slate-50\/80,
-.portal-dark main .bg-gray-50 {
-  background-color: rgba(255, 255, 255, 0.03);
-}
-
-.portal-dark main .bg-slate-100,
-.portal-dark main .bg-slate-100\/80,
-.portal-dark main .bg-slate-100\/90,
-.portal-dark main .bg-gray-100 {
-  background-color: rgba(255, 255, 255, 0.055);
-}
-
-.portal-dark main .bg-slate-200,
-.portal-dark main .bg-slate-200\/70 {
-  background-color: rgba(255, 255, 255, 0.09);
-}
-
-.portal-dark main .hover\:bg-slate-50:hover,
-.portal-dark main .hover\:bg-slate-100:hover,
-.portal-dark main .hover\:bg-white:hover,
-.portal-dark main .hover\:bg-white\/60:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-.portal-dark main .border-slate-100,
-.portal-dark main .border-slate-200,
-.portal-dark main .border-slate-200\/80,
-.portal-dark main .border-slate-200\/90,
-.portal-dark main .border-slate-300,
-.portal-dark main .border-slate-300\/80,
-.portal-dark main .border-gray-200 {
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.portal-dark main .divide-slate-100 > :not(:last-child),
-.portal-dark main .divide-slate-200 > :not(:last-child) {
-  border-color: rgba(255, 255, 255, 0.07);
-}
-
-.portal-dark main .ring-slate-200,
-.portal-dark main .ring-slate-900\/5 {
-  --tw-ring-color: rgba(255, 255, 255, 0.08);
-}
-
-.portal-dark main .text-slate-900,
-.portal-dark main .text-slate-800,
-.portal-dark main .text-gray-900 {
-  color: #fafafa;
-}
-
-.portal-dark main .text-slate-700,
-.portal-dark main .text-gray-700 {
-  color: #d4d4d8;
-}
-
-.portal-dark main .text-slate-600,
-.portal-dark main .text-slate-500,
-.portal-dark main .text-slate-400,
-.portal-dark main .text-gray-500 {
-  color: #a1a1aa;
-}
-
-.portal-dark main .hover\:text-slate-900:hover,
-.portal-dark main .hover\:text-slate-700:hover {
+.portal-socio ::selection {
+  background-color: rgba(74, 222, 128, 0.22);
   color: #ffffff;
 }
 
-/* StatusTabs / Pestañas segmentadas estilo Global Fan */
-.portal-dark main [role='tablist'] {
+.portal-socio *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.portal-socio *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portal-socio *::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+}
+
+.portal-socio *::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.24);
+}
+
+/* Adaptación aislada únicamente para widgets de solo lectura embebidos desde módulos compartidos */
+.portal-socio-embed .bg-white {
+  background-color: #0d1016;
+}
+.portal-socio-embed .bg-slate-50,
+.portal-socio-embed .bg-slate-100 {
   background-color: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
 }
-
-.portal-dark main [role='tablist'] [role='tab'] {
-  border-radius: 9999px;
-  color: #a1a1aa;
+.portal-socio-embed .border-slate-200,
+.portal-socio-embed .border-slate-300 {
+  border-color: rgba(255, 255, 255, 0.09);
 }
-
-.portal-dark main [role='tablist'] [role='tab'][aria-selected='true'] {
-  background-color: rgba(255, 255, 255, 0.11);
-  color: #ffffff;
-}
-
-/* Botones primarios y acentos adaptados al estilo monocromo + emerald Global Fan */
-.portal-dark main .bg-brand-600 {
-  background-color: #fafafa;
-  color: #09090b;
-}
-.portal-dark main .bg-brand-600:hover,
-.portal-dark main .hover\:bg-brand-700:hover {
-  background-color: #e4e4e7;
-}
-
-/* Badges y alertas pastel adaptadas a superficies oscuras translucidas */
-.portal-dark main .bg-emerald-50 {
-  background-color: rgba(16, 185, 129, 0.14);
-}
-.portal-dark main .text-emerald-700,
-.portal-dark main .text-emerald-800 {
-  color: #34d399;
-}
-.portal-dark main .border-emerald-200 {
-  border-color: rgba(16, 185, 129, 0.28);
-}
-
-.portal-dark main .bg-amber-50 {
-  background-color: rgba(245, 158, 11, 0.14);
-}
-.portal-dark main .text-amber-700,
-.portal-dark main .text-amber-800 {
-  color: #fbbf24;
-}
-.portal-dark main .border-amber-200 {
-  border-color: rgba(245, 158, 11, 0.28);
-}
-
-.portal-dark main .bg-red-50,
-.portal-dark main .bg-rose-50 {
-  background-color: rgba(239, 68, 68, 0.14);
-}
-.portal-dark main .text-red-700,
-.portal-dark main .text-red-800,
-.portal-dark main .text-rose-700 {
-  color: #f87171;
-}
-.portal-dark main .border-red-200,
-.portal-dark main .border-rose-200 {
-  border-color: rgba(239, 68, 68, 0.28);
-}
-
-.portal-dark main .bg-blue-50,
-.portal-dark main .bg-brand-50,
-.portal-dark main .bg-sky-50 {
-  background-color: rgba(52, 211, 153, 0.14);
-}
-.portal-dark main .text-blue-700,
-.portal-dark main .text-blue-800,
-.portal-dark main .text-brand-700,
-.portal-dark main .text-brand-600 {
-  color: #34d399;
-}
-.portal-dark main .border-blue-200,
-.portal-dark main .border-brand-200 {
-  border-color: rgba(52, 211, 153, 0.28);
-}
-
-/* Inputs, selects y textareas dentro del portal oscuro */
-.portal-dark main input:not([type='checkbox']):not([type='radio']),
-.portal-dark main select,
-.portal-dark main textarea {
-  background-color: #07090d;
-  color: #fafafa;
-  border-color: rgba(255, 255, 255, 0.11);
-}
-
-.portal-dark main input:not([type='checkbox']):not([type='radio']):disabled,
-.portal-dark main input:not([type='checkbox']):not([type='radio'])[readonly],
-.portal-dark main select:disabled,
-.portal-dark main textarea:disabled {
-  background-color: rgba(255, 255, 255, 0.035);
-  color: #a1a1aa;
-  border-color: rgba(255, 255, 255, 0.07);
-}
-
-.portal-dark main input::placeholder,
-.portal-dark main textarea::placeholder {
-  color: #71717a;
-}
-
-.portal-dark main select option {
-  background-color: #0b0d11;
+.portal-socio-embed .text-slate-900,
+.portal-socio-embed .text-slate-800 {
   color: #fafafa;
 }
-
-/* Tablas del portal */
-.portal-dark main thead {
-  background-color: rgba(255, 255, 255, 0.03);
+.portal-socio-embed .text-slate-700,
+.portal-socio-embed .text-slate-600,
+.portal-socio-embed .text-slate-500 {
+  color: #a1a1aa;
 }
-.portal-dark main th {
-  color: #94a3b8;
+.portal-socio-embed .bg-emerald-50 {
+  background-color: rgba(52, 211, 153, 0.12);
+}
+.portal-socio-embed .text-emerald-700,
+.portal-socio-embed .text-emerald-800 {
+  color: #6ee7b7;
+}
+.portal-socio-embed .bg-amber-50 {
+  background-color: rgba(251, 191, 36, 0.12);
+}
+.portal-socio-embed .text-amber-700,
+.portal-socio-embed .text-amber-800 {
+  color: #fcd34d;
+}
+.portal-socio-embed .bg-red-50,
+.portal-socio-embed .bg-rose-50 {
+  background-color: rgba(244, 63, 94, 0.12);
+}
+.portal-socio-embed .text-red-700,
+.portal-socio-embed .text-rose-700 {
+  color: #fda4af;
 }
