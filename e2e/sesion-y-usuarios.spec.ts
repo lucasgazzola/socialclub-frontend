@@ -7,6 +7,7 @@ import {
   resaltar,
   USUARIOS,
   PASSWORD_SEED,
+  enlaceDeVerificacion,
 } from './soporte/fixtures';
 
 /**
@@ -71,8 +72,9 @@ test('TC-001 · Registrar un usuario válido', { tag: ['@US-01'] }, async ({ pag
     await dialogo.getByLabel('Nombre').fill(colaborador.nombre);
     await dialogo.getByLabel('Apellido').fill(colaborador.apellido);
     await dialogo.getByLabel('DNI').fill(dniUnico());
-    await dialogo.getByLabel('Email').fill(colaborador.email);
-    await dialogo.getByLabel('Contraseña').fill(colaborador.password);
+    await dialogo.getByLabel('Email', { exact: true }).fill(colaborador.email);
+    // DT-54: el email se escribe dos veces; la contraseña la elige la persona.
+    await dialogo.getByLabel('Repetí el email').fill(colaborador.email);
     await dialogo.getByRole('checkbox', { name: 'ADMIN' }).uncheck();
     await dialogo.getByRole('checkbox', { name: 'COLABORADOR' }).check();
   });
@@ -84,7 +86,34 @@ test('TC-001 · Registrar un usuario válido', { tag: ['@US-01'] }, async ({ pag
     const fila = page.getByRole('row').filter({ hasText: colaborador.email });
     await expect(fila).toContainText('COLABORADOR');
     await expect(fila).toContainText('Activo');
+    await expect(fila).toContainText('Pendiente de verificación');
     await resaltar(fila);
+  });
+
+  await paso('4. Sin verificar el email, la persona todavía no puede iniciar sesión', async () => {
+    await page.context().clearCookies();
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(colaborador.email);
+    await page.getByLabel('Contraseña').fill(colaborador.password);
+    await page.getByRole('button', { name: 'Ingresar' }).click();
+    const aviso = page.getByText(/Tenés que verificar tu email/);
+    await expect(aviso).toBeVisible();
+    await resaltar(aviso);
+  });
+
+  await paso('5. Abre el enlace del email y elige su contraseña', async () => {
+    await page.goto(await enlaceDeVerificacion(colaborador.email));
+    await page.getByLabel('Contraseña', { exact: true }).fill(colaborador.password);
+    await page.getByLabel('Repetí la contraseña').fill(colaborador.password);
+    await page.getByRole('button', { name: 'Activar mi cuenta' }).click();
+    const ok = page.getByRole('status');
+    await expect(ok).toContainText('Tu cuenta quedó activa');
+    await resaltar(ok);
+  });
+
+  await paso('6. Ya puede iniciar sesión con la contraseña que eligió', async () => {
+    await iniciarSesion(page, colaborador.email, colaborador.password);
+    await expect(page).not.toHaveURL(/\/login/);
   });
 });
 

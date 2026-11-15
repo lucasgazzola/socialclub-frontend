@@ -17,8 +17,8 @@ import path from 'node:path';
  * - E2E_DATABASE_URL: base exclusiva de las pruebas (se crea si no existe).
  * - E2E_REUTILIZAR=1: usar una API y un front ya levantados en los puertos E2E.
  */
-const BACKEND_DIR = path.resolve(process.env.E2E_BACKEND_DIR ?? '../socialclub-backend');
-const DATABASE_URL =
+export const BACKEND_DIR = path.resolve(process.env.E2E_BACKEND_DIR ?? '../socialclub-backend');
+export const DATABASE_URL =
   process.env.E2E_DATABASE_URL ??
   'postgresql://socialclub:socialclub@localhost:5432/socialclub_e2e?schema=public';
 const API_PORT = 3101;
