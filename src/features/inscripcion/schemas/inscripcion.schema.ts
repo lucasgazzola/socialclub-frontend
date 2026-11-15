@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { errorConfirmacionEmail } from '@/lib/utils/email';
 
 const DNI_REGEX = /^\d{7,8}$/;
 
@@ -12,6 +13,8 @@ export const inscripcionSchema = z
     fechaNacimiento: z.string().optional(),
     genero: z.enum(['FEMENINO', 'MASCULINO', 'NO_BINARIO_NO_ESPECIFICADO']).optional(),
     email: z.string().trim().optional().refine((valor) => !valor || z.string().email().safeParse(valor).success, { message: 'El email no tiene un formato válido',}),
+    /** DT-54: el email del participante nuevo, escrito por segunda vez. */
+    confirmarEmail: z.string().trim().optional(),
     telefono: z.string().trim().optional(),
     disciplinaId: z.number({ error: 'Debe seleccionar una disciplina',}),
     categoriaDisciplinaId: z.number().int().optional(), })
@@ -27,6 +30,11 @@ export const inscripcionSchema = z
     }
     if (!data.dni) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dni'], message: 'El DNI es obligatorio' });
+    }
+    // DT-54: con email, el participante recibe un enlace para activar su cuenta.
+    const errorEmail = errorConfirmacionEmail(data.email, data.confirmarEmail);
+    if (errorEmail) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmarEmail'], message: errorEmail });
     }
   });
 

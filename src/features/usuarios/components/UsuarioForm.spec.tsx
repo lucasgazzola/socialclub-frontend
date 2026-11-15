@@ -13,8 +13,8 @@ describe('UsuarioForm', () => {
       await user.type(screen.getByLabelText(/nombre/i), 'Nuevo');
       await user.type(screen.getByLabelText(/apellido/i), 'Administrador');
       await user.type(screen.getByLabelText(/dni/i), '40123456');
-      await user.type(screen.getByLabelText(/email/i), 'nuevo.admin@socialclub.local');
-      await user.type(screen.getByLabelText(/contraseña/i), 'Admin123!');
+      await user.type(screen.getByLabelText('Email'), 'nuevo.admin@socialclub.local');
+      await user.type(screen.getByLabelText('Repetí el email'), 'nuevo.admin@socialclub.local');
       await user.click(screen.getByRole('button', { name: /crear usuario/i }));
 
       expect(onSubmit).toHaveBeenCalledWith(
@@ -23,7 +23,7 @@ describe('UsuarioForm', () => {
           apellido: 'Administrador',
           dni: '40123456',
           email: 'nuevo.admin@socialclub.local',
-          password: 'Admin123!',
+          confirmarEmail: 'nuevo.admin@socialclub.local',
           roles: ['ADMIN'],
         }),
         expect.anything(),
@@ -36,10 +36,27 @@ describe('UsuarioForm', () => {
       expect(screen.getByRole('checkbox', { name: /admin/i })).toBeChecked();
     });
 
-    it('muestra la contraseña como campo obligatorio en modo creación', () => {
+    it('DT-54: no pide contraseña y avisa que la persona la elige desde el email', () => {
       render(<UsuarioForm modo="crear" onSubmit={vi.fn().mockResolvedValue(undefined)} />);
 
-      expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
+      expect(screen.queryByLabelText(/contraseña/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/enlace para que elija su contraseña/i)).toBeInTheDocument();
+    });
+
+    it('DT-54: no deja crear el usuario si los dos emails no coinciden', async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      render(<UsuarioForm modo="crear" onSubmit={onSubmit} />);
+
+      await user.type(screen.getByLabelText(/nombre/i), 'Nuevo');
+      await user.type(screen.getByLabelText(/apellido/i), 'Administrador');
+      await user.type(screen.getByLabelText(/dni/i), '40123456');
+      await user.type(screen.getByLabelText('Email'), 'nuevo.admin@socialclub.local');
+      await user.type(screen.getByLabelText('Repetí el email'), 'nuevo.admin@socialclub.lcoal');
+      await user.click(screen.getByRole('button', { name: /crear usuario/i }));
+
+      expect(await screen.findByText('Los emails no coinciden')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
     });
   });
 
@@ -66,17 +83,34 @@ describe('UsuarioForm', () => {
       expect(screen.getByDisplayValue('admin@socialclub.local')).toBeInTheDocument();
     });
 
-    it('no muestra el campo de contraseña cuando mostrarPasswordField es false', () => {
+    it('DT-54: no muestra contraseña ni pide repetir el email si no cambia', () => {
       render(
         <UsuarioForm
           modo="editar"
           usuarioInicial={usuarioInicial}
           onSubmit={vi.fn().mockResolvedValue(undefined)}
-          mostrarPasswordField={false}
         />,
       );
 
-      expect(screen.queryByLabelText(/nueva contraseña/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/contraseña/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Repetí el email')).not.toBeInTheDocument();
+    });
+
+    it('DT-54: al cambiar el email pide escribirlo dos veces', async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      render(<UsuarioForm modo="editar" usuarioInicial={usuarioInicial} onSubmit={onSubmit} />);
+
+      await user.clear(screen.getByLabelText('Email'));
+      await user.type(screen.getByLabelText('Email'), 'nuevo@socialclub.local');
+      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+      expect(await screen.findByText('Confirmá el email')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+
+      await user.type(screen.getByLabelText('Repetí el email'), 'nuevo@socialclub.local');
+      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+      expect(onSubmit).toHaveBeenCalled();
     });
 
     it('muestra el botón "Guardar cambios" en modo edición', () => {
@@ -85,7 +119,6 @@ describe('UsuarioForm', () => {
           modo="editar"
           usuarioInicial={usuarioInicial}
           onSubmit={vi.fn().mockResolvedValue(undefined)}
-          mostrarPasswordField={false}
         />,
       );
 
@@ -101,7 +134,6 @@ describe('UsuarioForm', () => {
           modo="editar"
           usuarioInicial={usuarioInicial}
           onSubmit={onSubmit}
-          mostrarPasswordField={false}
         />,
       );
 
@@ -128,7 +160,6 @@ describe('UsuarioForm', () => {
           modo="editar"
           usuarioInicial={usuarioInicial}
           onSubmit={onSubmit}
-          mostrarPasswordField={false}
         />,
       );
 
@@ -183,7 +214,6 @@ describe('UsuarioForm', () => {
           modo="editar"
           usuarioInicial={{ ...delegado, disciplinas: [] }}
           onSubmit={onSubmit}
-          mostrarPasswordField={false}
           disciplinas={disciplinas}
         />,
       );
@@ -204,7 +234,6 @@ describe('UsuarioForm', () => {
           modo="editar"
           usuarioInicial={delegado}
           onSubmit={onSubmit}
-          mostrarPasswordField={false}
           disciplinas={disciplinas}
         />,
       );

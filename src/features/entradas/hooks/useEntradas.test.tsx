@@ -104,11 +104,13 @@ describe('useEntradas hooks & api', () => {
 
   it('useIniciarCompraEntradas inicia compra correctamente', async () => {
     vi.mocked(entradasApi.iniciarCompra).mockResolvedValueOnce({
-      id: 1,
       concepto: 'ENTRADAS',
-      montoTotal: 1000,
+      monto: 1000,
       estado: 'PENDIENTE',
+      pasarela: 'SIMULADA',
+      descripcion: 'Entradas',
       urlPago: 'https://pago.mock',
+      detalleEstado: null,
       referencia: 'ref-1',
       creadoEn: '2026-01-01',
       expiraEn: '2026-01-02',

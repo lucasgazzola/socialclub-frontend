@@ -12,7 +12,8 @@ interface RegisterFormProps {
 
 /**
  * Formulario de registro público (US-38). No inicia sesión: al crear la cuenta
- * el usuario es redirigido al login para ingresar con sus credenciales.
+ * el usuario es redirigido al login. DT-54: antes de ingresar tiene que
+ * verificar su email con el enlace que le enviamos.
  */
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
@@ -58,6 +59,14 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         autoComplete="email"
         error={errors.email?.message}
         {...register('email')}
+      />
+      <Input
+        id="confirmarEmail"
+        type="email"
+        label="Repetí el email"
+        autoComplete="off"
+        error={errors.confirmarEmail?.message}
+        {...register('confirmarEmail')}
       />
       <Input
         id="password"

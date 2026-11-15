@@ -15,7 +15,7 @@ export function RegisterPage() {
   }
 
   const onSuccess = () => {
-    toast.success('Cuenta creada. Iniciá sesión con tus credenciales.');
+    toast.success('Cuenta creada. Te enviamos un email para verificarla antes de iniciar sesión.');
     navigate(ROUTES.login, { replace: true });
   };
 

@@ -10,7 +10,7 @@ export function useCreateUsuario() {
         mutationFn: usuariosApi.create,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: usuariosKeys.all });
-            toast.success('Usuario creado exitosamente');
+            toast.success('Usuario creado. Le enviamos un email para que elija su contraseña.');
         },
         onError: (error: unknown) => {
             toast.error(error instanceof Error ? error.message : 'Error al crear el usuario');

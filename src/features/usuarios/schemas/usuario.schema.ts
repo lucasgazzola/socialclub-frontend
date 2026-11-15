@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { errorConfirmacionEmail, mismoEmail } from '@/lib/utils/email';
 
 /** DT-42: el delegado recibe las alertas de las disciplinas que tiene a cargo. */
 export const ROL_DELEGADO = 'DELEGADO';
@@ -10,6 +11,8 @@ const usuarioBaseSchema = z.object({
     .string()
     .regex(/^\d{7,8}$/, 'El DNI debe tener 7 u 8 dígitos sin puntos ni comas'),
   email: z.string().email('Debe ingresar un email válido'),
+  /** DT-54: el email escrito por segunda vez. */
+  confirmarEmail: z.string(),
   roles: z.array(z.string()).min(1, 'Debe seleccionar al menos un rol'),
   /** Ids como texto (valores de los checkboxes); la página los pasa a número. */
   disciplinasIds: z.array(z.string()),
@@ -29,13 +32,33 @@ function exigirDisciplinasDelDelegado(
   }
 }
 
-export const usuarioCreateSchema = usuarioBaseSchema
-  .extend({
-    password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
-  })
-  .superRefine(exigirDisciplinasDelDelegado);
+/** DT-54: la confirmación tiene que coincidir con el email. */
+function exigirConfirmacionEmail(
+  valores: { email: string; confirmarEmail: string },
+  ctx: z.RefinementCtx,
+) {
+  const error = errorConfirmacionEmail(valores.email, valores.confirmarEmail);
+  if (error) ctx.addIssue({ code: 'custom', path: ['confirmarEmail'], message: error });
+}
 
-export const usuarioEditSchema = usuarioBaseSchema.superRefine(exigirDisciplinasDelDelegado);
+/**
+ * DT-54: el alta no lleva contraseña. La persona recibe un email con un
+ * enlace (vence en 24 h) para elegirla y verificar su email.
+ */
+export const usuarioCreateSchema = usuarioBaseSchema.superRefine((valores, ctx) => {
+  exigirDisciplinasDelDelegado(valores, ctx);
+  exigirConfirmacionEmail(valores, ctx);
+});
+
+/** En la edición, la confirmación se pide solo si cambia el email. */
+export function crearUsuarioEditSchema(emailOriginal?: string | null) {
+  return usuarioBaseSchema.superRefine((valores, ctx) => {
+    exigirDisciplinasDelDelegado(valores, ctx);
+    if (!mismoEmail(valores.email, emailOriginal)) exigirConfirmacionEmail(valores, ctx);
+  });
+}
+
+export const usuarioEditSchema = crearUsuarioEditSchema();
 
 /**
  * DT-42: ids de las disciplinas a cargo para la API. Si el usuario no es

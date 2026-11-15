@@ -20,8 +20,10 @@ vi.mock('../schemas', () => {
     email: z.string().min(1, 'El email es obligatorio').email('El formato de email no es válido'),
     telefono: z.string().optional(),
     categoriaId: z.number().int().optional(),
+    confirmarEmail: z.string().optional(),
   });
-  return { socioFormSchema };
+  // DT-54: el formulario arma el schema según el email original.
+  return { socioFormSchema, crearSocioFormSchema: () => socioFormSchema };
 });
 
 vi.mock('../hooks/useCategorias', () => ({
@@ -186,6 +188,26 @@ describe('SocioForm', () => {
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('DT-54: el email se escribe dos veces', () => {
+    it('en el alta muestra «Repetí el email» desde el principio', () => {
+      render(<SocioForm onSubmit={vi.fn()} submitLabel="Crear socio" />);
+
+      expect(screen.getByLabelText('Repetí el email')).toBeInTheDocument();
+    });
+
+    it('en la edición no lo pide mientras el email no cambie', () => {
+      render(
+        <SocioForm
+          onSubmit={vi.fn()}
+          submitLabel="Guardar cambios"
+          defaultValues={{ ...datosValidos, email: 'juan@club.local' }}
+        />,
+      );
+
+      expect(screen.queryByLabelText('Repetí el email')).not.toBeInTheDocument();
     });
   });
 });

@@ -6,7 +6,9 @@ import {
   type Locator,
   type Page,
 } from '@playwright/test';
-import { API_URL } from '../../playwright.config';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import { API_URL, BACKEND_DIR, DATABASE_URL } from '../../playwright.config';
 
 /**
  * TASK-43 — Soporte de las pruebas E2E.
@@ -119,4 +121,40 @@ export async function ok<T = unknown>(respuesta: Awaited<ReturnType<APIRequestCo
     throw new Error(`${respuesta.status()} ${respuesta.url()}: ${await respuesta.text()}`);
   }
   return (await respuesta.json()) as T;
+}
+
+/** Lo único del cliente Prisma del backend que usa `enlaceDeVerificacion`. */
+type ClientePrismaMinimo = new (opciones: { datasources: { db: { url: string } } }) => {
+  notificacion: {
+    findFirst(args: {
+      where: { tipo: string; usuario: { email: string } };
+      orderBy: { id: 'desc' };
+    }): Promise<{ contenido: unknown } | null>;
+  };
+  $disconnect(): Promise<void>;
+};
+
+/**
+ * DT-54 — Enlace de verificación que recibió una cuenta por email. En las
+ * pruebas no hay SMTP: el email queda en el outbox (`notificaciones`), así que
+ * se lee de ahí con el cliente Prisma del backend. Devuelve la ruta del front
+ * (`/verificar-email?token=…`).
+ */
+export async function enlaceDeVerificacion(email: string): Promise<string> {
+  const requerir = createRequire(path.join(BACKEND_DIR, 'package.json'));
+  // El front no depende de @prisma/client: se tipa solo lo que se usa acá.
+  const { PrismaClient } = requerir('@prisma/client') as { PrismaClient: ClientePrismaMinimo };
+  const prisma = new PrismaClient({ datasources: { db: { url: DATABASE_URL } } });
+  try {
+    const notificacion = await prisma.notificacion.findFirst({
+      where: { tipo: 'VERIFICACION_EMAIL', usuario: { email: email.toLowerCase() } },
+      orderBy: { id: 'desc' },
+    });
+    const texto = (notificacion?.contenido as { texto?: string } | null)?.texto ?? '';
+    const token = /verificar-email\?token=([\w-]+)/.exec(texto)?.[1];
+    if (!token) throw new Error(`No hay enlace de verificación para ${email}`);
+    return `/verificar-email?token=${token}`;
+  } finally {
+    await prisma.$disconnect();
+  }
 }

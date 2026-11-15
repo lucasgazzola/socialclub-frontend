@@ -132,7 +132,11 @@ export function SociosPage() {
   const handleCrear = async (data: Parameters<typeof crearSocio.mutateAsync>[0]) => {
     await crearSocio.mutateAsync(data);
     setModalAbierto(false);
-    setMensaje('Socio registrado correctamente.');
+    setMensaje(
+      data.email
+        ? 'Socio registrado. Le enviamos un email para que active su cuenta (el enlace vence en 24 horas).'
+        : 'Socio registrado correctamente.',
+    );
   };
 
   const cambiarCategoria = (value: string) => {

@@ -42,7 +42,9 @@ test(
       await dialogo.getByLabel('Nombre').fill(socio.nombre);
       await dialogo.getByLabel('Apellido').fill(socio.apellido);
       await dialogo.getByLabel('DNI').fill(socio.dni);
-      await dialogo.getByLabel('Email').fill(socio.email);
+      await dialogo.getByLabel('Email', { exact: true }).fill(socio.email);
+      // DT-54: el email se escribe dos veces; el socio recibe un enlace para activar su cuenta.
+      await dialogo.getByLabel('Repetí el email').fill(socio.email);
       await dialogo.getByLabel('Categoría').selectOption({ label: 'Cuota General' });
       await resaltar(dialogo);
     });

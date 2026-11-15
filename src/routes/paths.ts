@@ -5,6 +5,8 @@
 export const ROUTES = {
   login: '/login',
   register: '/register',
+  /** DT-54: pantalla pública del enlace del email (la API arma el link con esta ruta). */
+  verificarEmail: '/verificar-email',
   dashboard: '/',
   dashboardGestion: '/dashboard',
   hacermeSocio: '/hacerme-socio',

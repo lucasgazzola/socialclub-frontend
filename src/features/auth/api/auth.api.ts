@@ -1,5 +1,12 @@
 import { apiClient } from '@/lib/api/client';
-import type { CambiarContrasenaPayload, LoginPayload, RegisterPayload, UsuarioAutenticado } from '../types';
+import type {
+  CambiarContrasenaPayload,
+  ConsultaVerificacion,
+  LoginPayload,
+  RegisterPayload,
+  UsuarioAutenticado,
+  VerificarEmailPayload,
+} from '../types';
 
 /**
  * Capa de acceso a la API del módulo de auth. Las features nunca llaman a
@@ -44,5 +51,19 @@ export const authApi = {
    */
   async cambiarContrasena(payload: CambiarContrasenaPayload): Promise<void> {
     await apiClient.patch('/auth/cambiar-contrasena', payload);
+  },
+
+  /** DT-54: datos del enlace de verificación (el token viaja en el body). */
+  async consultarVerificacion(token: string): Promise<ConsultaVerificacion> {
+    const { data } = await apiClient.post<ConsultaVerificacion>('/auth/verificacion/consultar', {
+      token,
+    });
+    return data;
+  },
+
+  /** DT-54: usa el enlace: verifica el email y, si hace falta, guarda la contraseña. */
+  async verificarEmail(payload: VerificarEmailPayload): Promise<{ mensaje: string }> {
+    const { data } = await apiClient.post<{ mensaje: string }>('/auth/verificacion', payload);
+    return data;
   },
 };

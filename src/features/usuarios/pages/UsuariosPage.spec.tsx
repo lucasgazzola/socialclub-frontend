@@ -19,6 +19,7 @@ const state = vi.hoisted(() => ({
   updateMutateAsync: vi.fn(),
   deactivateMutateAsync: vi.fn(),
   activateMutateAsync: vi.fn(),
+  reenviarMutate: vi.fn(),
 }));
 
 vi.mock('../hooks/useUsers', () => ({
@@ -44,6 +45,10 @@ vi.mock('../hooks/useDeactivateUsuario', () => ({
 
 vi.mock('../hooks/useActivateUsuario', () => ({
   useActivateUsuario: () => ({ mutateAsync: state.activateMutateAsync, isPending: false }),
+}));
+
+vi.mock('../hooks/useReenviarVerificacion', () => ({
+  useReenviarVerificacion: () => ({ mutate: state.reenviarMutate, isPending: false }),
 }));
 
 vi.mock('@/features/disciplinas/hooks/useDisciplinasActivas', () => ({
@@ -152,8 +157,8 @@ describe('UsuariosPage', () => {
     await user.type(screen.getByLabelText(/nombre/i), 'Nuevo');
     await user.type(screen.getByLabelText(/apellido/i), 'Administrador');
     await user.type(screen.getByLabelText(/dni/i), '40123456');
-    await user.type(screen.getByLabelText(/email/i), 'nuevo.admin@socialclub.local');
-    await user.type(screen.getByLabelText(/contraseña/i), 'Admin123!');
+    await user.type(screen.getByLabelText('Email'), 'nuevo.admin@socialclub.local');
+    await user.type(screen.getByLabelText('Repetí el email'), 'nuevo.admin@socialclub.local');
     await user.click(screen.getByRole('button', { name: /crear usuario/i }));
 
     await waitFor(() => {
@@ -163,7 +168,7 @@ describe('UsuariosPage', () => {
           apellido: 'Administrador',
           dni: '40123456',
           email: 'nuevo.admin@socialclub.local',
-          password: 'Admin123!',
+          confirmarEmail: 'nuevo.admin@socialclub.local',
           roles: ['ADMIN'],
         }),
       );
@@ -187,8 +192,8 @@ describe('UsuariosPage', () => {
     await user.type(screen.getByLabelText(/nombre/i), 'Nuevo');
     await user.type(screen.getByLabelText(/apellido/i), 'Admin123');
     await user.type(screen.getByLabelText(/dni/i), '40123456');
-    await user.type(screen.getByLabelText(/email/i), 'nuevo.admin@socialclub.local');
-    await user.type(screen.getByLabelText(/contraseña/i), 'Admin123!');
+    await user.type(screen.getByLabelText('Email'), 'nuevo.admin@socialclub.local');
+    await user.type(screen.getByLabelText('Repetí el email'), 'nuevo.admin@socialclub.local');
     await user.click(screen.getByRole('button', { name: /crear usuario/i }));
 
     expect(await screen.findByText('El apellido contiene caracteres inválidos')).toBeInTheDocument();
@@ -211,9 +216,11 @@ describe('UsuariosPage', () => {
     await user.clear(nombreInput);
     await user.type(nombreInput, 'AdminModificado');
 
-    const emailInput = screen.getByLabelText(/email/i);
+    const emailInput = screen.getByLabelText('Email');
     await user.clear(emailInput);
     await user.type(emailInput, 'admin.modificado@socialclub.local');
+    // DT-54: al cambiar el email hay que escribirlo dos veces.
+    await user.type(screen.getByLabelText('Repetí el email'), 'admin.modificado@socialclub.local');
 
     await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
 
@@ -223,6 +230,7 @@ describe('UsuariosPage', () => {
         payload: expect.objectContaining({
           nombre: 'AdminModificado',
           email: 'admin.modificado@socialclub.local',
+          confirmarEmail: 'admin.modificado@socialclub.local',
         }),
       });
     });
@@ -377,6 +385,23 @@ describe('UsuariosPage', () => {
     await waitFor(() => {
       expect(state.activateMutateAsync).toHaveBeenCalledWith(1);
     });
+  });
+
+  it('DT-54: marca al usuario pendiente de verificación y permite reenviarle el enlace', async () => {
+    state.usuarios = [
+      buildUsuario({ id: 7, nombre: 'Pendiente', apellido: 'Ruiz', emailVerificado: false }),
+      buildUsuario({ id: 8, nombre: 'Verificado', apellido: 'Paz', emailVerificado: true }),
+    ];
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    expect(screen.getAllByText('Pendiente de verificación')).toHaveLength(1);
+    const botones = screen.getAllByRole('button', { name: /reenviar enlace/i });
+    expect(botones).toHaveLength(1);
+
+    await user.click(botones[0]);
+    expect(state.reenviarMutate).toHaveBeenCalledWith(7);
   });
 
   describe('orden y filtro de la grilla (DT-03)', () => {

@@ -3,7 +3,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { Button, DateInput, Input, ModalActions, Select } from '@/components/ui';
-import { socioFormSchema, type SocioFormData } from '../schemas';
+import { crearSocioFormSchema, type SocioFormData } from '../schemas';
+import { mismoEmail } from '@/lib/utils/email';
 import { ROUTES } from '@/routes/paths';
 import { useCategorias } from '../hooks/useCategorias';
 
@@ -20,15 +21,22 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
   const { data: categorias, isLoading: cargandoCategorias } = useCategorias();
 
+  // DT-54: en la edición se compara contra el email que ya tenía.
+  const emailOriginal = defaultValues?.email;
   const {
     register,
     control,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SocioFormData>({
-    resolver: zodResolver(socioFormSchema),
+    resolver: zodResolver(crearSocioFormSchema(emailOriginal)),
     defaultValues,
   });
+  const emailActual = watch('email');
+  // En el alta se pide siempre; en la edición, solo si cambia el email.
+  const esAlta = !defaultValues;
+  const pideConfirmacion = esAlta || (!!emailActual?.trim() && !mismoEmail(emailActual, emailOriginal));
 
   const onFormSubmit = handleSubmit(async (values) => {
     setErrorServidor(null);
@@ -91,6 +99,16 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
           error={errors.email?.message}
           {...register('email')}
         />
+        {pideConfirmacion && (
+          <Input
+            id="confirmarEmail"
+            label="Repetí el email"
+            type="email"
+            autoComplete="off"
+            error={errors.confirmarEmail?.message}
+            {...register('confirmarEmail')}
+          />
+        )}
         <Input
           id="telefono"
           label="Teléfono"

@@ -54,6 +54,8 @@ export interface LoginPayload {
 /** Datos del registro público (US-38). El backend no acepta roles ni dni acá. */
 export interface RegisterPayload {
   email: string;
+  /** DT-54: el email escrito por segunda vez. */
+  confirmarEmail: string;
   password: string;
   confirmarPassword: string;
   nombre: string;
@@ -70,4 +72,20 @@ export interface CambiarContrasenaPayload {
   passwordActual: string;
   nuevaContrasena: string;
   confirmarNuevaContrasena: string;
+}
+
+/** DT-54: a quién pertenece un enlace de verificación y qué pide. */
+export interface ConsultaVerificacion {
+  nombre: string;
+  email: string;
+  /** true si la cuenta la creó el club y todavía no tiene contraseña. */
+  requiereContrasena: boolean;
+  expiraEn: string;
+}
+
+/** DT-54: cuerpo de `POST /auth/verificacion`. */
+export interface VerificarEmailPayload {
+  token: string;
+  password?: string;
+  confirmarPassword?: string;
 }

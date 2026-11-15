@@ -3,6 +3,7 @@ import { RedirigirAEdicion } from './RedirigirAEdicion';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { VerificarEmailPage } from '@/features/auth/pages/VerificarEmailPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { DashboardGestionPage } from '@/features/dashboard/pages/DashboardGestionPage';
 import { HacermeSocioPage } from '@/features/socios/pages/HacermeSocioPage';
@@ -45,6 +46,7 @@ export function AppRouter() {
     <Routes>
       <Route path={ROUTES.login} element={<LoginPage />} />
       <Route path={ROUTES.register} element={<RegisterPage />} />
+      <Route path={ROUTES.verificarEmail} element={<VerificarEmailPage />} />
 
       {/* Catálogo público de eventos (US-53) */}
       <Route element={<AppLayout />}>

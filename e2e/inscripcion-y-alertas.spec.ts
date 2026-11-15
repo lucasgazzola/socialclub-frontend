@@ -6,6 +6,7 @@ import {
   sufijoUnico,
   resaltar,
   USUARIOS,
+  enlaceDeVerificacion,
 } from './soporte/fixtures';
 
 /**
@@ -121,8 +122,9 @@ test(
       await dialogo.getByLabel('Nombre').fill('Bruno');
       await dialogo.getByLabel('Apellido').fill('Delegado');
       await dialogo.getByLabel('DNI').fill(dniUnico());
-      await dialogo.getByLabel('Email').fill(delegadoBasquet.email);
-      await dialogo.getByLabel('Contraseña').fill(delegadoBasquet.password);
+      await dialogo.getByLabel('Email', { exact: true }).fill(delegadoBasquet.email);
+      // DT-54: el email se escribe dos veces; la contraseña la elige el delegado.
+      await dialogo.getByLabel('Repetí el email').fill(delegadoBasquet.email);
       await dialogo.getByRole('checkbox', { name: 'ADMIN' }).uncheck();
       await dialogo.getByRole('checkbox', { name: 'DELEGADO' }).check();
       await dialogo.getByRole('button', { name: 'Crear usuario' }).click();
@@ -143,6 +145,15 @@ test(
       await expect(fila).toContainText('DELEGADO');
       await expect(fila).toContainText('Básquet');
       await resaltar(fila);
+    });
+
+    await paso('5. El delegado activa su cuenta desde el enlace del email (DT-54)', async () => {
+      await page.context().clearCookies();
+      await page.goto(await enlaceDeVerificacion(delegadoBasquet.email));
+      await page.getByLabel('Contraseña', { exact: true }).fill(delegadoBasquet.password);
+      await page.getByLabel('Repetí la contraseña').fill(delegadoBasquet.password);
+      await page.getByRole('button', { name: 'Activar mi cuenta' }).click();
+      await expect(page.getByRole('status')).toContainText('Tu cuenta quedó activa');
     });
   },
 );

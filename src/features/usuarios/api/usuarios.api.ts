@@ -42,4 +42,12 @@ export const usuariosApi = {
     const { data } = await apiClient.patch<Usuario>(`/usuarios/${id}/activar`);
     return data;
   },
+
+  /** DT-54: manda un enlace nuevo a un usuario que todavía no verificó su email. */
+  async reenviarVerificacion(id: number): Promise<{ mensaje: string }> {
+    const { data } = await apiClient.post<{ mensaje: string }>(
+      `/usuarios/${id}/reenviar-verificacion`,
+    );
+    return data;
+  },
 };
