@@ -83,10 +83,10 @@ export function PortalSocioLayout() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-[#060d1f] text-slate-100 selection:bg-brand-500/30"
+      className="portal-dark fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-[#070a0f] text-slate-100 selection:bg-brand-500/30"
       style={{
         backgroundImage:
-          'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 95, 194, 0.22), transparent), radial-gradient(ellipse 50% 40% at 95% 100%, rgba(249, 115, 22, 0.08), transparent)',
+          'radial-gradient(ellipse 80% 45% at 50% -12%, rgba(0, 95, 194, 0.16), transparent), radial-gradient(ellipse 45% 35% at 92% 96%, rgba(16, 185, 129, 0.06), transparent)',
       }}
     >
       {/* Franja sutil lateral derecha en color institucional */}
@@ -96,7 +96,7 @@ export function PortalSocioLayout() {
       />
 
       {/* Header superior fijo */}
-      <header className="relative z-30 shrink-0 border-b border-white/10 bg-[#060d1f]">
+      <header className="relative z-30 shrink-0 border-b border-white/[0.08] bg-[#070a0f]/95 backdrop-blur-md">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
           {/* Izquierda: botón menú móvil + Marca */}
           <div className="flex items-center gap-3">
@@ -232,7 +232,7 @@ export function PortalSocioLayout() {
             'min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-none',
             esRutaInicio
               ? 'pb-8'
-              : 'mb-6 rounded-2xl border border-white/10 bg-white p-6 text-slate-900 shadow-2xl sm:p-8 lg:mb-8',
+              : 'mb-6 rounded-2xl border border-white/[0.08] bg-[#0d1118]/95 p-6 text-slate-100 shadow-2xl sm:p-8 lg:mb-8',
           )}
         >
           <Outlet />

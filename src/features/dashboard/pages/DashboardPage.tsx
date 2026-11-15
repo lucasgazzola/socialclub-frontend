@@ -216,8 +216,8 @@ interface FilaDatoPortal {
 
 /**
  * Vista principal del Portal SocialClub ID (para Socios y Participantes).
- * Presenta la tarjeta blanca de carnet/identidad a la izquierda y la ficha
- * de datos personales sobre fondo oscuro a la derecha.
+ * Diseño oscuro estilo Global Fan: carnet digital en bento card oscura a la izquierda
+ * y ficha de datos personales sobre superficie mate a la derecha.
  */
 function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
   const { usuario } = useAuth();
@@ -285,19 +285,25 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
           label: 'VER MIS CUOTAS',
           icon: CreditCard,
           to: ROUTES.misCuotas,
-          className: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm',
+          className:
+            'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-950/50 ring-1 ring-brand-400/30',
+          iconClassName: 'text-white',
         },
         {
           label: 'RESERVAR ESPACIO',
           icon: CalendarClock,
           to: ROUTES.misReservas,
-          className: 'bg-accent-500 hover:bg-accent-600 text-white shadow-sm',
+          className:
+            'border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 text-slate-100',
+          iconClassName: 'text-amber-400',
         },
         {
           label: 'MIS ENTRADAS',
           icon: Ticket,
           to: ROUTES.misEntradas,
-          className: 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm',
+          className:
+            'border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 text-slate-100',
+          iconClassName: 'text-brand-400',
         },
       ]
     : [
@@ -305,31 +311,50 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
           label: 'QUIERO HACERME SOCIO',
           icon: UserPlus,
           to: ROUTES.hacermeSocio,
-          className: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm',
+          className:
+            'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-950/50 ring-1 ring-brand-400/30',
+          iconClassName: 'text-white',
         },
         {
           label: 'INSCRIBIRME A DISCIPLINA',
           icon: Dumbbell,
           to: ROUTES.solicitarInscripcion,
-          className: 'bg-accent-500 hover:bg-accent-600 text-white shadow-sm',
+          className:
+            'border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 text-slate-100',
+          iconClassName: 'text-amber-400',
         },
         {
           label: 'EXPLORAR EVENTOS',
           icon: CalendarDays,
           to: ROUTES.eventos,
-          className: 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm',
+          className:
+            'border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 text-slate-100',
+          iconClassName: 'text-brand-400',
         },
       ];
 
   return (
-    <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[310px_minmax(0,1fr)]">
-      {/* Tarjeta Blanca Central: Carnet Digital y Acciones Rápidas */}
+    <div className="grid grid-cols-1 items-start gap-7 xl:grid-cols-[320px_minmax(0,1fr)]">
+      {/* Bento Card Oscura: Carnet Digital y Acciones Rápidas (sin contenedores blancos) */}
       <section
         aria-label="Tarjeta de identidad del socio"
-        className="flex flex-col items-center rounded-2xl bg-white p-7 text-center text-slate-900 shadow-2xl ring-1 ring-white/15"
+        className="relative flex flex-col items-center overflow-hidden rounded-2xl border border-white/[0.1] bg-gradient-to-b from-[#131b28] via-[#0d121b] to-[#090d14] p-7 text-center text-slate-100 shadow-2xl"
       >
-        <div className="relative">
-          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-slate-200 text-3xl font-bold text-slate-500 ring-4 ring-brand-50">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgba(0,95,194,0.28),transparent_72%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/60 to-transparent"
+        />
+
+        <span className="relative z-10 text-[10px] font-bold uppercase tracking-[0.22em] text-brand-400/90">
+          Carnet Digital
+        </span>
+
+        <div className="relative z-10 mt-4">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-500/25 via-slate-800/90 to-slate-900 text-2xl font-bold tracking-tight text-white ring-1 ring-white/15 shadow-inner">
             {iniciales}
           </div>
           <button
@@ -337,72 +362,78 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
             onClick={() => navigate(ROUTES.perfil)}
             title="Editar mis datos"
             aria-label="Ir a editar mis datos"
-            className="absolute left-0 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-md transition-transform hover:scale-105 hover:bg-brand-600 cursor-pointer"
+            className="absolute -right-0.5 bottom-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-[#151d2b] text-slate-200 shadow-lg transition-all hover:scale-105 hover:border-brand-400/50 hover:bg-brand-600 hover:text-white cursor-pointer"
           >
-            <Pencil size={13} />
+            <Pencil size={12} />
           </button>
         </div>
 
-        <h1 className="mt-5 text-lg font-bold tracking-tight text-brand-700">
+        <h1 className="relative z-10 mt-4 text-xl font-bold tracking-tight text-white">
           {nombreMostrado}
         </h1>
 
-        <p className="mt-1 text-sm font-medium text-slate-500">
+        <p className="relative z-10 mt-1 text-sm font-medium text-slate-400">
           {membresiaActiva
             ? `Socio · ${membresiaActiva.categoria?.nombre ?? 'Activo'}`
             : 'Participante'}
         </p>
 
         {membresiaActiva ? (
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <div className="relative z-10 mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
             Membresía Activa
           </div>
         ) : (
-          <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <p className="relative z-10 mt-3.5 inline-flex items-center rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300">
             Sumate al club
           </p>
         )}
 
-        <div className="mt-6 w-full space-y-2.5">
-          {accionesRapidas.map(({ label, icon: Icon, to, className }) => (
+        <div className="relative z-10 mt-6 w-full space-y-2.5 border-t border-white/[0.07] pt-6">
+          {accionesRapidas.map(({ label, icon: Icon, to, className, iconClassName }) => (
             <button
               key={to}
               type="button"
               onClick={() => navigate(to)}
-              className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold tracking-wide transition-all cursor-pointer ${className}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold tracking-wide transition-all cursor-pointer ${className}`}
             >
-              <Icon size={15} aria-hidden="true" />
+              <Icon size={15} className={iconClassName} aria-hidden="true" />
               <span>{label}</span>
             </button>
           ))}
         </div>
       </section>
 
-      {/* Ficha Derecha: Datos Personales sobre fondo oscuro */}
-      <section aria-label="Datos personales" className="space-y-5">
-        <p className="text-xs leading-relaxed text-slate-300 sm:text-sm">
-          Tus datos personales se utilizan para tu carnet digital, inscripciones a disciplinas y
-          reservas en SocialClub. En caso de que necesites actualizar algún dato, hacé{' '}
-          <button
-            type="button"
-            onClick={() => navigate(ROUTES.perfil)}
-            className="font-semibold text-brand-400 underline decoration-brand-400/60 underline-offset-2 transition-colors hover:text-brand-300 cursor-pointer"
-          >
-            click aquí
-          </button>{' '}
-          para actualizarlos en tu perfil.
-        </p>
+      {/* Bento Card Derecha: Datos Personales */}
+      <section
+        aria-label="Datos personales"
+        className="space-y-5 rounded-2xl border border-white/[0.08] bg-[#0d1118]/90 p-6 shadow-2xl sm:p-8"
+      >
+        <div className="space-y-1.5">
+          <h2 className="text-lg font-bold tracking-tight text-white">Datos personales</h2>
+          <p className="text-xs leading-relaxed text-slate-400 sm:text-sm">
+            Tus datos personales se utilizan para tu carnet digital, inscripciones a disciplinas y
+            reservas en SocialClub. En caso de que necesites actualizar algún dato, hacé{' '}
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.perfil)}
+              className="font-semibold text-brand-400 underline decoration-brand-400/60 underline-offset-2 transition-colors hover:text-brand-300 cursor-pointer"
+            >
+              click aquí
+            </button>{' '}
+            para actualizarlos en tu perfil.
+          </p>
+        </div>
 
-        <dl className="divide-y divide-white/15 border-t border-b border-white/15">
+        <dl className="divide-y divide-white/[0.07] border-y border-white/[0.07]">
           {filasDatos.map(({ etiqueta, valor, editable }) => (
             <div
               key={etiqueta}
-              className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"
+              className="flex flex-wrap items-center justify-between gap-3 px-1 py-3.5 text-sm transition-colors hover:bg-white/[0.02]"
             >
               <div className="flex flex-wrap items-baseline gap-2">
-                <dt className="font-semibold text-slate-300">{etiqueta}:</dt>
-                <dd className="font-medium text-white">{valor}</dd>
+                <dt className="font-medium text-slate-400">{etiqueta}:</dt>
+                <dd className="font-semibold text-slate-100">{valor}</dd>
               </div>
 
               {editable && (
@@ -424,7 +455,7 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
             variant="outline"
             size="sm"
             onClick={() => navigate(ROUTES.perfil)}
-            className="border-white/20 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+            className="border-white/15 bg-white/[0.05] text-white hover:bg-white/[0.1] hover:text-white"
           >
             <User size={15} />
             Editar mis datos
@@ -434,7 +465,7 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
             variant="ghost"
             size="sm"
             onClick={() => navigate(ROUTES.cambiarContrasena)}
-            className="text-slate-300 hover:bg-white/10 hover:text-white"
+            className="text-slate-300 hover:bg-white/[0.06] hover:text-white"
           >
             <KeyRound size={15} />
             Cambiar contraseña
