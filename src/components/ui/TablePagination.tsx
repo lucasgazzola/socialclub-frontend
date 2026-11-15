@@ -82,7 +82,8 @@ export function TablePagination({
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        {/* TASK-60: en pantallas angostas los botones bajan de línea en vez de desbordar. */}
+        <div className="flex flex-wrap items-center gap-1">
           <Button
             variant="secondary"
             size="sm"
