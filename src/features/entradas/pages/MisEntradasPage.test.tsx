@@ -6,7 +6,7 @@ import { MisEntradasPage } from './MisEntradasPage';
 
 const mockUseMisEntradas = vi.fn();
 vi.mock('../hooks/useEntradas', () => ({
-  useMisEntradas: () => mockUseMisEntradas(),
+  useMisEntradas: (params?: unknown) => mockUseMisEntradas(params),
 }));
 
 vi.mock('../components/QRCode', () => ({
@@ -72,7 +72,7 @@ describe('MisEntradasPage', () => {
 
   it('muestra estado vacío si el usuario no tiene entradas', () => {
     mockUseMisEntradas.mockReturnValue({
-      data: [],
+      data: { items: [], total: 0, pagina: 1, porPagina: 10, totalPaginas: 1 },
       isLoading: false,
       isError: false,
     });
@@ -82,23 +82,31 @@ describe('MisEntradasPage', () => {
     expect(screen.getByText('Todavía no tenés entradas adquiridas.')).toBeInTheDocument();
   });
 
-  it('renderiza la lista de entradas y permite descargar QR en PNG y en PDF', async () => {
+  it('renderiza la lista de entradas válidas con badges y permite descargar QR en PNG y en PDF', async () => {
     const user = userEvent.setup();
-    const mockEntradas = [
-      {
-        id: 1,
-        token: 'token-12345678-abcd',
-        evento: { nombre: 'Torneo Apertura' },
-      },
-      {
-        id: 2,
-        token: 'token-87654321-efgh',
-        evento: null,
-      },
-    ];
+    const mockData = {
+      items: [
+        {
+          id: 1,
+          token: 'token-12345678-abcd',
+          estado: 'VALIDA',
+          evento: { nombre: 'Torneo Apertura' },
+        },
+        {
+          id: 2,
+          token: 'token-87654321-efgh',
+          estado: 'VALIDA',
+          evento: null,
+        },
+      ],
+      total: 2,
+      pagina: 1,
+      porPagina: 10,
+      totalPaginas: 1,
+    };
 
     mockUseMisEntradas.mockReturnValue({
-      data: mockEntradas,
+      data: mockData,
       isLoading: false,
       isError: false,
     });
@@ -117,10 +125,12 @@ describe('MisEntradasPage', () => {
 
     expect(screen.getByText('Torneo Apertura')).toBeInTheDocument();
     expect(screen.getByText('Evento')).toBeInTheDocument();
+    expect(screen.getAllByText('Válida')).toHaveLength(2);
     expect(screen.getAllByText('token-12345678-abcd').length).toBeGreaterThan(0);
 
     const downloadQrButtons = screen.getAllByRole('button', { name: /Descargar QR/i });
     expect(downloadQrButtons).toHaveLength(2);
+    expect(downloadQrButtons[0]).not.toBeDisabled();
 
     await user.click(downloadQrButtons[0]);
 
@@ -130,11 +140,120 @@ describe('MisEntradasPage', () => {
 
     const downloadPdfButtons = screen.getAllByRole('button', { name: /Descargar PDF/i });
     expect(downloadPdfButtons).toHaveLength(2);
+    expect(downloadPdfButtons[0]).not.toBeDisabled();
 
     await user.click(downloadPdfButtons[0]);
 
     await waitFor(() => {
       expect(mockSave).toHaveBeenCalledWith('entrada-token-12.pdf');
+    });
+  });
+
+  it('renderiza en gris y deshabilita los botones de descarga para entradas USADA y EXPIRADA (Vencida)', () => {
+    const mockData = {
+      items: [
+        {
+          id: 10,
+          token: 'token-usada-1111',
+          estado: 'USADA',
+          evento: { nombre: 'Fiesta de Fin de Año' },
+        },
+        {
+          id: 11,
+          token: 'token-expirada-2222',
+          estado: 'EXPIRADA',
+          evento: { nombre: 'Torneo Pasado' },
+        },
+      ],
+      total: 2,
+      pagina: 1,
+      porPagina: 10,
+      totalPaginas: 1,
+    };
+
+    mockUseMisEntradas.mockReturnValue({
+      data: mockData,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderWithProviders(<MisEntradasPage />);
+
+    expect(screen.getByText('Usada')).toBeInTheDocument();
+    expect(screen.getByText('Vencida')).toBeInTheDocument();
+
+    const cardUsada = screen.getByTestId('entrada-card-10');
+    expect(cardUsada).toHaveClass('grayscale');
+
+    const cardExpirada = screen.getByTestId('entrada-card-11');
+    expect(cardExpirada).toHaveClass('grayscale');
+
+    const btnPdfUsada = screen.getByTestId('btn-descargar-pdf-10');
+    const btnQrUsada = screen.getByTestId('btn-descargar-qr-10');
+    expect(btnPdfUsada).toBeDisabled();
+    expect(btnQrUsada).toBeDisabled();
+
+    const btnPdfExpirada = screen.getByTestId('btn-descargar-pdf-11');
+    const btnQrExpirada = screen.getByTestId('btn-descargar-qr-11');
+    expect(btnPdfExpirada).toBeDisabled();
+    expect(btnQrExpirada).toBeDisabled();
+  });
+
+  it('permite buscar entradas por nombre de evento con debounce', async () => {
+    const user = userEvent.setup();
+    mockUseMisEntradas.mockReturnValue({
+      data: { items: [], total: 0, pagina: 1, porPagina: 10, totalPaginas: 1 },
+      isLoading: false,
+      isError: false,
+    });
+
+    renderWithProviders(<MisEntradasPage />);
+
+    const searchInput = screen.getByTestId('buscar-entradas-input');
+    await user.type(searchInput, 'Pádel');
+
+    await waitFor(() => {
+      expect(mockUseMisEntradas).toHaveBeenCalledWith(
+        expect.objectContaining({ search: 'Pádel' }),
+      );
+    });
+  });
+
+  it('permite cambiar de página y de cantidad por página en TablePagination', async () => {
+    const user = userEvent.setup();
+    mockUseMisEntradas.mockReturnValue({
+      data: {
+        items: [
+          { id: 1, token: 'tok-1', estado: 'VALIDA', evento: { nombre: 'Torneo 1' } },
+        ],
+        total: 25,
+        pagina: 1,
+        porPagina: 10,
+        totalPaginas: 3,
+      },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+    });
+
+    renderWithProviders(<MisEntradasPage />);
+
+    const btnSiguiente = screen.getByRole('button', { name: /Siguiente/i });
+    await user.click(btnSiguiente);
+
+    await waitFor(() => {
+      expect(mockUseMisEntradas).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 2 }),
+      );
+    });
+
+    const selectorFilas = screen.getByRole('combobox', { name: /Filas por página/i });
+    await user.selectOptions(selectorFilas, '20');
+
+    await waitFor(() => {
+      expect(mockUseMisEntradas).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 20 }),
+      );
     });
   });
 });

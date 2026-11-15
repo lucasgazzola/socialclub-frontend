@@ -38,6 +38,24 @@ export interface ComprarEntradasPayload {
 
 export interface ValidarEntradaDto {
   token: string;
+  eventoId: number;
+}
+
+export interface FiltrosMisEntradas {
+  page?: number;
+  limit?: number;
+  pagina?: number;
+  porPagina?: number;
+  search?: string;
+  estado?: EstadoEntrada;
+}
+
+export interface MisEntradasPaginadas {
+  items: Entrada[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+  totalPaginas: number;
 }
 
 export interface ValidarAccesoResponse {

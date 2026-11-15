@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { entradasApi } from '../api/entradas.api';
+import type { FiltrosMisEntradas, ValidarEntradaDto } from '../types';
 
 /**
  * Organiza las keys de las queries para que sean consistentes y faciles de usar en los hooks.
@@ -8,7 +9,7 @@ import { entradasApi } from '../api/entradas.api';
 export const entradasKeys = {
   all: ['entradas'] as const,
   porEvento: (eventoId: number) => [...entradasKeys.all, 'por-evento', eventoId] as const,
-  propias: () => [...entradasKeys.all, 'propias'] as const,
+  propias: (params?: FiltrosMisEntradas) => [...entradasKeys.all, 'propias', params] as const,
 };
 
 /**
@@ -56,10 +57,10 @@ export function useIniciarCompraEntradas() {
   });
 }
 
-export function useMisEntradas() {
+export function useMisEntradas(params?: FiltrosMisEntradas) {
   return useQuery({
-    queryKey: entradasKeys.propias(),
-    queryFn: entradasApi.listarMisEntradas,
+    queryKey: entradasKeys.propias(params),
+    queryFn: () => entradasApi.listarMisEntradas(params),
   });
 }
 
@@ -67,7 +68,7 @@ export function useValidarEntrada() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (token: string) => entradasApi.validarEntrada(token),
+    mutationFn: (payload: ValidarEntradaDto) => entradasApi.validarEntrada(payload),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: entradasKeys.all });
       if (data.entrada?.eventoId) {

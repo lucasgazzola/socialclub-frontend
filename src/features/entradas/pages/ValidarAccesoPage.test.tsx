@@ -118,6 +118,10 @@ describe('ValidarAccesoPage', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
+      expect(entradasApi.validarEntrada).toHaveBeenCalledWith({
+        token: '550e8400-e29b-41d4-a716-446655440000',
+        eventoId: EVENTO.id,
+      });
       expect(screen.getByText('¡ACCESO PERMITIDO!')).toBeInTheDocument();
       expect(screen.getByText('Evento: Torneo Nocturno de Pádel')).toBeInTheDocument();
     });
@@ -166,19 +170,16 @@ describe('ValidarAccesoPage', () => {
     });
   });
 
-  it('detects when a ticket corresponds to a different event than selected', async () => {
-    const mockSuccessResponse = {
-      acceso: 'PERMITIDO' as const,
-      entrada: {
-        id: 10,
-        eventoId: 99,
-        eventoNombre: 'Torneo de Pádel',
-      },
-    };
-    vi.mocked(entradasApi.validarEntrada).mockResolvedValueOnce(mockSuccessResponse);
+  it('detects when a ticket corresponds to a different event than selected (409 Conflict)', async () => {
+    const mockConflictOtroEventoError = Object.assign(
+      new Error('La entrada corresponde a otro evento'),
+      { status: 409 },
+    );
+    vi.mocked(entradasApi.validarEntrada).mockRejectedValueOnce(mockConflictOtroEventoError);
 
     // El evento que se controla sale de la ruta (EVENTO.id = 1) y la entrada
-    // escaneada pertenece al 99, así que tiene que detectarse el desvío.
+    // escaneada pertenece a otro evento, por lo que el backend responde 409
+    // y el frontend muestra la alerta correspondiente.
     renderComponent();
 
     fireEvent.click(screen.getByText('Ingreso Manual / Archivo'));
@@ -189,10 +190,50 @@ describe('ValidarAccesoPage', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
+      expect(entradasApi.validarEntrada).toHaveBeenCalledWith({
+        token: '550e8400-e29b-41d4-a716-446655440000',
+        eventoId: EVENTO.id,
+      });
       expect(screen.getByText('¡ENTRADA DE OTRO EVENTO!')).toBeInTheDocument();
       expect(
         screen.getByText(/Esta entrada es válida, pero no corresponde a este evento/i),
       ).toBeInTheDocument();
     });
+  });
+
+  it('muestra error cuando el token es inválido (404 Not Found)', async () => {
+    vi.mocked(entradasApi.validarEntrada).mockRejectedValueOnce(
+      Object.assign(new Error('Entrada no encontrada. El código QR no es válido.'), { status: 404 }),
+    );
+
+    renderComponent();
+
+    fireEvent.click(screen.getByText('Ingreso Manual / Archivo'));
+    fireEvent.change(screen.getByLabelText(/Token UUID de la Entrada/i), {
+      target: { value: '550e8400-e29b-41d4-a716-446655440000' },
+    });
+    fireEvent.click(screen.getByText('Validar Token Manualmente'));
+
+    await waitFor(() => {
+      expect(screen.getByText('¡CÓDIGO QR INVÁLIDO!')).toBeInTheDocument();
+    });
+  });
+
+  it('muestra aviso si no hay evento seleccionado al escanear', async () => {
+    // Render sin parámetro de evento en la ruta
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/entradas/validar']}>
+          <Routes>
+            <Route path="/entradas/validar" element={<ValidarAccesoPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText('Validación de Acceso por QR')).toBeInTheDocument();
   });
 });

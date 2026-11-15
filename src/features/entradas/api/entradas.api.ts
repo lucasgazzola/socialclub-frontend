@@ -3,7 +3,10 @@ import type {
   ComprarEntradasPayload,
   CrearEntradasResult,
   Entrada,
+  FiltrosMisEntradas,
+  MisEntradasPaginadas,
   ValidarAccesoResponse,
+  ValidarEntradaDto,
 } from '../types';
 import type { OrdenPago } from '@/features/pasarela/types';
 
@@ -21,10 +24,8 @@ export const entradasApi = {
     return data;
   },
 
-  async validarEntrada(token: string): Promise<ValidarAccesoResponse> {
-    const { data } = await apiClient.post<ValidarAccesoResponse>('/entradas/validar', {
-      token,
-    });
+  async validarEntrada(payload: ValidarEntradaDto): Promise<ValidarAccesoResponse> {
+    const { data } = await apiClient.post<ValidarAccesoResponse>('/entradas/validar', payload);
     return data;
   },
 
@@ -34,8 +35,10 @@ export const entradasApi = {
     return data;
   },
 
-  async listarMisEntradas(): Promise<Entrada[]> {
-    const { data } = await apiClient.get<Entrada[]>('/entradas/mis-entradas');
+  async listarMisEntradas(params?: FiltrosMisEntradas): Promise<MisEntradasPaginadas> {
+    const { data } = await apiClient.get<MisEntradasPaginadas>('/entradas/mis-entradas', {
+      params,
+    });
     return data;
   },
 };
