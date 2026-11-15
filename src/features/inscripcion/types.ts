@@ -60,6 +60,8 @@ export interface CrearInscripcionPayload {
   fechaNacimiento?: string;
   genero?: GeneroDisciplina;
   email?: string;
+  /** DT-54: obligatorio si se carga el email de un participante nuevo. */
+  confirmarEmail?: string;
   telefono?: string;
   disciplinaId: number;
   categoriaDisciplinaId?: number;

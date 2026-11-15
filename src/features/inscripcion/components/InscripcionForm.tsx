@@ -43,6 +43,7 @@ const FORMULARIO_VACIO: Partial<InscripcionFormValues> = {
   fechaNacimiento: '',
   genero: undefined,
   email: '',
+  confirmarEmail: '',
   telefono: '',
 };
 
@@ -218,6 +219,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
       personaId: existente?.id,
       fechaNacimiento: data.fechaNacimiento || undefined,
       email: data.email || undefined,
+      confirmarEmail: data.email ? data.confirmarEmail : undefined,
       ...(docsAEnviar.length > 0 ? { documentos: docsAEnviar } : {}),
     };
 
@@ -225,7 +227,8 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
     const creada = await enviar(payload).catch((error: unknown) => {
       const mensaje = error instanceof Error ? error.message : 'No se pudo registrar la inscripción';
       // Si el error es de un campo, se marca en ese campo; si no, se muestra abajo.
-      if (/email/i.test(mensaje)) setError('email', { message: mensaje });
+      if (/coinciden|confirm/i.test(mensaje)) setError('confirmarEmail', { message: mensaje });
+      else if (/email/i.test(mensaje)) setError('email', { message: mensaje });
       else if (/DNI/.test(mensaje)) setError('dni', { message: mensaje });
       else setErrorEnvio(mensaje);
       return null;
@@ -443,6 +446,15 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
                 </Select>
               </div>
               <Input id="email" label="Email" type="email" error={errors.email?.message} {...register('email')} />
+              {/* DT-54: con email, el participante recibe un enlace para activar su cuenta. */}
+              <Input
+                id="confirmarEmail"
+                label="Repetí el email"
+                type="email"
+                autoComplete="off"
+                error={errors.confirmarEmail?.message}
+                {...register('confirmarEmail')}
+              />
               <Input id="telefono" label="Teléfono" error={errors.telefono?.message} {...register('telefono')} />
             </div>
           </>

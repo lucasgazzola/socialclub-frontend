@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { errorConfirmacionEmail, mismoEmail } from '@/lib/utils/email';
 
 export const socioFormSchema = z.object({
   nombre: z.string().min(1, 'Requerido').max(30).regex(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s'-]+$/),
@@ -6,11 +7,26 @@ export const socioFormSchema = z.object({
   dni: z.string().min(6).max(8).regex(/^\d+$/, 'Solo números'),
   fechaNacimiento: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
+  /** DT-54: el email escrito por segunda vez (al cargarlo o cambiarlo). */
+  confirmarEmail: z.string().optional(),
   telefono: z.string().optional(),
   categoriaId: z.number().int().optional(),
 });
 
 export type SocioFormData = z.infer<typeof socioFormSchema>;
+
+/**
+ * DT-54: si se carga un email nuevo (o cambia en la edición), hay que
+ * escribirlo dos veces. En el alta, el socio recibe un enlace para activar
+ * su cuenta.
+ */
+export function crearSocioFormSchema(emailOriginal?: string | null) {
+  return socioFormSchema.superRefine((valores, ctx) => {
+    if (mismoEmail(valores.email, emailOriginal)) return;
+    const error = errorConfirmacionEmail(valores.email, valores.confirmarEmail);
+    if (error) ctx.addIssue({ code: 'custom', path: ['confirmarEmail'], message: error });
+  });
+}
 
 /** Formulario de 'Hacerme socio'. Solo DNI y categoria son editables. */
 export const hacermeSocioFormSchema = z.object({
