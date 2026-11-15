@@ -41,57 +41,67 @@ export function PortalEntradasPage() {
           No se pudieron cargar tus entradas. Intentá recargar la página.
         </PortalSurface>
       ) : entradas?.length ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {entradas.map((entrada) => (
-            <PortalSurface key={entrada.id} variant="pass" className="flex flex-col justify-between">
-              {/* Cabecera del pase */}
-              <div className="p-4 sm:p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-[4px] border border-blue-400/25 bg-blue-500/12 text-blue-400">
-                    <Ticket size={15} />
-                  </span>
-                  <PortalTag tone="info" dot>
-                    Pase Digital
-                  </PortalTag>
-                </div>
+            <PortalSurface
+              key={entrada.id}
+              variant="pass"
+              className="relative grid grid-cols-1 overflow-hidden sm:grid-cols-[1fr_210px]"
+            >
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-blue-500"
+              />
 
-                <h2 className="mt-3.5 text-base font-semibold tracking-[-0.02em] text-white">
-                  {entrada.evento?.nombre ?? 'Evento'}
-                </h2>
-              </div>
-
-              {/* Corte perforado del ticket */}
-              <div className="border-t border-dashed border-blue-400/25 px-4 py-4 sm:px-5">
-                <div className="flex flex-col items-center rounded-[5px] border border-slate-300/[0.10] bg-[#060911] p-4">
-                  <div className="rounded-[4px] bg-white p-2">
-                    <PortalQRCode value={entrada.token} size={148} />
+              {/* Cuerpo izquierdo del ticket */}
+              <div className="flex flex-col justify-between p-5">
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-400">
+                      <Ticket size={13} />
+                      Ticket de Acceso
+                    </span>
+                    <PortalTag tone="info" dot>
+                      Pase Digital
+                    </PortalTag>
                   </div>
-                  <p className="mt-2.5 break-all text-center font-mono text-[11px] text-slate-400 tabular-nums">
-                    {entrada.token}
+
+                  <h2 className="mt-3 text-lg font-semibold tracking-[-0.02em] text-white">
+                    {entrada.evento?.nombre ?? 'Evento'}
+                  </h2>
+                  <p className="mt-1 font-mono text-[11px] text-slate-400 tabular-nums">
+                    Token: {entrada.token}
                   </p>
                 </div>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <PortalButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => descargarEntradaPdf(entrada)}
+                  >
+                    <FileText size={14} />
+                    Descargar PDF
+                  </PortalButton>
+                  <PortalButton
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => descargarQR(entrada)}
+                  >
+                    <Download size={14} />
+                    QR PNG
+                  </PortalButton>
+                </div>
               </div>
 
-              {/* Acciones de descarga */}
-              <div className="flex gap-2 border-t border-slate-300/[0.08] px-4 py-3.5 sm:px-5">
-                <PortalButton
-                  variant="primary"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => descargarEntradaPdf(entrada)}
-                >
-                  <FileText size={14} />
-                  PDF
-                </PortalButton>
-                <PortalButton
-                  variant="secondary"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => descargarQR(entrada)}
-                >
-                  <Download size={14} />
-                  QR PNG
-                </PortalButton>
+              {/* Talón derecho perforado con código QR */}
+              <div className="flex flex-col items-center justify-center border-t border-dashed border-blue-400/30 bg-[#04070e]/90 p-5 sm:border-t-0 sm:border-l">
+                <div className="rounded-[2px] bg-white p-2">
+                  <PortalQRCode value={entrada.token} size={136} />
+                </div>
+                <span className="mt-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                  Presentar en puerta
+                </span>
               </div>
             </PortalSurface>
           ))}

@@ -25,7 +25,7 @@ export function PortalBrandLogo({
     <div
       style={{ width: size, height: size }}
       className={cn(
-        'relative flex shrink-0 select-none items-center justify-center overflow-hidden rounded-[4px] border border-blue-400/20 bg-blue-500/[0.08] p-0.5',
+        'relative flex shrink-0 select-none items-center justify-center overflow-hidden rounded-[2px] border border-blue-400/30 bg-blue-500/[0.10] p-0.5',
         className,
       )}
     >
@@ -63,12 +63,15 @@ export function PortalTitleBar({
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-3 border-b border-slate-300/[0.10] pb-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-[22px] font-semibold tracking-[-0.025em] text-slate-50 sm:text-[26px]">
-          {title}
-        </h1>
-        {summary && <p className="mt-1 text-sm text-slate-400">{summary}</p>}
+    <header className="flex flex-col gap-3 border-b border-white/[0.08] pb-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex items-start gap-3">
+        <span aria-hidden="true" className="mt-1.5 h-5 w-0.5 shrink-0 bg-blue-500" />
+        <div>
+          <h1 className="text-[22px] font-semibold tracking-[-0.025em] text-white sm:text-[26px]">
+            {title}
+          </h1>
+          {summary && <p className="mt-0.5 text-sm text-slate-400">{summary}</p>}
+        </div>
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2.5">{actions}</div>}
     </header>
@@ -80,7 +83,7 @@ interface PortalSurfaceProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Superficie arquitectónica oscura con bordes afilados (6px) y tintes sutiles azul pizarra.
+ * Superficie arquitectónica oscura con bordes afilados (2px) y detalles en azul eléctrico.
  */
 export function PortalSurface({
   children,
@@ -91,11 +94,11 @@ export function PortalSurface({
   return (
     <div
       className={cn(
-        'rounded-md border transition-[border-color,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
-        variant === 'default' && 'border-slate-300/[0.10] bg-[#0a101b]',
-        variant === 'muted' && 'border-slate-300/[0.08] bg-[#070b14]',
+        'rounded-[2px] border transition-[border-color,background-color,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
+        variant === 'default' && 'border-white/[0.09] bg-[#070c16]',
+        variant === 'muted' && 'border-white/[0.07] bg-[#050912]',
         variant === 'pass' &&
-          'border-blue-400/[0.22] bg-gradient-to-b from-[#0f1a2e] via-[#0b1322] to-[#080d18] shadow-[0_16px_40px_-22px_rgba(37,99,235,0.35)]',
+          'border-blue-500/35 bg-gradient-to-br from-[#0b1830] via-[#070d1b] to-[#04070e] shadow-[0_20px_50px_-24px_rgba(37,99,235,0.5)]',
         className,
       )}
       {...props}
@@ -121,19 +124,19 @@ export function PortalButton({
     <button
       type={type}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-[5px] font-medium select-none cursor-pointer',
-        'transition-[transform,background-color,border-color,color,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
+        'inline-flex items-center justify-center gap-2 rounded-[2px] font-medium select-none cursor-pointer',
+        'transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
         'active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#05080f]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#03060c]',
         size === 'sm' ? 'h-8 px-3 text-xs' : 'h-10 px-4 text-sm',
         variant === 'primary' &&
-          'border border-blue-400/35 bg-blue-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:border-blue-300/45 hover:bg-blue-500',
+          'border border-blue-400/45 bg-blue-600 text-white shadow-[0_0_24px_-8px_rgba(37,99,235,0.75),inset_0_1px_0_rgba(255,255,255,0.2)] hover:border-blue-300/60 hover:bg-blue-500',
         variant === 'secondary' &&
-          'border border-slate-300/[0.16] bg-[#101827] text-slate-100 hover:border-blue-400/40 hover:bg-[#152035] hover:text-white',
+          'border border-blue-400/25 bg-[#0c1424] text-slate-100 hover:border-blue-400/55 hover:bg-[#111d34] hover:text-white',
         variant === 'ghost' &&
           'border border-transparent bg-transparent text-slate-300 hover:bg-blue-500/[0.10] hover:text-blue-300',
         variant === 'danger' &&
-          'border border-rose-500/35 bg-rose-500/12 text-rose-300 hover:border-rose-400/50 hover:bg-rose-500/20 hover:text-rose-200',
+          'border border-rose-500/40 bg-rose-500/12 text-rose-300 hover:border-rose-400/55 hover:bg-rose-500/20 hover:text-rose-200',
         className,
       )}
       {...props}
@@ -159,7 +162,7 @@ export function PortalSegmentedSwitch<T extends string>({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="inline-flex flex-wrap items-center gap-1 rounded-[5px] border border-slate-300/[0.12] bg-[#070b14] p-1"
+      className="inline-flex flex-wrap items-center gap-1 rounded-[2px] border border-white/[0.10] bg-[#050912] p-1"
     >
       {tabs.map((tab) => {
         const active = tab.value === value;
@@ -171,10 +174,10 @@ export function PortalSegmentedSwitch<T extends string>({
             aria-selected={active}
             onClick={() => onChange(tab.value)}
             className={cn(
-              'inline-flex items-center gap-2 rounded-[4px] px-3 py-1.5 text-xs font-medium cursor-pointer',
+              'inline-flex items-center gap-2 rounded-[2px] px-3 py-1.5 text-xs font-medium cursor-pointer',
               'transition-[background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
               active
-                ? 'bg-blue-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]'
+                ? 'bg-blue-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]'
                 : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-100',
             )}
           >
@@ -182,8 +185,8 @@ export function PortalSegmentedSwitch<T extends string>({
             {tab.count !== undefined && (
               <span
                 className={cn(
-                  'rounded-[3px] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
-                  active ? 'bg-blue-950/50 text-blue-100' : 'bg-white/[0.06] text-slate-400',
+                  'rounded-[2px] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+                  active ? 'bg-blue-950/60 text-blue-100' : 'bg-white/[0.06] text-slate-400',
                 )}
               >
                 {tab.count}
@@ -228,7 +231,7 @@ export function PortalTag({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-[4px] border px-2 py-0.5 text-[11px] font-medium tracking-tight',
+        'inline-flex items-center gap-1.5 rounded-[2px] border px-2 py-0.5 text-[11px] font-medium tracking-tight',
         toneClasses[tone],
         className,
       )}
@@ -267,13 +270,13 @@ export function PortalFieldInput({
         readOnly={readOnly}
         disabled={disabled}
         className={cn(
-          'block h-10 w-full rounded-[5px] border bg-[#070b14] px-3 text-sm text-slate-100 placeholder:text-slate-500',
+          'block h-10 w-full rounded-[2px] border bg-[#050912] px-3 text-sm text-slate-100 placeholder:text-slate-500',
           'transition-[border-color,background-color,box-shadow] duration-150',
           'focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
-          (disabled || readOnly) && 'cursor-not-allowed border-slate-300/[0.07] bg-[#060911] text-slate-400',
+          (disabled || readOnly) && 'cursor-not-allowed border-white/[0.06] bg-[#04070e] text-slate-400',
           error
             ? 'border-rose-500/60 focus:border-rose-400 focus:ring-rose-500/20'
-            : 'border-slate-300/[0.15]',
+            : 'border-white/[0.13]',
           className,
         )}
         {...props}
@@ -313,13 +316,13 @@ export function PortalFieldSelect({
           id={id}
           disabled={disabled}
           className={cn(
-            'flex h-10 w-full cursor-pointer appearance-none items-center rounded-[5px] border bg-[#070b14] pl-3 pr-9 text-sm text-slate-100',
+            'flex h-10 w-full cursor-pointer appearance-none items-center rounded-[2px] border bg-[#050912] pl-3 pr-9 text-sm text-slate-100',
             'transition-[border-color,background-color,box-shadow] duration-150',
             'focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20',
-            disabled && 'cursor-not-allowed border-slate-300/[0.07] bg-[#060911] text-slate-400',
+            disabled && 'cursor-not-allowed border-white/[0.06] bg-[#04070e] text-slate-400',
             error
               ? 'border-rose-500/60 focus:border-rose-400 focus:ring-rose-500/20'
-              : 'border-slate-300/[0.15]',
+              : 'border-white/[0.13]',
             className,
           )}
           {...props}
@@ -362,7 +365,7 @@ export function PortalEmptyState({
     >
       <div
         data-testid={testId}
-        className="flex h-11 w-11 items-center justify-center rounded-[5px] border border-blue-400/20 bg-blue-500/[0.08] text-blue-400"
+        className="flex h-11 w-11 items-center justify-center rounded-[2px] border border-blue-400/25 bg-blue-500/[0.10] text-blue-400"
       >
         {icon}
       </div>
@@ -419,14 +422,14 @@ export function PortalModal({
     >
       <div
         className={cn(
-          'portal-modal-panel relative max-h-[90vh] w-full overflow-y-auto rounded-md border border-slate-300/[0.16] bg-[#0a101b] text-slate-100 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.8)]',
+          'portal-modal-panel relative max-h-[90vh] w-full overflow-y-auto rounded-[2px] border border-white/[0.14] bg-[#070c16] text-slate-100 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.85)]',
           widthClass,
         )}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-slate-300/[0.10] px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-white/[0.09] px-5 py-4">
           <div className="flex items-start gap-3">
             {icon && (
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[5px] border border-blue-400/25 bg-blue-500/12 text-blue-400">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[2px] border border-blue-400/25 bg-blue-500/12 text-blue-400">
                 {icon}
               </span>
             )}
@@ -439,7 +442,7 @@ export function PortalModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar diálogo"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] border border-slate-300/[0.12] bg-white/[0.03] text-slate-400 transition-colors hover:border-blue-400/35 hover:text-white cursor-pointer"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[2px] border border-white/[0.12] bg-white/[0.03] text-slate-400 transition-colors hover:border-blue-400/45 hover:text-white cursor-pointer"
           >
             <X size={15} />
           </button>

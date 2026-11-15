@@ -43,7 +43,7 @@ import {
 } from './PortalUI';
 
 /**
- * Modal oscuro de confirmación previo a Mercado Pago / Simulador (propio del Portal de Socios).
+ * Modal oscuro de confirmaciÃ³n previo a Mercado Pago / Simulador (propio del Portal de Socios).
  */
 export function PortalConfirmarPagoModal({
   open,
@@ -68,11 +68,11 @@ export function PortalConfirmarPagoModal({
       onClose={isLoading ? () => {} : onClose}
       icon={<Lock size={16} />}
       title="Confirmar pago"
-      description="Vas a completar el pago en Mercado Pago. Al finalizar, regresás automáticamente a SocialClub."
+      description="Vas a completar el pago en Mercado Pago. Al finalizar, regresÃ¡s automÃ¡ticamente a SocialClub."
       size="md"
     >
       <div className="space-y-4">
-        <div className="rounded-[5px] border border-slate-300/[0.12] bg-[#070b14] p-4">
+        <div className="rounded-[2px] border border-slate-300/[0.12] bg-[#070b14] p-4">
           <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
             {titulo}
           </div>
@@ -85,11 +85,11 @@ export function PortalConfirmarPagoModal({
           </div>
         </div>
 
-        <div className="flex items-start gap-2.5 rounded-[5px] border border-blue-400/25 bg-blue-500/[0.08] p-3 text-xs text-blue-200">
+        <div className="flex items-start gap-2.5 rounded-[2px] border border-blue-400/25 bg-blue-500/[0.08] p-3 text-xs text-blue-200">
           <ShieldCheck size={16} className="mt-0.5 shrink-0 text-blue-400" />
           <span>
             Pago protegido: los datos de tu tarjeta se cargan en Mercado Pago, nunca en
-            SocialClub. Tenés 30 minutos para completarlo.
+            SocialClub. TenÃ©s 30 minutos para completarlo.
           </span>
         </div>
 
@@ -105,7 +105,7 @@ export function PortalConfirmarPagoModal({
             data-testid="pagar-ir-a-pasarela"
           >
             {isLoading ? <PortalSpinner className="h-3.5 w-3.5" /> : <ExternalLink size={14} />}
-            {isLoading ? 'Redirigiendo…' : 'Ir a pagar'}
+            {isLoading ? 'Redirigiendoâ€¦' : 'Ir a pagar'}
           </PortalButton>
         </div>
       </div>
@@ -143,12 +143,12 @@ export function PortalEventoDetalleModal({
       open={open}
       onClose={onClose}
       title={evento.nombre}
-      description="Información completa de la actividad y disponibilidad de entradas."
+      description="InformaciÃ³n completa de la actividad y disponibilidad de entradas."
       icon={<Info size={16} />}
       size="lg"
     >
       <div className="space-y-5" data-testid="evento-detalle-modal">
-        <div className="relative overflow-hidden rounded-[5px] border border-slate-300/[0.12] bg-[#070b14]">
+        <div className="relative overflow-hidden rounded-[2px] border border-slate-300/[0.12] bg-[#070b14]">
           <PortalEventoVisual
             nombre={evento.nombre}
             imageUrl={evento.imageUrl}
@@ -164,7 +164,7 @@ export function PortalEventoDetalleModal({
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="flex items-start gap-3 rounded-[5px] border border-slate-300/[0.10] bg-[#070b14] p-3">
+          <div className="flex items-start gap-3 rounded-[2px] border border-slate-300/[0.10] bg-[#070b14] p-3">
             <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
             <div>
               <p className="text-[11px] font-medium text-slate-400">Fecha y hora</p>
@@ -175,17 +175,17 @@ export function PortalEventoDetalleModal({
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-[5px] border border-slate-300/[0.10] bg-[#070b14] p-3">
+          <div className="flex items-start gap-3 rounded-[2px] border border-slate-300/[0.10] bg-[#070b14] p-3">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
             <div>
-              <p className="text-[11px] font-medium text-slate-400">Lugar de acreditación</p>
+              <p className="text-[11px] font-medium text-slate-400">Lugar de acreditaciÃ³n</p>
               <p className="mt-0.5 text-sm font-medium text-white">
                 {evento.lugarAcreditacion || 'Sede del club'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-[5px] border border-slate-300/[0.10] bg-[#070b14] p-3">
+          <div className="flex items-start gap-3 rounded-[2px] border border-slate-300/[0.10] bg-[#070b14] p-3">
             <Ticket className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
             <div>
               <p className="text-[11px] font-medium text-slate-400">Entrada y valor</p>
@@ -200,12 +200,12 @@ export function PortalEventoDetalleModal({
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-[5px] border border-slate-300/[0.10] bg-[#070b14] p-3">
+          <div className="flex items-start gap-3 rounded-[2px] border border-slate-300/[0.10] bg-[#070b14] p-3">
             <Users className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
             <div>
               <p className="text-[11px] font-medium text-slate-400">Disponibilidad</p>
               {!evento.requiereEntrada ? (
-                <p className="mt-0.5 text-sm font-medium text-slate-200">Sin límite de capacidad</p>
+                <p className="mt-0.5 text-sm font-medium text-slate-200">Sin lÃ­mite de capacidad</p>
               ) : estaEnPeriodoVenta ? (
                 <p className="mt-0.5 text-sm font-medium text-white tabular-nums">
                   {evento.entradasDisponibles !== null && evento.entradasDisponibles !== undefined
@@ -214,7 +214,7 @@ export function PortalEventoDetalleModal({
                   {evento.capacidadMaxima ? ` (cap. ${evento.capacidadMaxima})` : ''}
                 </p>
               ) : estadoVisual.key === 'VENTA_PROXIMA' ? (
-                <p className="mt-0.5 text-sm font-medium text-amber-300">Venta próxima a iniciar</p>
+                <p className="mt-0.5 text-sm font-medium text-amber-300">Venta prÃ³xima a iniciar</p>
               ) : estadoVisual.key === 'AGOTADO' ? (
                 <p className="mt-0.5 text-sm font-medium text-rose-400">Entradas agotadas</p>
               ) : (
@@ -225,7 +225,7 @@ export function PortalEventoDetalleModal({
         </div>
 
         {evento.requiereEntrada && (inicioVentaTexto || finVentaTexto) && (
-          <div className="rounded-[5px] border border-slate-300/[0.10] bg-[#070b14] p-3.5 text-xs text-slate-300">
+          <div className="rounded-[2px] border border-slate-300/[0.10] bg-[#070b14] p-3.5 text-xs text-slate-300">
             <div className="flex items-center gap-1.5 font-medium text-white">
               <Clock size={14} className="text-blue-400" />
               <span>Ventana de venta</span>
@@ -246,9 +246,9 @@ export function PortalEventoDetalleModal({
         )}
 
         <div className="space-y-1.5">
-          <h3 className="text-xs font-medium text-slate-400">Descripción</h3>
-          <p className="whitespace-pre-line rounded-[5px] border border-slate-300/[0.08] bg-[#070b14] p-3.5 text-sm leading-relaxed text-slate-300">
-            {evento.descripcion || 'Sin descripción detallada disponible para esta actividad.'}
+          <h3 className="text-xs font-medium text-slate-400">DescripciÃ³n</h3>
+          <p className="whitespace-pre-line rounded-[2px] border border-slate-300/[0.08] bg-[#070b14] p-3.5 text-sm leading-relaxed text-slate-300">
+            {evento.descripcion || 'Sin descripciÃ³n detallada disponible para esta actividad.'}
           </p>
         </div>
 
@@ -259,7 +259,7 @@ export function PortalEventoDetalleModal({
           {estaHabilitadoComprar && (
             <Link
               to={ROUTES.comprarEntradas(evento.id)}
-              className="inline-flex h-8 items-center gap-1.5 rounded-[5px] border border-blue-400/35 bg-blue-600 px-3.5 text-xs font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-blue-500 active:scale-[0.97]"
+              className="inline-flex h-8 items-center gap-1.5 rounded-[2px] border border-blue-400/35 bg-blue-600 px-3.5 text-xs font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-blue-500 active:scale-[0.97]"
             >
               <Ticket size={14} />
               Comprar entradas
@@ -272,7 +272,7 @@ export function PortalEventoDetalleModal({
 }
 
 /**
- * Modal oscuro para solicitar inscripción a una disciplina y categoría.
+ * Modal oscuro para solicitar inscripciÃ³n a una disciplina y categorÃ­a.
  */
 export function PortalSolicitarInscripcionModal({
   disciplina,
@@ -344,8 +344,8 @@ export function PortalSolicitarInscripcionModal({
     <PortalModal
       open={open}
       onClose={onClose}
-      title={`Postulación · ${disciplina.nombre}`}
-      description="Elegí tu categoría y revisá los requisitos antes de enviar la solicitud."
+      title={`PostulaciÃ³n Â· ${disciplina.nombre}`}
+      description="ElegÃ­ tu categorÃ­a y revisÃ¡ los requisitos antes de enviar la solicitud."
       size="md"
     >
       <form
@@ -361,11 +361,11 @@ export function PortalSolicitarInscripcionModal({
           <PortalFieldSelect
             id={selectId}
             data-testid="select-categoria-solicitud"
-            label="Categoría *"
+            label="CategorÃ­a *"
             value={categoriaSeleccionadaId ?? ''}
             onChange={(e) => handleCategoriaChange(Number(e.target.value))}
             options={[
-              { value: '', label: 'Seleccioná una categoría…' },
+              { value: '', label: 'SeleccionÃ¡ una categorÃ­aâ€¦' },
               ...categorias.map((cat) => ({
                 value: cat.id,
                 label: `${cat.nombre}${cat.cumpleRestricciones ? '' : ' (No cumple requisitos)'}`,
@@ -375,7 +375,7 @@ export function PortalSolicitarInscripcionModal({
         )}
 
         <div
-          className="rounded-[5px] border border-slate-300/[0.12] bg-[#070b14] p-4"
+          className="rounded-[2px] border border-slate-300/[0.12] bg-[#070b14] p-4"
           data-testid="arancel-mensual-info"
         >
           <div className="flex items-center justify-between gap-2">
@@ -397,12 +397,12 @@ export function PortalSolicitarInscripcionModal({
         <div className="space-y-2" data-testid="documentos-obligatorios-seccion">
           <div className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
             <FileText size={14} className="text-blue-400" />
-            <span>Documentación obligatoria</span>
+            <span>DocumentaciÃ³n obligatoria</span>
           </div>
           {docsObligatorios.length === 0 ? (
-            <p className="text-xs text-slate-400">No requiere documentación previa obligatoria.</p>
+            <p className="text-xs text-slate-400">No requiere documentaciÃ³n previa obligatoria.</p>
           ) : (
-            <ul className="divide-y divide-slate-300/[0.08] rounded-[5px] border border-slate-300/[0.10] bg-[#070b14]">
+            <ul className="divide-y divide-slate-300/[0.08] rounded-[2px] border border-slate-300/[0.10] bg-[#070b14]">
               {docsObligatorios.map((doc) => (
                 <li
                   key={doc.tipoDocumento}
@@ -412,7 +412,7 @@ export function PortalSolicitarInscripcionModal({
                   <span className="text-slate-400 tabular-nums">
                     {doc.plazoDiasTolerancia === 0
                       ? 'Requerido al inicio'
-                      : `${doc.plazoDiasTolerancia} días de tolerancia`}
+                      : `${doc.plazoDiasTolerancia} dÃ­as de tolerancia`}
                   </span>
                 </li>
               ))}
@@ -421,21 +421,21 @@ export function PortalSolicitarInscripcionModal({
         </div>
 
         {tieneCategorias && !categoriaSeleccionadaId ? (
-          <div className="flex items-start gap-2 rounded-[5px] border border-slate-300/[0.12] bg-[#070b14] p-3 text-xs text-slate-300">
+          <div className="flex items-start gap-2 rounded-[2px] border border-slate-300/[0.12] bg-[#070b14] p-3 text-xs text-slate-300">
             <Info size={15} className="mt-0.5 shrink-0 text-blue-400" />
             <span>
-              Seleccioná una categoría para validar los requisitos de edad y género de tu cuenta.
+              SeleccionÃ¡ una categorÃ­a para validar los requisitos de edad y gÃ©nero de tu cuenta.
             </span>
           </div>
         ) : !cumpleRestricciones ? (
           <div
-            className="flex items-start gap-2.5 rounded-[5px] border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200"
+            className="flex items-start gap-2.5 rounded-[2px] border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200"
             data-testid="alerta-incumplimiento-restricciones"
           >
             <AlertCircle size={15} className="mt-0.5 shrink-0 text-rose-400" />
             <div>
               <p className="font-semibold text-rose-200">
-                No cumplís las condiciones para esta categoría:
+                No cumplÃ­s las condiciones para esta categorÃ­a:
               </p>
               <ul className="mt-1 list-inside list-disc space-y-0.5 text-rose-300">
                 {motivosIncumplimiento.map((m, idx) => (
@@ -446,11 +446,11 @@ export function PortalSolicitarInscripcionModal({
           </div>
         ) : (
           <div
-            className="flex items-center gap-2 rounded-[5px] border border-emerald-500/25 bg-emerald-500/10 p-3 text-xs text-emerald-200"
+            className="flex items-center gap-2 rounded-[2px] border border-emerald-500/25 bg-emerald-500/10 p-3 text-xs text-emerald-200"
             data-testid="alerta-cumple-restricciones"
           >
             <CheckCircle2 size={15} className="shrink-0 text-emerald-400" />
-            <span>Tu perfil cumple con los requisitos de edad y género para inscribirte.</span>
+            <span>Tu perfil cumple con los requisitos de edad y gÃ©nero para inscribirte.</span>
           </div>
         )}
 
@@ -476,7 +476,7 @@ export function PortalSolicitarInscripcionModal({
             }
             data-testid="btn-confirmar-solicitud"
           >
-            {isPending ? 'Enviando solicitud…' : 'Confirmar solicitud'}
+            {isPending ? 'Enviando solicitudâ€¦' : 'Confirmar solicitud'}
           </PortalButton>
         </div>
       </form>
@@ -507,25 +507,25 @@ export function PortalBajaSocioModal({
       size="sm"
     >
       <div className="space-y-4">
-        <div className="flex items-start gap-3 rounded-[5px] border border-amber-400/25 bg-amber-500/10 p-3.5 text-amber-100">
+        <div className="flex items-start gap-3 rounded-[2px] border border-amber-400/25 bg-amber-500/10 p-3.5 text-amber-100">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
           <div className="space-y-1 text-xs">
-            <p className="font-semibold">¿Estás seguro de que querés darte de baja?</p>
+            <p className="font-semibold">Â¿EstÃ¡s seguro de que querÃ©s darte de baja?</p>
             <p className="leading-relaxed text-amber-200/85">
-              Al confirmar, tu membresía pasará a estado <strong>Inactivo</strong> y dejarás de
+              Al confirmar, tu membresÃ­a pasarÃ¡ a estado <strong>Inactivo</strong> y dejarÃ¡s de
               tener beneficios exclusivos para socios activos.
             </p>
           </div>
         </div>
 
-        <ul className="space-y-2 rounded-[5px] border border-slate-300/[0.10] bg-[#070b14] p-3 text-xs text-slate-300">
+        <ul className="space-y-2 rounded-[2px] border border-slate-300/[0.10] bg-[#070b14] p-3 text-xs text-slate-300">
           <li className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
             Tu usuario e historial de pagos y cuotas se conservan intactos.
           </li>
           <li className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-            Podrás solicitar re-asociarte desde este mismo panel en cualquier momento.
+            PodrÃ¡s solicitar re-asociarte desde este mismo panel en cualquier momento.
           </li>
         </ul>
 
@@ -539,7 +539,7 @@ export function PortalBajaSocioModal({
             onClick={() => void onConfirm()}
             disabled={isPending}
           >
-            {isPending ? 'Procesando baja…' : 'Sí, confirmar baja'}
+            {isPending ? 'Procesando bajaâ€¦' : 'SÃ­, confirmar baja'}
           </PortalButton>
         </div>
       </div>

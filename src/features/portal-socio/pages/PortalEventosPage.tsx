@@ -172,7 +172,7 @@ export function PortalEventosPage() {
         />
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {eventos.map((evento) => {
               const estadoVisual = getEstadoVisual(evento);
               const habilitadoComprar = ventaAbierta(evento);
@@ -182,30 +182,33 @@ export function PortalEventosPage() {
               return (
                 <PortalSurface
                   key={evento.id}
-                  className="group flex flex-col justify-between overflow-hidden hover:border-blue-400/35 hover:bg-[#0e1627]"
+                  className="group flex flex-col justify-between overflow-hidden hover:border-blue-500/45 hover:bg-[#0a1322] hover:shadow-[0_14px_34px_-20px_rgba(37,99,235,0.65)]"
                 >
-                  <div className="flex flex-1 flex-col sm:flex-row">
-                    <PortalEventoVisual
-                      nombre={evento.nombre}
-                      imageUrl={evento.imageUrl}
-                      tempImageUrl={evento.tempImageUrl}
-                      logoSize={52}
-                      className="aspect-4/3 w-full shrink-0 border-b border-slate-300/[0.08] sm:aspect-auto sm:min-h-[168px] sm:w-44 sm:border-b-0 sm:border-r"
-                    />
+                  <div className="flex flex-1 flex-col">
+                    <div className="relative">
+                      <PortalEventoVisual
+                        nombre={evento.nombre}
+                        imageUrl={evento.imageUrl}
+                        tempImageUrl={evento.tempImageUrl}
+                        logoSize={54}
+                        className="h-40 w-full border-b border-white/[0.08]"
+                      />
+                      <div className="absolute top-3 right-3">
+                        <PortalTag
+                          tone={habilitadoComprar ? 'info' : 'neutral'}
+                          dot={habilitadoComprar}
+                          className="backdrop-blur-md"
+                        >
+                          {estadoVisual.label}
+                        </PortalTag>
+                      </div>
+                    </div>
 
                     <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
                       <div>
-                        <div className="flex items-start justify-between gap-2">
-                          <h2 className="text-base font-semibold tracking-[-0.02em] text-white">
-                            {evento.nombre}
-                          </h2>
-                          <PortalTag
-                            tone={habilitadoComprar ? 'info' : 'neutral'}
-                            dot={habilitadoComprar}
-                          >
-                            {estadoVisual.label}
-                          </PortalTag>
-                        </div>
+                        <h2 className="text-base font-semibold tracking-[-0.02em] text-white">
+                          {evento.nombre}
+                        </h2>
 
                         <div className="mt-2.5 space-y-1 text-xs text-slate-400">
                           <div className="flex items-center gap-1.5 tabular-nums">
@@ -227,21 +230,21 @@ export function PortalEventosPage() {
                         )}
                       </div>
 
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-300/[0.08] pt-3.5">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] pt-3.5">
                         <div>
                           <span className="text-sm font-semibold text-white tabular-nums">
                             {precioTexto}
                           </span>
                           {precioSocioTexto && (
-                            <span className="ml-2 text-[11px] font-medium text-blue-400 tabular-nums">
+                            <p className="text-[11px] font-medium text-blue-400 tabular-nums">
                               {precioSocioTexto}
-                            </span>
+                            </p>
                           )}
                         </div>
 
                         <div className="flex items-center gap-2">
                           <PortalButton
-                            variant="ghost"
+                            variant="secondary"
                             size="sm"
                             onClick={() => setEventoDetalle(evento)}
                           >
@@ -251,7 +254,7 @@ export function PortalEventosPage() {
                           {habilitadoComprar && (
                             <Link
                               to={ROUTES.comprarEntradas(evento.id)}
-                              className="inline-flex h-8 items-center gap-1.5 rounded-[5px] border border-blue-400/35 bg-blue-600 px-3 text-xs font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-blue-500 active:scale-[0.97]"
+                              className="inline-flex h-8 items-center gap-1.5 rounded-[2px] border border-blue-400/45 bg-blue-600 px-3 text-xs font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-blue-500 active:scale-[0.97]"
                             >
                               <Ticket size={13} />
                               Entradas

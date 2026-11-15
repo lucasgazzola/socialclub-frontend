@@ -45,12 +45,12 @@ export function PortalCambiarContrasenaPage() {
     try {
       await cambiarContrasena(valores);
       reset();
-      setMensajeExito('Tu contraseña fue actualizada correctamente. Cerrando sesión…');
+      setMensajeExito('Tu contraseÃ±a fue actualizada correctamente. Cerrando sesiÃ³nâ€¦');
       await logout();
       navigate(ROUTES.login, { replace: true });
     } catch (error) {
       setMensajeError(
-        error instanceof Error ? error.message : 'Ocurrió un error al cambiar la contraseña.',
+        error instanceof Error ? error.message : 'OcurriÃ³ un error al cambiar la contraseÃ±a.',
       );
     }
   });
@@ -58,8 +58,8 @@ export function PortalCambiarContrasenaPage() {
   return (
     <div className="space-y-6">
       <PortalTitleBar
-        title="Cambiar contraseña"
-        summary="Actualizá tu clave confirmando la contraseña actual. Al guardar se cerrará la sesión."
+        title="Cambiar contraseÃ±a"
+        summary="ActualizÃ¡ tu clave confirmando la contraseÃ±a actual. Al guardar se cerrarÃ¡ la sesiÃ³n."
       />
 
       <PortalSurface className="max-w-xl p-5 sm:p-6">
@@ -67,7 +67,7 @@ export function PortalCambiarContrasenaPage() {
           {mensajeExito && (
             <div
               role="status"
-              className="flex items-center gap-3 rounded-[5px] border border-emerald-400/25 bg-emerald-500/10 p-3.5 text-sm text-emerald-200"
+              className="flex items-center gap-3 rounded-[2px] border border-emerald-400/25 bg-emerald-500/10 p-3.5 text-sm text-emerald-200"
             >
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
               <span>{mensajeExito}</span>
@@ -77,7 +77,7 @@ export function PortalCambiarContrasenaPage() {
           {mensajeError && (
             <div
               role="alert"
-              className="flex items-center gap-3 rounded-[5px] border border-rose-500/30 bg-rose-500/10 p-3.5 text-sm text-rose-200"
+              className="flex items-center gap-3 rounded-[2px] border border-rose-500/30 bg-rose-500/10 p-3.5 text-sm text-rose-200"
             >
               <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
               <span>{mensajeError}</span>
@@ -87,8 +87,8 @@ export function PortalCambiarContrasenaPage() {
           <PortalFieldInput
             id="passwordActual"
             type="password"
-            label="Contraseña actual"
-            placeholder="Tu contraseña actual"
+            label="ContraseÃ±a actual"
+            placeholder="Tu contraseÃ±a actual"
             autoComplete="current-password"
             error={errors.passwordActual?.message}
             {...register('passwordActual')}
@@ -97,8 +97,8 @@ export function PortalCambiarContrasenaPage() {
           <PortalFieldInput
             id="nuevaContrasena"
             type="password"
-            label="Nueva contraseña"
-            placeholder="Mínimo 8 caracteres"
+            label="Nueva contraseÃ±a"
+            placeholder="MÃ­nimo 8 caracteres"
             autoComplete="new-password"
             error={errors.nuevaContrasena?.message}
             {...register('nuevaContrasena')}
@@ -107,8 +107,8 @@ export function PortalCambiarContrasenaPage() {
           <PortalFieldInput
             id="confirmarNuevaContrasena"
             type="password"
-            label="Confirmar nueva contraseña"
-            placeholder="Repetí la nueva contraseña"
+            label="Confirmar nueva contraseÃ±a"
+            placeholder="RepetÃ­ la nueva contraseÃ±a"
             autoComplete="new-password"
             error={errors.confirmarNuevaContrasena?.message}
             {...register('confirmarNuevaContrasena')}
@@ -117,7 +117,7 @@ export function PortalCambiarContrasenaPage() {
           <div className="flex flex-wrap items-center gap-3 border-t border-slate-300/[0.08] pt-5">
             <PortalButton type="submit" variant="primary" disabled={isPending}>
               <KeyRound size={15} />
-              {isPending ? 'Actualizando…' : 'Actualizar contraseña'}
+              {isPending ? 'Actualizandoâ€¦' : 'Actualizar contraseÃ±a'}
             </PortalButton>
             <PortalButton variant="ghost" onClick={() => navigate(ROUTES.perfil)}>
               Cancelar

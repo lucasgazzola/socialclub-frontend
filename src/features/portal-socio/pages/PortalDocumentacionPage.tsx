@@ -67,7 +67,7 @@ const HABILITACION_TONE: Record<
 };
 
 /**
- * Documentación 100% nativa en tema oscuro + azul para Socios y Participantes.
+ * DocumentaciÃ³n 100% nativa en tema oscuro + azul para Socios y Participantes.
  * No reutiliza ni envuelve DocumentacionParticipante ni hacks CSS.
  */
 export function PortalDocumentacionPage() {
@@ -123,7 +123,7 @@ export function PortalDocumentacionPage() {
       return;
     }
     if (!archivo) {
-      setErrorArchivo('Seleccioná un archivo PDF o imagen.');
+      setErrorArchivo('SeleccionÃ¡ un archivo PDF o imagen.');
       return;
     }
 
@@ -136,26 +136,26 @@ export function PortalDocumentacionPage() {
         },
         archivo,
       });
-      toast.success('Documentación cargada correctamente.');
+      toast.success('DocumentaciÃ³n cargada correctamente.');
       cancelarCarga();
       setFileKey((k) => k + 1);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo cargar la documentación.');
+      toast.error(error instanceof Error ? error.message : 'No se pudo cargar la documentaciÃ³n.');
     }
   }
 
   return (
     <div className="space-y-6">
       <PortalTitleBar
-        title="Mi documentación"
-        summary="Controlá requisitos médicos o federativos exigidos por disciplina y renová certificados."
+        title="Mi documentaciÃ³n"
+        summary="ControlÃ¡ requisitos mÃ©dicos o federativos exigidos por disciplina y renovÃ¡ certificados."
       />
 
       {!personaId ? (
         <PortalEmptyState
           icon={<FolderOpen size={20} />}
-          title="Todavía no registrás inscripciones ni documentación"
-          description="Cuando te asocies o te inscribas a una disciplina deportiva, aquí verás tus requisitos documentales."
+          title="TodavÃ­a no registrÃ¡s inscripciones ni documentaciÃ³n"
+          description="Cuando te asocies o te inscribas a una disciplina deportiva, aquÃ­ verÃ¡s tus requisitos documentales."
         />
       ) : isLoading ? (
         <div className="flex h-48 items-center justify-center">
@@ -164,14 +164,14 @@ export function PortalDocumentacionPage() {
       ) : isError || !estado ? (
         <PortalSurface className="space-y-4 p-5">
           <p className="text-sm text-slate-300">
-            No tenés documentación pendiente ni inscripciones activas.
+            No tenÃ©s documentaciÃ³n pendiente ni inscripciones activas.
           </p>
           {historial && historial.length > 0 && (
             <div className="space-y-2 border-t border-slate-300/[0.08] pt-4">
               <p className="text-xs font-semibold text-blue-300">
                 Historial presentado ({historial.length})
               </p>
-              <ul className="divide-y divide-slate-300/[0.08] rounded-[5px] border border-slate-300/[0.10] bg-[#070b14]">
+              <ul className="divide-y divide-slate-300/[0.08] rounded-[2px] border border-slate-300/[0.10] bg-[#070b14]">
                 {historial.map((doc) => (
                   <li
                     key={doc.id}
@@ -208,7 +208,7 @@ export function PortalDocumentacionPage() {
             <PortalEmptyState
               icon={<FileCheck2 size={20} />}
               title="Sin inscripciones activas"
-              description="No estás inscripto en ninguna disciplina que exija documentación en este momento."
+              description="No estÃ¡s inscripto en ninguna disciplina que exija documentaciÃ³n en este momento."
             />
           ) : (
             <div className="space-y-4">
@@ -223,7 +223,7 @@ export function PortalDocumentacionPage() {
                           {insc.categoriaDisciplina && (
                             <span className="font-normal text-slate-400">
                               {' '}
-                              · {insc.categoriaDisciplina.nombre}
+                              Â· {insc.categoriaDisciplina.nombre}
                             </span>
                           )}
                         </h2>
@@ -237,11 +237,11 @@ export function PortalDocumentacionPage() {
                       {insc.estado === 'BLOQUEADO' && insc.motivos?.length > 0 && (
                         <div
                           role="alert"
-                          className="flex items-start gap-2.5 rounded-[5px] border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200"
+                          className="flex items-start gap-2.5 rounded-[2px] border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200"
                         >
                           <AlertTriangle size={15} className="mt-0.5 shrink-0 text-rose-400" />
                           <div>
-                            <p className="font-semibold">Inscripción bloqueada por documentación:</p>
+                            <p className="font-semibold">InscripciÃ³n bloqueada por documentaciÃ³n:</p>
                             <ul className="mt-1 list-disc pl-4 space-y-0.5 text-rose-300">
                               {insc.motivos.map((m) => (
                                 <li key={m}>{m}</li>
@@ -252,7 +252,7 @@ export function PortalDocumentacionPage() {
                       )}
 
                       {insc.habilitadoExcepcionalmenteHasta && (
-                        <div className="rounded-[5px] border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                        <div className="rounded-[2px] border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
                           Habilitado excepcionalmente hasta el{' '}
                           <span className="tabular-nums">
                             {isoADisplay(insc.habilitadoExcepcionalmenteHasta)}
@@ -262,9 +262,9 @@ export function PortalDocumentacionPage() {
                       )}
 
                       {insc.documentos.length === 0 ? (
-                        <p className="text-xs text-slate-400">Esta disciplina no exige documentación.</p>
+                        <p className="text-xs text-slate-400">Esta disciplina no exige documentaciÃ³n.</p>
                       ) : (
-                        <ul className="divide-y divide-slate-300/[0.08] rounded-[5px] border border-slate-300/[0.10] bg-[#070b14]">
+                        <ul className="divide-y divide-slate-300/[0.08] rounded-[2px] border border-slate-300/[0.10] bg-[#070b14]">
                           {insc.documentos.map((doc) => {
                             const docMeta = DOC_TONE[doc.estado];
                             const isSelected = docSeleccionado?.tipoDocumento === doc.tipoDocumento;
@@ -279,7 +279,7 @@ export function PortalDocumentacionPage() {
                                     {doc.etiqueta}
                                     {doc.origen === 'CATEGORIA' && (
                                       <span className="ml-1.5 text-xs font-normal text-slate-400">
-                                        (por categoría)
+                                        (por categorÃ­a)
                                       </span>
                                     )}
                                   </p>
@@ -315,7 +315,7 @@ export function PortalDocumentacionPage() {
             </div>
           )}
 
-          {/* Formulario inline nativo oscuro para carga o renovación */}
+          {/* Formulario inline nativo oscuro para carga o renovaciÃ³n */}
           {docSeleccionado && (
             <PortalSurface className="border-blue-400/35 bg-[#0b1322] p-5">
               <div className="mb-4 flex items-center justify-between gap-3 border-b border-blue-400/15 pb-3">
@@ -362,7 +362,7 @@ export function PortalDocumentacionPage() {
                       setArchivo(e.target.files?.[0] ?? null);
                       if (errorArchivo) setErrorArchivo(null);
                     }}
-                    className="block w-full rounded-[5px] border border-slate-300/[0.15] bg-[#070b14] p-2 text-xs text-slate-300 file:mr-3 file:rounded-[4px] file:border file:border-blue-400/30 file:bg-blue-600 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-blue-500 cursor-pointer"
+                    className="block w-full rounded-[2px] border border-slate-300/[0.15] bg-[#070b14] p-2 text-xs text-slate-300 file:mr-3 file:rounded-[2px] file:border file:border-blue-400/30 file:bg-blue-600 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-blue-500 cursor-pointer"
                   />
                   {errorArchivo && <p className="text-xs text-rose-400">{errorArchivo}</p>}
                 </div>
@@ -373,7 +373,7 @@ export function PortalDocumentacionPage() {
                   </PortalButton>
                   <PortalButton type="submit" variant="primary" size="sm" disabled={crear.isPending}>
                     <Upload size={14} />
-                    {crear.isPending ? 'Subiendo archivo…' : 'Cargar documentación'}
+                    {crear.isPending ? 'Subiendo archivoâ€¦' : 'Cargar documentaciÃ³n'}
                   </PortalButton>
                 </div>
               </form>

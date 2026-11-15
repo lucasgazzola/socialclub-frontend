@@ -83,7 +83,7 @@ export function PortalResultadoPagoPage() {
         <Acciones>
           <Link
             to={ROUTES.dashboard}
-            className="inline-flex h-9 items-center rounded-[5px] border border-slate-300/[0.16] bg-[#101827] px-4 text-sm font-medium text-slate-100 hover:border-blue-400/40"
+            className="inline-flex h-9 items-center rounded-[2px] border border-slate-300/[0.16] bg-[#101827] px-4 text-sm font-medium text-slate-100 hover:border-blue-400/40"
           >
             Ir al inicio
           </Link>
@@ -99,12 +99,12 @@ export function PortalResultadoPagoPage() {
           <Estado
             icono={<AlertTriangle className="h-9 w-9 text-amber-300" />}
             titulo="No pudimos verificar el pago"
-            texto={confirmar.error instanceof Error ? confirmar.error.message : 'Intentá nuevamente.'}
+            texto={confirmar.error instanceof Error ? confirmar.error.message : 'IntentÃ¡ nuevamente.'}
           />
         ) : (
           <div className="flex flex-col items-center gap-3 py-6 text-sm text-slate-400">
             <PortalSpinner />
-            <span>Verificando el pago…</span>
+            <span>Verificando el pagoâ€¦</span>
           </div>
         )}
       </Contenedor>
@@ -119,24 +119,24 @@ export function PortalResultadoPagoPage() {
       {orden.estado === 'APROBADA' && (
         <Estado
           icono={<CheckCircle2 className="h-10 w-10 text-emerald-400" />}
-          titulo="¡Pago aprobado!"
-          texto={`${orden.descripcion} · ${monto}`}
+          titulo="Â¡Pago aprobado!"
+          texto={`${orden.descripcion} Â· ${monto}`}
           testId="pago-aprobado"
         />
       )}
       {orden.estado === 'PENDIENTE' && !orden.detalleEstado && (
         <Estado
           icono={<Clock className="h-10 w-10 text-amber-300" />}
-          titulo="El pago todavía no se completó"
-          texto={`${orden.descripcion} · ${monto}. Podés volver a la pasarela para terminarlo.`}
+          titulo="El pago todavÃ­a no se completÃ³"
+          texto={`${orden.descripcion} Â· ${monto}. PodÃ©s volver a la pasarela para terminarlo.`}
           testId="pago-pendiente"
         />
       )}
       {orden.estado === 'PENDIENTE' && orden.detalleEstado?.startsWith('Pago en proceso') && (
         <Estado
           icono={<Clock className="h-10 w-10 text-amber-300" />}
-          titulo="El pago está en proceso"
-          texto="Mercado Pago todavía lo está revisando. Te avisamos aquí en cuanto se acredite."
+          titulo="El pago estÃ¡ en proceso"
+          texto="Mercado Pago todavÃ­a lo estÃ¡ revisando. Te avisamos aquÃ­ en cuanto se acredite."
           testId="pago-en-proceso"
         />
       )}
@@ -144,23 +144,23 @@ export function PortalResultadoPagoPage() {
         <Estado
           icono={<XCircle className="h-10 w-10 text-rose-400" />}
           titulo="El pago fue rechazado"
-          texto="No se realizó ningún cobro. Podés reintentar con otro medio de pago o cancelar."
+          texto="No se realizÃ³ ningÃºn cobro. PodÃ©s reintentar con otro medio de pago o cancelar."
           testId="pago-rechazado"
         />
       )}
       {(orden.estado === 'CANCELADA' || orden.estado === 'VENCIDA') && (
         <Estado
           icono={<XCircle className="h-10 w-10 text-slate-400" />}
-          titulo={orden.estado === 'VENCIDA' ? 'El pago venció' : 'Pago cancelado'}
-          texto="No se realizó ningún cobro. Podés iniciar un nuevo pago cuando quieras."
+          titulo={orden.estado === 'VENCIDA' ? 'El pago venciÃ³' : 'Pago cancelado'}
+          texto="No se realizÃ³ ningÃºn cobro. PodÃ©s iniciar un nuevo pago cuando quieras."
           testId="pago-cancelado"
         />
       )}
       {orden.estado === 'REQUIERE_REVISION' && (
         <Estado
           icono={<AlertTriangle className="h-10 w-10 text-amber-300" />}
-          titulo="Recibimos tu pago, pero requiere revisión"
-          texto="El pago se acreditó pero no pudimos aplicarlo automáticamente. La administración lo revisará."
+          titulo="Recibimos tu pago, pero requiere revisiÃ³n"
+          texto="El pago se acreditÃ³ pero no pudimos aplicarlo automÃ¡ticamente. La administraciÃ³n lo revisarÃ¡."
           testId="pago-revision"
         />
       )}
@@ -184,7 +184,7 @@ export function PortalResultadoPagoPage() {
           <Link
             to={destino.ruta}
             data-testid="pago-ir-a-destino"
-            className="inline-flex h-10 items-center rounded-[5px] border border-blue-400/35 bg-blue-600 px-4 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-blue-500"
+            className="inline-flex h-10 items-center rounded-[2px] border border-blue-400/35 bg-blue-600 px-4 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-blue-500"
           >
             {destino.texto}
           </Link>

@@ -20,14 +20,14 @@ import {
   PortalTitleBar,
 } from '../components/PortalUI';
 
-const errorDe = (e: unknown) => (e instanceof Error ? e.message : 'No se pudo completar la acción.');
+const errorDe = (e: unknown) => (e instanceof Error ? e.message : 'No se pudo completar la acciÃ³n.');
 
 const ESTADO_RESERVA_TONE: Record<
   MiReserva['estado'],
   { label: string; tone: 'active' | 'pending' | 'danger' | 'info' | 'neutral' }
 > = {
   PENDIENTE_APROBACION: { label: 'Pendiente', tone: 'pending' },
-  APROBADA_PENDIENTE_PAGO: { label: 'Seña pendiente', tone: 'info' },
+  APROBADA_PENDIENTE_PAGO: { label: 'SeÃ±a pendiente', tone: 'info' },
   CONFIRMADA: { label: 'Confirmada', tone: 'active' },
   RECHAZADA: { label: 'Rechazada', tone: 'danger' },
   CANCELADA_USUARIO: { label: 'Cancelada', tone: 'neutral' },
@@ -36,7 +36,7 @@ const ESTADO_RESERVA_TONE: Record<
 };
 
 /**
- * Reservas del socio/participante como feed cronológico de tickets (cero tabla administrativa).
+ * Reservas del socio/participante como feed cronolÃ³gico de tickets (cero tabla administrativa).
  */
 export function PortalReservasPage() {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ export function PortalReservasPage() {
     <div className="space-y-6">
       <PortalTitleBar
         title="Mis reservas"
-        summary="Seguí el estado de tus solicitudes de espacios del club y aboná señas pendientes."
+        summary="SeguÃ­ el estado de tus solicitudes de espacios del club y abonÃ¡ seÃ±as pendientes."
       />
 
       {isLoading ? (
@@ -86,8 +86,8 @@ export function PortalReservasPage() {
         <PortalEmptyState
           testId="sin-reservas"
           icon={<CalendarX2 size={20} />}
-          title="Todavía no hiciste ninguna solicitud de reserva"
-          description="Cuando solicites un espacio del club, podrás hacer el seguimiento y pagar tu seña aquí."
+          title="TodavÃ­a no hiciste ninguna solicitud de reserva"
+          description="Cuando solicites un espacio del club, podrÃ¡s hacer el seguimiento y pagar tu seÃ±a aquÃ­."
         />
       ) : (
         <div className="space-y-5">
@@ -97,15 +97,15 @@ export function PortalReservasPage() {
               className="flex flex-wrap items-center justify-between gap-4 border-blue-400/35 bg-blue-500/[0.08] p-4 sm:p-5"
             >
               <div className="flex items-start gap-3" data-testid={`sena-pendiente-${r.codigo}`}>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] border border-blue-400/30 bg-blue-500/15 text-blue-300">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[2px] border border-blue-400/30 bg-blue-500/15 text-blue-300">
                   <AlarmClock size={17} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-blue-200 tabular-nums">
-                    Pagá la seña de {formatearPesos(r.montoSena)} antes del {r.limitePagoSenaTexto}
+                    PagÃ¡ la seÃ±a de {formatearPesos(r.montoSena)} antes del {r.limitePagoSenaTexto}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-300">
-                    Reserva <span className="font-mono">{r.codigo}</span> · {r.espacio.nombre} ·{' '}
+                    Reserva <span className="font-mono">{r.codigo}</span> Â· {r.espacio.nombre} Â·{' '}
                     {r.turno}
                   </p>
                   {r.instruccionesSena && (
@@ -121,7 +121,7 @@ export function PortalReservasPage() {
                   disabled={pagarSena.isPending}
                 >
                   <CreditCard size={14} />
-                  Pagar seña online
+                  Pagar seÃ±a online
                 </PortalButton>
               )}
             </PortalSurface>
@@ -144,7 +144,7 @@ export function PortalReservasPage() {
                     className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
                   >
                     <div className="flex items-start gap-3.5 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] border border-blue-400/20 bg-blue-500/10 text-blue-400">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[2px] border border-blue-400/20 bg-blue-500/10 text-blue-400">
                         <CalendarClock size={18} />
                       </div>
                       <div className="min-w-0 space-y-1">
@@ -152,7 +152,7 @@ export function PortalReservasPage() {
                           <h2 className="text-base font-semibold tracking-[-0.015em] text-white">
                             {r.espacio.nombre}
                           </h2>
-                          <span className="rounded-[3px] border border-slate-300/[0.12] bg-[#070b14] px-1.5 py-0.5 font-mono text-[11px] text-slate-300 tabular-nums">
+                          <span className="rounded-[2px] border border-slate-300/[0.12] bg-[#070b14] px-1.5 py-0.5 font-mono text-[11px] text-slate-300 tabular-nums">
                             {r.codigo}
                           </span>
                           <PortalTag tone={meta.tone} dot>
@@ -188,7 +188,7 @@ export function PortalReservasPage() {
                             onClick={() => void pagar(r)}
                             disabled={pagarSena.isPending}
                           >
-                            Pagar seña
+                            Pagar seÃ±a
                           </PortalButton>
                         )}
                         {r.puedeCancelar && (
@@ -216,10 +216,10 @@ export function PortalReservasPage() {
         title="Cancelar reserva"
         description={
           aCancelar
-            ? `¿Confirmás la cancelación de la reserva ${aCancelar.codigo} (${aCancelar.espacio.nombre} — ${aCancelar.turno})?`
+            ? `Â¿ConfirmÃ¡s la cancelaciÃ³n de la reserva ${aCancelar.codigo} (${aCancelar.espacio.nombre} â€” ${aCancelar.turno})?`
             : ''
         }
-        confirmLabel="Sí, cancelar reserva"
+        confirmLabel="SÃ­, cancelar reserva"
         onConfirm={() => void confirmarCancelacion()}
         onCancel={() => setACancelar(null)}
         loading={cancelar.isPending}

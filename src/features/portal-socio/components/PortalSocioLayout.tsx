@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   CalendarClock,
@@ -57,6 +57,30 @@ export function PortalSocioLayout() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
   const [drawerAbierto, setDrawerAbierto] = useState(false);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlBg = html.style.backgroundColor;
+    const prevBodyBg = body.style.backgroundColor;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+    const prevScheme = html.style.colorScheme;
+
+    html.style.backgroundColor = '#03060c';
+    body.style.backgroundColor = '#03060c';
+    html.style.overscrollBehavior = 'none';
+    body.style.overscrollBehavior = 'none';
+    html.style.colorScheme = 'dark';
+
+    return () => {
+      html.style.backgroundColor = prevHtmlBg;
+      body.style.backgroundColor = prevBodyBg;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+      html.style.colorScheme = prevScheme;
+    };
+  }, []);
 
   const tieneMembresia = Boolean(usuario?.persona?.membresias?.some((m) => m.activo));
   const membresiaActiva = usuario?.persona?.membresias?.find((m) => m.activo);
@@ -226,16 +250,16 @@ export function PortalSocioLayout() {
   }
 
   return (
-    <div className="portal-socio min-h-screen bg-[#05080f] text-slate-100 flex flex-col">
+    <div className="portal-socio min-h-screen bg-[#03060c] text-slate-100 flex flex-col">
       {/* Barra superior compacta (sin menú admin ni pills) */}
-      <header className="sticky top-0 z-40 h-14 border-b border-slate-300/[0.10] bg-[#05080f]/95 backdrop-blur-md">
+      <header className="sticky top-0 z-40 h-14 border-b border-white/[0.08] bg-[#03060c]/95 backdrop-blur-md">
         <div className="mx-auto flex h-full max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setDrawerAbierto(true)}
               aria-label="Abrir menú"
-              className="flex h-8 w-8 items-center justify-center rounded-[5px] border border-slate-300/[0.14] bg-[#0a101b] text-slate-200 transition-colors hover:border-blue-400/40 lg:hidden cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-[2px] border border-white/[0.14] bg-[#070c16] text-slate-200 transition-colors hover:border-blue-400/50 lg:hidden cursor-pointer"
             >
               <Menu size={16} />
             </button>
@@ -249,7 +273,7 @@ export function PortalSocioLayout() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-1.5 rounded-[4px] border border-blue-400/25 bg-blue-500/[0.08] px-2.5 py-1 text-[11px] font-medium text-blue-300 sm:inline-flex">
+            <span className="hidden items-center gap-1.5 rounded-[2px] border border-blue-400/25 bg-blue-500/[0.08] px-2.5 py-1 text-[11px] font-medium text-blue-300 sm:inline-flex">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-400" aria-hidden="true" />
               Portal del Socio
             </span>
@@ -260,12 +284,12 @@ export function PortalSocioLayout() {
       {/* Drawer móvil del aside estilo RiverID */}
       {drawerAbierto && (
         <div
-          className="fixed inset-0 z-50 flex bg-black/75 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-0 z-50 flex bg-black/80 backdrop-blur-[2px] lg:hidden"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setDrawerAbierto(false);
           }}
         >
-          <aside className="flex h-full w-72 flex-col justify-between overflow-y-auto border-r border-slate-300/[0.12] bg-[#060911] p-5">
+          <aside className="flex h-full w-72 flex-col justify-between overflow-y-auto border-r border-white/[0.10] bg-[#050912] p-5">
             <div>
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -276,7 +300,7 @@ export function PortalSocioLayout() {
                   type="button"
                   onClick={() => setDrawerAbierto(false)}
                   aria-label="Cerrar menú"
-                  className="flex h-7 w-7 items-center justify-center rounded-[4px] border border-slate-300/[0.14] bg-white/[0.03] text-slate-300 cursor-pointer"
+                  className="flex h-7 w-7 items-center justify-center rounded-[2px] border border-white/[0.14] bg-white/[0.03] text-slate-300 cursor-pointer"
                 >
                   <X size={15} />
                 </button>
@@ -298,11 +322,11 @@ export function PortalSocioLayout() {
         </main>
       </div>
 
-      {/* Pie mínimo oscuro */}
-      <footer className="border-t border-slate-300/[0.08] bg-[#04070d]">
+      {/* Pie mínimo oscuro de la marca del club */}
+      <footer className="border-t border-white/[0.07] bg-[#03060c]">
         <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-slate-500 sm:px-6 lg:px-8">
-          <span>SocialClub · Portal de Socios y Participantes</span>
-          <span className="tabular-nums">UTN FRVM · {new Date().getFullYear()}</span>
+          <span className="font-medium text-slate-400">Club Digital</span>
+          <span className="tabular-nums">© {new Date().getFullYear()} SocialClub · Todos los derechos reservados</span>
         </div>
       </footer>
     </div>

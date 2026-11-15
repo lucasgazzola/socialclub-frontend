@@ -126,31 +126,47 @@ export function PortalCuotasPage() {
         }
       />
 
-      {/* Resumen financiero en banda compacta */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <PortalSurface variant="muted" className="px-4 py-3.5">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-            Categoría
-          </p>
-          <p className="mt-1 text-base font-semibold text-white">{resumen?.categoria ?? '—'}</p>
-        </PortalSurface>
-        <PortalSurface variant="muted" className="px-4 py-3.5">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-            Períodos pendientes
-          </p>
-          <p className="mt-1 text-base font-semibold text-blue-400 tabular-nums">
-            {cuotasPendientes.length}
-          </p>
-        </PortalSurface>
-        <PortalSurface variant="muted" className="px-4 py-3.5">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-            Saldo adeudado
-          </p>
-          <p className="mt-1 text-base font-semibold text-white tabular-nums">
-            ${(resumen?.totalAdeudado ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-          </p>
-        </PortalSurface>
-      </div>
+      {/* Panel unificado de estado de cuenta (Billetera Global Fan) */}
+      <PortalSurface variant="pass" className="relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-blue-400 to-transparent"
+        />
+        <div className="grid grid-cols-1 divide-y divide-white/[0.08] lg:grid-cols-12 lg:divide-x lg:divide-y-0">
+          <div className="p-5 sm:p-6 lg:col-span-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-400">
+              Saldo total adeudado
+            </p>
+            <p className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-white tabular-nums sm:text-4xl">
+              ${(resumen?.totalAdeudado ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+            </p>
+            <p className="mt-1.5 text-xs text-slate-400">
+              Plan de membresía: <span className="font-medium text-slate-200">{resumen?.categoria ?? '—'}</span>
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 divide-x divide-white/[0.08] bg-[#040811]/60 lg:col-span-5">
+            <div className="flex flex-col justify-center p-5">
+              <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-slate-400">
+                Por pagar
+              </p>
+              <p className="mt-1.5 text-2xl font-semibold text-blue-400 tabular-nums">
+                {cuotasPendientes.length}
+              </p>
+              <p className="mt-0.5 text-[11px] text-slate-500">períodos</p>
+            </div>
+            <div className="flex flex-col justify-center p-5">
+              <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-slate-400">
+                Abonados
+              </p>
+              <p className="mt-1.5 text-2xl font-semibold text-white tabular-nums">
+                {historial?.length ?? 0}
+              </p>
+              <p className="mt-0.5 text-[11px] text-slate-500">comprobantes</p>
+            </div>
+          </div>
+        </div>
+      </PortalSurface>
 
       <PortalSegmentedSwitch<'pendientes' | 'historial'>
         ariaLabel="Secciones de cuotas"
@@ -184,7 +200,7 @@ export function PortalCuotasPage() {
               >
                 <span
                   className={cn(
-                    'flex h-4 w-4 items-center justify-center rounded-[3px] border transition-colors',
+                    'flex h-4 w-4 items-center justify-center rounded-[2px] border transition-colors',
                     allSelected
                       ? 'border-blue-500 bg-blue-600 text-white'
                       : 'border-slate-500/60 bg-transparent',
@@ -214,8 +230,8 @@ export function PortalCuotasPage() {
               </div>
             </PortalSurface>
 
-            {/* Filas afiladas de cuotas */}
-            <PortalSurface className="divide-y divide-slate-300/[0.08] overflow-hidden">
+            {/* Tiras afiladas de cuotas */}
+            <PortalSurface className="divide-y divide-white/[0.08] overflow-hidden">
               {cuotasPendientes.map((cuota) => {
                 const selected = selectedPeriodos.includes(cuota.periodo);
                 return (
@@ -224,14 +240,16 @@ export function PortalCuotasPage() {
                     type="button"
                     onClick={() => togglePeriodo(cuota.periodo)}
                     className={cn(
-                      'flex w-full flex-wrap items-center justify-between gap-4 px-4 py-3.5 text-left transition-colors cursor-pointer',
-                      selected ? 'bg-blue-500/[0.08]' : 'hover:bg-white/[0.02]',
+                      'flex w-full flex-wrap items-center justify-between gap-4 border-l-2 px-4 py-3.5 text-left transition-colors cursor-pointer',
+                      selected
+                        ? 'border-l-blue-500 bg-blue-500/[0.09]'
+                        : 'border-l-transparent hover:bg-white/[0.02]',
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <span
                         className={cn(
-                          'flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border transition-colors',
+                          'flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border transition-colors',
                           selected
                             ? 'border-blue-500 bg-blue-600 text-white'
                             : 'border-slate-500/60 bg-transparent',
@@ -278,7 +296,7 @@ export function PortalCuotasPage() {
               className="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5 hover:bg-white/[0.02]"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] border border-blue-400/25 bg-blue-500/10 text-xs font-semibold text-blue-300 tabular-nums">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[2px] border border-blue-400/25 bg-blue-500/10 text-xs font-semibold text-blue-300 tabular-nums">
                   {pago.periodo.slice(5)}
                 </div>
                 <div>

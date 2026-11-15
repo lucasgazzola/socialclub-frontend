@@ -107,6 +107,14 @@ body {
    Portal Socios / Participantes — Sistema Visual Propio (Obsidian & Azul)
    Completamente independiente del backoffice administrativo.
    ========================================================================== */
+html:has(.portal-socio),
+html:has(.portal-socio) body {
+  background-color: #03060c;
+  color: #f1f5f9;
+  color-scheme: dark;
+  overscroll-behavior: none;
+}
+
 @keyframes portal-modal-in {
   from {
     opacity: 0;
@@ -124,8 +132,10 @@ body {
   --ease-portal-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #03060c;
+  background-image: radial-gradient(ellipse 80% 420px at 58% -120px, rgba(37, 99, 235, 0.14), transparent 72%);
   color-scheme: dark;
-  scrollbar-color: rgba(96, 165, 250, 0.25) transparent;
+  scrollbar-color: rgba(96, 165, 250, 0.28) transparent;
   scrollbar-width: thin;
 }
 

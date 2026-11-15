@@ -57,11 +57,11 @@ export function PortalHacermeSocioPage() {
       });
       await authApi.refresh();
       await refrescar();
-      toast.success('¡Felicitaciones! Te registraste como socio correctamente.');
+      toast.success('Â¡Felicitaciones! Te registraste como socio correctamente.');
       navigate(ROUTES.dashboard, { replace: true });
     } catch (error) {
       setErrorServidor(
-        error instanceof Error ? error.message : 'Ocurrió un error inesperado. Intentá nuevamente.',
+        error instanceof Error ? error.message : 'OcurriÃ³ un error inesperado. IntentÃ¡ nuevamente.',
       );
     }
   });
@@ -121,13 +121,13 @@ export function PortalHacermeSocioPage() {
 
             <PortalFieldSelect
               id="categoriaId"
-              label="Categoría de socio *"
+              label="CategorÃ­a de socio *"
               disabled={cargandoCategorias}
               error={errors.categoriaId?.message}
               options={[
                 {
                   value: '',
-                  label: cargandoCategorias ? 'Cargando categorías…' : 'Seleccioná una categoría',
+                  label: cargandoCategorias ? 'Cargando categorÃ­asâ€¦' : 'SeleccionÃ¡ una categorÃ­a',
                 },
                 ...(categorias?.map((c) => ({ value: c.id, label: c.nombre })) ?? []),
               ]}
@@ -143,7 +143,7 @@ export function PortalHacermeSocioPage() {
           {errorServidor && (
             <div
               role="alert"
-              className="rounded-[5px] border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-sm text-rose-200"
+              className="rounded-[2px] border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-sm text-rose-200"
             >
               {errorServidor}
             </div>
@@ -152,7 +152,7 @@ export function PortalHacermeSocioPage() {
           <div className="flex items-center gap-3 border-t border-slate-300/[0.08] pt-5">
             <PortalButton type="submit" variant="primary" disabled={isSubmitting}>
               <UserPlus size={15} />
-              {isSubmitting ? 'Registrando…' : 'Hacerme socio'}
+              {isSubmitting ? 'Registrandoâ€¦' : 'Hacerme socio'}
             </PortalButton>
           </div>
         </form>

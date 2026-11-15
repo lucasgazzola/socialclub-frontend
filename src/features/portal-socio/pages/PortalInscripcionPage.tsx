@@ -95,8 +95,14 @@ export function PortalInscripcionPage() {
               return (
                 <PortalSurface
                   key={d.id}
-                  className="flex flex-col justify-between p-5 hover:border-blue-400/35 hover:bg-[#0e1627]"
+                  className="group relative flex flex-col justify-between overflow-hidden p-5 hover:border-blue-500/45 hover:bg-[#0a1322] hover:shadow-[0_14px_34px_-20px_rgba(37,99,235,0.65)]"
                 >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none absolute inset-x-0 top-0 h-[2px] transition-opacity duration-150 ${
+                      puedeSolicitar ? 'bg-blue-500/80 opacity-60 group-hover:opacity-100' : 'bg-white/10'
+                    }`}
+                  />
                   <div className="flex flex-1 flex-col" data-testid={`tarjeta-disciplina-${d.id}`}>
                     <div className="flex items-start justify-between gap-2">
                       <h2 className="text-base font-semibold tracking-[-0.02em] text-white">

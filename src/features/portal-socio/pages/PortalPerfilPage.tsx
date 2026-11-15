@@ -22,7 +22,7 @@ import {
 } from '../components/PortalUI';
 
 /**
- * Edición de datos personales + gestión de membresía nativa del Portal de Socios (sin componentes admin).
+ * EdiciÃ³n de datos personales + gestiÃ³n de membresÃ­a nativa del Portal de Socios (sin componentes admin).
  */
 export function PortalPerfilPage() {
   const { usuario } = useAuth();
@@ -61,7 +61,7 @@ export function PortalPerfilPage() {
     setMensajeError(null);
     try {
       await updatePerfil(data);
-      setMensajeExito('Tus datos personales fueron actualizados con éxito.');
+      setMensajeExito('Tus datos personales fueron actualizados con Ã©xito.');
     } catch (error) {
       const err = error as Error & { status?: number };
       if (
@@ -70,11 +70,11 @@ export function PortalPerfilPage() {
         err.message?.toLowerCase().includes('email')
       ) {
         setMensajeError(
-          'El correo electrónico ya se encuentra registrado por otro usuario activo.',
+          'El correo electrÃ³nico ya se encuentra registrado por otro usuario activo.',
         );
       } else {
         setMensajeError(
-          err.message || 'Ocurrió un error al guardar los cambios. Intentá nuevamente.',
+          err.message || 'OcurriÃ³ un error al guardar los cambios. IntentÃ¡ nuevamente.',
         );
       }
     }
@@ -84,7 +84,7 @@ export function PortalPerfilPage() {
     <div className="space-y-6">
       <PortalTitleBar
         title="Editar mis datos"
-        summary="Actualizá tu nombre, email y teléfono de contacto."
+        summary="ActualizÃ¡ tu nombre, email y telÃ©fono de contacto."
         actions={
           <PortalButton
             variant="secondary"
@@ -92,7 +92,7 @@ export function PortalPerfilPage() {
             onClick={() => navigate(ROUTES.cambiarContrasena)}
           >
             <KeyRound size={14} />
-            Cambiar contraseña
+            Cambiar contraseÃ±a
           </PortalButton>
         }
       />
@@ -104,7 +104,7 @@ export function PortalPerfilPage() {
               {mensajeExito && (
                 <div
                   role="status"
-                  className="flex items-center gap-3 rounded-[5px] border border-emerald-400/25 bg-emerald-500/10 p-3.5 text-sm text-emerald-200"
+                  className="flex items-center gap-3 rounded-[2px] border border-emerald-400/25 bg-emerald-500/10 p-3.5 text-sm text-emerald-200"
                 >
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
                   <span>{mensajeExito}</span>
@@ -114,7 +114,7 @@ export function PortalPerfilPage() {
               {mensajeError && (
                 <div
                   role="alert"
-                  className="flex items-center gap-3 rounded-[5px] border border-rose-500/30 bg-rose-500/10 p-3.5 text-sm text-rose-200"
+                  className="flex items-center gap-3 rounded-[2px] border border-rose-500/30 bg-rose-500/10 p-3.5 text-sm text-rose-200"
                 >
                   <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
                   <span>{mensajeError}</span>
@@ -125,21 +125,21 @@ export function PortalPerfilPage() {
                 <PortalFieldInput
                   id="nombre"
                   label="Nombre *"
-                  placeholder="Ingresá tu nombre"
+                  placeholder="IngresÃ¡ tu nombre"
                   error={errors.nombre?.message}
                   {...register('nombre')}
                 />
                 <PortalFieldInput
                   id="apellido"
                   label="Apellido *"
-                  placeholder="Ingresá tu apellido"
+                  placeholder="IngresÃ¡ tu apellido"
                   error={errors.apellido?.message}
                   {...register('apellido')}
                 />
                 <PortalFieldInput
                   id="email"
                   type="email"
-                  label="Correo electrónico *"
+                  label="Correo electrÃ³nico *"
                   placeholder="usuario@dominio.com"
                   error={errors.email?.message}
                   {...register('email')}
@@ -147,7 +147,7 @@ export function PortalPerfilPage() {
                 <PortalFieldInput
                   id="telefono"
                   type="tel"
-                  label="Teléfono"
+                  label="TelÃ©fono"
                   placeholder="Ej: +54 351 1234567"
                   error={errors.telefono?.message}
                   {...register('telefono')}
@@ -163,10 +163,10 @@ export function PortalPerfilPage() {
                 />
                 <PortalFieldSelect
                   id="genero"
-                  label="Género"
+                  label="GÃ©nero"
                   value={persona?.genero ?? ''}
                   disabled
-                  hint="El género no se puede modificar."
+                  hint="El gÃ©nero no se puede modificar."
                   options={[
                     { value: '', label: 'Sin especificar' },
                     ...(persona?.genero
@@ -178,7 +178,7 @@ export function PortalPerfilPage() {
 
               <div className="flex items-center gap-3 border-t border-slate-300/[0.08] pt-5">
                 <PortalButton type="submit" variant="primary" disabled={isPending}>
-                  {isPending ? 'Guardando cambios…' : 'Guardar cambios'}
+                  {isPending ? 'Guardando cambiosâ€¦' : 'Guardar cambios'}
                 </PortalButton>
               </div>
             </form>
@@ -189,7 +189,7 @@ export function PortalPerfilPage() {
           {membresiaActiva && (
             <PortalSurface className="space-y-4 p-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-white">Membresía</h2>
+                <h2 className="text-sm font-semibold text-white">MembresÃ­a</h2>
                 <PortalTag tone="info" dot>
                   Activo
                 </PortalTag>
@@ -205,7 +205,7 @@ export function PortalPerfilPage() {
                   </dd>
                 </div>
                 <div className="flex items-center justify-between">
-                  <dt className="text-slate-400">Categoría</dt>
+                  <dt className="text-slate-400">CategorÃ­a</dt>
                   <dd className="font-medium text-white">
                     {membresiaActiva.categoria?.nombre || 'Socio'}
                   </dd>
@@ -218,7 +218,7 @@ export function PortalPerfilPage() {
                   <span>Darme de baja</span>
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                  Tu usuario y tus registros se conservarán, pero dejarás de acceder a los beneficios
+                  Tu usuario y tus registros se conservarÃ¡n, pero dejarÃ¡s de acceder a los beneficios
                   de socio activo.
                 </p>
                 <PortalButton
@@ -240,7 +240,7 @@ export function PortalPerfilPage() {
                 <PortalTag tone="pending">Inactivo</PortalTag>
               </div>
               <p className="text-xs leading-relaxed text-slate-400">
-                Podés reactivar tu membresía cuando quieras para recuperar el acceso completo y
+                PodÃ©s reactivar tu membresÃ­a cuando quieras para recuperar el acceso completo y
                 beneficios del club.
               </p>
               <PortalButton
@@ -257,7 +257,7 @@ export function PortalPerfilPage() {
                 }}
               >
                 <UserCheck size={14} />
-                {isReactivando ? 'Reactivando…' : 'Reactivar mi membresía'}
+                {isReactivando ? 'Reactivandoâ€¦' : 'Reactivar mi membresÃ­a'}
               </PortalButton>
             </PortalSurface>
           )}
@@ -265,7 +265,7 @@ export function PortalPerfilPage() {
           <PortalSurface variant="muted" className="space-y-2.5 p-5">
             <h2 className="text-sm font-semibold text-white">Seguridad de la cuenta</h2>
             <p className="text-xs leading-relaxed text-slate-400">
-              Actualizá tu contraseña de acceso confirmando la actual.
+              ActualizÃ¡ tu contraseÃ±a de acceso confirmando la actual.
             </p>
             <PortalButton
               variant="secondary"
@@ -273,7 +273,7 @@ export function PortalPerfilPage() {
               className="w-full"
               onClick={() => navigate(ROUTES.cambiarContrasena)}
             >
-              Cambiar contraseña
+              Cambiar contraseÃ±a
             </PortalButton>
           </PortalSurface>
         </div>
