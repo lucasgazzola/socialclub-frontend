@@ -64,7 +64,7 @@ describe('RegisterPage', () => {
     await user.click(screen.getByRole('button', { name: 'Simular Éxito Registro' }));
 
     expect(toast.success).toHaveBeenCalledWith(
-      'Cuenta creada. Iniciá sesión con tus credenciales.',
+      'Cuenta creada. Te enviamos un email para verificarla antes de iniciar sesión.',
     );
     expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
   });

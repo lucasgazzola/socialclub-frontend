@@ -23,6 +23,7 @@ describe('Auth Schemas', () => {
         nombre: 'Juan',
         apellido: 'Perez',
         email: 'juan@club.com',
+        confirmarEmail: 'juan@club.com',
         password: 'Password123!',
         confirmarPassword: 'Password123!',
         fechaNacimiento: '1990-01-01',
@@ -30,6 +31,21 @@ describe('Auth Schemas', () => {
       };
       const res = registerSchema.safeParse(valid);
       expect(res.success).toBe(true);
+    });
+
+    it('DT-54: falla si el email repetido no coincide', () => {
+      const res = registerSchema.safeParse({
+        nombre: 'Juan',
+        apellido: 'Perez',
+        email: 'juan@club.com',
+        confirmarEmail: 'juan@clu.com',
+        password: 'Password123!',
+        confirmarPassword: 'Password123!',
+        fechaNacimiento: '1990-01-01',
+        genero: 'MASCULINO',
+      });
+      expect(res.success).toBe(false);
+      expect(res.error?.issues.map((i) => i.message)).toContain('Los emails no coinciden');
     });
 
     it('rechaza registros con contraseñas que no cumplen complejidad o campos vacíos', () => {

@@ -270,11 +270,28 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.type(screen.getByLabelText('Nombre'), 'Nuevo');
     await user.type(screen.getByLabelText('Apellido'), 'Prueba');
     await user.type(screen.getByLabelText('Email'), 'admin@socialclub.local');
+    await user.type(screen.getByLabelText('Repetí el email'), 'admin@socialclub.local');
     await user.selectOptions(screen.getByLabelText('Disciplina'), '2');
     await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
 
     expect(await screen.findAllByText('El email ya está registrado por otra persona')).toHaveLength(1);
     expect(screen.getByLabelText('Email')).toHaveClass('border-rose-400');
+  });
+
+  it('DT-54: con email pide repetirlo y no registra si no coincide', async () => {
+    const user = userEvent.setup();
+    renderForm(<InscripcionForm />);
+
+    await user.type(screen.getByLabelText('DNI'), '47123456');
+    await user.type(screen.getByLabelText('Nombre'), 'Nuevo');
+    await user.type(screen.getByLabelText('Apellido'), 'Prueba');
+    await user.type(screen.getByLabelText('Email'), 'nuevo@club.local');
+    await user.type(screen.getByLabelText('Repetí el email'), 'nuevo@clb.local');
+    await user.selectOptions(screen.getByLabelText('Disciplina'), '2');
+    await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
+
+    expect(await screen.findByText('Los emails no coinciden')).toBeInTheDocument();
+    expect(enviarMock).not.toHaveBeenCalled();
   });
 
   it('permite adjuntar documentación faltante en la misma operación de alta (Criterio 7)', async () => {
