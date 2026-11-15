@@ -35,6 +35,9 @@ vi.mock('../hooks/useEntradas', () => ({
   }),
 }));
 
+let mockUsuario: unknown = null;
+vi.mock('@/features/auth/hooks/useAuth', () => ({ useAuth: () => ({ usuario: mockUsuario }) }));
+
 const mockIrAPagar = vi.fn();
 vi.mock('@/features/pasarela/hooks/usePasarela', () => ({
   irAPagar: (url: string) => mockIrAPagar(url),
@@ -43,6 +46,58 @@ vi.mock('@/features/pasarela/hooks/usePasarela', () => ({
 describe('ComprarEntradasPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUsuario = null;
+  });
+
+  const eventoConDescuento = {
+    id: 1,
+    nombre: 'Cena Aniversario',
+    descripcion: null,
+    precio: '6000',
+    descuentoSocio: 10,
+    entradasDisponibles: 50,
+    estado: 'PUBLICADO',
+    fechaEvento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    requiereEntrada: true,
+  };
+
+  it('H02 · al socio le muestra el precio con su descuento, igual que lo que cobra la pasarela', async () => {
+    const user = userEvent.setup();
+    mockUsuario = { id: 1, email: 's@club.local', roles: ['SOCIO'], persona: { id: 1, membresias: [] } };
+    mockUseEvento.mockReturnValue({ data: eventoConDescuento, isLoading: false, isError: false });
+
+    renderWithProviders(<ComprarEntradasPage />);
+
+    expect(screen.getByTestId('precio-unitario')).toHaveTextContent('5.400,00');
+    expect(screen.getByTestId('descuento-socio')).toHaveTextContent('10% de descuento por ser socio');
+
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '2' } });
+    expect(screen.getByTestId('total-compra')).toHaveTextContent('10.800,00');
+
+    await user.click(screen.getByRole('button', { name: /Comprar entradas/ }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('10.800,00');
+  });
+
+  it('H02 · también aplica el descuento a quien tiene una membresía sin baja aunque falte el rol', () => {
+    mockUsuario = {
+      id: 2,
+      email: 'm@club.local',
+      roles: [],
+      persona: { id: 2, membresias: [{ id: 1, activo: true, categoriaId: 1, fechaAlta: '2025-01-01', fechaBaja: null }] },
+    };
+    mockUseEvento.mockReturnValue({ data: eventoConDescuento, isLoading: false, isError: false });
+
+    renderWithProviders(<ComprarEntradasPage />);
+    expect(screen.getByTestId('precio-unitario')).toHaveTextContent('5.400,00');
+  });
+
+  it('H02 · a quien no es socio le cobra el precio de lista, sin descuento', () => {
+    mockUsuario = { id: 3, email: 'v@club.local', roles: [], persona: { id: 3, membresias: [] } };
+    mockUseEvento.mockReturnValue({ data: eventoConDescuento, isLoading: false, isError: false });
+
+    renderWithProviders(<ComprarEntradasPage />);
+    expect(screen.getByTestId('precio-unitario')).toHaveTextContent('6.000,00');
+    expect(screen.queryByTestId('descuento-socio')).not.toBeInTheDocument();
   });
 
   it('muestra spinner mientras carga el evento', () => {

@@ -33,6 +33,7 @@ vi.mock('@/features/eventos/hooks/useEventos', () => ({
     isLoading: false,
     isError: false,
   }),
+  useEvento: () => ({ data: undefined }),
   eventosKeys: { all: ['eventos'], list: () => ['eventos', 'list'] },
 }));
 
@@ -150,6 +151,25 @@ describe('ValidarAccesoPage', () => {
       expect(screen.getByText('¡ENTRADA YA UTILIZADA!')).toBeInTheDocument();
       expect(screen.getByText('⛔ Posible intento de reingreso no autorizado.')).toBeInTheDocument();
     });
+  });
+
+  it.each([
+    ['Todavía no se habilitó el acceso a "Peña": abre el 05/12 a las 18:00 h.', '¡ACCESO TODAVÍA NO HABILITADO!'],
+    ['El evento "Peña" fue cancelado: la entrada no es válida.', '¡EVENTO CANCELADO!'],
+  ])('H05 · ante «%s» muestra «%s» y aclara que la entrada no se usó', async (mensaje, titulo) => {
+    vi.mocked(entradasApi.validarEntrada).mockRejectedValueOnce(Object.assign(new Error(mensaje), { status: 400 }));
+
+    renderComponent();
+
+    fireEvent.click(screen.getByText('Ingreso Manual / Archivo'));
+    fireEvent.change(screen.getByLabelText(/Token UUID de la Entrada/i), {
+      target: { value: '550e8400-e29b-41d4-a716-446655440000' },
+    });
+    fireEvent.click(screen.getByText('Validar Token Manualmente'));
+
+    await waitFor(() => expect(screen.getByText(titulo)).toBeInTheDocument());
+    expect(screen.getByText('La entrada no se usó: sigue siendo de su dueño.')).toBeInTheDocument();
+    expect(screen.queryByText('¡CÓDIGO QR INVÁLIDO!')).not.toBeInTheDocument();
   });
 
   it('DT-33: muestra ENTRADA EXPIRADA cuando el evento ya terminó (400 «expirada»)', async () => {

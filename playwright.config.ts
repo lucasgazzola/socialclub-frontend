@@ -87,6 +87,9 @@ export default defineConfig({
         // US-60..62: las reservas de ejemplo (RES-SEED*) vuelven a su estado inicial.
         SEED_RESETEAR_RESERVAS: '1',
         MP_ACCESS_TOKEN: '',
+        // H05: el evento de prueba es dentro de 7 días y se valida enseguida; se
+        // abre el acceso con anticipación de sobra (la regla tiene sus tests unitarios).
+        ACCESO_APERTURA_HORAS: '240',
         PRISMA_HIDE_UPDATE_MESSAGE: '1',
       },
     },
