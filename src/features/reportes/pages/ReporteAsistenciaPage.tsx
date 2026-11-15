@@ -394,8 +394,11 @@ export function ReporteAsistenciaPage() {
                         <td className="px-3 py-3.5 text-right font-semibold tabular-nums text-emerald-600">
                           {ev.ingresosValidados}
                         </td>
-                        <td className="px-3 py-3.5 text-right tabular-nums text-slate-500">
-                          {ev.ausentes}
+                        <td
+                          className="px-3 py-3.5 text-right tabular-nums text-slate-500"
+                          title={ev.realizado === false ? 'El evento todavía no se realizó' : undefined}
+                        >
+                          {ev.realizado === false ? '—' : ev.ausentes}
                         </td>
                         <td className="px-3 py-3.5 text-center">
                           <BadgeAsistencia valor={ev.porcentajeAsistencia} />

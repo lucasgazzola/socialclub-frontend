@@ -298,7 +298,9 @@ export function GraficoAsistenciaEventos({ eventos }: GraficoAsistenciaEventosPr
               <div className="flex justify-between gap-4">
                 <span className="text-slate-500">Ausentismo (No-show):</span>
                 <span className="font-medium text-rose-600">
-                  {eventosGraficables[hoverIndex].ausentes}
+                  {eventosGraficables[hoverIndex].realizado === false
+                    ? 'Por realizarse'
+                    : eventosGraficables[hoverIndex].ausentes}
                 </span>
               </div>
               <div className="border-t border-slate-100 pt-1">
