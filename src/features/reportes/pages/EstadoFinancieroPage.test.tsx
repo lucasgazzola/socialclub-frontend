@@ -152,7 +152,7 @@ describe('US-35 · EstadoFinancieroPage', () => {
     expect(within(conceptos).getByText('Cuota social')).toBeInTheDocument();
     expect(
       within(conceptos).getByRole('link', { name: /morosos de cuota deportiva \(1\)/ }),
-    ).toHaveAttribute('href', '/cuotas/deportiva/morosos');
+    ).toHaveAttribute('href', '/admin/cuotas/deportiva/morosos');
     expect(
       within(screen.getByRole('table', { name: 'Cuota deportiva por disciplina' })).getByText(
         'Natación',

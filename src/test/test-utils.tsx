@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export function renderWithProviders(
   ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
+  { ruta = '/', ...options }: Omit<RenderOptions, 'wrapper'> & { /** URL inicial del router. */ ruta?: string } = {},
 ) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -17,7 +17,7 @@ export function renderWithProviders(
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>{children}</MemoryRouter>
+        <MemoryRouter initialEntries={[ruta]}>{children}</MemoryRouter>
       </QueryClientProvider>
     );
   }

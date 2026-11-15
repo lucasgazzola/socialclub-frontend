@@ -10,8 +10,29 @@ export interface Documentacion {
   personaId: number;
   archivoNombre?: string | null;
   mimeType?: string | null;
+  /** TASK-60: lo que sube el titular espera revisión; solo APROBADO cuenta para la habilitación. */
+  estadoRevision?: EstadoRevisionDocumento;
+  cargadoPorTitular?: boolean;
+  motivoRechazo?: string | null;
+  revisadoEn?: string | null;
   creadoEn: string;
 }
+
+export type EstadoRevisionDocumento = 'APROBADO' | 'PENDIENTE_REVISION' | 'RECHAZADO';
+
+/** TASK-60: documento subido por un titular que espera revisión (bandeja del delegado). */
+export interface DocumentoPendienteRevision extends Documentacion {
+  persona: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    dni: string | null;
+    inscripciones: { disciplina: { id: number; nombre: string } }[];
+  };
+}
+
+/** TASK-60: lo que manda el titular desde Mi club (la persona sale de su sesión). */
+export type SubirMiDocumentacionPayload = Omit<CrearDocumentacionPayload, 'personaId'>;
 
 /** Payload para cargar un documento obligatorio. */
 export interface CrearDocumentacionPayload {

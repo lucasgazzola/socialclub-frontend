@@ -19,10 +19,12 @@ test(
 
     await paso('1. Como socia, elegir la cuota pendiente más antigua y confirmar el pago', async () => {
       await iniciarSesion(page, USUARIOS.socio);
-      await page.goto('/mis-cuotas');
-      const primera = page.getByRole('checkbox').nth(1);
-      await primera.check();
-      periodo = (await primera.locator('xpath=ancestor::tr').innerText()).match(/\d{4}-\d{2}/)![0];
+      await page.goto('/mi-club/cuotas');
+      // TASK-60: en el portal cada cuota es un botón que se marca (aria-pressed).
+      const primera = page.getByRole('button', { name: /Período \d{4}-\d{2}/ }).first();
+      await primera.click();
+      await expect(primera).toHaveAttribute('aria-pressed', 'true');
+      periodo = (await primera.innerText()).match(/\d{4}-\d{2}/)![0];
       await page.getByRole('button', { name: /Pagar seleccionadas/ }).click();
       const confirmacion = page.getByRole('dialog', { name: 'Confirmar pago' });
       await expect(confirmacion).toContainText(periodo);
@@ -48,8 +50,8 @@ test(
     await paso('4. Cancelar: no se cobró nada y la cuota sigue pendiente', async () => {
       await page.getByRole('button', { name: 'Cancelar pago' }).click();
       await expect(page.getByTestId('pago-cancelado')).toBeVisible();
-      await page.getByRole('button', { name: 'Ver mis cuotas' }).click();
-      const fila = page.getByRole('row').filter({ hasText: periodo });
+      await page.getByTestId('pago-ir-a-destino').click();
+      const fila = page.getByRole('button', { name: new RegExp(`Período ${periodo}`) });
       await expect(fila).toBeVisible();
       await resaltar(fila);
     });

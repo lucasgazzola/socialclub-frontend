@@ -47,3 +47,20 @@ export function enmascararHora(texto: string): string {
   const digitos = texto.replace(/\D/g, '').slice(0, 4);
   return digitos.length <= 2 ? digitos : `${digitos.slice(0, 2)}:${digitos.slice(2)}`;
 }
+
+/**
+ * Fecha y hora en formato de 24 h («15/11/2026, 13:34:08»). `toLocaleString`
+ * sin opciones depende del navegador: algunos muestran «01:34:08» sin «p. m.»,
+ * que en una auditoría es ambiguo.
+ */
+export function formatearFechaHora24(iso: string | Date): string {
+  return new Date(iso).toLocaleString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  });
+}

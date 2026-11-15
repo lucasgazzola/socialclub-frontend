@@ -84,7 +84,7 @@ describe('EventosPage', () => {
     renderPage();
 
     const link = screen.getByRole('link', { name: /comprar entradas/i });
-    expect(link).toHaveAttribute('href', '/eventos/12/entradas');
+    expect(link).toHaveAttribute('href', '/mi-club/eventos/12/entradas');
   });
 
   it('oculta Nuevo evento para un usuario autenticado sin rol administrativo', () => {

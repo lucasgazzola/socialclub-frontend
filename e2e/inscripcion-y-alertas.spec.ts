@@ -41,7 +41,7 @@ test(
     });
 
     await paso('2. Abrir Participantes y elegir «Nuevo participante»', async () => {
-      await page.goto('/participantes');
+      await page.goto('/admin/participantes');
       await page.getByRole('button', { name: 'Nuevo participante' }).click();
       await expect(page.getByRole('dialog', { name: 'Nuevo participante' })).toBeVisible();
     });
@@ -113,7 +113,7 @@ test(
   async ({ page, paso }) => {
     await paso('1. Iniciar sesión como administrador y abrir Usuarios', async () => {
       await iniciarSesion(page, USUARIOS.admin);
-      await page.goto('/usuarios');
+      await page.goto('/admin/usuarios');
       await page.getByRole('button', { name: 'Nuevo usuario' }).click();
     });
 

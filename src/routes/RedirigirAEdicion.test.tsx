@@ -11,9 +11,9 @@ function Destino() {
 
 describe('DT-20 · las rutas viejas de edición abren el modal sobre el listado', () => {
   it.each([
-    ['/socios/5/editar', 'socios/:id/editar', ROUTES.editarSocio, '/socios?editar=5'],
-    ['/cuotas/social/3/editar', 'cuotas/social/:id/editar', ROUTES.editarCuotaSocial, '/cuotas/social?editar=3'],
-    ['/participante/10/editar', 'participante/:id/editar', ROUTES.editarParticipante, '/participantes?editar=10'],
+    ['/socios/5/editar', 'socios/:id/editar', ROUTES.editarSocio, '/admin/socios?editar=5'],
+    ['/cuotas/social/3/editar', 'cuotas/social/:id/editar', ROUTES.editarCuotaSocial, '/admin/cuotas/social?editar=3'],
+    ['/participante/10/editar', 'participante/:id/editar', ROUTES.editarParticipante, '/admin/participantes?editar=10'],
   ])('%s → %s', (ruta, patron, destino, esperado) => {
     render(
       <MemoryRouter initialEntries={[ruta]}>

@@ -1,33 +1,37 @@
-import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui';
-import { ROUTES } from '@/routes/paths';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import { ROUTES, destinoAlIngresar } from '@/routes/paths';
+import { consumirVolverA } from '@/lib/utils/volverA';
 import { useAuth } from '../hooks/useAuth';
 import { LoginForm } from '../components/LoginForm';
+import { MarcoAcceso } from '../components/MarcoAcceso';
+
+/** Solo rutas internas: evita redirigir a otro sitio con un `from` armado. */
+function rutaInterna(valor: unknown): string | null {
+  return typeof valor === 'string' && valor.startsWith('/') && !valor.startsWith('//') ? valor : null;
+}
 
 export function LoginPage() {
   const { usuario } = useAuth();
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Si ya hay sesión activa, redirige siempre al inicio/dashboard.
+  // TASK-60: con sesión, vuelve a la ruta pedida (o a la que dejó el alta de
+  // socio); si no hay, la gestión va al panel y el resto a Mi club.
   if (usuario) {
-    return <Navigate to={ROUTES.dashboard} replace />;
+    const pedida = rutaInterna((location.state as { from?: unknown } | null)?.from);
+    const destino = pedida ?? consumirVolverA() ?? destinoAlIngresar(usuario.roles);
+    return <Navigate to={destino} replace />;
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-sm p-8">
-        <div className="mb-6 text-center">
-          <h1 className="text-xl font-semibold text-slate-900">SocialClub</h1>
-          <p className="mt-1 text-sm text-slate-500">Ingresá con tu cuenta administrativa</p>
-        </div>
-        <LoginForm onSuccess={() => navigate(ROUTES.dashboard, { replace: true })} />
-        <p className="mt-6 text-center text-sm text-slate-500">
-          ¿No tenés cuenta?{' '}
-          <Link to={ROUTES.register} className="font-medium text-brand-700 hover:underline">
-            Registrate
-          </Link>
-        </p>
-      </Card>
-    </div>
+    <MarcoAcceso subtitulo="Ingresá a Mi club o al panel de gestión">
+      {/* Al ingresar, el contexto actualiza `usuario` y el render de arriba redirige. */}
+      <LoginForm onSuccess={() => undefined} />
+      <p className="mt-6 text-center text-sm text-slate-500">
+        ¿No tenés cuenta?{' '}
+        <Link to={ROUTES.register} className="font-medium text-brand-700 hover:underline">
+          Registrate
+        </Link>
+      </p>
+    </MarcoAcceso>
   );
 }

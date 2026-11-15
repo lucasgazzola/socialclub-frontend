@@ -128,7 +128,7 @@ test(
     await paso('1. Como delegado, abrir el reporte por URL', async () => {
       await iniciarSesion(page, USUARIOS.delegado);
       await expect(page.getByRole('link', { name: 'Estado financiero' })).toHaveCount(0);
-      await page.goto('/reportes/estado-financiero');
+      await page.goto('/admin/reportes/estado-financiero');
       const aviso = page.getByText('No tenés permisos para acceder a esta sección.');
       await expect(aviso).toBeVisible();
       await resaltar(aviso);

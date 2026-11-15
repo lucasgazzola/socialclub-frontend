@@ -21,7 +21,7 @@ export function DashboardProximosEventos({ eventos }: DashboardProximosEventosPr
           Próximos Eventos
         </h2>
         <Link
-          to={ROUTES.eventos}
+          to={ROUTES.eventosAdmin}
           className="text-brand-700 inline-flex items-center gap-1 text-xs font-semibold hover:underline"
         >
           Ver todos

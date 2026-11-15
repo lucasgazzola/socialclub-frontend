@@ -31,10 +31,10 @@ vi.mock('../components/PerfilSocioForm', () => ({
 
 function renderPage() {
   return render(
-    <MemoryRouter initialEntries={['/perfil']}>
+    <MemoryRouter initialEntries={['/mi-club/perfil']}>
       <Routes>
-        <Route path="/perfil" element={<PerfilSocioPage />} />
-        <Route path="/perfil/cambiar-contrasena" element={<p>Pantalla de cambio</p>} />
+        <Route path="/mi-club/perfil" element={<PerfilSocioPage />} />
+        <Route path="/mi-club/perfil/cambiar-contrasena" element={<p>Pantalla de cambio</p>} />
       </Routes>
     </MemoryRouter>,
   );

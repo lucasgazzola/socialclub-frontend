@@ -80,7 +80,7 @@ export function DashboardGestionPage() {
 
     if (!esAutorizado) {
       toast.error(MENSAJE_FALTA_PERMISOS);
-      navigate('/mi-perfil', { replace: true });
+      navigate(ROUTES.dashboard, { replace: true });
     }
   }, [usuario, esAutorizado, navigate]);
 

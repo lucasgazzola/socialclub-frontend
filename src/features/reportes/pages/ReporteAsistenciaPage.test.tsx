@@ -125,6 +125,32 @@ describe('US-36 · ReporteAsistenciaPage', () => {
     expect(within(tabla).getByText('100 %')).toBeInTheDocument();
   });
 
+  it('H03 · un evento que todavía no se realizó no muestra ausentes ni asistencia', () => {
+    const futuro = {
+      ...reporteMock.eventos[0],
+      id: 3,
+      nombre: 'Cena Aniversario',
+      estado: 'PUBLICADO',
+      totalEntradas: 2,
+      ingresosValidados: 1,
+      realizado: false,
+      ausentes: 0,
+      porcentajeAsistencia: null,
+    };
+    vi.mocked(useAsistenciaEventos).mockReturnValue({
+      data: { ...reporteMock, eventos: [futuro] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    render(<ReporteAsistenciaPage />);
+
+    const fila = within(screen.getByRole('table')).getByText('Cena Aniversario').closest('tr') as HTMLElement;
+    expect(within(fila).getByTitle('El evento todavía no se realizó')).toHaveTextContent('—');
+  });
+
   it('permite accionar los botones de exportación a CSV y PDF', () => {
     vi.mocked(useAsistenciaEventos).mockReturnValue({
       data: reporteMock,

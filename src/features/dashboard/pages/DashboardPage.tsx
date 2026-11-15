@@ -1,7 +1,5 @@
 import {
   ArrowRight,
-  CalendarDays,
-  CreditCard,
   ScrollText,
   ShieldCheck,
   Sparkles,
@@ -9,11 +7,11 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
-import { formatearDni } from '@/lib/utils/dni';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { AlertasDocumentacion } from '@/features/documentacion/components/AlertasDocumentacion';
+import { DocumentosParaRevisar } from '@/features/documentacion/components/DocumentosParaRevisar';
 import { ROUTES } from '@/routes/paths';
 
 const modulos = [
@@ -47,17 +45,11 @@ const modulos = [
   },
 ];
 
-function formatearFecha(iso?: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
-}
-
 /**
- * Pantalla principal segun el rol del usuario:
+ * Inicio del panel de gestión según el rol del usuario:
  * - ADMIN/COLABORADOR: panel de administración (ADMIN ve además las alertas de documentación).
  * - DELEGADO: alertas de documentación (US-26) y acceso a participantes.
- * - SOCIO: pantalla principal de socio.
- * - Sin roles: pantalla neutra con la opción 'Hacerme socio'.
+ * - Socios y participantes (TASK-60): su inicio es Mi club.
  */
 export function DashboardPage() {
   const { usuario } = useAuth();
@@ -70,11 +62,8 @@ export function DashboardPage() {
     return <PanelDelegado />;
   }
 
-  if (usuario?.roles.includes('SOCIO')) {
-    return <PanelSocio />;
-  }
-
-  return <PantallaNeutra />;
+  // TASK-60: el inicio de socios y participantes es Mi club.
+  return <Navigate to={ROUTES.miClub} replace />;
 }
 
 function PanelAdministracion() {
@@ -106,6 +95,8 @@ function PanelAdministracion() {
         </div>
       </div>
 
+      {/* TASK-60: lo que subieron los titulares desde Mi club (ADMIN). */}
+      {veAlertas && <DocumentosParaRevisar />}
       {veAlertas && <AlertasDocumentacion />}
 
       {/* Grid de módulos con estilo Apex */}
@@ -178,99 +169,9 @@ function PanelDelegado() {
         </Button>
       </div>
 
+      {/* TASK-60: lo que subieron los titulares de sus disciplinas. */}
+      <DocumentosParaRevisar />
       <AlertasDocumentacion />
-    </div>
-  );
-}
-
-/** Pantalla principal del socio */
-function PanelSocio() {
-  const { usuario } = useAuth();
-  const navigate = useNavigate();
-  const persona = usuario?.persona;
-  const membresiaActiva = persona?.membresias?.find((m) => m.activo);
-
-  if (!persona || !membresiaActiva) {
-    // Por consistencia: rol SOCIO sin membresía activa (estado transitorio).
-    return <PantallaNeutra />;
-  }
-
-  return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/15 mb-2">
-            Membresía Activa
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Hola, {usuario?.nombre ?? usuario?.email} 👋
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Bienvenido a tu espacio personal en SocialClub.
-          </p>
-        </div>
-        <Button onClick={() => navigate(ROUTES.perfil)}>
-          <User size={16} />
-          Editar mis datos
-        </Button>
-      </header>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-5">
-          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
-            <Users size={20} />
-          </div>
-          <h2 className="font-semibold text-slate-900">Categoría</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">{membresiaActiva.categoria?.nombre ?? '—'}</p>
-        </Card>
-
-        <Card className="p-5">
-          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
-            <CalendarDays size={20} />
-          </div>
-          <h2 className="font-semibold text-slate-900">Socio desde</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">{formatearFecha(membresiaActiva.fechaAlta)}</p>
-        </Card>
-
-        <Card className="p-5">
-          <div className="mb-3 inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-700 ring-1 ring-brand-100">
-            <CreditCard size={20} />
-          </div>
-          <h2 className="font-semibold text-slate-900">DNI</h2>
-          <p className="mt-1 text-base font-medium text-slate-700">{formatearDni(persona.dni)}</p>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-/** Pantalla para usuarios autenticados sin roles/Persona. */
-function PantallaNeutra() {
-  const { usuario } = useAuth();
-  const navigate = useNavigate();
-
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          Hola, {usuario?.nombre ?? usuario?.email}
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">Bienvenido a SocialClub.</p>
-      </header>
-
-      <Card className="max-w-xl p-6">
-        <div className="mb-3 inline-flex rounded-lg bg-brand-50 p-2 text-brand-700">
-          <UserPlus size={20} />
-        </div>
-        <h2 className="text-lg font-medium text-slate-900">Sumate al club</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Hacete socio y accedé a los beneficios de la membresía del club.
-        </p>
-        <Button className="mt-4" onClick={() => navigate(ROUTES.hacermeSocio)}>
-          <UserPlus size={16} />
-          Hacerme socio
-        </Button>
-      </Card>
     </div>
   );
 }

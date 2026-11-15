@@ -14,24 +14,16 @@ export interface RutaMeta {
 
 export const RUTAS_BREADCRUMBS: Record<string, RutaMeta> = {
   [ROUTES.dashboard]: { label: 'Inicio' },
-  [ROUTES.perfil]: { label: 'Mi Perfil', parent: ROUTES.dashboard },
-  [ROUTES.cambiarContrasena]: { label: 'Cambiar Contraseña', parent: ROUTES.perfil },
-  [ROUTES.misCuotas]: { label: 'Mis Cuotas', parent: ROUTES.dashboard },
-  [ROUTES.misEntradas]: { label: 'Mis Entradas', parent: ROUTES.dashboard },
-  [ROUTES.resultadoPago]: { label: 'Resultado del Pago', parent: ROUTES.dashboard },
-  [ROUTES.misReservas]: { label: 'Mis Reservas', parent: ROUTES.dashboard },
+  [ROUTES.dashboardGestion]: { label: 'Dashboard', parent: ROUTES.dashboard },
   [ROUTES.solicitudesReserva]: { label: 'Solicitudes de Reserva', parent: ROUTES.dashboard },
   [ROUTES.espacios]: { label: 'Espacios Físicos', parent: ROUTES.dashboard },
-  [ROUTES.simuladorPago]: { label: 'Simulador de Pago', parent: ROUTES.dashboard },
-  [ROUTES.miDocumentacion]: { label: 'Mi Documentación', parent: ROUTES.dashboard },
-  [ROUTES.hacermeSocio]: { label: 'Hacerme Socio', parent: ROUTES.dashboard },
   [ROUTES.socios]: { label: 'Socios', parent: ROUTES.dashboard },
   [ROUTES.participantes]: { label: 'Participantes', parent: ROUTES.dashboard },
   [ROUTES.disciplinas]: { label: 'Disciplinas', parent: ROUTES.dashboard },
   [ROUTES.usuarios]: { label: 'Usuarios', parent: ROUTES.dashboard },
   [ROUTES.auditoria]: { label: 'Auditoría', parent: ROUTES.dashboard },
   [ROUTES.tareas]: { label: 'Tareas Automáticas', parent: ROUTES.dashboard },
-  [ROUTES.eventos]: { label: 'Eventos', parent: ROUTES.dashboard },
+  [ROUTES.eventosAdmin]: { label: 'Eventos', parent: ROUTES.dashboard },
   [ROUTES.validarAcceso]: { label: 'Validar QR', parent: ROUTES.dashboard },
   [ROUTES.cuotas]: { label: 'Cuotas', parent: ROUTES.dashboard },
   [ROUTES.cuotaSocial]: { label: 'Cuota Social', parent: ROUTES.cuotas },
@@ -51,27 +43,23 @@ export interface RutaDinamica {
 
 export const RUTAS_DINAMICAS: RutaDinamica[] = [
   {
-    pattern: /^\/disciplinas\/([^/]+)\/categorias$/,
+    pattern: /^\/admin\/disciplinas\/([^/]+)\/categorias$/,
     getMeta: () => ({ label: 'Categorías', parent: ROUTES.disciplinas }),
   },
   {
-    pattern: /^\/eventos\/([^/]+)\/entradas$/,
-    getMeta: () => ({ label: 'Comprar Entradas', parent: ROUTES.eventos }),
+    pattern: /^\/admin\/eventos\/([^/]+)\/validar$/,
+    getMeta: () => ({ label: 'Validar QR', parent: ROUTES.eventosAdmin }),
   },
   {
-    pattern: /^\/eventos\/([^/]+)\/validar$/,
-    getMeta: () => ({ label: 'Validar QR', parent: ROUTES.eventos }),
-  },
-  {
-    pattern: /^\/socios\/([^/]+)\/editar$/,
+    pattern: /^\/admin\/socios\/([^/]+)\/editar$/,
     getMeta: () => ({ label: 'Editar Socio', parent: ROUTES.socios }),
   },
   {
-    pattern: /^\/participante\/([^/]+)\/editar$/,
+    pattern: /^\/admin\/participante\/([^/]+)\/editar$/,
     getMeta: () => ({ label: 'Editar Participante', parent: ROUTES.participantes }),
   },
   {
-    pattern: /^\/cuotas\/social\/([^/]+)\/editar$/,
+    pattern: /^\/admin\/cuotas\/social\/([^/]+)\/editar$/,
     getMeta: () => ({ label: 'Editar Cuota Social', parent: ROUTES.cuotaSocial }),
   },
 ];

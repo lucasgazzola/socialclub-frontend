@@ -44,6 +44,8 @@ export interface EventoReporteItem {
   precio: number;
   totalEntradas: number;
   ingresosValidados: number;
+  /** H03: el evento ya terminó; si no, no hay ausentes ni asistencia que medir. */
+  realizado?: boolean;
   ausentes: number;
   porcentajeOcupacion: number | null;
   porcentajeAsistencia: number | null;

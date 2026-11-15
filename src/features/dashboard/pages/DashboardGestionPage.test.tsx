@@ -117,16 +117,16 @@ describe('DashboardGestionPage (/dashboard)', () => {
 
     // Navegación desde tarjetas KPI a rutas existentes
     await user.click(screen.getByText('Total de Integrantes Activos'));
-    expect(mockNavigate).toHaveBeenCalledWith('/socios');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/socios');
 
     await user.click(screen.getByText('Porcentaje de Morosos'));
-    expect(mockNavigate).toHaveBeenCalledWith('/cuotas/social/morosos');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/cuotas/social/morosos');
 
     await user.click(screen.getByText('Documentos por Vencer'));
-    expect(mockNavigate).toHaveBeenCalledWith('/participantes');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/participantes');
 
     await user.click(screen.getByText('Inscripciones Irregulares'));
-    expect(mockNavigate).toHaveBeenCalledWith('/participantes');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/participantes');
   });
 
   it('permite el acceso al rol COLABORADOR y muestra todas las métricas y gráficos', () => {
@@ -241,7 +241,7 @@ describe('DashboardGestionPage (/dashboard)', () => {
     expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
 
-  it('redirige a /mi-perfil con mensaje de falta de permisos si un SOCIO intenta acceder a /dashboard', () => {
+  it('redirige al inicio del panel con mensaje de falta de permisos si un SOCIO intenta acceder a /dashboard', () => {
     mockUsuario = {
       id: 2,
       nombre: 'Martin',
@@ -254,10 +254,10 @@ describe('DashboardGestionPage (/dashboard)', () => {
     expect(
       screen.getByText('No posee permisos para acceder al dashboard de gestión de la organización'),
     ).toBeInTheDocument();
-    expect(mockNavigate).toHaveBeenCalledWith('/mi-perfil', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/admin', { replace: true });
   });
 
-  it('redirige a /mi-perfil con mensaje de falta de permisos si un DELEGADO intenta acceder a /dashboard', () => {
+  it('redirige al inicio del panel con mensaje de falta de permisos si un DELEGADO intenta acceder a /dashboard', () => {
     mockUsuario = {
       id: 4,
       nombre: 'Diego',
@@ -270,7 +270,7 @@ describe('DashboardGestionPage (/dashboard)', () => {
     expect(
       screen.getByText('No posee permisos para acceder al dashboard de gestión de la organización'),
     ).toBeInTheDocument();
-    expect(mockNavigate).toHaveBeenCalledWith('/mi-perfil', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/admin', { replace: true });
   });
 
   it('redirige a /login si un usuario anónimo intenta acceder a /dashboard', () => {

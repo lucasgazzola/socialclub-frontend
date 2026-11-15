@@ -39,7 +39,7 @@ describe('CuotasHubPage', () => {
 
     const cuotaSocialCard = screen.getByText('Cuota social').closest('[role="button"]')!;
     await user.click(cuotaSocialCard);
-    expect(mockNavigate).toHaveBeenCalledWith('/cuotas/social');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/cuotas/social');
 
     await user.keyboard('{Enter}');
     expect(mockNavigate).toHaveBeenCalled();
@@ -51,7 +51,7 @@ describe('CuotasHubPage', () => {
 
     const cuotaDeportivaCard = screen.getByText('Cuota deportiva').closest('[role="button"]')!;
     await user.click(cuotaDeportivaCard);
-    expect(mockNavigate).toHaveBeenCalledWith('/cuotas/deportiva');
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/cuotas/deportiva');
   });
 });
 

@@ -34,7 +34,7 @@ export function MisCuotasPage() {
   const [activeTab, setActiveTab] = useState<'pendientes' | 'historial'>('pendientes');
 
   if (!esOFueSocio) {
-    return <Navigate to={ROUTES.dashboard} replace />;
+    return <Navigate to={ROUTES.hacermeSocio} replace />;
   }
 
   const cuotasPendientes = resumen?.cuotasPendientes ?? [];
