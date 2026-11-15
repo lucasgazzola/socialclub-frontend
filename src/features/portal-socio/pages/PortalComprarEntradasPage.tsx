@@ -7,6 +7,12 @@ import { ventaAbierta } from '@/features/eventos/helpers';
 import { useIniciarCompraEntradas } from '@/features/entradas/hooks/useEntradas';
 import { irAPagar } from '@/features/pasarela/hooks/usePasarela';
 import { ROUTES } from '@/routes/paths';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import {
+  aplicaDescuentoSocio,
+  precioUnitarioEntrada,
+  totalCompraEntradas,
+} from '@/features/entradas/utils/precioEntrada';
 import { PortalConfirmarPagoModal } from '../components/PortalModals';
 import {
   PortalButton,
@@ -26,7 +32,12 @@ export function PortalComprarEntradasPage() {
   const [cantidad, setCantidad] = useState(1);
   const [modalAbierto, setModalAbierto] = useState(false);
 
-  const precio = Number(evento?.precio ?? 0);
+  const { usuario } = useAuth();
+  const precioLista = Number(evento?.precio ?? 0);
+  // H02: al socio se le muestra el mismo precio que cobra la pasarela.
+  const descuento = aplicaDescuentoSocio(usuario) ? (evento?.descuentoSocio ?? 0) : 0;
+  const precio = precioUnitarioEntrada(precioLista, descuento);
+  const total = totalCompraEntradas(precio, cantidad);
   const maxCantidad = evento?.entradasDisponibles ?? 0;
   const ventaHabilitada = Boolean(evento && ventaAbierta(evento));
 
@@ -75,9 +86,17 @@ export function PortalComprarEntradasPage() {
                 <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                   Precio unitario
                 </span>
-                <p className="mt-1 text-base font-semibold text-white tabular-nums">
+                <p className="mt-1 text-base font-semibold text-white tabular-nums" data-testid="precio-unitario">
                   ${precio.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </p>
+                {descuento > 0 && (
+                  <p className="mt-0.5 text-[11px] text-emerald-300" data-testid="descuento-socio">
+                    <span className="text-slate-500 line-through">
+                      ${precioLista.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                    </span>{' '}
+                    · {descuento}% socio
+                  </p>
+                )}
               </div>
               <div>
                 <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
@@ -90,7 +109,7 @@ export function PortalComprarEntradasPage() {
                   Total estimado
                 </span>
                 <p className="mt-1 text-base font-semibold text-blue-400 tabular-nums">
-                  ${(cantidad * precio).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  ${total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
             </div>
@@ -128,7 +147,7 @@ export function PortalComprarEntradasPage() {
             onClose={() => setModalAbierto(false)}
             titulo={`${cantidad} entrada(s)`}
             detalle={evento.nombre}
-            total={cantidad * precio}
+            total={total}
             onConfirmar={() => void confirmarPago()}
             isLoading={comprar.isPending}
           />
