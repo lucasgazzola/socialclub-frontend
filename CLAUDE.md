@@ -20,7 +20,7 @@ Consume la API del repo hermano `socialclub-backend` (`/api/v1`).
 - Rutas protegidas con `ProtectedRoute` (sesión + rol). Navegación en `components/layout/AppLayout.tsx` con visibilidad por rol.
 - **Tres zonas (TASK-60, ver `docs/decisiones/0006` en el back):**
   - **Sitio público:** `/` (landing del Club Sportivo Unión de Ordóñez, `features/landing/`), `/asociarme` (alta de socio con primera cuota), login y registro.
-  - **Mi club (`/mi-club/*`):** autogestión de cualquier usuario con sesión, con `components/layout/PortalLayout.tsx` (barra inferior en el celular). Todo lo **personal** (perfil, cuotas, entradas, reservas, inscripciones propias) va acá, no en el panel.
+  - **Mi club (`/mi-club/*`):** autogestión de cualquier usuario con sesión: el **portal de socios** (`features/portal-socio`, diseño de Luis, tema oscuro limitado a `.portal-socio`). Todo lo **personal** (perfil, cuotas, entradas, reservas, inscripciones y documentación propias) va acá, no en el panel. La documentación que sube el titular queda en revisión y se aprueba desde el panel (`DocumentosParaRevisar`).
   - **Panel (`/admin/*`):** gestión del club, solo ADMIN, COLABORADOR y DELEGADO (`ProtectedRoute soloGestion`), con `AppLayout`.
   - No mover `/verificar-email` ni `/pagos/resultado`: los arma la API. Las rutas viejas redirigen con `rutaNuevaDe` (`routes/paths.ts`).
   - Identidad del club (nombre, misión, contacto **de ejemplo**) en `src/config/club.ts`.
