@@ -286,24 +286,24 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
           icon: CreditCard,
           to: ROUTES.misCuotas,
           className:
-            'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-950/50 ring-1 ring-brand-400/30',
-          iconClassName: 'text-white',
+            'bg-white text-zinc-950 hover:bg-zinc-200 shadow-sm',
+          iconClassName: 'text-zinc-950',
         },
         {
           label: 'RESERVAR ESPACIO',
           icon: CalendarClock,
           to: ROUTES.misReservas,
           className:
-            'border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 text-slate-100',
-          iconClassName: 'text-amber-400',
+            'border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15 text-zinc-100',
+          iconClassName: 'text-emerald-400',
         },
         {
           label: 'MIS ENTRADAS',
           icon: Ticket,
           to: ROUTES.misEntradas,
           className:
-            'border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 text-slate-100',
-          iconClassName: 'text-brand-400',
+            'border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15 text-zinc-100',
+          iconClassName: 'text-zinc-300',
         },
       ]
     : [
@@ -312,49 +312,49 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
           icon: UserPlus,
           to: ROUTES.hacermeSocio,
           className:
-            'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-950/50 ring-1 ring-brand-400/30',
-          iconClassName: 'text-white',
+            'bg-white text-zinc-950 hover:bg-zinc-200 shadow-sm',
+          iconClassName: 'text-zinc-950',
         },
         {
           label: 'INSCRIBIRME A DISCIPLINA',
           icon: Dumbbell,
           to: ROUTES.solicitarInscripcion,
           className:
-            'border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 text-slate-100',
-          iconClassName: 'text-amber-400',
+            'border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15 text-zinc-100',
+          iconClassName: 'text-emerald-400',
         },
         {
           label: 'EXPLORAR EVENTOS',
           icon: CalendarDays,
           to: ROUTES.eventos,
           className:
-            'border border-white/10 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 text-slate-100',
-          iconClassName: 'text-brand-400',
+            'border border-white/[0.09] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15 text-zinc-100',
+          iconClassName: 'text-zinc-300',
         },
       ];
 
   return (
-    <div className="grid grid-cols-1 items-start gap-7 xl:grid-cols-[320px_minmax(0,1fr)]">
-      {/* Bento Card Oscura: Carnet Digital y Acciones Rápidas (sin contenedores blancos) */}
+    <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[310px_minmax(0,1fr)]">
+      {/* Bento Card Oscura: Carnet Digital y Acciones Rápidas (Global Fan style) */}
       <section
         aria-label="Tarjeta de identidad del socio"
-        className="relative flex flex-col items-center overflow-hidden rounded-2xl border border-white/[0.1] bg-gradient-to-b from-[#131b28] via-[#0d121b] to-[#090d14] p-7 text-center text-slate-100 shadow-2xl"
+        className="relative flex flex-col items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0d11] p-7 text-center text-zinc-100 shadow-2xl"
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgba(0,95,194,0.28),transparent_72%)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.12),transparent_72%)]"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/60 to-transparent"
+          className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent"
         />
 
-        <span className="relative z-10 text-[10px] font-bold uppercase tracking-[0.22em] text-brand-400/90">
+        <span className="relative z-10 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
           Carnet Digital
         </span>
 
         <div className="relative z-10 mt-4">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-500/25 via-slate-800/90 to-slate-900 text-2xl font-bold tracking-tight text-white ring-1 ring-white/15 shadow-inner">
+          <div className="flex h-22 w-22 items-center justify-center rounded-full bg-zinc-900 text-2xl font-semibold tracking-tight text-white ring-1 ring-white/15">
             {iniciales}
           </div>
           <button
@@ -362,29 +362,29 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
             onClick={() => navigate(ROUTES.perfil)}
             title="Editar mis datos"
             aria-label="Ir a editar mis datos"
-            className="absolute -right-0.5 bottom-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-[#151d2b] text-slate-200 shadow-lg transition-all hover:scale-105 hover:border-brand-400/50 hover:bg-brand-600 hover:text-white cursor-pointer"
+            className="absolute -right-0.5 bottom-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-zinc-900 text-zinc-200 shadow-lg transition-all hover:scale-105 hover:bg-white hover:text-zinc-950 cursor-pointer"
           >
             <Pencil size={12} />
           </button>
         </div>
 
-        <h1 className="relative z-10 mt-4 text-xl font-bold tracking-tight text-white">
+        <h1 className="relative z-10 mt-4 text-lg font-semibold tracking-[-0.02em] text-white">
           {nombreMostrado}
         </h1>
 
-        <p className="relative z-10 mt-1 text-sm font-medium text-slate-400">
+        <p className="relative z-10 mt-1 text-sm text-zinc-400">
           {membresiaActiva
             ? `Socio · ${membresiaActiva.categoria?.nombre ?? 'Activo'}`
             : 'Participante'}
         </p>
 
         {membresiaActiva ? (
-          <div className="relative z-10 mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
+          <div className="relative z-10 mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
             Membresía Activa
           </div>
         ) : (
-          <p className="relative z-10 mt-3.5 inline-flex items-center rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300">
+          <p className="relative z-10 mt-3.5 inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-zinc-300">
             Sumate al club
           </p>
         )}
@@ -395,7 +395,7 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
               key={to}
               type="button"
               onClick={() => navigate(to)}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold tracking-wide transition-all cursor-pointer ${className}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold tracking-wide transition-all cursor-pointer ${className}`}
             >
               <Icon size={15} className={iconClassName} aria-hidden="true" />
               <span>{label}</span>
@@ -407,17 +407,17 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
       {/* Bento Card Derecha: Datos Personales */}
       <section
         aria-label="Datos personales"
-        className="space-y-5 rounded-2xl border border-white/[0.08] bg-[#0d1118]/90 p-6 shadow-2xl sm:p-8"
+        className="space-y-5 rounded-2xl border border-white/[0.07] bg-[#0b0d11]/95 p-6 shadow-2xl sm:p-8"
       >
         <div className="space-y-1.5">
-          <h2 className="text-lg font-bold tracking-tight text-white">Datos personales</h2>
-          <p className="text-xs leading-relaxed text-slate-400 sm:text-sm">
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-white">Datos personales</h2>
+          <p className="text-xs leading-relaxed text-zinc-400 sm:text-sm">
             Tus datos personales se utilizan para tu carnet digital, inscripciones a disciplinas y
             reservas en SocialClub. En caso de que necesites actualizar algún dato, hacé{' '}
             <button
               type="button"
               onClick={() => navigate(ROUTES.perfil)}
-              className="font-semibold text-brand-400 underline decoration-brand-400/60 underline-offset-2 transition-colors hover:text-brand-300 cursor-pointer"
+              className="font-medium text-emerald-400 underline decoration-emerald-400/50 underline-offset-2 transition-colors hover:text-emerald-300 cursor-pointer"
             >
               click aquí
             </button>{' '}
@@ -432,15 +432,15 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
               className="flex flex-wrap items-center justify-between gap-3 px-1 py-3.5 text-sm transition-colors hover:bg-white/[0.02]"
             >
               <div className="flex flex-wrap items-baseline gap-2">
-                <dt className="font-medium text-slate-400">{etiqueta}:</dt>
-                <dd className="font-semibold text-slate-100">{valor}</dd>
+                <dt className="font-normal text-zinc-400">{etiqueta}:</dt>
+                <dd className="font-medium text-zinc-100">{valor}</dd>
               </div>
 
               {editable && (
                 <button
                   type="button"
                   onClick={() => navigate(ROUTES.perfil)}
-                  className="text-xs font-semibold text-brand-400 transition-colors hover:text-brand-300 cursor-pointer"
+                  className="text-xs font-medium text-emerald-400 transition-colors hover:text-emerald-300 cursor-pointer"
                 >
                   Editar
                 </button>
@@ -455,7 +455,7 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
             variant="outline"
             size="sm"
             onClick={() => navigate(ROUTES.perfil)}
-            className="border-white/15 bg-white/[0.05] text-white hover:bg-white/[0.1] hover:text-white"
+            className="rounded-full border-white/15 bg-white/[0.04] text-zinc-100 hover:bg-white/[0.1] hover:text-white"
           >
             <User size={15} />
             Editar mis datos
@@ -465,7 +465,7 @@ function VistaPortalIdentidad({ esSocio }: { esSocio: boolean }) {
             variant="ghost"
             size="sm"
             onClick={() => navigate(ROUTES.cambiarContrasena)}
-            className="text-slate-300 hover:bg-white/[0.06] hover:text-white"
+            className="rounded-full text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100"
           >
             <KeyRound size={15} />
             Cambiar contraseña
