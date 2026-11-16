@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MisSolicitudesInscripcionTable } from './MisSolicitudesInscripcionTable';
@@ -68,6 +68,28 @@ const solicitudesMock: SolicitudInscripcion[] = [
 ];
 
 describe('MisSolicitudesInscripcionTable (US-64)', () => {
+  it('US-65: muestra cancelar para solicitudes cancelables y solicita confirmación', async () => {
+    const user = userEvent.setup();
+    const onCancelar = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <MisSolicitudesInscripcionTable
+        solicitudes={solicitudesMock}
+        onCancelar={onCancelar}
+      />,
+    );
+
+    const botonesCancelar = screen.getAllByTestId('btn-cancelar-solicitud');
+    expect(botonesCancelar).toHaveLength(3);
+    await user.click(botonesCancelar[0]);
+
+    expect(screen.getByTestId('modal-confirmar-cancelacion')).toBeInTheDocument();
+    expect(onCancelar).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /sí, cancelar solicitud/i }));
+    expect(onCancelar).toHaveBeenCalledWith(1);
+  });
+
   it('TC-US64-UI-01: muestra la lista de solicitudes con disciplina, categoría, fecha y estado', () => {
     render(<MisSolicitudesInscripcionTable solicitudes={solicitudesMock} />);
 
@@ -142,4 +164,3 @@ describe('MisSolicitudesInscripcionTable (US-64)', () => {
     expect(screen.getByText(/No hay solicitudes para el filtro seleccionado/i)).toBeInTheDocument();
   });
 });
-

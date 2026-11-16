@@ -9,6 +9,11 @@ import {
 } from '../schemas/solicitar-inscripcion.schema';
 import { useSolicitarInscripcion } from '../hooks/useSolicitarInscripcion';
 import type { CategoriaCatalogo, DisciplinaCatalogo } from '../types';
+import {
+  DocumentacionSolicitudFields,
+  type DocumentosSolicitudValues,
+} from './DocumentacionSolicitudFields';
+import { subirDocumentacionSolicitud } from '../api/inscripcion.api';
 
 interface Props {
   disciplina: DisciplinaCatalogo | null;
@@ -19,6 +24,7 @@ interface Props {
 
 export function SolicitarInscripcionModal({ disciplina, open, onClose, esSocio }: Props) {
   const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<number | null>(null);
+  const [documentos, setDocumentos] = useState<DocumentosSolicitudValues>({});
   const selectId = useId();
 
   const {
@@ -34,13 +40,7 @@ export function SolicitarInscripcionModal({ disciplina, open, onClose, esSocio }
     },
   });
 
-  const { solicitar, isPending } = useSolicitarInscripcion({
-    onSuccess: () => {
-      reset();
-      setCategoriaSeleccionadaId(null);
-      onClose();
-    },
-  });
+  const { solicitar, isPending } = useSolicitarInscripcion();
 
   if (!disciplina) return null;
 
@@ -74,10 +74,31 @@ export function SolicitarInscripcionModal({ disciplina, open, onClose, esSocio }
   };
 
   const onSubmit = async () => {
-    await solicitar({
+    const solicitud = await solicitar({
       disciplinaId: disciplina.id,
       categoriaDisciplinaId: categoriaSeleccionadaId ?? undefined,
     });
+    await Promise.all(
+      docsObligatorios
+        .map((documento) => ({ documento, valor: documentos[documento.tipoDocumento] }))
+        .filter(({ valor }) => valor?.archivo)
+        .map(({ documento, valor }) =>
+          subirDocumentacionSolicitud(
+            solicitud.id,
+            {
+              tipoDocumento: documento.tipoDocumento,
+              ...(valor?.fechaVencimiento
+                ? { fechaVencimiento: valor.fechaVencimiento }
+                : {}),
+            },
+            valor!.archivo!,
+          ),
+        ),
+    );
+    reset();
+    setCategoriaSeleccionadaId(null);
+    setDocumentos({});
+    onClose();
   };
 
   return (
@@ -157,6 +178,29 @@ export function SolicitarInscripcionModal({ disciplina, open, onClose, esSocio }
           )}
         </div>
 
+        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3" data-testid="carga-documentacion-solicitud">
+          <div>
+            <p className="text-sm font-semibold text-slate-700">Adjuntar documentación (opcional)</p>
+            <p className="text-xs text-slate-500">
+              Podés enviarla ahora o más tarde mientras la solicitud siga pendiente.
+            </p>
+          </div>
+          <DocumentacionSolicitudFields
+            documentos={docsObligatorios}
+            valores={documentos}
+            onChange={(tipoDocumento, cambio) =>
+              setDocumentos((actuales) => ({
+                ...actuales,
+                [tipoDocumento]: {
+                  archivo: actuales[tipoDocumento]?.archivo ?? null,
+                  fechaVencimiento: actuales[tipoDocumento]?.fechaVencimiento ?? '',
+                  ...cambio,
+                },
+              }))
+            }
+          />
+        </div>
+
         {/* Validación de Restricciones */}
         {tieneCategorias && !categoriaSeleccionadaId ? (
           <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
@@ -209,4 +253,3 @@ export function SolicitarInscripcionModal({ disciplina, open, onClose, esSocio }
     </Modal>
   );
 }
-

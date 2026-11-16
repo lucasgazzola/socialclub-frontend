@@ -5,6 +5,8 @@ import { ROUTES } from '@/routes/paths';
 import {
   useCatalogoInscripcion,
   useMisSolicitudesInscripcion,
+  useCancelarSolicitudInscripcion,
+  useSubirDocumentacionSolicitud,
 } from '../hooks/useSolicitarInscripcion';
 import { CatalogoDisciplinasGrid } from '../components/CatalogoDisciplinasGrid';
 import { SolicitarInscripcionModal } from '../components/SolicitarInscripcionModal';
@@ -35,6 +37,15 @@ export function SolicitarInscripcionPage() {
     refetch: recargarSolicitudes,
   } = useMisSolicitudesInscripcion();
   const ultimaRuta = useRef(location.pathname);
+  const { cancelar, isPending: cancelando } = useCancelarSolicitudInscripcion();
+  const { subir } = useSubirDocumentacionSolicitud();
+  const obtenerDocumentosSolicitud = (solicitud: (typeof solicitudes)[number]) => {
+    const disciplina = catalogo?.items.find((item) => item.id === solicitud.disciplinaId);
+    const categoria = disciplina?.categorias.find(
+      (item) => item.id === solicitud.categoriaDisciplinaId,
+    );
+    return categoria?.documentosObligatorios ?? disciplina?.documentosObligatorios ?? [];
+  };
 
   useEffect(() => {
     if (ultimaRuta.current === location.pathname) {
@@ -102,7 +113,15 @@ export function SolicitarInscripcionPage() {
           <Spinner className="h-8 w-8 text-brand-600" />
         </div>
       ) : (
-        <MisSolicitudesInscripcionTable solicitudes={solicitudes} />
+        <MisSolicitudesInscripcionTable
+          solicitudes={solicitudes}
+          onCancelar={cancelar}
+          cancelando={cancelando}
+          onSubirDocumentacion={(solicitudId, payload, archivo) =>
+            subir({ solicitudId, payload, archivo })
+          }
+          obtenerDocumentosSolicitud={obtenerDocumentosSolicitud}
+        />
       )}
 
       {disciplinaSeleccionada && (

@@ -11,12 +11,14 @@ const api = vi.hoisted(() => ({
   obtenerCatalogoInscripcion: vi.fn(),
   solicitarInscripcion: vi.fn(),
   obtenerMisSolicitudesInscripcion: vi.fn(),
+  cancelarSolicitudInscripcion: vi.fn(),
 }));
 
 vi.mock('../api/inscripcion.api', () => ({
   obtenerCatalogoInscripcion: api.obtenerCatalogoInscripcion,
   solicitarInscripcion: api.solicitarInscripcion,
   obtenerMisSolicitudesInscripcion: api.obtenerMisSolicitudesInscripcion,
+  cancelarSolicitudInscripcion: api.cancelarSolicitudInscripcion,
 }));
 
 vi.mock('sonner', () => ({
