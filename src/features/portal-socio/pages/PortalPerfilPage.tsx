@@ -41,7 +41,8 @@ export function PortalPerfilPage() {
   const esExSocio =
     !membresiaActiva && Boolean(persona?.membresias && persona.membresias.length > 0);
 
-  const emailOriginal = persona?.email || usuario?.email || '';
+  // DT-63: el email que manda es el del usuario (con el que inicia sesión).
+  const emailOriginal = usuario?.email || persona?.email || '';
   const {
     register,
     handleSubmit,
