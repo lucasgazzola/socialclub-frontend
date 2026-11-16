@@ -161,6 +161,29 @@ describe('US-35 · EstadoFinancieroPage', () => {
     expect(screen.getByTestId('barra-2026-08')).toBeInTheDocument();
   });
 
+  it('H08 · DT-63 · entradas y señas no muestran morosos ni barra de cobranza', () => {
+    mockHook.mockReturnValue({
+      data: {
+        ...reporte,
+        porConcepto: [
+          ...reporte.porConcepto,
+          { concepto: 'ENTRADAS', recaudado: 9000, adeudado: 0, morosos: 0, porcentajeCobranza: 100 },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as never);
+    renderPagina();
+
+    const fila = within(screen.getByRole('table', { name: 'Estado por concepto' }))
+      .getByText('Entradas')
+      .closest('tr')!;
+    expect(within(fila).queryByRole('link')).not.toBeInTheDocument();
+    expect(within(fila).queryByText('100 %')).not.toBeInTheDocument();
+    expect(screen.getByText(/sin entradas ni señas/)).toBeInTheDocument();
+  });
+
   it('el gráfico tiene su versión en tabla', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     renderPagina();
