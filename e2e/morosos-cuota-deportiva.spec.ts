@@ -29,7 +29,9 @@ test(
         const fila = page.getByRole('row', { name: new RegExp(VALERIA.nombre) });
         await expect(fila).toContainText(formatearDni(VALERIA.dni));
         await expect(fila).toContainText('Fútbol Femenino');
-        await expect(fila).toContainText('Pelota Paleta');
+        // US-23: la fila muestra dos disciplinas y resume el resto; Pelota Paleta
+        // se ve en el detalle (TC-208).
+        await expect(fila).toContainText(/\+\d+ disciplinas? más/);
         await expect(fila).toContainText(/per\. · \$/);
         await expect(fila).toContainText(/\$\s?[\d.]+,00/);
         await resaltar(fila);
