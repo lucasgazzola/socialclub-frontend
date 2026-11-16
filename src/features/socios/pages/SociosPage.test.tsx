@@ -25,8 +25,9 @@ vi.mock('../hooks/useSocios', () => ({
 }));
 
 vi.mock('../components/SociosTable', () => ({
-  SociosTable: ({ socios }: { socios: any[] }) => (
+  SociosTable: ({ socios, onOrdenar }: { socios: any[]; onOrdenar?: (c: string) => void }) => (
     <div data-testid="socios-table">
+      <button onClick={() => onOrdenar?.('estadoCuenta')}>Ordenar Estado Cuenta</button>
       {socios.map((s) => (
         <div key={s.id}>{s.nombre} {s.apellido}</div>
       ))}
@@ -222,6 +223,43 @@ describe('SociosPage', () => {
     expect(mockUseSocios).toHaveBeenCalledWith(
       expect.objectContaining({
         estadoCuenta: 'MOROSO',
+        pagina: 1,
+      }),
+    );
+  });
+
+  it('permite ordenar por estadoCuenta en 3 estados invocando useSocios', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SociosPage />);
+
+    const btnOrdenar = screen.getByRole('button', { name: /Ordenar Estado Cuenta/i });
+
+    // Clic 1: asc
+    await user.click(btnOrdenar);
+    expect(mockUseSocios).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ordenarPor: 'estadoCuenta',
+        orden: 'asc',
+        pagina: 1,
+      }),
+    );
+
+    // Clic 2: desc
+    await user.click(btnOrdenar);
+    expect(mockUseSocios).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ordenarPor: 'estadoCuenta',
+        orden: 'desc',
+        pagina: 1,
+      }),
+    );
+
+    // Clic 3: neutro / reset
+    await user.click(btnOrdenar);
+    expect(mockUseSocios).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ordenarPor: undefined,
+        orden: undefined,
         pagina: 1,
       }),
     );

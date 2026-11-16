@@ -16,7 +16,7 @@ export const inscripcionSchema = z
     /** DT-54: el email del participante nuevo, escrito por segunda vez. */
     confirmarEmail: z.string().trim().optional(),
     telefono: z.string().trim().optional(),
-    disciplinaId: z.number({ error: 'Debe seleccionar una disciplina',}),
+    disciplinaId: z.number().optional(),
     categoriaDisciplinaId: z.number().int().optional(), })
   .superRefine((data, ctx) => {
     if (data.personaId) return; 

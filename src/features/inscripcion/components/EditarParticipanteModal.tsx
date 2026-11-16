@@ -2,15 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
   Button,
+  ConfirmDialog,
   DateInput,
   Input,
   Modal,
   ModalActions,
   Select,
   Spinner,
-  StatusTabs,
 } from '@/components/ui';
-import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
 import { formatearDni } from '@/lib/utils/dni';
 import { ROUTES } from '@/routes/paths';
 import { useInscripcionesPorPersona } from '../hooks/useInscripciones';
@@ -29,15 +28,13 @@ import { useCrearInscripcion } from '../hooks/useCrearInscripcion';
 import { useActualizarInscripcion } from '../hooks/useActualizarInscripcion';
 import { useEliminarInscripcion } from '../hooks/useEliminarInscripcion';
 import type { Inscripcion } from '../types';
-import { Plus, Trash2, Loader2, UserCog } from 'lucide-react';
+import { Plus, Trash2, Loader2, Save, UserCog } from 'lucide-react';
 
 interface DisciplinaSeleccionada {
   disciplinaId: number;
   categoriaDisciplinaId?: number;
   inscripcionId?: number;
 }
-
-type Pestania = 'datos' | 'documentacion';
 
 interface EditarParticipanteModalProps {
   /** Participante a editar; null cierra el modal. */
@@ -50,7 +47,6 @@ interface EditarParticipanteModalProps {
  * Dos pestañas: datos y disciplinas, y su documentación (DT-11).
  */
 export function EditarParticipanteModal({ personaId, onClose }: EditarParticipanteModalProps) {
-  const [pestania, setPestania] = useState<Pestania>('datos');
   return (
     <Modal
       open={personaId !== null}
@@ -58,26 +54,14 @@ export function EditarParticipanteModal({ personaId, onClose }: EditarParticipan
       size="xl"
       icon={<UserCog />}
       title="Editar participante"
-      description="Datos personales, disciplinas y documentación."
+      description="Datos personales y disciplinas."
     >
       {personaId !== null && (
-        <div className="space-y-5">
-          <StatusTabs<Pestania>
-            value={pestania}
-            onChange={setPestania}
-            aria-label="Secciones del participante"
-            tabs={[
-              { value: 'datos', label: 'Datos y disciplinas' },
-              { value: 'documentacion', label: 'Documentación' },
-            ]}
-          />
-          <EditarParticipanteContenido
-            key={personaId}
-            personaId={personaId}
-            pestania={pestania}
-            onClose={onClose}
-          />
-        </div>
+        <EditarParticipanteContenido
+          key={personaId}
+          personaId={personaId}
+          onClose={onClose}
+        />
       )}
     </Modal>
   );
@@ -85,11 +69,9 @@ export function EditarParticipanteModal({ personaId, onClose }: EditarParticipan
 
 function EditarParticipanteContenido({
   personaId,
-  pestania,
   onClose,
 }: {
   personaId: number;
-  pestania: Pestania;
   onClose: () => void;
 }) {
   const navigate = useNavigate();
@@ -100,7 +82,7 @@ function EditarParticipanteContenido({
     error: errorInscripciones,
   } = useInscripcionesPorPersona(personaId, true);
   const { disciplinas, cargando: cargandoDisciplinas } = useDisciplinasActivas();
-  const { enviar: crearInscripcion, enviando: creando } = useCrearInscripcion();
+  const { enviar: crearInscripcion, enviando: creando } = useCrearInscripcion({ toastDeExito: false });
   const { mutateAsync: actualizarInscripcion, isPending: actualizando } =
     useActualizarInscripcion();
   const { mutateAsync: eliminarInscripcion, isPending: eliminando } = useEliminarInscripcion();
@@ -109,11 +91,18 @@ function EditarParticipanteContenido({
   const [disciplinasSeleccionadas, setDisciplinasSeleccionadas] = useState<
     DisciplinaSeleccionada[]
   >([]);
+  const [inscripcionesAEliminar, setInscripcionesAEliminar] = useState<number[]>([]);
+  const [disciplinaAEliminar, setDisciplinaAEliminar] = useState<{
+    index: number;
+    inscripcionId?: number;
+    nombre: string;
+  } | null>(null);
 
   const {
     register,
     control,
     handleSubmit,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<InscripcionFormValues>({
@@ -171,9 +160,11 @@ function EditarParticipanteContenido({
     };
   });
 
-  const handleEliminarDisciplina = async (index: number, inscripcionId?: number) => {
+  const handleEliminarDisciplina = (index: number, inscripcionId?: number) => {
     if (inscripcionId) {
-      await eliminarInscripcion(inscripcionId);
+      setInscripcionesAEliminar((prev) =>
+        prev.includes(inscripcionId) ? prev : [...prev, inscripcionId],
+      );
     }
     const nuevas = [...disciplinasSeleccionadas];
     nuevas.splice(index, 1);
@@ -189,7 +180,11 @@ function EditarParticipanteContenido({
 
   const handleDisciplinaChange = (index: number, value: number) => {
     const nuevas = [...disciplinasSeleccionadas];
-    nuevas[index] = { ...nuevas[index], disciplinaId: value };
+    nuevas[index] = {
+      ...nuevas[index],
+      disciplinaId: value,
+      categoriaDisciplinaId: undefined,
+    };
     setDisciplinasSeleccionadas(nuevas);
   };
 
@@ -200,6 +195,19 @@ function EditarParticipanteContenido({
   };
 
   const onSubmit = async (data: InscripcionFormValues) => {
+    for (const d of disciplinasSeleccionadas) {
+      if (d.disciplinaId > 0) {
+        const disc = disciplinas.find((item) => item.id === d.disciplinaId);
+        const requiereCat = (disc?.categorias ?? []).some(
+          (c) => c.activo || c.id === d.categoriaDisciplinaId,
+        );
+        if (requiereCat && !d.categoriaDisciplinaId) {
+          toast.error(`Debe seleccionar una categoría para ${disc?.nombre ?? 'la disciplina'}`);
+          return;
+        }
+      }
+    }
+
     const payload = {
       ...data,
       fechaNacimiento: data.fechaNacimiento || undefined,
@@ -207,11 +215,15 @@ function EditarParticipanteContenido({
       telefono: data.telefono || undefined,
     };
 
-    // Sin disciplinas para crear/actualizar, el camino por inscripción no
-    // tiene dónde escribir los datos: guardarlos directo en la Persona
-    // (participante dado de baja o reactivado sin disciplinas, US-07).
-    if (disciplinasSeleccionadas.length === 0) {
-      try {
+    try {
+      for (const id of inscripcionesAEliminar) {
+        await eliminarInscripcion(id);
+      }
+
+      // Sin disciplinas para crear/actualizar, el camino por inscripción no
+      // tiene dónde escribir los datos: guardarlos directo en la Persona
+      // (participante dado de baja o reactivado sin disciplinas, US-07).
+      if (disciplinasSeleccionadas.length === 0) {
         await actualizarDatosPersona(personaId, {
           nombre: data.nombre,
           apellido: data.apellido,
@@ -221,36 +233,36 @@ function EditarParticipanteContenido({
           email: data.email || undefined,
           telefono: data.telefono || undefined,
         });
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'No se pudo guardar el participante');
+        toast.success('Participante actualizado correctamente');
+        onClose();
         return;
       }
-      toast.success('Participante actualizado correctamente');
-      onClose();
-      return;
-    }
 
-    for (const d of disciplinasSeleccionadas) {
-      if (d.inscripcionId) {
-        await actualizarInscripcion({
-          id: d.inscripcionId,
-          payload: {
+      for (const d of disciplinasSeleccionadas) {
+        if (d.inscripcionId) {
+          await actualizarInscripcion({
+            id: d.inscripcionId,
+            payload: {
+              ...payload,
+              disciplinaId: d.disciplinaId,
+              categoriaDisciplinaId: d.categoriaDisciplinaId,
+            },
+          });
+        } else if (d.disciplinaId > 0) {
+          await crearInscripcion({
             ...payload,
+            personaId,
             disciplinaId: d.disciplinaId,
             categoriaDisciplinaId: d.categoriaDisciplinaId,
-          },
-        });
-      } else if (d.disciplinaId > 0) {
-        await crearInscripcion({
-          ...payload,
-          disciplinaId: d.disciplinaId,
-          categoriaDisciplinaId: d.categoriaDisciplinaId,
-        });
+          });
+        }
       }
-    }
 
-    toast.success('Participante actualizado correctamente');
-    onClose();
+      toast.success('Participante actualizado correctamente');
+      onClose();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo guardar el participante');
+    }
   };
 
   if (loadingInscripciones) {
@@ -282,14 +294,6 @@ function EditarParticipanteContenido({
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
         No se pudo cargar el participante.
       </div>
-    );
-  }
-
-  if (pestania === 'documentacion') {
-    return (
-      <DocumentacionParticipante
-        persona={{ id: personaId, nombre: participante.nombre, apellido: participante.apellido }}
-      />
     );
   }
 
@@ -457,41 +461,53 @@ function EditarParticipanteContenido({
                     />
                   </div>
 
-                  {categoriasDisponibles(
-                    disciplinas.find((disc) => disc.id === d.disciplinaId),
-                    d.categoriaDisciplinaId,
-                  ).length > 0 && (
-                    <div className="min-w-0 flex-1">
-                      <label className="mb-1 block text-sm font-medium text-slate-700">
-                        Categoría
-                      </label>
-                      <Controller
-                        control={control}
-                        name="categoriaDisciplinaId"
-                        render={({ field }) => (
-                          <select
-                            value={d.categoriaDisciplinaId ?? ''}
-                            onChange={(e) => {
-                              const value = e.target.value ? Number(e.target.value) : undefined;
-                              field.onChange(value);
-                              handleCategoriaChange(index, value);
-                            }}
-                            className="focus:ring-brand-500 focus:border-brand-500 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-                          >
-                            <option value="">Seleccioná una categoría</option>
-                            {categoriasDisponibles(
-                              disciplinas.find((disc) => disc.id === d.disciplinaId),
-                              d.categoriaDisciplinaId,
-                            ).map((cat) => (
-                              <option key={cat.id} value={cat.id}>
-                                {cat.activo ? cat.nombre : `${cat.nombre} (dada de baja)`}
+                  {(() => {
+                    const disc = disciplinas.find((item) => item.id === d.disciplinaId);
+                    const tieneCategorias = (disc?.categorias ?? []).some(
+                      (c) => c.activo || c.id === d.categoriaDisciplinaId,
+                    );
+                    if (!tieneCategorias) return null;
+
+                    const cats = categoriasDisponibles(disc, d.categoriaDisciplinaId, {
+                      fechaNacimiento: watch('fechaNacimiento') || participante?.fechaNacimiento,
+                      genero: watch('genero') ?? participante?.genero,
+                    });
+
+                    return (
+                      <div className="min-w-0 flex-1">
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                          Categoría
+                        </label>
+                        <Controller
+                          control={control}
+                          name="categoriaDisciplinaId"
+                          render={({ field }) => (
+                            <select
+                              value={d.categoriaDisciplinaId ?? ''}
+                              disabled={cats.length === 0}
+                              onChange={(e) => {
+                                const value = e.target.value ? Number(e.target.value) : undefined;
+                                field.onChange(value);
+                                handleCategoriaChange(index, value);
+                              }}
+                              className="focus:ring-brand-500 focus:border-brand-500 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+                            >
+                              <option value="">
+                                {cats.length === 0
+                                  ? 'No hay categorías que cumplan edad/género'
+                                  : 'Seleccioná una categoría'}
                               </option>
-                            ))}
-                          </select>
-                        )}
-                      />
-                    </div>
-                  )}
+                              {cats.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.activo ? cat.nombre : `${cat.nombre} (dada de baja)`}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        />
+                      </div>
+                    );
+                  })()}
 
                   <div className="flex items-center gap-2">
                     <Button
@@ -499,7 +515,16 @@ function EditarParticipanteContenido({
                       variant="ghost"
                       size="sm"
                       className="text-red-600 hover:bg-red-50"
-                      onClick={() => handleEliminarDisciplina(index, d.inscripcionId)}
+                      onClick={() => {
+                        const nombre =
+                          disciplinas.find((item) => item.id === d.disciplinaId)?.nombre ??
+                          'esta disciplina';
+                        setDisciplinaAEliminar({
+                          index,
+                          inscripcionId: d.inscripcionId,
+                          nombre,
+                        });
+                      }}
                       disabled={eliminando}
                     >
                       <Trash2 size={14} />
@@ -516,11 +541,37 @@ function EditarParticipanteContenido({
             Cancelar
           </Button>
           <Button type="submit" disabled={guardando}>
-            {guardando && <Loader2 className="h-4 w-4 animate-spin" />}
+            {guardando ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save size={14} aria-hidden="true" />
+            )}
             {guardando ? 'Guardando cambios…' : 'Guardar cambios'}
           </Button>
         </ModalActions>
       </form>
+
+      <ConfirmDialog
+        open={disciplinaAEliminar !== null}
+        variant="danger"
+        title="Quitar disciplina"
+        description={
+          disciplinaAEliminar
+            ? `¿Estás seguro de que deseás quitar la disciplina "${disciplinaAEliminar.nombre}" de este participante?`
+            : undefined
+        }
+        confirmLabel="Quitar disciplina"
+        onConfirm={() => {
+          if (disciplinaAEliminar) {
+            handleEliminarDisciplina(
+              disciplinaAEliminar.index,
+              disciplinaAEliminar.inscripcionId,
+            );
+            setDisciplinaAEliminar(null);
+          }
+        }}
+        onCancel={() => setDisciplinaAEliminar(null)}
+      />
     </div>
   );
 }

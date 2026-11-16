@@ -1,11 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { apiClient } from '@/lib/api/client';
+import { eliminarInscripcion } from '../api/inscripcion.api';
 import { inscripcionesKeys } from './useInscripciones';
-
-export async function eliminarInscripcion(id: number): Promise<void> {
-  await apiClient.delete(`/inscripcion/${id}`);
-}
 
 export function useEliminarInscripcion() {
   const qc = useQueryClient();

@@ -1,19 +1,82 @@
 import { useState } from 'react';
-import { CreditCard, AlertCircle } from 'lucide-react';
+import { CreditCard, AlertCircle, ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { formatearDni } from '@/lib/utils/dni';
+import { cn } from '@/lib/utils/cn';
 import type { SocioMorosoCuotaSocial } from '../types';
+
+export type CriterioOrdenMorosos = 'nombre' | 'dni' | 'categoria' | 'monto' | 'periodos';
+export type SentidoOrdenMorosos = 'asc' | 'desc';
+
+interface ColumnaOrdenableProps {
+  campo: CriterioOrdenMorosos;
+  label: string;
+  ordenarPor?: CriterioOrdenMorosos;
+  orden?: SentidoOrdenMorosos;
+  onOrdenar?: (campo: CriterioOrdenMorosos) => void;
+  align?: 'left' | 'right';
+}
+
+function ColumnaOrdenable({
+  campo,
+  label,
+  ordenarPor,
+  orden,
+  onOrdenar,
+  align = 'left',
+}: ColumnaOrdenableProps) {
+  const activo = ordenarPor === campo && Boolean(orden);
+  return (
+    <th
+      scope="col"
+      aria-sort={activo ? (orden === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className={cn('px-6 py-3.5', align === 'right' && 'text-right')}
+    >
+      <button
+        type="button"
+        onClick={() => onOrdenar?.(campo)}
+        title={`Ordenar por ${label}`}
+        className="group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-colors select-none focus:outline-hidden cursor-pointer"
+      >
+        <span>{label}</span>
+        <span className="flex items-center" aria-hidden="true">
+          {activo ? (
+            orden === 'asc' ? (
+              <ArrowUp size={13} className="text-brand-600 stroke-[2.5]" />
+            ) : (
+              <ArrowDown size={13} className="text-brand-600 stroke-[2.5]" />
+            )
+          ) : (
+            <ArrowUpDown
+              size={13}
+              className="text-slate-400 opacity-60 group-hover:opacity-100 transition-opacity"
+            />
+          )}
+        </span>
+      </button>
+    </th>
+  );
+}
 
 interface MorososCuotaSocialTableProps {
   morosos: SocioMorosoCuotaSocial[];
   onCobrar: (socio: { id: number; nombre: string; apellido: string; dni?: string }) => void;
+  ordenarPor?: CriterioOrdenMorosos;
+  orden?: SentidoOrdenMorosos;
+  onOrdenar?: (campo: CriterioOrdenMorosos) => void;
 }
 
 function formatMonto(monto: number): string {
   return monto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 }
 
-export function MorososCuotaSocialTable({ morosos, onCobrar }: MorososCuotaSocialTableProps) {
+export function MorososCuotaSocialTable({
+  morosos,
+  onCobrar,
+  ordenarPor,
+  orden,
+  onOrdenar,
+}: MorososCuotaSocialTableProps) {
   // Manejo de despliegue de períodos cuando son más de 3
   const [expandidos, setExpandidos] = useState<Record<number, boolean>>({});
 
@@ -43,21 +106,42 @@ export function MorososCuotaSocialTable({ morosos, onCobrar }: MorososCuotaSocia
         <table className="w-full text-left text-sm text-slate-600">
           <thead className="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
-              <th scope="col" className="px-6 py-3.5">
-                Socio
-              </th>
-              <th scope="col" className="px-6 py-3.5">
-                DNI
-              </th>
-              <th scope="col" className="px-6 py-3.5">
-                Categoría
-              </th>
-              <th scope="col" className="px-6 py-3.5">
-                Períodos adeudados
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-right">
-                Deuda total
-              </th>
+              <ColumnaOrdenable
+                campo="nombre"
+                label="Socio"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <ColumnaOrdenable
+                campo="dni"
+                label="DNI"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <ColumnaOrdenable
+                campo="categoria"
+                label="Categoría"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <ColumnaOrdenable
+                campo="periodos"
+                label="Períodos adeudados"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <ColumnaOrdenable
+                campo="monto"
+                label="Deuda total"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+                align="right"
+              />
               <th scope="col" className="px-6 py-3.5 text-right">
                 Acciones
               </th>

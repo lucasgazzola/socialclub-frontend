@@ -21,11 +21,17 @@ import {
   Dumbbell,
   Building2,
   Timer,
+  Bell,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Breadcrumbs, ClubLogo } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { RolNombre } from '@/features/auth/types';
+import { NotificacionesBell } from '@/features/documentacion/components/NotificacionesBell';
+import {
+  useAlertasDocumentacion,
+  usePendientesRevision,
+} from '@/features/documentacion/hooks/useDocumentacion';
 import { ROUTES, cruzaZonas } from '@/routes/paths';
 import { cn } from '@/lib/utils/cn';
 
@@ -57,6 +63,12 @@ const navSections: NavSection[] = [
         label: 'Dashboard',
         icon: BarChart3,
         roles: ['ADMIN', 'COLABORADOR'],
+      },
+      {
+        to: ROUTES.notificaciones,
+        label: 'Notificaciones',
+        icon: Bell,
+        roles: ['ADMIN', 'DELEGADO'],
       },
     ],
   },
@@ -148,6 +160,7 @@ const navSections: NavSection[] = [
 const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.dashboard]: 'Panel de Inicio',
   [ROUTES.dashboardGestion]: 'Dashboard de Gestión',
+  [ROUTES.notificaciones]: 'Notificaciones',
   [ROUTES.solicitudesReserva]: 'Solicitudes de Reserva',
   [ROUTES.espacios]: 'Espacios Físicos',
   [ROUTES.socios]: 'Socios del Club',
@@ -176,6 +189,11 @@ export function AppLayout() {
   const { usuario, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const veNotificaciones =
+    usuario?.roles.some((r) => r === 'ADMIN' || r === 'DELEGADO') ?? false;
+  const { data: alertasDoc = [] } = useAlertasDocumentacion(veNotificaciones);
+  const { data: pendientesRevision = [] } = usePendientesRevision(veNotificaciones);
+  const totalNotificaciones = pendientesRevision.length + alertasDoc.length;
 
   const [colapsado, setColapsado] = useState(() => {
     try {
@@ -341,7 +359,7 @@ export function AppLayout() {
                       <NavLink
                         key={to}
                         to={to}
-                        end={to === ROUTES.dashboard}
+                        end={to === ROUTES.dashboard || to === ROUTES.cuotas}
                         title={colapsado ? label : undefined}
                         className={({ isActive }) =>
                           cn(
@@ -364,6 +382,11 @@ export function AppLayout() {
                       >
                         <Icon size={18} strokeWidth={1.8} className="shrink-0" />
                         {!colapsado && <span className="truncate flex-1">{label}</span>}
+                        {!colapsado && to === ROUTES.notificaciones && totalNotificaciones > 0 && (
+                          <span className="ml-auto rounded-full bg-brand-500/20 px-2 py-0.5 text-[11px] font-semibold leading-none text-brand-300 ring-1 ring-inset ring-brand-400/30">
+                            {totalNotificaciones > 99 ? '99+' : totalNotificaciones}
+                          </span>
+                        )}
                       </NavLink>
                     ))}
                   </div>
@@ -430,7 +453,7 @@ export function AppLayout() {
       {/* Contenedor Principal: Top Header + Contenido de Ruta */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top Header Bar estilo Apex */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200/90 bg-white/90 px-8 backdrop-blur-xs shadow-[0_1px_2px_0_rgba(0,0,0,0.02)]">
+        <header className="relative z-40 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/90 bg-white/90 px-8 backdrop-blur-xs shadow-[0_1px_2px_0_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold text-slate-900 tracking-tight">
               {tituloActual}
@@ -438,6 +461,10 @@ export function AppLayout() {
           </div>
 
           <div className="flex items-center gap-3">
+            {veNotificaciones && (
+              <NotificacionesBell pendientes={pendientesRevision} alertas={alertasDoc} />
+            )}
+
             {cruzaZonas(usuario?.roles) && (
               <NavLink
                 to={ROUTES.miClub}

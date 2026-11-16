@@ -3,11 +3,9 @@ import { toast } from 'sonner';
 import {
   AlertTriangle,
   Building2,
-  CheckCircle2,
   Filter,
   Plus,
   Search,
-  X,
 } from 'lucide-react';
 import {
   Button,
@@ -102,7 +100,6 @@ export function EspaciosPage() {
   const [espacioAEliminar, setEspacioAEliminar] = useState<Espacio | null>(null);
   const [espacioAReactivar, setEspacioAReactivar] = useState<Espacio | null>(null);
   const [errorBajaEspacio, setErrorBajaEspacio] = useState<string | null>(null);
-  const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
   // Debounce de 300ms en la búsqueda (ESTANDARES_CRUD_FULLSTACK.md)
   useEffect(() => {
@@ -254,7 +251,7 @@ export function EspaciosPage() {
       payload.subespacios?.length ??
       0;
     const sufijo = cantSubs > 0 ? ` con ${cantSubs} sub-espacios asociados` : '';
-    setMensajeExito(
+    toast.success(
       `El espacio físico "${creado?.nombre ?? payload.nombre}"${sufijo} se registró correctamente.`,
     );
   };
@@ -274,7 +271,7 @@ export function EspaciosPage() {
 
     try {
       await eliminarEspacio.mutateAsync(espacioAEliminar.id);
-      setMensajeExito(
+      toast.success(
         `El espacio "${espacioAEliminar.nombre}" fue dado de baja correctamente.`,
       );
       setEspacioAEliminar(null);
@@ -296,7 +293,7 @@ export function EspaciosPage() {
     if (!espacioAReactivar) return;
     try {
       await reactivarEspacio.mutateAsync(espacioAReactivar.id);
-      setMensajeExito(
+      toast.success(
         `El espacio "${espacioAReactivar.nombre}" fue reactivado exitosamente.`,
       );
       setEspacioAReactivar(null);
@@ -333,27 +330,6 @@ export function EspaciosPage() {
         )}
       </header>
 
-      {mensajeExito && (
-        <div
-          role="status"
-          data-testid="notificacion-exito-espacio"
-          className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
-        >
-          <div className="flex items-center gap-2.5">
-            <CheckCircle2 size={18} className="shrink-0 text-emerald-600" aria-hidden="true" />
-            <span>{mensajeExito}</span>
-          </div>
-          <button
-            type="button"
-            aria-label="Cerrar notificación"
-            onClick={() => setMensajeExito(null)}
-            className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-100"
-          >
-            <X size={15} aria-hidden="true" />
-          </button>
-        </div>
-      )}
-
       <Modal
         open={modalCrearAbierto}
         title="Nuevo espacio físico"
@@ -381,7 +357,7 @@ export function EspaciosPage() {
           setTabInicialEdicion('datos');
         }}
         onSuccess={() => {
-          setMensajeExito(
+          toast.success(
             `El espacio "${espacioEditando?.nombre}" fue actualizado exitosamente.`,
           );
         }}

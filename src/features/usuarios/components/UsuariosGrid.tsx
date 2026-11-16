@@ -261,8 +261,8 @@ export function UsuariosGrid({
                         className={cn(
                           'w-[102px] justify-start',
                           usuario.activo
-                            ? 'text-rose-600 hover:bg-rose-50 hover:text-rose-700'
-                            : 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700',
+                            ? 'hover:bg-rose-50 hover:text-rose-700'
+                            : 'hover:bg-emerald-50 hover:text-emerald-700',
                         )}
                         disabled={accionesDeshabilitadas}
                         onClick={() => onCambiarEstado(usuario)}

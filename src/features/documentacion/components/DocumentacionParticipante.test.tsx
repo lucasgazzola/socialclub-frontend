@@ -5,12 +5,14 @@ import { DocumentacionParticipante } from './DocumentacionParticipante';
 import { useCrearDocumentacion, useDocumentacionPorPersona, useEstadoDocumental } from '../hooks/useDocumentacion';
 import type { EstadoDocumentalPersona } from '../types';
 
+const revisarMock = vi.fn();
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('../hooks/useDocumentacion', () => ({
   useCrearDocumentacion: vi.fn(),
   useDocumentacionPorPersona: vi.fn(),
   useEstadoDocumental: vi.fn(),
   useHabilitarExcepcional: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useRevisarDocumento: vi.fn(() => ({ mutate: revisarMock, mutateAsync: revisarMock, isPending: false })),
 }));
 
 const mockAuth = {
@@ -92,8 +94,7 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     expect(within(futbol).getByText('Pendiente de documentación')).toBeInTheDocument();
     expect(within(futbol).getByText('Vence el 31/03/2027')).toBeInTheDocument();
     expect(within(futbol).getByText('Vigente')).toBeInTheDocument();
-    expect(within(futbol).getByText('Presentar hasta el 15/10/2026')).toBeInTheDocument();
-    expect(within(futbol).getByText('Faltante')).toBeInTheDocument();
+    expect(within(futbol).getByText(/Faltante · Presentar hasta el 15\/10\/2026/)).toBeInTheDocument();
     expect(within(futbol).getByText('(de la categoría)')).toBeInTheDocument();
   });
 
@@ -118,7 +119,7 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     const file = new File(['contenido'], 'autorizacion.pdf', { type: 'application/pdf' });
     const inputArchivo = screen.getByLabelText(/Archivo \(PDF o imagen\)/);
     await user.upload(inputArchivo, file);
-    await user.click(screen.getByRole('button', { name: 'Cargar documentación' }));
+    await user.click(screen.getByRole('button', { name: 'Subir' }));
 
     await waitFor(() => {
       expect(crearMock).toHaveBeenCalledWith({
@@ -136,13 +137,13 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     await user.click(screen.getByRole('button', { name: 'Cargar' }));
     expect(screen.getByRole('heading', { name: 'Cargar documentación' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Cargar documentación' }));
+    await user.click(screen.getByRole('button', { name: 'Subir' }));
     expect(await screen.findByText('La fecha de vencimiento es obligatoria')).toBeInTheDocument();
     expect(crearMock).not.toHaveBeenCalled();
 
     // Completar fecha pero sin archivo
     await user.type(screen.getByLabelText(/Fecha de vencimiento/), texto);
-    await user.click(screen.getByRole('button', { name: 'Cargar documentación' }));
+    await user.click(screen.getByRole('button', { name: 'Subir' }));
     expect(await screen.findByText('El archivo es obligatorio')).toBeInTheDocument();
     expect(crearMock).not.toHaveBeenCalled();
 
@@ -196,8 +197,8 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     });
     render(<DocumentacionParticipante persona={persona} />);
 
-    expect(screen.getByText('Por vencer')).toBeInTheDocument();
     expect(screen.getByText('Habilitado')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Renovar' })).toBeInTheDocument();
     expect(screen.getByText(/Vence el 20\/10\/2026/)).toBeInTheDocument();
   });
 
@@ -231,7 +232,7 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     render(<DocumentacionParticipante persona={persona} />);
 
     expect(screen.getByText('Bloqueado')).toBeInTheDocument();
-    expect(screen.getByText('Vencido')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Renovar' })).toBeInTheDocument();
     expect(screen.getByText(/Vence el 30\/09\/2026/)).toBeInTheDocument();
   });
 
@@ -452,7 +453,7 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     const file = new File(['contenido'], 'dni.pdf', { type: 'application/pdf' });
     const inputArchivo = screen.getByLabelText(/Archivo \(PDF o imagen\)/);
     await user.upload(inputArchivo, file);
-    await user.click(screen.getByRole('button', { name: 'Cargar documentación' }));
+    await user.click(screen.getByRole('button', { name: 'Subir' }));
 
     await waitFor(() => {
       expect(crearMock).toHaveBeenCalledWith({
@@ -467,5 +468,70 @@ describe('US-24/25 · TASK-31 · DocumentacionParticipante', () => {
     expect(
       screen.getByText('No se registran inscripciones o documentación activa para este participante.'),
     ).toBeInTheDocument();
+  });
+
+  describe('Revisión de documentos pendientes', () => {
+    it('si existe un documento con estadoRevision PENDIENTE_REVISION, un revisor ve Aprobar y Rechazar con motivo obligatorio', async () => {
+      const user = userEvent.setup();
+      revisarMock.mockResolvedValue({});
+      mockAuth.usuario = { id: 1, email: 'admin@socialclub.com', roles: ['ADMIN'] };
+      mockHook(useEstadoDocumental).mockReturnValue({ data: estado, isLoading: false });
+      mockHook(useDocumentacionPorPersona).mockReturnValue({
+        data: [
+          {
+            id: 99,
+            tipo: 'Certificado médico de aptitud física',
+            tipoDocumento: 'CERTIFICADO_MEDICO_APTITUD_FISICA',
+            fechaVencimiento: '2027-03-31T00:00:00.000Z',
+            archivoNombre: 'certificado.pdf',
+            estadoRevision: 'PENDIENTE_REVISION',
+          },
+        ],
+      });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      const btnAprobar = screen.getAllByRole('button', { name: /Aprobar/i })[0];
+      const btnRechazar = screen.getAllByRole('button', { name: /Rechazar/i })[0];
+      expect(btnAprobar).toBeInTheDocument();
+      expect(btnRechazar).toBeInTheDocument();
+
+      // Aprobar
+      await user.click(btnAprobar);
+      await waitFor(() => {
+        expect(revisarMock).toHaveBeenCalledWith({
+          id: 99,
+          aprobar: true,
+        });
+      });
+
+      // Rechazar requiere motivo obligatorio
+      await user.click(btnRechazar);
+      const btnConfirmarRechazo = screen.getByRole('button', { name: /Confirmar rechazo/i });
+      await user.click(btnConfirmarRechazo);
+      expect(revisarMock).toHaveBeenCalledTimes(1); // Solo el de Aprobar
+
+      const inputMotivo = screen.getByRole('textbox');
+      await user.type(inputMotivo, 'Imagen borrosa');
+      await user.click(btnConfirmarRechazo);
+
+      await waitFor(() => {
+        expect(revisarMock).toHaveBeenCalledWith({
+          id: 99,
+          aprobar: false,
+          motivo: 'Imagen borrosa',
+        });
+      });
+    });
+
+    it('si no hay documento pendiente de revisión, muestra normalmente Cargar', () => {
+      mockAuth.usuario = { id: 1, email: 'admin@socialclub.com', roles: ['ADMIN'] };
+      mockHook(useEstadoDocumental).mockReturnValue({ data: estado, isLoading: false });
+
+      render(<DocumentacionParticipante persona={persona} />);
+
+      expect(screen.queryByRole('button', { name: /Aprobar/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Cargar' })).toBeInTheDocument();
+    });
   });
 });

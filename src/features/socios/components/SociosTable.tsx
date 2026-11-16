@@ -173,7 +173,13 @@ export function SociosTable({ socios, ordenarPor, orden, onOrdenar }: SociosTabl
                 orden={orden}
                 onOrdenar={onOrdenar}
               />
-              <th className="px-5 py-3.5">Estado de cuenta</th>
+              <HeaderOrdenable
+                campo="estadoCuenta"
+                label="Estado de cuenta"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
               <th className="px-5 py-3.5 text-right">Acciones</th>
             </tr>
           </thead>
@@ -226,7 +232,7 @@ export function SociosTable({ socios, ordenarPor, orden, onOrdenar }: SociosTabl
                         variant="ghost"
                         size="sm"
                         aria-label="Dar de alta (Re-asociar)"
-                        className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                        className="hover:bg-emerald-50 hover:text-emerald-700"
                         disabled={isReactivando}
                         onClick={() => reactivar(socio.id)}
                       >
@@ -261,7 +267,7 @@ export function SociosTable({ socios, ordenarPor, orden, onOrdenar }: SociosTabl
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                          className="hover:bg-rose-50 hover:text-rose-700"
                           onClick={() => {
                             setConfirmId(socio.id);
                           }}

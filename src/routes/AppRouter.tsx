@@ -21,6 +21,7 @@ import { TareasPage } from '@/features/tareas/pages/TareasPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { ParticipantesPage } from '@/features/inscripcion/pages/ParticipantesPage';
 import { SolicitudesInscripcionPage } from '@/features/inscripcion/pages/SolicitudesInscripcionPage';
+import { NotificacionesPage } from '@/features/documentacion/pages/NotificacionesPage';
 import { SolicitarReservaPage } from '@/features/reservas/pages/SolicitarReservaPage';
 import { SolicitudesReservaPage } from '@/features/reservas/pages/SolicitudesReservaPage';
 import { RegistrarPagoDeportivoPage } from '@/features/pagos/pages/RegistrarPagoDeportivoPage';
@@ -135,6 +136,7 @@ export function AppRouter() {
           <Route element={<ProtectedRoute rolesPermitidos={['ADMIN', 'DELEGADO']} />}>
             {/* US-66: bandeja de evaluación de solicitudes de inscripción a disciplinas. */}
             <Route path="inscripcion/solicitudes" element={<SolicitudesInscripcionPage />} />
+            <Route path="notificaciones" element={<NotificacionesPage />} />
             {/* DT-11: inscripción y documentación viven dentro de Participantes. */}
             <Route path="inscripcion" element={<Navigate to={ROUTES.nuevaInscripcion} replace />} />
             <Route path="documentacion" element={<Navigate to={ROUTES.participantes} replace />} />

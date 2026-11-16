@@ -266,7 +266,7 @@ describe('SociosTable Component', () => {
     expect(rows[2]).toHaveTextContent('Reciente');
   });
 
-  it('dispara onOrdenar con el campo correspondiente al hacer clic en los encabezados', () => {
+  it('dispara onOrdenar con el campo correspondiente al hacer clic en los encabezados (incluyendo estadoCuenta)', () => {
     const onOrdenar = vi.fn();
     renderWithProviders(<SociosTable socios={SOCIOS_FIXTURE} onOrdenar={onOrdenar} />);
     fireEvent.click(screen.getByRole('button', { name: /^Apellido y nombre$/i }));
@@ -274,5 +274,8 @@ describe('SociosTable Component', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^DNI$/i }));
     expect(onOrdenar).toHaveBeenCalledWith('dni');
+
+    fireEvent.click(screen.getByRole('button', { name: /^Estado de cuenta$/i }));
+    expect(onOrdenar).toHaveBeenCalledWith('estadoCuenta');
   });
 });

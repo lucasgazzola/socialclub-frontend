@@ -1,28 +1,74 @@
-import { Fragment, useState } from 'react';
-import { AlertCircle, ChevronDown, ChevronRight, CreditCard } from 'lucide-react';
-import { Badge, Button } from '@/components/ui';
+import { useNavigate } from 'react-router-dom';
+import { AlertCircle, ArrowDown, ArrowUp, ArrowUpDown, CreditCard, Eye } from 'lucide-react';
+import { Button } from '@/components/ui';
+import { cn } from '@/lib/utils/cn';
 import { formatearDni } from '@/lib/utils/dni';
-import { isoADisplay } from '@/lib/utils/fecha';
+import { ROUTES } from '@/routes/paths';
 import type { MorosoCuotaDeportiva } from '../types';
+import type { SentidoOrdenMorosos } from './MorososCuotaSocialTable';
+
+export type CriterioOrdenMorososDeportiva = 'nombre' | 'dni' | 'monto' | 'periodos';
 
 interface MorososCuotaDeportivaTableProps {
   morosos: MorosoCuotaDeportiva[];
   onCobrar: (moroso: MorosoCuotaDeportiva) => void;
+  ordenarPor?: CriterioOrdenMorososDeportiva;
+  orden?: SentidoOrdenMorosos;
+  onOrdenar?: (campo: CriterioOrdenMorososDeportiva) => void;
 }
 
-/**
- * Disciplinas que se muestran en la fila; el resto se ve en el detalle. Así la
- * fila no crece con quien debe en muchas disciplinas.
- */
-const DISCIPLINAS_VISIBLES = 2;
+interface ColumnaOrdenableProps {
+  campo: CriterioOrdenMorososDeportiva;
+  label: string;
+  ordenarPor?: CriterioOrdenMorososDeportiva;
+  orden?: SentidoOrdenMorosos;
+  onOrdenar?: (campo: CriterioOrdenMorososDeportiva) => void;
+  align?: 'left' | 'right';
+}
+
+function ColumnaOrdenable({
+  campo,
+  label,
+  ordenarPor,
+  orden,
+  onOrdenar,
+  align = 'left',
+}: ColumnaOrdenableProps) {
+  const activo = ordenarPor === campo && Boolean(orden);
+  return (
+    <th
+      scope="col"
+      aria-sort={activo ? (orden === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className={cn('px-6 py-3.5', align === 'right' && 'text-right')}
+    >
+      <button
+        type="button"
+        onClick={() => onOrdenar?.(campo)}
+        title={`Ordenar por ${label}`}
+        className="group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-colors select-none focus:outline-hidden cursor-pointer"
+      >
+        <span>{label}</span>
+        <span className="flex items-center" aria-hidden="true">
+          {activo ? (
+            orden === 'asc' ? (
+              <ArrowUp size={13} className="text-brand-600 stroke-[2.5]" />
+            ) : (
+              <ArrowDown size={13} className="text-brand-600 stroke-[2.5]" />
+            )
+          ) : (
+            <ArrowUpDown
+              size={13}
+              className="text-slate-400 opacity-60 group-hover:opacity-100 transition-opacity"
+            />
+          )}
+        </span>
+      </button>
+    </th>
+  );
+}
 
 function formatMonto(monto: number): string {
   return monto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-}
-
-/** "2026-09" → "09/2026". */
-function formatPeriodo(periodo: string): string {
-  return periodo.split('-').reverse().join('/');
 }
 
 /**
@@ -30,8 +76,14 @@ function formatPeriodo(periodo: string): string {
  * cada disciplina por separado y se despliega para ver el detalle de las
  * cuotas vencidas (período, vencimiento, importe y estado).
  */
-export function MorososCuotaDeportivaTable({ morosos, onCobrar }: MorososCuotaDeportivaTableProps) {
-  const [abiertos, setAbiertos] = useState<Record<number, boolean>>({});
+export function MorososCuotaDeportivaTable({
+  morosos,
+  onCobrar,
+  ordenarPor,
+  orden,
+  onOrdenar,
+}: MorososCuotaDeportivaTableProps) {
+  const navigate = useNavigate();
 
   if (morosos.length === 0) {
     return (
@@ -55,155 +107,78 @@ export function MorososCuotaDeportivaTable({ morosos, onCobrar }: MorososCuotaDe
         <table className="w-full text-left text-sm text-slate-600">
           <thead className="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold tracking-wider text-slate-500 uppercase">
             <tr>
-              <th scope="col" className="px-6 py-3.5">
-                Participante
-              </th>
-              <th scope="col" className="px-6 py-3.5">
-                DNI
-              </th>
-              <th scope="col" className="px-6 py-3.5">
-                Deuda por disciplina
-              </th>
-              <th scope="col" className="px-6 py-3.5">
-                Períodos
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-right">
-                Deuda total
-              </th>
+              <ColumnaOrdenable
+                campo="nombre"
+                label="Participante"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <ColumnaOrdenable
+                campo="dni"
+                label="DNI"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <ColumnaOrdenable
+                campo="periodos"
+                label="Períodos"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <ColumnaOrdenable
+                campo="monto"
+                label="Deuda total"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+                align="right"
+              />
               <th scope="col" className="px-6 py-3.5 text-right">
                 Acciones
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {morosos.map((moroso) => {
-              const abierto = Boolean(abiertos[moroso.personaId]);
-              return (
-                <Fragment key={moroso.personaId}>
-                  <tr className="transition-colors hover:bg-slate-50/60">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-slate-900">{moroso.nombreCompleto}</div>
-                      <div className="text-xs text-slate-400">
-                        {moroso.email || moroso.telefono || 'Sin datos de contacto'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-slate-600">{formatearDni(moroso.dni)}</td>
-                    <td className="px-6 py-4">
-                      <ul className="space-y-1">
-                        {moroso.disciplinas.slice(0, DISCIPLINAS_VISIBLES).map((d) => (
-                          <li key={d.disciplinaId}>
-                            <span className="font-medium text-slate-800">{d.disciplinaNombre}</span>
-                            <span className="text-xs text-slate-500">
-                              {' '}
-                              · {d.cantidadPeriodos} per. · {formatMonto(d.montoAdeudado)}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                      {moroso.disciplinas.length > DISCIPLINAS_VISIBLES && !abierto && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAbiertos((prev) => ({ ...prev, [moroso.personaId]: true }))
-                          }
-                          className="text-brand-600 hover:text-brand-700 mt-1 text-xs font-semibold hover:underline"
-                        >
-                          +{moroso.disciplinas.length - DISCIPLINAS_VISIBLES}{' '}
-                          {moroso.disciplinas.length - DISCIPLINAS_VISIBLES === 1
-                            ? 'disciplina más'
-                            : 'disciplinas más'}
-                        </button>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 tabular-nums">{moroso.cantidadPeriodos}</td>
-                    <td className="px-6 py-4 text-right font-semibold text-rose-600 tabular-nums">
-                      {formatMonto(moroso.montoTotalDeuda)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-expanded={abierto}
-                          aria-label={`${abierto ? 'Ocultar' : 'Ver'} detalle de ${moroso.nombreCompleto}`}
-                          onClick={() =>
-                            setAbiertos((prev) => ({ ...prev, [moroso.personaId]: !abierto }))
-                          }
-                        >
-                          {abierto ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                          Detalle
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onCobrar(moroso)}
-                          title="Registrar el cobro de las cuotas adeudadas"
-                        >
-                          <CreditCard size={14} className="text-brand-600" />
-                          Cobrar
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                  {abierto && (
-                    <tr className="bg-slate-50/50">
-                      <td colSpan={6} className="px-6 pt-1 pb-5">
-                        <div className="grid gap-4 lg:grid-cols-2">
-                          {moroso.disciplinas.map((d) => (
-                            <section
-                              key={d.disciplinaId}
-                              aria-label={`Cuotas adeudadas de ${d.disciplinaNombre}`}
-                              className="overflow-hidden rounded-lg border border-slate-200 bg-white"
-                            >
-                              <h4 className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-2 text-sm font-semibold text-slate-800">
-                                {d.disciplinaNombre}
-                                {d.categoriaNombre && (
-                                  <span className="font-normal text-slate-400">
-                                    {' '}
-                                    · {d.categoriaNombre}
-                                  </span>
-                                )}
-                                {!d.inscripcionActiva && (
-                                  <Badge variant="secondary">Dada de baja</Badge>
-                                )}
-                              </h4>
-                              <table className="w-full text-sm">
-                                <thead className="text-xs tracking-wider text-slate-400 uppercase">
-                                  <tr>
-                                    <th className="px-4 py-2 font-medium">Período</th>
-                                    <th className="px-4 py-2 font-medium">Vencimiento</th>
-                                    <th className="px-4 py-2 text-right font-medium">Importe</th>
-                                    <th className="px-4 py-2 text-right font-medium">Estado</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                  {d.cuotas.map((c) => (
-                                    <tr key={c.periodo}>
-                                      <td className="px-4 py-2 font-medium text-slate-700">
-                                        {formatPeriodo(c.periodo)}
-                                      </td>
-                                      <td className="px-4 py-2 text-slate-500">
-                                        {isoADisplay(c.fechaVencimiento)}
-                                      </td>
-                                      <td className="px-4 py-2 text-right text-slate-700 tabular-nums">
-                                        {formatMonto(c.monto)}
-                                      </td>
-                                      <td className="px-4 py-2 text-right">
-                                        <Badge variant="danger">Vencida · impaga</Badge>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </section>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              );
-            })}
+            {morosos.map((moroso) => (
+              <tr key={moroso.personaId} className="transition-colors hover:bg-slate-50/60">
+                <td className="px-6 py-4">
+                  <div className="font-medium text-slate-900">{moroso.nombreCompleto}</div>
+                  <div className="text-xs text-slate-400">
+                    {moroso.email || moroso.telefono || 'Sin datos de contacto'}
+                  </div>
+                </td>
+                <td className="px-6 py-4 font-mono text-slate-600">{formatearDni(moroso.dni)}</td>
+                <td className="px-6 py-4 tabular-nums">{moroso.cantidadPeriodos}</td>
+                <td className="px-6 py-4 text-right font-semibold text-rose-600 tabular-nums">
+                  {formatMonto(moroso.montoTotalDeuda)}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`Ver historial de ${moroso.nombreCompleto}`}
+                      onClick={() => navigate(ROUTES.historialCuotaDeportivaDe(moroso.personaId))}
+                    >
+                      <Eye size={14} />
+                      Detalle
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCobrar(moroso)}
+                      title="Registrar el cobro de las cuotas adeudadas"
+                    >
+                      <CreditCard size={14} className="text-brand-600" />
+                      Cobrar
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

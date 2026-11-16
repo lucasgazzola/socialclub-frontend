@@ -47,6 +47,7 @@ export const ROUTES = {
   // ── Panel de gestión ────────────────────────────────────────────────────
   dashboard: ADMIN,
   dashboardGestion: `${ADMIN}/dashboard`,
+  notificaciones: `${ADMIN}/notificaciones`,
   socios: `${ADMIN}/socios`,
   /** DT-20: las ediciones son modales sobre el listado (?editar=<id>). */
   editarSocio: (id: number) => `${ADMIN}/socios?editar=${id}`,
@@ -85,6 +86,8 @@ export const ROUTES = {
   /** US-36. */
   reporteAsistencia: `${ADMIN}/reportes/asistencia-eventos`,
   historialCuotaDeportiva: `${ADMIN}/cuotas/deportiva/historial`,
+  historialCuotaDeportivaDe: (personaId: number) =>
+    `${ADMIN}/cuotas/deportiva/historial?personaId=${personaId}`,
   morososCuotaSocial: `${ADMIN}/cuotas/social/morosos`,
 } as const;
 

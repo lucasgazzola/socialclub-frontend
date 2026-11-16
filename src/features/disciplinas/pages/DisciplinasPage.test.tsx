@@ -183,9 +183,9 @@ describe('DisciplinasPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Desactivar 1' }));
 
-    expect(screen.getByText('Desactivar disciplina')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    const confirmarBtn = screen.getByRole('button', { name: 'Desactivar' });
+    const confirmarBtn = screen.getByRole('button', { name: 'Dar de baja' });
     await user.click(confirmarBtn);
 
     await waitFor(() => {

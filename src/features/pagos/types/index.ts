@@ -208,7 +208,7 @@ export interface MorososCuotaDeportivaResponse {
 export interface FiltrosMorososCuotaDeportiva {
   busqueda?: string;
   disciplinaId?: number;
-  ordenarPor?: 'monto' | 'periodos';
+  ordenarPor?: 'nombre' | 'dni' | 'monto' | 'periodos';
   orden?: 'asc' | 'desc';
   pagina?: number;
   porPagina?: number;
@@ -217,7 +217,7 @@ export interface FiltrosMorososCuotaDeportiva {
 export interface FiltrosMorososCuotaSocial {
   busqueda?: string;
   categoriaId?: number;
-  ordenarPor?: 'monto' | 'periodos';
+  ordenarPor?: 'nombre' | 'dni' | 'categoria' | 'monto' | 'periodos';
   orden?: 'asc' | 'desc';
   pagina?: number;
   porPagina?: number;

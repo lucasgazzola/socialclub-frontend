@@ -16,7 +16,8 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { Badge, Button, Input, Modal, Select } from '@/components/ui';
+import { toast } from 'sonner';
+import { Badge, Button, ConfirmDialog, Input, Modal, Select } from '@/components/ui';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import {
   DIAS_SEMANA,
@@ -111,6 +112,7 @@ export function EditarEspacioModal({
   const [bloqVigenteHasta, setBloqVigenteHasta] = useState('');
   const [bloqDisciplinaId, setBloqDisciplinaId] = useState<number | ''>('');
   const [bloqMotivo, setBloqMotivo] = useState('');
+  const [subespacioAEliminar, setSubespacioAEliminar] = useState<SubespacioResumen | null>(null);
 
   const idObjetivo = espacioHijoId ?? espacio?.id ?? null;
 
@@ -300,20 +302,26 @@ export function EditarEspacioModal({
     }
   };
 
-  const handleEliminarSubespacio = async (sub: SubespacioResumen) => {
-    if (window.confirm(`¿Confirmás dar de baja el sub-espacio "${sub.nombre}"?`)) {
-      setErrorSubespacio(null);
-      try {
-        await eliminarEspacio.mutateAsync(sub.id);
-        await refetchEspacio();
-      } catch (err: unknown) {
-        const errorObj = err as { message?: string; response?: { data?: { message?: string } } };
-        const msj =
-          errorObj?.response?.data?.message ||
-          errorObj?.message ||
-          'No se puede dar de baja el sub-espacio porque tiene reservas futuras activas.';
-        setErrorSubespacio(msj);
-      }
+  const handleEliminarSubespacio = (sub: SubespacioResumen) => {
+    setErrorSubespacio(null);
+    setSubespacioAEliminar(sub);
+  };
+
+  const confirmarEliminarSubespacio = async () => {
+    if (!subespacioAEliminar) return;
+    setErrorSubespacio(null);
+    try {
+      await eliminarEspacio.mutateAsync(subespacioAEliminar.id);
+      await refetchEspacio();
+      setSubespacioAEliminar(null);
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string; response?: { data?: { message?: string } } };
+      const msj =
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
+        'No se puede dar de baja el sub-espacio porque tiene reservas futuras activas.';
+      setErrorSubespacio(msj);
+      setSubespacioAEliminar(null);
     }
   };
 
@@ -546,7 +554,16 @@ export function EditarEspacioModal({
 
         {/* Tab 1: Datos Generales */}
         {tabActiva === 'datos' && (
-          <form onSubmit={handleSubmit(handleGuardarDatos)} className="space-y-4">
+          <form
+            onSubmit={handleSubmit(handleGuardarDatos, (formErrors) => {
+              const primerMensaje = Object.values(formErrors)
+                .map((e) => e?.message)
+                .find((m): m is string => typeof m === 'string' && m.length > 0);
+              toast.error(primerMensaje ?? 'Revisá los campos del formulario antes de guardar.');
+            })}
+            className="space-y-4"
+            noValidate
+          >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label htmlFor="edit-nombre" className="block text-xs font-semibold text-slate-700">
@@ -860,7 +877,7 @@ export function EditarEspacioModal({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="text-rose-600 hover:bg-rose-50"
+                              className="w-28 justify-start"
                               onClick={() => handleEliminarSubespacio(sub)}
                               title="Dar de baja este sub-espacio"
                             >
@@ -872,7 +889,7 @@ export function EditarEspacioModal({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="text-emerald-600 hover:bg-emerald-50"
+                              className="w-28 justify-start"
                               onClick={() => handleReactivarSubespacio(sub)}
                               title="Reactivar este sub-espacio"
                             >
@@ -1293,6 +1310,21 @@ export function EditarEspacioModal({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={subespacioAEliminar !== null}
+        variant="danger"
+        title="Dar de baja sub-espacio"
+        description={
+          subespacioAEliminar
+            ? `¿Estás seguro de que deseás dar de baja el sub-espacio "${subespacioAEliminar.nombre}"?`
+            : undefined
+        }
+        confirmLabel="Dar de baja"
+        loading={eliminarEspacio.isPending}
+        onConfirm={() => void confirmarEliminarSubespacio()}
+        onCancel={() => setSubespacioAEliminar(null)}
+      />
     </Modal>
   );
 }

@@ -10,8 +10,6 @@ import {
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { AlertasDocumentacion } from '@/features/documentacion/components/AlertasDocumentacion';
-import { DocumentosParaRevisar } from '@/features/documentacion/components/DocumentosParaRevisar';
 import { ROUTES } from '@/routes/paths';
 
 const modulos = [
@@ -69,7 +67,6 @@ export function DashboardPage() {
 function PanelAdministracion() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
-  const veAlertas = usuario?.roles.includes('ADMIN');
 
   return (
     <div className="space-y-8">
@@ -94,10 +91,6 @@ function PanelAdministracion() {
           </Button>
         </div>
       </div>
-
-      {/* TASK-60: lo que subieron los titulares desde Mi club (ADMIN). */}
-      {veAlertas && <DocumentosParaRevisar />}
-      {veAlertas && <AlertasDocumentacion />}
 
       {/* Grid de módulos con estilo Apex */}
       <div>
@@ -168,10 +161,6 @@ function PanelDelegado() {
           Ver participantes
         </Button>
       </div>
-
-      {/* TASK-60: lo que subieron los titulares de sus disciplinas. */}
-      <DocumentosParaRevisar />
-      <AlertasDocumentacion />
     </div>
   );
 }

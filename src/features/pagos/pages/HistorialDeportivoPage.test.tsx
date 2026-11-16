@@ -60,9 +60,9 @@ describe('HistorialDeportivoPage', () => {
       isLoading: true,
     };
 
-    renderWithProviders(<HistorialDeportivoPage />);
+    const { container } = renderWithProviders(<HistorialDeportivoPage />);
 
-    expect(screen.getByText('Cargando historial…')).toBeInTheDocument();
+    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
   it('renderiza datos del historial con pagos y períodos adeudados (con deuda)', async () => {

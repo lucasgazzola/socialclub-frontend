@@ -47,9 +47,26 @@ describe('US-07 · useActivarParticipante', () => {
 
     expect(apiMock).toHaveBeenCalledWith(10);
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith(
-        'El participante fue reactivado: ya se lo puede inscribir de nuevo',
-      );
+      expect(toast.success).toHaveBeenCalledWith('Participante dado de alta correctamente');
+    });
+  });
+
+  it('permite dar de alta enviando payload con disciplinas', async () => {
+    apiMock.mockResolvedValue({ personaId: 10, activo: true, disciplinasActivadas: [1] });
+    const { wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useActivarParticipante(), { wrapper });
+
+    await result.current.mutateAsync({
+      personaId: 10,
+      payload: { disciplinas: [{ disciplinaId: 1, categoriaDisciplinaId: 11 }] },
+    });
+
+    expect(apiMock).toHaveBeenCalledWith(10, {
+      disciplinas: [{ disciplinaId: 1, categoriaDisciplinaId: 11 }],
+    });
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('Participante dado de alta correctamente');
     });
   });
 
@@ -89,7 +106,7 @@ describe('US-07 · useActivarParticipante', () => {
     await expect(result.current.mutateAsync(10)).rejects.toBe('Error desconocido');
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Error al reactivar al participante');
+      expect(toast.error).toHaveBeenCalledWith('Error al dar de alta al participante');
     });
   });
 });

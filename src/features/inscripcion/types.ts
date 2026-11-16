@@ -68,8 +68,12 @@ export interface CrearInscripcionPayload {
   /** DT-54: obligatorio si se carga el email de un participante nuevo. */
   confirmarEmail?: string;
   telefono?: string;
-  disciplinaId: number;
+  disciplinaId?: number;
   categoriaDisciplinaId?: number;
+  disciplinas?: Array<{
+    disciplinaId: number;
+    categoriaDisciplinaId?: number;
+  }>;
   documentos?: Array<{
     tipoDocumento: TipoDocumentacionDisciplina;
     fechaVencimiento?: string;
@@ -80,10 +84,17 @@ export interface CrearInscripcionPayload {
 export interface InscripcionCreada {
   persona: { id: number; nombre: string; apellido: string; dni: string };
   inscripcion: { id: number; disciplinaId: number; categoriaDisciplinaId: number | null };
+  inscripciones?: Array<{
+    id: number;
+    disciplinaId: number;
+    categoriaDisciplinaId: number | null;
+    estadoDocumental?: EstadoDocumentalInscripcion | null;
+  }>;
   /** TASK-31: qué documentación falta y hasta cuándo (US-05). */
   estadoDocumental?: EstadoDocumentalInscripcion | null;
   /** US-05 Criterio 10: cuota generada automáticamente para la disciplina en el período actual */
   cuotaGenerada?: CuotaGeneradaInfo | null;
+  cuotasGeneradas?: CuotaGeneradaInfo[];
 }
 
 /** US-05: lo que se le va a exigir a una inscripción antes de confirmarla. */
@@ -195,6 +206,47 @@ export interface BajaParticipanteResultado {
   activo: boolean;
   disciplinasDadasDeBaja: number;
   disciplinas: DisciplinaDadaDeBaja[];
+}
+
+/** Disciplina seleccionada al reactivar / dar de alta a un participante. */
+export interface ActivarParticipanteDisciplinaPayload {
+  disciplinaId: number;
+  categoriaDisciplinaId?: number;
+}
+
+/** Payload de PATCH /inscripcion/persona/:personaId/activar. */
+export interface ActivarParticipantePayload {
+  disciplinas: ActivarParticipanteDisciplinaPayload[];
+}
+
+export interface PreAltaCuotaPendiente {
+  id?: number;
+  periodo: string;
+  disciplina?: string | { id?: number; nombre: string } | null;
+  disciplinaNombre?: string | null;
+  monto: number;
+  estado?: string;
+  fechaVencimiento?: string | null;
+}
+
+export interface PreAltaInscripcionAnterior {
+  inscripcionId?: number;
+  disciplinaId: number;
+  disciplinaNombre?: string;
+  disciplina?: { id: number; nombre: string };
+  categoriaDisciplinaId?: number | null;
+  categoriaNombre?: string | null;
+  categoriaDisciplina?: { id: number; nombre: string } | null;
+  cumpleRestricciones: boolean;
+  motivosBloqueo: string[];
+}
+
+export interface PreAltaParticipanteResponse {
+  personaId?: number;
+  tieneDeuda: boolean;
+  deudaDeportivaTotal: number;
+  cuotasPendientes: PreAltaCuotaPendiente[];
+  inscripcionesAnteriores: PreAltaInscripcionAnterior[];
 }
 
 /** Resultado de reactivar a un participante dado de baja (US-07). */

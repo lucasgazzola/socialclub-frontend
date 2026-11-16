@@ -8,7 +8,10 @@ import { ROUTES } from '@/routes/paths';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import { pagosApi } from '../api/pagos.api';
 import { useMorososCuotaDeportiva } from '../hooks/useMorososCuotaDeportiva';
-import { MorososCuotaDeportivaTable } from '../components/MorososCuotaDeportivaTable';
+import {
+  MorososCuotaDeportivaTable,
+  type CriterioOrdenMorososDeportiva,
+} from '../components/MorososCuotaDeportivaTable';
 import type { FiltrosMorososCuotaDeportiva, MorosoCuotaDeportiva } from '../types';
 
 function formatMonto(monto: number): string {
@@ -37,10 +40,27 @@ export function MorososCuotaDeportivaPage() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
-  const [ordenarPor, setOrdenarPor] = useState<'monto' | 'periodos'>('monto');
-  const [orden, setOrden] = useState<'asc' | 'desc'>('desc');
+  const [ordenarPor, setOrdenarPor] = useState<CriterioOrdenMorososDeportiva | undefined>(undefined);
+  const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
+
+  function handleOrdenar(campo: CriterioOrdenMorososDeportiva) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+  }
   const { disciplinas } = useDisciplinasActivas();
 
   const filtros: FiltrosMorososCuotaDeportiva = useMemo(
@@ -151,27 +171,6 @@ export function MorososCuotaDeportivaPage() {
               ))}
             </Select>
           </div>
-          <div className="w-56">
-            <Select
-              id="ordenar-morosos-deportivos"
-              aria-label="Ordenar listado de morosos"
-              value={`${ordenarPor}-${orden}`}
-              onChange={(e) => {
-                const [criterio, sentido] = e.target.value.split('-') as [
-                  'monto' | 'periodos',
-                  'asc' | 'desc',
-                ];
-                setOrdenarPor(criterio);
-                setOrden(sentido);
-                setPagina(1);
-              }}
-            >
-              <option value="monto-desc">Mayor deuda primero</option>
-              <option value="monto-asc">Menor deuda primero</option>
-              <option value="periodos-desc">Más períodos adeudados</option>
-              <option value="periodos-asc">Menos períodos adeudados</option>
-            </Select>
-          </div>
         </div>
       </div>
 
@@ -190,6 +189,9 @@ export function MorososCuotaDeportivaPage() {
           <MorososCuotaDeportivaTable
             morosos={itemsPaginados}
             onCobrar={(moroso) => navigate(ROUTES.cobrarCuotaDeportivaDe(moroso.dni))}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
           />
           {items.length > 0 && (
             <TablePagination

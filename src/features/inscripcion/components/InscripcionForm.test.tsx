@@ -121,8 +121,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
           apellido: 'Gómez',
           fechaNacimiento: '2012-05-03',
           genero: 'FEMENINO',
-          disciplinaId: 1,
-          categoriaDisciplinaId: 7,
+          disciplinas: [{ disciplinaId: 1, categoriaDisciplinaId: 7 }],
           personaId: undefined,
         }),
       );
@@ -179,7 +178,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.click(screen.getByRole('button', { name: 'Inscribir' }));
 
     await waitFor(() => {
-      expect(enviarMock).toHaveBeenCalledWith(expect.objectContaining({ personaId: 20, disciplinaId: 2 }));
+      expect(enviarMock).toHaveBeenCalledWith(expect.objectContaining({ personaId: 20, disciplinas: [{ disciplinaId: 2 }] }));
     });
   });
 
@@ -195,7 +194,7 @@ describe('US-05 · TASK-31 · InscripcionForm', () => {
     await user.selectOptions(screen.getByLabelText('Disciplina'), '1');
     await user.click(screen.getByRole('button', { name: 'Registrar participante' }));
 
-    expect(await screen.findByText('Debe seleccionar una categoría para esta disciplina')).toBeInTheDocument();
+    expect(await screen.findByText('Debe seleccionar una categoría para Fútbol')).toBeInTheDocument();
     expect(enviarMock).not.toHaveBeenCalled();
   });
 

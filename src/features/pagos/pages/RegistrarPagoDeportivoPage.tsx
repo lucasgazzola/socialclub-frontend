@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Badge, Button, Card } from '@/components/ui';
 import { formatearDni } from '@/lib/utils/dni';
-import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
 import { BuscarParticipanteDni } from '@/features/inscripcion/components/buscarParticipanteDni';
 import { usePendientesDeportivos, useRegistrarPagoDeportivo } from '../hooks/usePagosDeportivos';
@@ -222,7 +221,6 @@ function CuotasPendientesDeportivas({
  * los períodos pendientes por disciplina y registrar el cobro.
  */
 export function RegistrarPagoDeportivoPage() {
-  const navigate = useNavigate();
   const busqueda = useBuscarParticipante();
   const participante = busqueda.participante;
   // US-23: desde Morosos se llega con ?dni= y el participante ya buscado.
@@ -250,7 +248,6 @@ export function RegistrarPagoDeportivoPage() {
         cargando={busqueda.cargando}
         noEncontrado={busqueda.noEncontrado}
         error={busqueda.error}
-        onRegistrarNuevo={() => navigate(ROUTES.nuevaInscripcion)}
         dniInicial={dniInicial}
       />
 

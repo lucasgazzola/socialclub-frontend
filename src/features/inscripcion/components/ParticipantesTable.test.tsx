@@ -29,6 +29,16 @@ vi.mock('../hooks/useActivarParticipante', () => ({
   }),
 }));
 
+vi.mock('./DarDeAltaParticipanteModal', () => ({
+  DarDeAltaParticipanteModal: ({ participante, onClose }: any) =>
+    participante ? (
+      <div data-testid="dar-de-alta-modal" role="dialog">
+        <h3>Dar de alta participante: {participante.persona.apellido}, {participante.persona.nombre}</h3>
+        <button onClick={onClose}>Cancelar</button>
+      </div>
+    ) : null,
+}));
+
 /** Inscripción (disciplina) de prueba. */
 function disciplina(overrides: Partial<DisciplinaInscripta> = {}): DisciplinaInscripta {
   return {
@@ -149,21 +159,25 @@ describe('US-08 · ParticipantesTable', () => {
     expect(screen.getByText('Baja')).toBeInTheDocument();
   });
 
-  it('colapsa el detalle al volver a pulsar el botón', async () => {
+  it('al hacer clic en Ver disciplinas abre DisciplinasParticipanteModal y no muestra botón Ocultar', async () => {
     const user = userEvent.setup();
     render(<ParticipantesTable participantes={[participante()]} />);
 
-    // El aria-label es estable, así que el botón se consulta siempre por él.
     const boton = screen.getByRole('button', { name: /Ver disciplinas de/i });
     await user.click(boton);
-    expect(screen.getByText('Sub-15')).toBeInTheDocument();
-    expect(screen.getByText('Ocultar')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Ver disciplinas de/i }));
-    expect(screen.queryByText('Sub-15')).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('Sub-15')).toBeInTheDocument();
+    expect(screen.queryByText('Ocultar')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Editar participante/i })).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: /^Cerrar$/i })[0]);
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
-  it('muestra el estado Inactivo del participante dado de baja (US-07)', () => {
+  it('muestra el estado Baja del participante dado de baja (US-07)', () => {
     render(
       <ParticipantesTable
         participantes={[
@@ -176,7 +190,7 @@ describe('US-08 · ParticipantesTable', () => {
       />,
     );
 
-    expect(screen.getByText('Inactivo')).toBeInTheDocument();
+    expect(screen.getByText('Baja')).toBeInTheDocument();
   });
 
   it('muestra el mensaje No se encontraron resultados cuando no hay coincidencias', () => {
@@ -248,7 +262,7 @@ describe('US-08 · ParticipantesTable', () => {
         />,
       );
 
-      expect(screen.getByText('Inactivo')).toBeInTheDocument();
+      expect(screen.getByText('Baja')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Dar de baja a/i })).not.toBeInTheDocument();
     });
 
@@ -260,7 +274,7 @@ describe('US-08 · ParticipantesTable', () => {
     });
   });
 
-  describe('US-07 · Reactivar participante', () => {
+  describe('US-07 · Dar de alta a participante', () => {
     function participanteInactivo() {
       return participante({
         persona: {
@@ -281,44 +295,42 @@ describe('US-08 · ParticipantesTable', () => {
     beforeEach(() => {
       vi.clearAllMocks();
       auth.roles = ['DELEGADO'];
-      reactivacion.isPending = false;
-      reactivacion.mutateAsync.mockResolvedValue({ personaId: 10, activo: true });
     });
 
-    it('TC-0711: ofrece Reactivar a un participante dado de baja y lo confirma', async () => {
+    it('TC-0711: ofrece Dar de alta a un participante dado de baja y abre el modal', async () => {
       const user = userEvent.setup();
       render(<ParticipantesTable participantes={[participanteInactivo()]} />);
 
-      await user.click(screen.getByRole('button', { name: /Reactivar a Perez, Juan/i }));
+      const btnAlta = screen.getByRole('button', { name: /Dar de alta a Perez, Juan/i });
+      expect(btnAlta).toBeInTheDocument();
+      await user.click(btnAlta);
 
       const dialogo = await screen.findByRole('dialog');
-      expect(dialogo).toHaveTextContent('Reactivar al participante');
-      expect(dialogo).toHaveTextContent(/va a poder inscribirse de nuevo/i);
-
-      await user.click(screen.getByRole('button', { name: 'Reactivar' }));
-
-      await waitFor(() => {
-        expect(reactivacion.mutateAsync).toHaveBeenCalledWith(10);
-      });
+      expect(dialogo).toHaveTextContent('Dar de alta participante: Perez, Juan');
     });
 
-    it('TC-0712: no reactiva si el delegado cancela el diálogo', async () => {
+    it('TC-0712: cierra el modal de alta si el usuario cancela', async () => {
       const user = userEvent.setup();
       render(<ParticipantesTable participantes={[participanteInactivo()]} />);
 
-      await user.click(screen.getByRole('button', { name: /Reactivar a Perez, Juan/i }));
+      await user.click(screen.getByRole('button', { name: /Dar de alta a Perez, Juan/i }));
       await user.click(await screen.findByRole('button', { name: 'Cancelar' }));
 
-      expect(reactivacion.mutateAsync).not.toHaveBeenCalled();
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       });
     });
 
-    it('no ofrece Reactivar a un participante activo', () => {
+    it('no ofrece Dar de alta a un participante activo', () => {
       render(<ParticipantesTable participantes={[participante()]} />);
 
-      expect(screen.queryByRole('button', { name: /Reactivar a/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Dar de alta a/i })).not.toBeInTheDocument();
+    });
+
+    it('no muestra el botón Inscribir en la columna de acciones', () => {
+      render(<ParticipantesTable participantes={[participante()]} />);
+
+      expect(screen.queryByRole('button', { name: /^Inscribir$/i })).not.toBeInTheDocument();
     });
   });
 
@@ -336,7 +348,8 @@ describe('US-08 · ParticipantesTable', () => {
 
     await user.click(screen.getByRole('button', { name: /Ver disciplinas de/i }));
 
-    expect(screen.getByText('el 15/09/2026')).toBeInTheDocument();
+    expect(screen.getByText(/Historial \(Bajas\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/15\/09\/2026/)).toBeInTheDocument();
   });
 
   describe('US-25 · Estado documental en listado', () => {

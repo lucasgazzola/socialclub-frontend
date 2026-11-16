@@ -83,7 +83,7 @@ export function CategoriasTable({ categorias, requerimientosDisciplina, restricc
                           size="sm"
                           disabled={accionesDeshabilitadas}
                           onClick={() => onCambiarEstado(categoria)}
-                          className={categoria.activo ? 'text-rose-600 hover:bg-rose-50 hover:text-rose-700' : 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700'}
+                          className={categoria.activo ? 'hover:bg-rose-50 hover:text-rose-700' : 'hover:bg-emerald-50 hover:text-emerald-700'}
                         >
                           {categoria.activo ? <X size={14} /> : <RotateCcw size={14} />}
                           {categoria.activo ? 'Dar de baja' : 'Reactivar'}

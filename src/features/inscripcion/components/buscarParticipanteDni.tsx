@@ -7,7 +7,7 @@ interface BuscarParticipanteDniProps {
   noEncontrado: boolean;
   error?: string | null;
   onBuscar: (dni: string) => void;
-  onRegistrarNuevo: () => void;
+  onRegistrarNuevo?: () => void;
   /** DNI con el que arranca el campo (p. ej. al venir desde Morosos, US-23). */
   dniInicial?: string;
 }
@@ -76,15 +76,17 @@ export function BuscarParticipanteDni({
         </p>
       )}
 
-      <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-        <span className="text-sm text-slate-600">
-          ¿No encontraste al participante?
-        </span>
-        <Button type="button" variant="secondary" size="sm" onClick={onRegistrarNuevo}>
-          <UserPlus size={14} />
-          Inscribir nuevo participante
-        </Button>
-      </div>
+      {onRegistrarNuevo && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+          <span className="text-sm text-slate-600">
+            ¿No encontraste al participante?
+          </span>
+          <Button type="button" variant="secondary" size="sm" onClick={onRegistrarNuevo}>
+            <UserPlus size={14} />
+            Inscribir nuevo participante
+          </Button>
+        </div>
+      )}
 
       
     </div>

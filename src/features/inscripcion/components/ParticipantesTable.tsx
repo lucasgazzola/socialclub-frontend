@@ -1,13 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, ChevronUp, Dumbbell, FileText, Pencil, UserMinus, UserPlus } from 'lucide-react';
+import { Dumbbell, FileText, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Badge, Button, ConfirmDialog, HeaderOrdenable } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import { formatearDni } from '@/lib/utils/dni';
-import { isoADisplay } from '@/lib/utils/fecha';
-import { useActivarParticipante } from '../hooks/useActivarParticipante';
 import { useDarDeBajaParticipante } from '../hooks/useDarDeBajaParticipante';
+import { DarDeAltaParticipanteModal } from './DarDeAltaParticipanteModal';
+import { DisciplinasParticipanteModal } from './DisciplinasParticipanteModal';
 import { EstadoHabilitacionBadge } from '@/features/documentacion/components/EstadoBadges';
 import type { ParticipanteConDisciplinas } from '../types';
 
@@ -22,25 +22,11 @@ interface ParticipantesTableProps {
   onInscribir?: (participante: ParticipanteConDisciplinas) => void;
 }
 
-/** Etiqueta del estado de una inscripción puntual del participante. */
-function etiquetaEstadoDisciplina(activo: boolean, estado?: string) {
-  const esActivo = estado ? estado === 'INSCRIPTO' : activo;
-  return { texto: esActivo ? 'Inscripto' : 'Baja', activo: esActivo };
-}
-
-function BadgeEstado({ activo, texto }: { activo: boolean; texto: string }) {
-  return (
-    <Badge variant={activo ? 'success' : 'secondary'}>
-      {texto}
-    </Badge>
-  );
-}
-
-/** Badge del estado propio del participante (US-07: Activo/Inactivo). */
+/** Badge del estado agregado del participante (Activo si está inscripto, Baja si no). */
 function BadgeParticipante({ activo }: { activo: boolean }) {
   return (
     <Badge variant={activo ? 'success' : 'secondary'}>
-      {activo ? 'Activo' : 'Inactivo'}
+      {activo ? 'Activo' : 'Baja'}
     </Badge>
   );
 }
@@ -51,7 +37,7 @@ function BadgeParticipante({ activo }: { activo: boolean }) {
  * US-07 — Desde acá el delegado (o un admin) puede dar de baja al
  * participante: la baja alcanza a todas sus disciplinas.
  */
-export function ParticipantesTable({ participantes, ordenarPor, orden, onOrdenar, onVerDocumentacion, onInscribir }: ParticipantesTableProps) {
+export function ParticipantesTable({ participantes, ordenarPor, orden, onOrdenar, onVerDocumentacion }: ParticipantesTableProps) {
   const participantesOrdenados = useMemo(() => {
     if (!ordenarPor || !orden) return participantes;
     const copia = [...participantes];
@@ -97,13 +83,13 @@ export function ParticipantesTable({ participantes, ordenarPor, orden, onOrdenar
 
   const navigate = useNavigate();
   const { usuario } = useAuth();
-  const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
+  const [participanteDrawer, setParticipanteDrawer] =
+    useState<ParticipanteConDisciplinas | null>(null);
   const [participanteAConfirmar, setParticipanteAConfirmar] =
     useState<ParticipanteConDisciplinas | null>(null);
-  const [participanteAReactivar, setParticipanteAReactivar] =
+  const [participanteADarDeAlta, setParticipanteADarDeAlta] =
     useState<ParticipanteConDisciplinas | null>(null);
   const { mutateAsync: darDeBaja, isPending: dandoDeBaja } = useDarDeBajaParticipante();
-  const { mutateAsync: activar, isPending: activando } = useActivarParticipante();
 
   // El backend además valida el rol: acá sólo se oculta lo que no corresponde.
   const puedeDarDeBaja =
@@ -122,33 +108,6 @@ export function ParticipantesTable({ participantes, ordenarPor, orden, onOrdenar
       // El hook ya avisa del error con un toast; el diálogo queda abierto
       // para poder reintentar.
     }
-  };
-
-  const confirmarReactivacion = async () => {
-    const participante = participanteAReactivar;
-    if (!participante) {
-      return;
-    }
-
-    try {
-      await activar(participante.personaId);
-      setParticipanteAReactivar(null);
-    } catch {
-      // El hook ya avisa del error con un toast; el diálogo queda abierto
-      // para poder reintentar.
-    }
-  };
-
-  const toggleExpandido = (personaId: number) => {
-    setExpandidos((prev) => {
-      const next = new Set(prev);
-      if (next.has(personaId)) {
-        next.delete(personaId);
-      } else {
-        next.add(personaId);
-      }
-      return next;
-    });
   };
 
   if (participantes.length === 0) {
@@ -204,27 +163,22 @@ export function ParticipantesTable({ participantes, ordenarPor, orden, onOrdenar
             </tr>
           </thead>
         <tbody>
-          {participantesOrdenados.map((participante) => {
-            const expandido = expandidos.has(participante.personaId);
-            return (
-              <ParticipanteRow
-                key={participante.personaId}
-                participante={participante}
-                expandido={expandido}
-                puedeDarDeBaja={puedeDarDeBaja}
-                onToggle={() => toggleExpandido(participante.personaId)}
-                onDarDeBaja={() => setParticipanteAConfirmar(participante)}
-                onReactivar={() => setParticipanteAReactivar(participante)}
-                onVerDocumentacion={onVerDocumentacion ? () => onVerDocumentacion(participante) : undefined}
-                onInscribir={onInscribir ? () => onInscribir(participante) : undefined}
-                onEditar={() =>
-                  navigate(
-                    ROUTES.editarParticipante(participante.personaId),
-                  )
-                }
-              />
-            );
-          })}
+          {participantesOrdenados.map((participante) => (
+            <ParticipanteRow
+              key={participante.personaId}
+              participante={participante}
+              puedeDarDeBaja={puedeDarDeBaja}
+              onVerDisciplinas={() => setParticipanteDrawer(participante)}
+              onDarDeBaja={() => setParticipanteAConfirmar(participante)}
+              onDarDeAlta={() => setParticipanteADarDeAlta(participante)}
+              onVerDocumentacion={onVerDocumentacion ? () => onVerDocumentacion(participante) : undefined}
+              onEditar={() =>
+                navigate(
+                  ROUTES.editarParticipante(participante.personaId),
+                )
+              }
+            />
+          ))}
         </tbody>
       </table>
       </div>
@@ -252,38 +206,25 @@ export function ParticipantesTable({ participantes, ordenarPor, orden, onOrdenar
         ) : null}
       </ConfirmDialog>
 
-      <ConfirmDialog
-        open={participanteAReactivar !== null}
-        variant="success"
-        title="Reactivar al participante"
-        description={
-          participanteAReactivar
-            ? `${participanteAReactivar.persona.apellido}, ${participanteAReactivar.persona.nombre} va a poder inscribirse de nuevo.`
-            : undefined
-        }
-        confirmLabel="Reactivar"
-        loading={activando}
-        onConfirm={() => void confirmarReactivacion()}
-        onCancel={() => setParticipanteAReactivar(null)}
-      >
-        {participanteAReactivar ? (
-          <p className="text-sm text-slate-600">
-            Su estado pasa a Activo. Las disciplinas no se re-inscriben solas: cada inscripción
-            se hace por separado.
-          </p>
-        ) : null}
-      </ConfirmDialog>
+      <DarDeAltaParticipanteModal
+        participante={participanteADarDeAlta}
+        onClose={() => setParticipanteADarDeAlta(null)}
+      />
+
+      <DisciplinasParticipanteModal
+        participante={participanteDrawer}
+        onClose={() => setParticipanteDrawer(null)}
+      />
     </div>
   );
 }
 
 interface ParticipanteRowProps {
   participante: ParticipanteConDisciplinas;
-  expandido: boolean;
   puedeDarDeBaja: boolean;
-  onToggle: () => void;
+  onVerDisciplinas: () => void;
   onDarDeBaja: () => void;
-  onReactivar: () => void;
+  onDarDeAlta: () => void;
   onEditar: () => void;
   onVerDocumentacion?: () => void;
   onInscribir?: () => void;
@@ -291,32 +232,37 @@ interface ParticipanteRowProps {
 
 function ParticipanteRow({
   participante,
-  expandido,
   puedeDarDeBaja,
-  onToggle,
+  onVerDisciplinas,
   onDarDeBaja,
-  onReactivar,
+  onDarDeAlta,
   onEditar,
   onVerDocumentacion,
-  onInscribir,
-}: ParticipanteRowProps) {
-  const nombres = participante.disciplinas.map((d) => d.disciplina.nombre);
+}: Omit<ParticipanteRowProps, 'onInscribir'>) {
+  const esInscripto = participante.estado === 'INSCRIPTO';
+  const disciplinasActivas = participante.disciplinas.filter((d) => d.activo === true);
+  const nombres = disciplinasActivas.map((d) => d.disciplina.nombre);
   const visibles = nombres.slice(0, 2);
   const restantes = nombres.length - visibles.length;
 
   return (
-    <>
-      <tr className={`border-b border-slate-100 last:border-b-0 transition-colors ${expandido ? 'bg-brand-50/60' : 'hover:bg-slate-50/70'}`}>
+    <tr className="border-b border-slate-100 last:border-b-0 transition-colors hover:bg-slate-50/70">
         <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
           {participante.persona.apellido}, {participante.persona.nombre}
         </td>
         <td className="px-5 py-3.5 font-mono text-xs tabular-nums text-slate-600">{formatearDni(participante.persona.dni)}</td>
         <td className="px-5 py-3.5 text-slate-600">
-          {nombres.length === 0 ? '—' : visibles.join(', ')}
-          {restantes > 0 && <span className="ml-1 text-xs text-slate-400">+{restantes} más</span>}
+          {nombres.length === 0 ? (
+            <span className="text-slate-400">Sin disciplinas activas</span>
+          ) : (
+            <>
+              {visibles.join(', ')}
+              {restantes > 0 && <span className="ml-1 text-xs text-slate-400">+{restantes} más</span>}
+            </>
+          )}
         </td>
         <td className="px-5 py-3.5">
-          <BadgeParticipante activo={participante.persona.activo} />
+          <BadgeParticipante activo={esInscripto} />
         </td>
         <td className="px-5 py-3.5">
           {participante.estadoDocumental ? (
@@ -330,30 +276,17 @@ function ParticipanteRow({
             <Button
               variant="ghost"
               size="sm"
-              aria-expanded={expandido}
               aria-label={`Ver disciplinas de ${participante.persona.apellido}, ${participante.persona.nombre}`}
-              onClick={onToggle}
-              // Ancho fijo: al pasar a "Ocultar" no corre el resto de las acciones.
-              className="min-w-33 justify-start whitespace-nowrap"
+              onClick={onVerDisciplinas}
+              className="whitespace-nowrap"
             >
-              {expandido ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              {expandido ? 'Ocultar' : 'Ver disciplinas'}
+              <Dumbbell size={14} />
+              Ver disciplinas
             </Button>
             <Button variant="ghost" size="sm" onClick={onEditar}>
               <Pencil size={14} />
               Editar
             </Button>
-            {onInscribir && participante.persona.activo && (
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-label={`Inscribir a ${participante.persona.apellido}, ${participante.persona.nombre} en otra disciplina`}
-                onClick={onInscribir}
-              >
-                <UserPlus size={14} />
-                Inscribir
-              </Button>
-            )}
             {onVerDocumentacion && (
               <Button
                 variant="ghost"
@@ -365,11 +298,11 @@ function ParticipanteRow({
                 Documentación
               </Button>
             )}
-            {puedeDarDeBaja && participante.persona.activo && (
+            {puedeDarDeBaja && esInscripto && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                className="hover:bg-rose-50 hover:text-rose-700"
                 aria-label={`Dar de baja a ${participante.persona.apellido}, ${participante.persona.nombre}`}
                 onClick={onDarDeBaja}
               >
@@ -377,88 +310,20 @@ function ParticipanteRow({
                 Dar de baja
               </Button>
             )}
-            {puedeDarDeBaja && !participante.persona.activo && (
+            {puedeDarDeBaja && !esInscripto && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-                aria-label={`Reactivar a ${participante.persona.apellido}, ${participante.persona.nombre}`}
-                onClick={onReactivar}
+                className="hover:bg-emerald-50 hover:text-emerald-700"
+                aria-label={`Dar de alta a ${participante.persona.apellido}, ${participante.persona.nombre}`}
+                onClick={onDarDeAlta}
               >
-                <CheckCircle2 size={14} />
-                Reactivar
+                <UserCheck size={14} />
+                Dar de alta
               </Button>
             )}
           </div>
         </td>
       </tr>
-      {expandido && (
-        <>
-          {/* El detalle son filas de la misma tabla: cada dato queda debajo de su columna. */}
-          {/* Bloque de disciplinas con los colores de SocialClub: azul de marca y acento naranja. */}
-          <tr className="border-t border-brand-100 bg-brand-50 text-[11px] font-semibold uppercase tracking-wider text-brand-700">
-            <td className="py-2 pl-10 pr-5 shadow-[inset_3px_0_0_var(--color-brand-500)]">Disciplina</td>
-            <td className="px-5 py-2">Categoría</td>
-            <td className="whitespace-nowrap px-5 py-2">Fecha de inscripción</td>
-            <td className="px-5 py-2">Estado</td>
-            <td className="px-5 py-2">Documentación</td>
-            <td className="px-5 py-2">Observaciones</td>
-          </tr>
-          {participante.disciplinas.map((d, indice) => {
-            const estadoDisciplina = etiquetaEstadoDisciplina(d.activo, d.estado);
-            const ultima = indice === participante.disciplinas.length - 1;
-            return (
-              <tr
-                key={d.inscripcionId}
-                className={`bg-brand-50/40 transition-colors hover:bg-brand-50/80 ${ultima ? 'border-b border-brand-100' : ''} ${estadoDisciplina.activo ? '' : 'opacity-70'}`}
-              >
-                <td className="whitespace-nowrap py-2.5 pl-10 pr-5 shadow-[inset_3px_0_0_var(--color-brand-500)]">
-                  <span className="inline-flex items-center gap-2 font-medium text-brand-900">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent-100 text-accent-600">
-                      <Dumbbell size={13} />
-                    </span>
-                    {d.disciplina.nombre}
-                  </span>
-                </td>
-                <td className="px-5 py-2.5">
-                  {d.categoriaDisciplina ? (
-                    <span className="inline-flex whitespace-nowrap rounded-md bg-brand-100/70 px-2 py-0.5 text-xs font-medium text-brand-700">
-                      {d.categoriaDisciplina.nombre}
-                    </span>
-                  ) : (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </td>
-                <td className="px-5 py-2.5 text-slate-600">{isoADisplay(d.fechaInscripcion)}</td>
-                <td className="whitespace-nowrap px-5 py-2.5">
-                  <BadgeEstado activo={estadoDisciplina.activo} texto={estadoDisciplina.texto} />
-                  {!estadoDisciplina.activo && d.fechaBaja && (
-                    <span className="ml-2 text-xs text-slate-500">el {isoADisplay(d.fechaBaja)}</span>
-                  )}
-                </td>
-                <td className="px-5 py-2.5">
-                  {d.estadoDocumental ? (
-                    <EstadoHabilitacionBadge estado={d.estadoDocumental} />
-                  ) : (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </td>
-                <td className="px-5 py-2.5 text-xs text-slate-500">
-                  {d.motivosDocumentacion && d.motivosDocumentacion.length > 0 ? (
-                    <ul className="space-y-0.5">
-                      {d.motivosDocumentacion.map((m) => (
-                        <li key={m}>{m}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </>
-      )}
-    </>
   );
 }
