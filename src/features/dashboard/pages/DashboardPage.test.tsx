@@ -34,10 +34,11 @@ describe('DashboardPage', () => {
     mockAlertas.mockReturnValue({ data: [], isLoading: false, isError: false });
   });
 
-  it('US-26 · el ADMIN ve las alertas de documentación en el Inicio', () => {
+  it('US-26 · el ADMIN ya no ve alertas ni documentos para revisar en el Inicio (viven en Notificaciones)', () => {
     mockUsuario = { id: 1, nombre: 'Gonzalo', roles: ['ADMIN'] };
     renderWithProviders(<DashboardPage />);
-    expect(screen.getByRole('heading', { name: 'Alertas de documentación' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Alertas de documentación' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Documentos para revisar' })).not.toBeInTheDocument();
   });
 
   it('US-26 · el COLABORADOR no ve las alertas de documentación', () => {
@@ -46,17 +47,14 @@ describe('DashboardPage', () => {
     expect(screen.queryByRole('heading', { name: 'Alertas de documentación' })).not.toBeInTheDocument();
   });
 
-  it('US-26 · el DELEGADO ve sus alertas al iniciar sesión y puede ir a participantes', async () => {
-    const user = userEvent.setup();
+  it('US-26 · el DELEGADO ve su saludo sin alertas en el Inicio (viven en Notificaciones)', () => {
     mockUsuario = { id: 4, nombre: 'Diego', roles: ['DELEGADO'] };
     renderWithProviders(<DashboardPage />);
 
     expect(screen.getByText('Hola, Diego')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Alertas de documentación' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Alertas de documentación' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Documentos para revisar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Hacerme socio/i })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /Ver participantes/i }));
-    expect(mockNavigate).toHaveBeenCalledWith('/admin/participantes');
   });
 
   it('renderiza panel de administración para usuario ADMIN y permite navegar a módulos', async () => {

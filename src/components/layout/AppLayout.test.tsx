@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/test-utils';
+import { ROUTES } from '@/routes/paths';
 import { AppLayout } from './AppLayout';
 
 const mockLogout = vi.fn();
@@ -165,5 +166,19 @@ describe('AppLayout', () => {
 
     renderWithProviders(<AppLayout />, { ruta: '/admin' });
     expect(screen.queryByRole('link', { name: /^Dashboard$/i })).not.toBeInTheDocument();
+  });
+
+  it('al estar en /admin/cuotas/deportiva/cobrar, el ítem Cobrar cuota deportiva está activo y Cuotas no queda resaltado', () => {
+    const { container } = renderWithProviders(<AppLayout />, { ruta: ROUTES.cobrarCuotaDeportiva });
+
+    const aside = container.querySelector('aside')!;
+    const linkCobrar = within(aside).getByRole('link', { name: /^Cobrar cuota deportiva$/i });
+    const linkCuotas = within(aside).getByRole('link', { name: /^Cuotas$/i });
+
+    expect(linkCobrar).toHaveAttribute('aria-current', 'page');
+    expect(linkCobrar.className).toContain('text-brand-300');
+
+    expect(linkCuotas).not.toHaveAttribute('aria-current', 'page');
+    expect(linkCuotas.className).not.toContain('text-brand-300');
   });
 });

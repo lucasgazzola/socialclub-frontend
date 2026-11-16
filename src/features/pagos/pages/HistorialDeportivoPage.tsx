@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, DateInput } from '@/components/ui';
+import { useSearchParams } from 'react-router-dom';
+import { Card, DateInput, Spinner } from '@/components/ui';
 import { formatearDni } from '@/lib/utils/dni';
-import { ROUTES } from '@/routes/paths';
 import { useBuscarParticipante } from '@/features/inscripcion/hooks/useBuscarParticipante';
 import { BuscarParticipanteDni } from '@/features/inscripcion/components/buscarParticipanteDni';
 import { useHistorialDeportivo } from '../hooks/useHistorialDeportivo';
@@ -140,9 +139,15 @@ function HistorialDeportivo({ data }: { data: HistorialDeportivoResponse }) {
  * períodos adeudados, con filtro por rango de fechas. Vista de solo lectura.
  */
 export function HistorialDeportivoPage() {
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const personaIdParam = searchParams.get('personaId');
+  const personaIdUrl =
+    personaIdParam && !Number.isNaN(Number(personaIdParam)) ? Number(personaIdParam) : null;
+
   const busqueda = useBuscarParticipante();
   const participante = busqueda.participante;
+  const personaIdActivo = personaIdUrl ?? participante?.id ?? null;
+
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
 
@@ -150,7 +155,7 @@ export function HistorialDeportivoPage() {
     () => ({ desde: desde || undefined, hasta: hasta || undefined }),
     [desde, hasta],
   );
-  const { data, isLoading } = useHistorialDeportivo(participante?.id ?? null, filtro);
+  const { data, isLoading } = useHistorialDeportivo(personaIdActivo, filtro);
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -159,19 +164,20 @@ export function HistorialDeportivoPage() {
           Historial de cuotas deportivas
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          Buscá al jugador por DNI y consultá sus pagos y períodos adeudados. Solo lectura.
+          Consultá los pagos realizados y períodos adeudados. Solo lectura.
         </p>
       </header>
 
-      <BuscarParticipanteDni
-        onBuscar={busqueda.buscar}
-        cargando={busqueda.cargando}
-        noEncontrado={busqueda.noEncontrado}
-        error={busqueda.error}
-        onRegistrarNuevo={() => navigate(ROUTES.nuevaInscripcion)}
-      />
+      {!personaIdUrl && (
+        <BuscarParticipanteDni
+          onBuscar={busqueda.buscar}
+          cargando={busqueda.cargando}
+          noEncontrado={busqueda.noEncontrado}
+          error={busqueda.error}
+        />
+      )}
 
-      {participante && (
+      {personaIdActivo && (
         <Card className="flex flex-wrap items-end gap-4 p-5">
           <DateInput label="Desde" value={desde} max={hasta || undefined} onChange={setDesde} containerClassName="w-44" />
           <DateInput label="Hasta" value={hasta} min={desde || undefined} onChange={setHasta} containerClassName="w-44" />
@@ -190,10 +196,12 @@ export function HistorialDeportivoPage() {
         </Card>
       )}
 
-      {participante && isLoading && (
-        <p className="text-sm text-slate-500">Cargando historial…</p>
+      {personaIdActivo && isLoading && (
+        <div className="flex justify-center py-8">
+          <Spinner className="h-6 w-6" />
+        </div>
       )}
-      {participante && data && <HistorialDeportivo data={data} />}
+      {personaIdActivo && data && <HistorialDeportivo data={data} />}
     </div>
   );
 }

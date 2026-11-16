@@ -69,7 +69,7 @@ export function EspaciosTable({
               <HeaderOrdenable
                 campo="nombre"
                 label="Espacio"
-                className="px-4 py-3"
+                className="px-2.5 py-3"
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
@@ -77,7 +77,7 @@ export function EspaciosTable({
               <HeaderOrdenable
                 campo="tipo"
                 label="Tipo"
-                className="px-4 py-3 whitespace-nowrap"
+                className="px-2.5 py-3 whitespace-nowrap"
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
@@ -85,24 +85,24 @@ export function EspaciosTable({
               <HeaderOrdenable
                 campo="capacidadMaxima"
                 label="Capacidad"
-                className="px-4 py-3 whitespace-nowrap"
+                className="px-2.5 py-3 whitespace-nowrap"
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
               />
-              <th className="px-4 py-3 text-left whitespace-nowrap">Modalidad</th>
-              <th className="px-4 py-3 text-left">Disciplinas</th>
+              <th className="hidden xl:table-cell px-2.5 py-3 text-left whitespace-nowrap">Modalidad</th>
+              <th className="px-2.5 py-3 text-left">Disciplinas</th>
               <HeaderOrdenable
                 campo="precio"
                 label="Alquiler / Seña"
                 align="right"
-                className="px-4 py-3 whitespace-nowrap"
+                className="px-2.5 py-3 whitespace-nowrap"
                 ordenarPor={ordenarPor}
                 orden={orden}
                 onOrdenar={onOrdenar}
               />
-              <th className="px-4 py-3 text-left">Estado</th>
-              {puedeMutar && <th className="px-4 py-3 text-right">Acciones</th>}
+              <th className="px-2.5 py-3 text-left">Estado</th>
+              {puedeMutar && <th className="px-2.5 py-3 text-right">Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -117,15 +117,17 @@ export function EspaciosTable({
                   className="border-b border-slate-100 last:border-b-0 transition-colors hover:bg-slate-50/70"
                   data-testid={`espacio-row-${espacio.id}`}
                 >
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="font-medium text-slate-900">{espacio.nombre}</span>
+                  <td className="max-w-[220px] px-3 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate font-medium text-slate-900" title={espacio.nombre}>
+                        {espacio.nombre}
+                      </span>
                       {resumenComposite && (
                         <button
                           type="button"
                           onClick={() => onEditar?.(espacio, 'subespacios')}
                           className={cn(
-                            'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors cursor-pointer border',
+                            'inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors cursor-pointer border',
                             resumenComposite.inactivo
                               ? 'bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-100'
                               : 'bg-brand-50 text-brand-700 border-brand-200/70 hover:bg-brand-100',
@@ -138,24 +140,26 @@ export function EspaciosTable({
                       )}
                     </div>
                     {espacio.ubicacion && (
-                      <div className="mt-0.5 text-xs text-slate-500">{espacio.ubicacion}</div>
+                      <div className="mt-0.5 truncate text-xs text-slate-500" title={espacio.ubicacion}>
+                        {espacio.ubicacion}
+                      </div>
                     )}
                     {espacio.espacioPadre && (
-                      <div className="mt-0.5 text-xs text-slate-400">
+                      <div className="mt-0.5 truncate text-xs text-slate-400">
                         Pertenece a: {espacio.espacioPadre.nombre}
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                  <td className="px-2.5 py-3 whitespace-nowrap text-slate-600">
                     {TIPO_ESPACIO_LABELS[espacio.tipo] ?? espacio.tipo}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-600 tabular-nums">
+                  <td className="px-2.5 py-3 whitespace-nowrap text-slate-600 tabular-nums">
                     {espacio.capacidadMaxima} pers.
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                  <td className="hidden xl:table-cell px-2.5 py-3 whitespace-nowrap text-slate-600">
                     {MODALIDAD_RESERVA_LABELS[espacio.modalidad] ?? espacio.modalidad}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-2.5 py-3 text-slate-600">
                     {espacio.tipo === 'SOCIAL' || disciplinasNombres.length === 0 ? (
                       <span className="text-slate-400">—</span>
                     ) : (
@@ -171,7 +175,7 @@ export function EspaciosTable({
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right tabular-nums">
+                  <td className="px-2.5 py-3 whitespace-nowrap text-right tabular-nums">
                     <div className="font-semibold text-slate-900">
                       {formatMoneda(espacio.precio)}
                     </div>
@@ -179,13 +183,13 @@ export function EspaciosTable({
                       Seña {formatMoneda(espacio.montoSena)}
                     </div>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-2.5 py-3 whitespace-nowrap">
                     <Badge variant={espacio.activo ? 'success' : 'secondary'}>
                       {espacio.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
                   </td>
                   {puedeMutar && (
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <td className="px-2.5 py-3 text-right whitespace-nowrap">
                       <div className="inline-flex items-center justify-end gap-1.5">
                         <Button
                           type="button"
@@ -203,7 +207,7 @@ export function EspaciosTable({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="w-28 justify-center text-rose-600 hover:bg-rose-50"
+                            className="w-28 justify-center hover:bg-rose-50 hover:text-rose-700"
                             onClick={() => onEliminar?.(espacio)}
                             title="Dar de baja este espacio"
                           >
@@ -215,7 +219,7 @@ export function EspaciosTable({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="w-28 justify-center text-emerald-600 hover:bg-emerald-50"
+                            className="w-28 justify-center hover:bg-emerald-50 hover:text-emerald-700"
                             onClick={() => onReactivar?.(espacio)}
                             title="Reactivar este espacio"
                           >

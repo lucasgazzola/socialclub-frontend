@@ -5,7 +5,7 @@ import type { ExportColumn } from '@/lib/utils/exportTable';
 import { formatearDni } from '@/lib/utils/dni';
 import { pagosApi } from '../api/pagos.api';
 import { useMorososCuotaSocial } from '../hooks/useMorososCuotaSocial';
-import { MorososCuotaSocialTable } from '../components/MorososCuotaSocialTable';
+import { MorososCuotaSocialTable, type CriterioOrdenMorosos } from '../components/MorososCuotaSocialTable';
 import { ModalCobroCuotaSocio } from '../components/ModalCobroCuotaSocio';
 import { useCategorias } from '@/features/socios/hooks/useCategorias';
 import type { FiltrosMorososCuotaSocial, SocioMorosoCuotaSocial } from '../types';
@@ -26,10 +26,27 @@ const COLUMNAS_EXPORT_MOROSOS_SOCIAL: ExportColumn<SocioMorosoCuotaSocial>[] = [
 export function MorososCuotaSocialPage() {
   const [busqueda, setBusqueda] = useState('');
   const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
-  const [ordenarPor, setOrdenarPor] = useState<'monto' | 'periodos'>('monto');
-  const [orden, setOrden] = useState<'asc' | 'desc'>('desc');
+  const [ordenarPor, setOrdenarPor] = useState<CriterioOrdenMorosos | undefined>(undefined);
+  const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
+
+  function handleOrdenar(campo: CriterioOrdenMorosos) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+  }
 
   // Modal de cobro
   const [socioCobro, setSocioCobro] = useState<{
@@ -156,29 +173,6 @@ export function MorososCuotaSocialPage() {
               ))}
             </Select>
           </div>
-
-          {/* Ordenamiento */}
-          <div className="w-56">
-            <Select
-              id="ordenar-por"
-              aria-label="Ordenar listado de morosos"
-              value={`${ordenarPor}-${orden}`}
-              onChange={(e) => {
-                const [criterio, dir] = e.target.value.split('-') as [
-                  'monto' | 'periodos',
-                  'asc' | 'desc',
-                ];
-                setOrdenarPor(criterio);
-                setOrden(dir);
-                setPagina(1);
-              }}
-            >
-              <option value="monto-desc">Mayor deuda primero</option>
-              <option value="monto-asc">Menor deuda primero</option>
-              <option value="periodos-desc">Más períodos adeudados</option>
-              <option value="periodos-asc">Menos períodos adeudados</option>
-            </Select>
-          </div>
         </div>
       </div>
 
@@ -198,6 +192,9 @@ export function MorososCuotaSocialPage() {
           <MorososCuotaSocialTable
             morosos={itemsPaginados}
             onCobrar={(socio) => setSocioCobro(socio)}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
           />
           {items.length > 0 && (
             <TablePagination

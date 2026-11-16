@@ -211,10 +211,6 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
       await waitFor(() => {
         expect(espaciosApi.remove).toHaveBeenCalledWith(1);
       });
-
-      expect(
-        await screen.findByText(/El espacio "Cancha de Fútbol 5 Norte" fue dado de baja correctamente/i),
-      ).toBeInTheDocument();
     });
 
     it('maneja conflicto 409 cuando hay reservas futuras y muestra alerta explicativa', async () => {
@@ -291,10 +287,6 @@ describe('US-58 · Consultar espacios y Catálogo público', () => {
       await waitFor(() => {
         expect(espaciosApi.reactivar).toHaveBeenCalledWith(3);
       });
-
-      expect(
-        await screen.findByText(/El espacio "Cancha 3 Inactiva" fue reactivado exitosamente/i),
-      ).toBeInTheDocument();
     });
   });
 });

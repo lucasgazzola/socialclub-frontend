@@ -96,7 +96,7 @@ export function DisciplinasPage() {
   }
 
   const guardando = crear.isPending || actualizar.isPending;
-  const tituloConfirmacion = disciplinaAConfirmar?.activo ? 'Desactivar disciplina' : 'Reactivar disciplina';
+  const tituloConfirmacion = disciplinaAConfirmar?.activo ? 'Dar de baja disciplina' : 'Reactivar disciplina';
 
   return (
     <div className="space-y-4">
@@ -124,7 +124,7 @@ export function DisciplinasPage() {
         variant={disciplinaAConfirmar?.activo ? 'danger' : 'success'}
         title={tituloConfirmacion}
         description={disciplinaAConfirmar?.activo ? 'La disciplina dejará de aparecer entre las actividades activas, sin borrar el historial de inscripciones.' : 'La disciplina volverá a estar disponible para nuevas operaciones.'}
-        confirmLabel={disciplinaAConfirmar?.activo ? 'Desactivar' : 'Reactivar'}
+        confirmLabel={disciplinaAConfirmar?.activo ? 'Dar de baja' : 'Reactivar'}
         loading={cambiandoEstado}
         onConfirm={() => void cambiarEstado()}
         onCancel={() => setDisciplinaAConfirmar(null)}

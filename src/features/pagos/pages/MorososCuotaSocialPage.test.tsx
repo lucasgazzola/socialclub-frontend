@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/test-utils';
 import { MorososCuotaSocialPage } from './MorososCuotaSocialPage';
@@ -112,21 +112,69 @@ describe('MorososCuotaSocialPage · US-19', () => {
     ).toBeInTheDocument();
   });
 
-  it('CA 2: Permite cambiar el ordenamiento por monto o períodos atrasados', async () => {
+  it('CA 2: Permite ordenar por cabeceras en 3 estados (asc -> desc -> reset) y no renderiza el antiguo Select', async () => {
     vi.mocked(pagosApi.getMorososCuotaSocial).mockResolvedValue(mockMorososData);
     const user = userEvent.setup();
 
     renderWithProviders(<MorososCuotaSocialPage />);
     await screen.findByText('Juan Gómez');
 
-    const selectOrden = screen.getByLabelText(/Ordenar listado de morosos/i);
-    await user.selectOptions(selectOrden, 'periodos-desc');
+    // Verifica que el antiguo <Select> de ordenamiento no exista
+    expect(screen.queryByLabelText(/Ordenar listado de morosos/i)).not.toBeInTheDocument();
 
+    const thPeriodos = screen.getByRole('columnheader', { name: /Períodos adeudados/i });
+    expect(thPeriodos).toHaveAttribute('aria-sort', 'none');
+
+    // Clic 1: asc
+    await user.click(within(screen.getByRole('columnheader', { name: /Períodos adeudados/i })).getByRole('button'));
     await waitFor(() => {
-      expect(pagosApi.getMorososCuotaSocial).toHaveBeenCalledWith(
+      expect(screen.getByRole('columnheader', { name: /Períodos adeudados/i })).toHaveAttribute(
+        'aria-sort',
+        'ascending',
+      );
+      expect(pagosApi.getMorososCuotaSocial).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          ordenarPor: 'periodos',
+          orden: 'asc',
+        }),
+      );
+    });
+
+    // Clic 2: desc
+    await user.click(within(screen.getByRole('columnheader', { name: /Períodos adeudados/i })).getByRole('button'));
+    await waitFor(() => {
+      expect(screen.getByRole('columnheader', { name: /Períodos adeudados/i })).toHaveAttribute(
+        'aria-sort',
+        'descending',
+      );
+      expect(pagosApi.getMorososCuotaSocial).toHaveBeenLastCalledWith(
         expect.objectContaining({
           ordenarPor: 'periodos',
           orden: 'desc',
+        }),
+      );
+    });
+
+    // Clic 3: neutro / reset
+    await user.click(within(screen.getByRole('columnheader', { name: /Períodos adeudados/i })).getByRole('button'));
+    await waitFor(() => {
+      expect(screen.getByRole('columnheader', { name: /Períodos adeudados/i })).toHaveAttribute(
+        'aria-sort',
+        'none',
+      );
+    });
+
+    // Probar también ordenamiento por Deuda total
+    await user.click(within(screen.getByRole('columnheader', { name: /Deuda total/i })).getByRole('button'));
+    await waitFor(() => {
+      expect(screen.getByRole('columnheader', { name: /Deuda total/i })).toHaveAttribute(
+        'aria-sort',
+        'ascending',
+      );
+      expect(pagosApi.getMorososCuotaSocial).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          ordenarPor: 'monto',
+          orden: 'asc',
         }),
       );
     });

@@ -91,7 +91,7 @@ describe('US-23 · MorososCuotaDeportivaPage', () => {
     } as never);
   });
 
-  it('muestra el resumen, el vencimiento y por moroso: nombre, DNI, deuda por disciplina, períodos y total', () => {
+  it('muestra el resumen, el vencimiento y por moroso: nombre, DNI, períodos y total (sin columna Deuda por disciplina ni Select)', () => {
     renderPagina();
 
     expect(screen.getByText(/La cuota de cada mes vence el día 10/)).toBeInTheDocument();
@@ -99,84 +99,93 @@ describe('US-23 · MorososCuotaDeportivaPage', () => {
     expect(screen.getByTestId('deuda-total')).toHaveTextContent('35.000');
     const fila = screen.getByRole('row', { name: /Ana Gómez/ });
     expect(within(fila).getByText('30.111.222')).toBeInTheDocument();
-    expect(within(fila).getByText('Fútbol')).toBeInTheDocument();
-    expect(within(fila).getByText('Natación')).toBeInTheDocument();
-    expect(within(fila).getByText(/2 per\. · \$\s?20\.000/)).toBeInTheDocument();
-    expect(within(fila).queryByText(/disciplinas? más/)).not.toBeInTheDocument();
+    expect(within(fila).getByText('3')).toBeInTheDocument();
+    expect(within(fila).getByText(/35\.000/)).toBeInTheDocument();
+
+    // Verifica que la antigua columna "Deuda por disciplina" y el antiguo Select no existan
+    expect(screen.queryByText(/Deuda por disciplina/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Ordenar listado de morosos/i)).not.toBeInTheDocument();
   });
 
-  it('el detalle muestra cada cuota adeudada con período, vencimiento, importe y estado, por disciplina', async () => {
+  it('«Ver historial» navega al historial de cuota deportiva del participante', async () => {
     const user = userEvent.setup();
     renderPagina();
 
-    await user.click(screen.getByRole('button', { name: 'Ver detalle de Ana Gómez' }));
+    await user.click(screen.getByRole('button', { name: 'Ver historial de Ana Gómez' }));
 
-    const futbol = screen.getByRole('region', { name: 'Cuotas adeudadas de Fútbol' });
-    const filas = within(futbol).getAllByRole('row').slice(1);
-    expect(filas.map((f) => f.textContent)).toEqual([
-      expect.stringContaining('08/2026'),
-      expect.stringContaining('09/2026'),
-    ]);
-    expect(filas[0]).toHaveTextContent('10/08/2026');
-    expect(filas[0]).toHaveTextContent('10.000');
-    expect(filas[0]).toHaveTextContent('Vencida · impaga');
-    const natacion = screen.getByRole('region', { name: 'Cuotas adeudadas de Natación' });
-    expect(within(natacion).getByText('Dada de baja')).toBeInTheDocument();
+    expect(screen.getByTestId('ubicacion')).toHaveTextContent(
+      '/admin/cuotas/deportiva/historial?personaId=7',
+    );
   });
 
-  it('con más de dos disciplinas muestra dos en la fila y el resto en el detalle', async () => {
-    const user = userEvent.setup();
-    const base = respuesta.items[0].disciplinas[0];
-    const nombres = ['Fútbol', 'Natación', 'Gimnasio', 'Básquet'];
-    mockHook.mockReturnValue({
-      data: {
-        ...respuesta,
-        items: [
-          {
-            ...respuesta.items[0],
-            disciplinas: nombres.map((disciplinaNombre, i) => ({
-              ...base,
-              disciplinaId: i + 1,
-              disciplinaNombre,
-            })),
-          },
-        ],
-      },
-      isLoading: false,
-      isError: false,
-      error: null,
-    } as never);
-    renderPagina();
-
-    const fila = screen.getByRole('row', { name: /Ana Gómez/ });
-    expect(within(fila).getByText('Fútbol')).toBeInTheDocument();
-    expect(within(fila).getByText('Natación')).toBeInTheDocument();
-    expect(within(fila).queryByText('Gimnasio')).not.toBeInTheDocument();
-
-    await user.click(within(fila).getByRole('button', { name: '+2 disciplinas más' }));
-
-    for (const nombre of nombres) {
-      expect(
-        screen.getByRole('region', { name: `Cuotas adeudadas de ${nombre}` }),
-      ).toBeInTheDocument();
-    }
-    expect(within(fila).queryByRole('button', { name: /disciplinas más/ })).not.toBeInTheDocument();
-  });
-
-  it('filtra por disciplina, busca y ordena pasando los filtros a la consulta', async () => {
+  it('filtra por disciplina, busca y permite ordenar en 3 estados (asc -> desc -> reset)', async () => {
     const user = userEvent.setup();
     renderPagina();
 
     await user.selectOptions(screen.getByLabelText('Filtrar por disciplina'), '2');
     await user.type(screen.getByLabelText('Buscar moroso por nombre, apellido o DNI'), 'Gómez');
-    await user.selectOptions(screen.getByLabelText('Ordenar listado de morosos'), 'periodos-asc');
 
-    expect(mockHook).toHaveBeenLastCalledWith({
-      busqueda: 'Gómez',
-      disciplinaId: 2,
-      ordenarPor: 'periodos',
-      orden: 'asc',
-    });
+    const btnPeriodos = screen.getByRole('button', { name: /Períodos/i });
+    // Clic 1: asc
+    await user.click(btnPeriodos);
+    expect(mockHook).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        busqueda: 'Gómez',
+        disciplinaId: 2,
+        ordenarPor: 'periodos',
+        orden: 'asc',
+      }),
+    );
+
+    // Clic 2: desc
+    await user.click(btnPeriodos);
+    expect(mockHook).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        busqueda: 'Gómez',
+        disciplinaId: 2,
+        ordenarPor: 'periodos',
+        orden: 'desc',
+      }),
+    );
+
+    // Clic 3: neutro / reset
+    await user.click(btnPeriodos);
+    expect(mockHook).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        busqueda: 'Gómez',
+        disciplinaId: 2,
+        ordenarPor: undefined,
+        orden: undefined,
+      }),
+    );
+
+    // Probar también ordenamiento por Participante, DNI y Deuda total
+    const btnParticipante = screen.getByRole('button', { name: /Participante/i });
+    await user.click(btnParticipante);
+    expect(mockHook).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        ordenarPor: 'nombre',
+        orden: 'asc',
+      }),
+    );
+
+    const btnDni = screen.getByRole('button', { name: /DNI/i });
+    await user.click(btnDni);
+    expect(mockHook).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        ordenarPor: 'dni',
+        orden: 'asc',
+      }),
+    );
+
+    const btnMonto = screen.getByRole('button', { name: /Deuda total/i });
+    await user.click(btnMonto);
+    expect(mockHook).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        ordenarPor: 'monto',
+        orden: 'asc',
+      }),
+    );
   });
 
   it('sin morosos informa que no se registran', () => {

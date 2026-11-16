@@ -1,11 +1,17 @@
 import { useRef, useState } from 'react';
+import { Check, ExternalLink, FileText, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, DateInput, Spinner } from '@/components/ui';
+import { Button, DateInput, Modal, ModalActions, Spinner } from '@/components/ui';
 import { env } from '@/config/env';
 import { isoADisplay } from '@/lib/utils/fecha';
 import { requiereVencimiento, type TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useCrearDocumentacion, useDocumentacionPorPersona, useEstadoDocumental } from '../hooks/useDocumentacion';
+import {
+  useCrearDocumentacion,
+  useDocumentacionPorPersona,
+  useEstadoDocumental,
+  useRevisarDocumento,
+} from '../hooks/useDocumentacion';
 import type { EstadoDeDocumento, EstadoDocumentalInscripcion } from '../types';
 import { EstadoDocumentoBadge, EstadoHabilitacionBadge, EstadoRevisionBadge } from './EstadoBadges';
 import { ModalHabilitacionExcepcional } from './ModalHabilitacionExcepcional';
@@ -38,10 +44,15 @@ interface DocumentacionParticipanteProps {
 export function DocumentacionParticipante({ persona, puedeCargar = true }: DocumentacionParticipanteProps) {
   const { usuario } = useAuth();
   const esAdmin = usuario?.roles.includes('ADMIN') ?? false;
+  const esRevisor = usuario?.roles.some((r) => r === 'ADMIN' || r === 'DELEGADO') ?? false;
   const esSocio = (usuario?.roles.includes('SOCIO') ?? false) || usuario?.persona?.id === persona.id;
   const crear = useCrearDocumentacion();
+  const revisar = useRevisarDocumento();
   const { data: estado, isLoading, isError } = useEstadoDocumental(persona?.id ?? null);
   const { data: historial } = useDocumentacionPorPersona(persona.id);
+  const [docARechazar, setDocARechazar] = useState<{ id: number; etiqueta: string } | null>(null);
+  const [motivoRechazo, setMotivoRechazo] = useState('');
+  const [errorMotivo, setErrorMotivo] = useState<string | null>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
   const [inscripcionAHabilitar, setInscripcionAHabilitar] = useState<EstadoDocumentalInscripcion | null>(null);
@@ -52,6 +63,7 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
   const [fechaVencimiento, setFechaVencimiento] = useState('');
   const [errorFecha, setErrorFecha] = useState<string | null>(null);
   const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
+  const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
   const formularioRef = useRef<HTMLFormElement>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -217,28 +229,129 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
               <p className="text-sm text-slate-500">No exige documentación.</p>
             ) : (
               <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
-                {insc.documentos.map((doc) => (
-                  <li key={doc.tipoDocumento} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-                    <span className="min-w-0 text-slate-700">
-                      {doc.etiqueta}
-                      {doc.origen === 'CATEGORIA' && <span className="ml-1 text-xs text-slate-400">(de la categoría)</span>}
-                      <span className="block text-xs text-slate-500">{detalleDocumento(doc)}</span>
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <EstadoDocumentoBadge estado={doc.estado} />
-                      {puedeCargar && doc.estado !== 'VIGENTE' && (
-                        <Button
-                          type="button"
-                          variant={docSeleccionado?.tipoDocumento === doc.tipoDocumento ? 'secondary' : 'ghost'}
-                          size="sm"
-                          onClick={() => elegirParaCargar(doc.tipoDocumento, doc.etiqueta)}
-                        >
-                          {doc.estado === 'FALTANTE' ? 'Cargar' : 'Renovar'}
-                        </Button>
+                {insc.documentos.map((doc) => {
+                  const candidatosPendientes = esRevisor
+                    ? (historial ?? []).filter(
+                        (h) =>
+                          h.estadoRevision === 'PENDIENTE_REVISION' &&
+                          (h.tipoDocumento === doc.tipoDocumento || h.tipo === doc.etiqueta),
+                      )
+                    : [];
+                  const docPendiente =
+                    candidatosPendientes.length > 0
+                      ? [...candidatosPendientes].sort((a, b) => (b.id ?? 0) - (a.id ?? 0))[0]
+                      : null;
+
+                  return (
+                    <li
+                      key={doc.tipoDocumento}
+                      className="px-3.5 py-3 text-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="min-w-0 text-slate-800">
+                          <span className="font-medium">{doc.etiqueta}</span>
+                          {doc.origen === 'CATEGORIA' && (
+                            <span className="ml-1.5 text-xs font-normal text-slate-400">
+                              (de la categoría)
+                            </span>
+                          )}
+                          {docPendiente ? (
+                            <span className="mt-0.5 block text-xs text-slate-500">
+                              Subido por el titular ·{' '}
+                              {docPendiente.fechaVencimiento
+                                ? `Vence el ${isoADisplay(docPendiente.fechaVencimiento)}`
+                                : 'Sin vencimiento'}
+                            </span>
+                          ) : (
+                            <span
+                              className={`mt-0.5 block text-xs ${
+                                doc.estado === 'FALTANTE'
+                                  ? 'text-amber-700'
+                                  : doc.estado === 'VENCIDO'
+                                    ? 'text-rose-600'
+                                    : 'text-slate-500'
+                              }`}
+                            >
+                              {doc.estado === 'FALTANTE'
+                                ? `Faltante · ${detalleDocumento(doc)}`
+                                : doc.estado === 'VENCIDO'
+                                  ? `Vencido · ${detalleDocumento(doc)}`
+                                  : detalleDocumento(doc)}
+                            </span>
+                          )}
+                        </span>
+
+                        {docPendiente ? (
+                          <span className="inline-flex shrink-0 items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700 ring-1 ring-inset ring-brand-600/20">
+                            Pendiente de revisión
+                          </span>
+                        ) : puedeCargar && doc.estado !== 'VIGENTE' ? (
+                          <Button
+                            type="button"
+                            variant={
+                              docSeleccionado?.tipoDocumento === doc.tipoDocumento
+                                ? 'secondary'
+                                : 'outline'
+                            }
+                            size="sm"
+                            onClick={() => elegirParaCargar(doc.tipoDocumento, doc.etiqueta)}
+                          >
+                            <Upload size={13} aria-hidden="true" />
+                            {doc.estado === 'FALTANTE' ? 'Cargar' : 'Renovar'}
+                          </Button>
+                        ) : (
+                          <EstadoDocumentoBadge estado={doc.estado} />
+                        )}
+                      </div>
+
+                      {docPendiente && (
+                        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200/80 bg-slate-50/80 px-3 py-2">
+                          <a
+                            href={`${env.apiUrl}/documentacion/${docPendiente.id}/archivo`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+                          >
+                            <FileText size={13} aria-hidden="true" />
+                            Ver archivo adjunto
+                            <ExternalLink size={11} aria-hidden="true" />
+                          </a>
+
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={revisar.isPending}
+                              className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                              onClick={() => {
+                                setDocARechazar({ id: docPendiente.id, etiqueta: doc.etiqueta });
+                                setMotivoRechazo('');
+                                setErrorMotivo(null);
+                              }}
+                              aria-label={`Rechazar ${doc.etiqueta}`}
+                            >
+                              <X size={13} aria-hidden="true" /> Rechazar
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={revisar.isPending}
+                              className="border-emerald-200 bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
+                              onClick={() =>
+                                revisar.mutate({ id: docPendiente.id, aprobar: true })
+                              }
+                              aria-label={`Aprobar ${doc.etiqueta}`}
+                            >
+                              <Check size={13} aria-hidden="true" /> Aprobar
+                            </Button>
+                          </div>
+                        </div>
                       )}
-                    </span>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>
@@ -246,14 +359,22 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
       )}
 
       {puedeCargar && docSeleccionado && (
-        <section aria-labelledby={`doc-nueva-${persona.id}`} className="border-t border-slate-200 pt-5">
-          <div className="mb-3 flex items-center justify-between">
+        <section
+          aria-labelledby={`doc-nueva-${persona.id}`}
+          className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs"
+        >
+          <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 id={`doc-nueva-${persona.id}`} className="text-sm font-semibold text-slate-800">
               Cargar documentación
             </h3>
-            <Button type="button" variant="ghost" size="sm" onClick={cancelarCarga}>
-              Cancelar
-            </Button>
+            <button
+              type="button"
+              onClick={cancelarCarga}
+              aria-label="Cerrar carga de documentación"
+              className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            >
+              <X size={16} />
+            </button>
           </div>
           <form ref={formularioRef} className="space-y-4" onSubmit={onSubmit} noValidate>
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
@@ -277,7 +398,7 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
             )}
 
             <div>
-              <label htmlFor={`archivo-${persona.id}`} className="mb-1 block text-sm font-medium text-slate-700">
+              <label htmlFor={`archivo-${persona.id}`} className="mb-1.5 block text-sm font-medium text-slate-700">
                 Archivo (PDF o imagen) *
               </label>
               <input
@@ -289,17 +410,74 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                   setArchivo(e.target.files?.[0] ?? null);
                   if (errorArchivo) setErrorArchivo(null);
                 }}
-                className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-slate-200"
+                className="sr-only"
               />
-              {errorArchivo && <p className="mt-1 text-xs text-red-600">{errorArchivo}</p>}
+              {archivo ? (
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-600">
+                      <FileText size={16} aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-slate-800">{archivo.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {(archivo.size / 1024).toFixed(0)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Quitar archivo seleccionado"
+                    onClick={() => {
+                      setArchivo(null);
+                      setFileKey((k) => k + 1);
+                    }}
+                    className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-200/70 hover:text-slate-600"
+                  >
+                    <X size={15} aria-hidden="true" />
+                  </button>
+                </div>
+              ) : (
+                <label
+                  htmlFor={`archivo-${persona.id}`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setArrastrandoArchivo(true);
+                  }}
+                  onDragLeave={() => setArrastrandoArchivo(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setArrastrandoArchivo(false);
+                    const file = e.dataTransfer.files?.[0] ?? null;
+                    if (file) {
+                      setArchivo(file);
+                      if (errorArchivo) setErrorArchivo(null);
+                    }
+                  }}
+                  className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed px-4 py-5 text-center transition-colors ${
+                    arrastrandoArchivo
+                      ? 'border-brand-500 bg-brand-50/50'
+                      : errorArchivo
+                        ? 'border-rose-300 bg-rose-50/30 hover:border-rose-400'
+                        : 'border-slate-300 bg-slate-50/50 hover:border-brand-400 hover:bg-slate-50'
+                  }`}
+                >
+                  <Upload size={18} className="text-slate-400" aria-hidden="true" />
+                  <p className="text-sm font-medium text-slate-700">
+                    Elegí un archivo <span className="font-normal text-slate-500">o arrastralo acá</span>
+                  </p>
+                  <p className="text-xs text-slate-400">PDF, JPG, PNG o WEBP · Ningún archivo seleccionado</p>
+                </label>
+              )}
+              {errorArchivo && <p className="mt-1 text-xs text-rose-600">{errorArchivo}</p>}
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
               <Button type="button" variant="secondary" onClick={cancelarCarga}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={crear.isPending}>
-                {crear.isPending ? 'Cargando…' : 'Cargar documentación'}
+                {crear.isPending ? 'Subiendo…' : 'Subir'}
               </Button>
             </div>
           </form>
@@ -326,8 +504,38 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
                   )}
                   <EstadoRevisionBadge doc={doc} />
                 </span>
-                <span className="shrink-0 text-slate-500">
-                  {doc.fechaVencimiento ? `Vence: ${isoADisplay(doc.fechaVencimiento)}` : 'Sin vencimiento'}
+                <span className="flex shrink-0 items-center gap-2 text-slate-500">
+                  <span>
+                    {doc.fechaVencimiento ? `Vence: ${isoADisplay(doc.fechaVencimiento)}` : 'Sin vencimiento'}
+                  </span>
+                  {esRevisor && doc.estadoRevision === 'PENDIENTE_REVISION' && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={revisar.isPending}
+                        className="h-7 px-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                        onClick={() => {
+                          setDocARechazar({ id: doc.id, etiqueta: doc.tipo });
+                          setMotivoRechazo('');
+                          setErrorMotivo(null);
+                        }}
+                      >
+                        <X size={12} aria-hidden="true" /> Rechazar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={revisar.isPending}
+                        className="h-7 border-emerald-200 bg-emerald-50/70 px-2 text-xs text-emerald-700 hover:bg-emerald-100"
+                        onClick={() => revisar.mutate({ id: doc.id, aprobar: true })}
+                      >
+                        <Check size={12} aria-hidden="true" /> Aprobar
+                      </Button>
+                    </>
+                  )}
                 </span>
               </li>
             ))}
@@ -347,6 +555,69 @@ export function DocumentacionParticipante({ persona, puedeCargar = true }: Docum
           motivos={inscripcionAHabilitar.motivos}
         />
       )}
+
+      <Modal
+        open={Boolean(docARechazar)}
+        onClose={() => {
+          setDocARechazar(null);
+          setErrorMotivo(null);
+        }}
+        title="Rechazar documento"
+        description={
+          docARechazar
+            ? `${docARechazar.etiqueta} de ${persona.nombre} ${persona.apellido}. Le vamos a avisar por email con el motivo para que lo vuelva a subir.`
+            : undefined
+        }
+        icon={<X size={16} />}
+        size="md"
+      >
+        <label htmlFor={`motivo-rechazo-${persona.id}`} className="mb-1.5 block text-sm font-medium text-slate-700">
+          Motivo
+        </label>
+        <textarea
+          id={`motivo-rechazo-${persona.id}`}
+          rows={3}
+          value={motivoRechazo}
+          onChange={(e) => setMotivoRechazo(e.target.value)}
+          placeholder="Ej.: la foto está borrosa y no se lee la fecha de vencimiento."
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
+        />
+        {errorMotivo && <p className="mt-1 text-xs text-red-600">{errorMotivo}</p>}
+        <ModalActions>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setDocARechazar(null);
+              setErrorMotivo(null);
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={revisar.isPending}
+            onClick={async () => {
+              if (!docARechazar) return;
+              if (motivoRechazo.trim().length < 5) {
+                setErrorMotivo('Contale al titular qué corregir (al menos 5 caracteres).');
+                return;
+              }
+              await revisar.mutateAsync({
+                id: docARechazar.id,
+                aprobar: false,
+                motivo: motivoRechazo.trim(),
+              });
+              setDocARechazar(null);
+              setMotivoRechazo('');
+              setErrorMotivo(null);
+            }}
+          >
+            Confirmar rechazo
+          </Button>
+        </ModalActions>
+      </Modal>
     </div>
   );
 }

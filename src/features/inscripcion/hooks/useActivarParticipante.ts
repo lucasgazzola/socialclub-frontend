@@ -1,25 +1,31 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { activarParticipante } from '../api/inscripcion.api';
+import type { ActivarParticipantePayload } from '../types';
 import { inscripcionesKeys } from './useInscripciones';
 
 /**
- * US-07 — Reactivar a un participante dado de baja.
- *
- * Solo cambia el estado del participante y lo audita: las disciplinas no se
- * re-inscriben solas (cada inscripción tiene su propio flujo).
+ * US-07 — Reactivar / dar de alta a un participante dado de baja junto con
+ * las disciplinas seleccionadas.
  */
 export function useActivarParticipante() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (personaId: number) => activarParticipante(personaId),
+    mutationFn: (
+      arg: number | { personaId: number; payload?: ActivarParticipantePayload },
+    ) => {
+      if (typeof arg === 'number') {
+        return activarParticipante(arg);
+      }
+      return activarParticipante(arg.personaId, arg.payload);
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: inscripcionesKeys.all });
-      toast.success('El participante fue reactivado: ya se lo puede inscribir de nuevo');
+      toast.success('Participante dado de alta correctamente');
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : 'Error al reactivar al participante');
+      toast.error(error instanceof Error ? error.message : 'Error al dar de alta al participante');
     },
   });
 }

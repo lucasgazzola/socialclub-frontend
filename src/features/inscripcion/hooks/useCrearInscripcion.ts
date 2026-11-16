@@ -8,13 +8,16 @@ import { toast } from 'sonner';
  * @param opciones.toastDeError en false el error no se muestra como toast: lo
  * muestra quien llama (ej. en el campo del formulario), para no duplicarlo.
  */
-export function useCrearInscripcion({ toastDeError = true }: { toastDeError?: boolean } = {}) {
+export function useCrearInscripcion({
+  toastDeError = true,
+  toastDeExito = true,
+}: { toastDeError?: boolean; toastDeExito?: boolean } = {}) {
   const qc = useQueryClient();
   const mutation = useMutation<InscripcionCreada, Error, CrearInscripcionPayload>({
     mutationFn: crearInscripcion,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: inscripcionesKeys.all });
-      toast.success('Inscripción registrada correctamente');
+      if (toastDeExito) toast.success('Inscripción registrada correctamente');
     },
     onError: (error: Error) => {
       if (toastDeError) toast.error(error.message);

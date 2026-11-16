@@ -54,7 +54,10 @@ describe('inscripcion.api', () => {
     vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { id: 10 } });
     const payload = { disciplinaId: 1, personaId: 2 } as any;
     const res = await crearInscripcion(payload);
-    expect(apiClient.post).toHaveBeenCalledWith('/inscripcion', payload);
+    expect(apiClient.post).toHaveBeenCalledWith('/inscripcion', {
+      personaId: 2,
+      disciplinas: [{ disciplinaId: 1, categoriaDisciplinaId: undefined }],
+    });
     expect(res).toEqual({ id: 10 });
   });
 
@@ -110,11 +113,17 @@ describe('inscripcion.api', () => {
     expect(res).toEqual({ ok: true });
   });
 
-  it('activarParticipante() envía patch a /inscripcion/persona/:id/activar', async () => {
+  it('activarParticipante() envía patch a /inscripcion/persona/:id/activar con y sin payload', async () => {
     vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: { ok: true } });
     const res = await activarParticipante(10);
     expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/persona/10/activar');
     expect(res).toEqual({ ok: true });
+
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: { ok: true } });
+    const payload = { disciplinas: [{ disciplinaId: 1, categoriaDisciplinaId: 2 }] };
+    const res2 = await activarParticipante(10, payload);
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/persona/10/activar', payload);
+    expect(res2).toEqual({ ok: true });
   });
 
   it('obtenerCatalogoInscripcion() envía get a /inscripcion/catalogo', async () => {

@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import type {
+  ActivarParticipantePayload,
   ActualizarDatosPersonaPayload,
   ActivacionParticipanteResultado,
   BajaParticipanteResultado,
@@ -11,6 +12,7 @@ import type {
   ParticipanteConDisciplinas,
   ParticipanteEncontrado,
   PersonaActualizada,
+  PreAltaParticipanteResponse,
   RequisitosInscripcion,
   SolicitarInscripcionPayload,
   SolicitudInscripcion,
@@ -44,7 +46,22 @@ export async function obtenerRequisitos(params: {
 export async function crearInscripcion(
   payload: CrearInscripcionPayload,
 ): Promise<InscripcionCreada> {
-  const { data } = await apiClient.post<InscripcionCreada>('/inscripcion', payload);
+  const { disciplinaId, categoriaDisciplinaId, disciplinas, ...rest } = payload;
+  const body = {
+    ...rest,
+    disciplinas:
+      disciplinas && disciplinas.length > 0
+        ? disciplinas
+        : disciplinaId
+          ? [
+              {
+                disciplinaId,
+                ...(categoriaDisciplinaId ? { categoriaDisciplinaId } : {}),
+              },
+            ]
+          : [],
+  };
+  const { data } = await apiClient.post<InscripcionCreada>('/inscripcion', body);
   return data;
 }
 
@@ -56,7 +73,7 @@ export async function getInscripcion(id: number): Promise<Inscripcion> {
 export async function getInscripcionesPorPersona(
   personaId: number,
   incluirBajas = false,
- ): Promise<Inscripcion[]> {
+): Promise<Inscripcion[]> {
   const { data } = await apiClient.get<Inscripcion[]>(`/inscripcion/persona/${personaId}`, {
     params: { incluirBajas: incluirBajas || undefined },
   });
@@ -67,7 +84,7 @@ export async function getInscripcionesPorPersona(
 export async function actualizarDatosPersona(
   personaId: number,
   payload: ActualizarDatosPersonaPayload,
- ): Promise<PersonaActualizada> {
+): Promise<PersonaActualizada> {
   const { data } = await apiClient.patch<PersonaActualizada>(`/personas/${personaId}`, payload);
   return data;
 }
@@ -108,13 +125,29 @@ export async function darDeBajaParticipante(
   return data;
 }
 
-/** US-07: reactivar a un participante dado de baja. */
+/** Pre-evaluación para dar de alta (re-admitir) a un participante en baja. */
+export async function preEvaluarAltaParticipante(
+  personaId: number,
+): Promise<PreAltaParticipanteResponse> {
+  const { data } = await apiClient.get<PreAltaParticipanteResponse>(
+    `/inscripcion/persona/${personaId}/pre-alta`,
+  );
+  return data;
+}
+
+/** US-07: reactivar / dar de alta a un participante dado de baja con sus disciplinas. */
 export async function activarParticipante(
   personaId: number,
+  payload?: ActivarParticipantePayload,
 ): Promise<ActivacionParticipanteResultado> {
-  const { data } = await apiClient.patch<ActivacionParticipanteResultado>(
-    `/inscripcion/persona/${personaId}/activar`,
-  );
+  const { data } = await (payload !== undefined
+    ? apiClient.patch<ActivacionParticipanteResultado>(
+        `/inscripcion/persona/${personaId}/activar`,
+        payload,
+      )
+    : apiClient.patch<ActivacionParticipanteResultado>(
+        `/inscripcion/persona/${personaId}/activar`,
+      ));
   return data;
 }
 
@@ -226,4 +259,9 @@ export async function subirDocumentacionSolicitud(
     { headers: { 'Content-Type': 'multipart/form-data' } },
   );
   return data;
+}
+
+/** Eliminar una inscripción existente por ID. */
+export async function eliminarInscripcion(id: number): Promise<void> {
+  await apiClient.delete(`/inscripcion/${id}`);
 }
