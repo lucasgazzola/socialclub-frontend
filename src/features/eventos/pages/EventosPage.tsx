@@ -7,13 +7,13 @@ import { EventoDetalleModal } from '../components/EventoDetalleModal';
 import { useCrearEvento, useActualizarEvento, useEventos } from '../hooks/useEventos';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { FiltrarEventosParams } from '../api/eventos.api';
-import type { Evento } from '../types';
+import type { EstadoEventoBackend, Evento } from '../types';
 
 const POR_PAGINA = 5;
 
 interface EventosPageProps {
   /**
-   * TASK-60: «gestion» en el panel (alta, edición y borradores para ADMIN);
+   * TASK-60: «gestion» en el panel (alta y edición para ADMIN);
    * «socio» en Mi club, donde solo se exploran eventos y se compran entradas.
    */
   modo?: 'gestion' | 'socio';
@@ -28,7 +28,7 @@ export function EventosPage({ modo = 'gestion' }: EventosPageProps) {
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
   const [ordenar, setOrdenar] = useState<FiltrarEventosParams['ordenar']>('fecha');
-  const [incluirBorradores, setIncluirBorradores] = useState(false);
+  const [estado, setEstado] = useState<EstadoEventoBackend | ''>('');
 
   const { usuario } = useAuth();
   const esAdmin = modo === 'gestion' && (usuario?.roles.includes('ADMIN') ?? false);
@@ -40,7 +40,7 @@ export function EventosPage({ modo = 'gestion' }: EventosPageProps) {
     ...(fechaDesde ? { fechaDesde } : {}),
     ...(fechaHasta ? { fechaHasta } : {}),
     ...(ordenar ? { ordenar } : {}),
-    ...(esAdmin && incluirBorradores ? { incluirBorradores: true } : {}),
+    ...(estado ? { estado } : {}),
   };
 
   const { data: paginado, isLoading, isError } = useEventos(params);
@@ -53,7 +53,7 @@ export function EventosPage({ modo = 'gestion' }: EventosPageProps) {
   const eventos = paginado?.items ?? [];
 
   const tieneFiltrosActivos = Boolean(
-    search || fechaDesde || fechaHasta || ordenar !== 'fecha' || incluirBorradores,
+    search || fechaDesde || fechaHasta || estado || ordenar !== 'fecha',
   );
 
   function limpiarFiltros() {
@@ -61,7 +61,7 @@ export function EventosPage({ modo = 'gestion' }: EventosPageProps) {
     setFechaDesde('');
     setFechaHasta('');
     setOrdenar('fecha');
-    setIncluirBorradores(false);
+    setEstado('');
     setPagina(1);
   }
 
@@ -94,8 +94,8 @@ export function EventosPage({ modo = 'gestion' }: EventosPageProps) {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Eventos</h1>
           <p className="mt-1 text-sm text-slate-500">
             {modo === 'gestion'
-              ? 'Gestioná y explorá los eventos del club.'
-              : 'Elegí un evento y comprá tus entradas online.'}
+              ? 'Los eventos que siguen en curso aparecen primero. Filtrá por estado o por fecha.'
+              : 'Los próximos aparecen primero. Filtrá por estado o por fecha.'}
           </p>
         </div>
         {puedeCrearEvento && (
@@ -144,13 +144,29 @@ export function EventosPage({ modo = 'gestion' }: EventosPageProps) {
             </div>
 
             <Select
+              id="estado-eventos"
+              aria-label="Filtrar por estado del evento"
+              value={estado}
+              onChange={(e) => {
+                setEstado(e.target.value as EstadoEventoBackend | '');
+                setPagina(1);
+              }}
+              className="w-auto"
+            >
+              <option value="">Todos los estados</option>
+              <option value="PUBLICADO">Publicados</option>
+              <option value="FINALIZADO">Finalizados</option>
+              <option value="CANCELADO">Cancelados</option>
+            </Select>
+
+            <Select
               id="ordenar-eventos"
               value={ordenar}
               onChange={(e) => { setOrdenar(e.target.value as FiltrarEventosParams['ordenar']); setPagina(1); }}
               className="w-auto"
               aria-label="Ordenar eventos por"
             >
-              <option value="fecha">Ordenar: por fecha</option>
+              <option value="fecha">Ordenar: próximos primero</option>
               <option value="nombre">Ordenar: por nombre</option>
               <option value="reciente">Ordenar: más recientes</option>
             </Select>
@@ -167,21 +183,6 @@ export function EventosPage({ modo = 'gestion' }: EventosPageProps) {
             )}
           </div>
         </div>
-
-        {esAdmin && (
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 whitespace-nowrap">
-              <input
-                id="incluir-borradores"
-                type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                checked={incluirBorradores}
-                onChange={(e) => { setIncluirBorradores(e.target.checked); setPagina(1); }}
-              />
-              Ver borradores
-            </label>
-          </div>
-        )}
       </div>
 
       {/* ─── Modal crear evento ─── */}

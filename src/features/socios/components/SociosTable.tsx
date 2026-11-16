@@ -85,13 +85,9 @@ export function SociosTable({ socios, ordenarPor, orden, onOrdenar }: SociosTabl
   const puedeCobrar = Boolean(usuario?.roles.some((r) => r === 'ADMIN' || r === 'COLABORADOR'));
 
   const sociosOrdenados = useMemo(() => {
-    if (!ordenarPor || !orden) {
-      return [...socios].sort((a, b) => {
-        const timeA = a.creadoEn ? new Date(a.creadoEn).getTime() : 0;
-        const timeB = b.creadoEn ? new Date(b.creadoEn).getTime() : 0;
-        return timeB - timeA;
-      });
-    }
+    // El orden por defecto (morosos primero) lo resuelve el backend sobre
+    // todas las páginas. Reordenar acá solo la página visible lo deshacía.
+    if (!ordenarPor || !orden) return socios;
 
     const copia = [...socios];
     copia.sort((a, b) => {

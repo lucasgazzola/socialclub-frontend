@@ -24,7 +24,7 @@ import type { DisciplinaPublica, PlanSocio } from '@/features/club/types';
 import { useEventos } from '@/features/eventos/hooks/useEventos';
 import type { Evento } from '@/features/eventos/types';
 import { QRCode } from '@/features/entradas/components/QRCode';
-import { ROUTES } from '@/routes/paths';
+import { ROUTES, destinosDeSesion } from '@/routes/paths';
 import { cn } from '@/lib/utils/cn';
 import { SitioHeader } from '../components/SitioHeader';
 import { SitioFooter } from '../components/SitioFooter';
@@ -65,6 +65,36 @@ export function LandingPage() {
 
 /* ─── Hero ──────────────────────────────────────────────────────────────── */
 
+/** Botones de la landing para quien ya tiene sesión. 0008. */
+function EnlacesDeSesion({
+  roles,
+  variante,
+}: {
+  roles: readonly string[];
+  variante: 'hero' | 'cierre';
+}) {
+  const destinos = destinosDeSesion(roles);
+  return destinos.map((destino) => {
+    const principal = destinos.length === 1 || destino.to === ROUTES.miClub;
+    const claro = 'inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-7 font-semibold text-[#0A1A4F] transition-transform hover:-translate-y-0.5';
+    const borde = 'inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/5 px-7 font-medium text-white transition-colors hover:bg-white/10';
+    return (
+      <Link
+        key={destino.to}
+        to={destino.to}
+        className={cn(
+          principal ? claro : borde,
+          variante === 'hero' && 'w-full sm:w-auto',
+          variante === 'hero' && principal && 'text-base shadow-lg shadow-black/20',
+        )}
+      >
+        {destino.etiqueta}
+        {principal && <ArrowRight size={18} aria-hidden />}
+      </Link>
+    );
+  });
+}
+
 function Hero({ numeros }: { numeros?: { socios: number; participantes: number; disciplinas: number; eventosProximos: number } }) {
   const { usuario } = useAuth();
   const datos = numeros
@@ -101,19 +131,23 @@ function Hero({ numeros }: { numeros?: { socios: number; participantes: number; 
           reservá espacios. Todo en un solo lugar.
         </p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            to={usuario ? ROUTES.miClub : ROUTES.hacermeSocio}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-7 text-base font-semibold text-[#0A1A4F] shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5 sm:w-auto"
-          >
-            {usuario ? 'Ir a Mi club' : 'Quiero ser socio'} <ArrowRight size={18} aria-hidden />
-          </Link>
-          {!usuario && (
-            <Link
-              to={ROUTES.login}
-              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-white/25 bg-white/5 px-7 text-base font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/10 sm:w-auto"
-            >
-              Ya soy socio, ingresar
-            </Link>
+          {usuario ? (
+            <EnlacesDeSesion roles={usuario.roles} variante="hero" />
+          ) : (
+            <>
+              <Link
+                to={ROUTES.hacermeSocio}
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-7 text-base font-semibold text-[#0A1A4F] shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5 sm:w-auto"
+              >
+                Quiero ser socio <ArrowRight size={18} aria-hidden />
+              </Link>
+              <Link
+                to={ROUTES.login}
+                className="inline-flex h-12 w-full items-center justify-center rounded-full border border-white/25 bg-white/5 px-7 text-base font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/10 sm:w-auto"
+              >
+                Ya soy socio, ingresar
+              </Link>
+            </>
           )}
         </div>
       </div>
@@ -470,12 +504,18 @@ function LlamadoFinal() {
           ¿Querés ser parte de <span className="font-semibold">{CLUB.nombreCorto}</span>?
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-slate-300">Asociate hoy y empezá a disfrutar de todos los beneficios del club.</p>
-        <Link
-          to={usuario ? ROUTES.miClub : ROUTES.hacermeSocio}
-          className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-white px-7 font-semibold text-[#0A1A4F] transition-transform hover:-translate-y-0.5"
-        >
-          {usuario ? 'Ir a Mi club' : 'Quiero ser socio'} <ArrowRight size={18} aria-hidden />
-        </Link>
+        {usuario ? (
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <EnlacesDeSesion roles={usuario.roles} variante="cierre" />
+          </div>
+        ) : (
+          <Link
+            to={ROUTES.hacermeSocio}
+            className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-white px-7 font-semibold text-[#0A1A4F] transition-transform hover:-translate-y-0.5"
+          >
+            Quiero ser socio <ArrowRight size={18} aria-hidden />
+          </Link>
+        )}
       </div>
     </section>
   );

@@ -19,7 +19,7 @@ import {
   ventaAbierta,
 } from '@/features/eventos/helpers';
 import { useEventos } from '@/features/eventos/hooks/useEventos';
-import type { Evento } from '@/features/eventos/types';
+import type { EstadoEventoBackend, Evento } from '@/features/eventos/types';
 import { ROUTES } from '@/routes/paths';
 import { PortalEventoDetalleModal } from '../components/PortalModals';
 import {
@@ -46,6 +46,7 @@ export function PortalEventosPage() {
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
   const [ordenar, setOrdenar] = useState<FiltrarEventosParams['ordenar']>('fecha');
+  const [estado, setEstado] = useState<EstadoEventoBackend | ''>('');
 
   const params: FiltrarEventosParams = {
     pagina,
@@ -54,6 +55,7 @@ export function PortalEventosPage() {
     ...(fechaDesde ? { fechaDesde } : {}),
     ...(fechaHasta ? { fechaHasta } : {}),
     ...(ordenar ? { ordenar } : {}),
+    ...(estado ? { estado } : {}),
   };
 
   const { data: paginado, isLoading, isError } = useEventos(params);
@@ -61,13 +63,16 @@ export function PortalEventosPage() {
   const total = paginado?.total ?? 0;
   const eventos = paginado?.items ?? [];
 
-  const tieneFiltrosActivos = Boolean(search || fechaDesde || fechaHasta || ordenar !== 'fecha');
+  const tieneFiltrosActivos = Boolean(
+    search || fechaDesde || fechaHasta || estado || ordenar !== 'fecha',
+  );
 
   function limpiarFiltros() {
     setSearch('');
     setFechaDesde('');
     setFechaHasta('');
     setOrdenar('fecha');
+    setEstado('');
     setPagina(1);
   }
 
@@ -75,11 +80,11 @@ export function PortalEventosPage() {
     <div className="space-y-6">
       <PortalTitleBar
         title="Eventos del club"
-        summary="Explorá torneos, encuentros y actividades con descuento para socios."
+        summary="Los próximos aparecen primero. Podés acotar por estado o por fecha."
       />
 
       <PortalSurface className="p-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="relative">
             <Search
               size={14}
@@ -117,6 +122,22 @@ export function PortalEventosPage() {
               setFechaHasta(e.target.value);
               setPagina(1);
             }}
+          />
+
+          <PortalFieldSelect
+            id="estado-evento"
+            aria-label="Filtrar por estado del evento"
+            value={estado}
+            onChange={(e) => {
+              setEstado(e.target.value as EstadoEventoBackend | '');
+              setPagina(1);
+            }}
+            options={[
+              { value: '', label: 'Todos los estados' },
+              { value: 'PUBLICADO', label: 'Publicados' },
+              { value: 'FINALIZADO', label: 'Finalizados' },
+              { value: 'CANCELADO', label: 'Cancelados' },
+            ]}
           />
 
           <div className="flex items-center gap-2">

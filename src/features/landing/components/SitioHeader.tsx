@@ -4,7 +4,7 @@ import { LayoutDashboard, Menu, X } from 'lucide-react';
 import { ClubLogo } from '@/components/ui';
 import { CLUB } from '@/config/club';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ROUTES, esDeGestion } from '@/routes/paths';
+import { ROUTES, destinosDeSesion } from '@/routes/paths';
 import { cn } from '@/lib/utils/cn';
 
 const ENLACES = [
@@ -22,8 +22,8 @@ interface SitioHeaderProps {
 }
 
 /**
- * TASK-60 — Encabezado del sitio público del club. Con sesión ofrece ir a
- * Mi club (y al panel si tiene un rol de gestión); sin sesión, ingresar o asociarse.
+ * Encabezado del sitio público. Con sesión ofrece la zona que le toca
+ * (las dos, solo si gestiona y es socio). Sin sesión, ingresar o asociarse.
  */
 export function SitioHeader({ variante = 'oscuro', conSecciones = true }: SitioHeaderProps) {
   const { usuario } = useAuth();
@@ -39,6 +39,7 @@ export function SitioHeader({ variante = 'oscuro', conSecciones = true }: SitioH
   }, []);
 
   const claseTexto = oscuro ? 'text-white' : 'text-slate-900';
+  const destinos = usuario ? destinosDeSesion(usuario.roles) : [];
 
   return (
     <header
@@ -81,28 +82,30 @@ export function SitioHeader({ variante = 'oscuro', conSecciones = true }: SitioH
 
         <div className="flex items-center gap-2">
           {usuario ? (
-            <>
-              {esDeGestion(usuario.roles) && (
+            destinos.map((destino) => {
+              const principal = destinos.length === 1 || destino.to === ROUTES.miClub;
+              return (
                 <Link
-                  to={ROUTES.dashboard}
+                  key={destino.to}
+                  to={destino.to}
                   className={cn(
-                    'hidden h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors sm:inline-flex',
-                    oscuro ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100',
+                    'inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm transition-colors',
+                    principal
+                      ? cn(
+                          'px-5 font-semibold transition-transform hover:-translate-y-0.5',
+                          oscuro ? 'bg-white text-[#0A1A4F]' : 'bg-brand-600 text-white',
+                        )
+                      : cn(
+                          'font-medium',
+                          oscuro ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100',
+                        ),
                   )}
                 >
-                  <LayoutDashboard size={15} aria-hidden /> Panel
+                  {destino.to === ROUTES.dashboard && <LayoutDashboard size={15} aria-hidden />}
+                  {destino.to === ROUTES.dashboard ? 'Panel' : 'Mi club'}
                 </Link>
-              )}
-              <Link
-                to={ROUTES.miClub}
-                className={cn(
-                  'inline-flex h-10 items-center rounded-full px-5 text-sm font-semibold transition-transform hover:-translate-y-0.5',
-                  oscuro ? 'bg-white text-[#0A1A4F]' : 'bg-brand-600 text-white',
-                )}
-              >
-                Mi club
-              </Link>
-            </>
+              );
+            })
           ) : (
             <>
               <Link

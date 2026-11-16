@@ -213,4 +213,18 @@ describe('EventosPage', () => {
       }),
     );
   });
+
+  it('segmenta el listado por estado del evento', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.selectOptions(screen.getByLabelText('Filtrar por estado del evento'), 'PUBLICADO');
+
+    expect(useEventos).toHaveBeenCalledWith(
+      expect.objectContaining({
+        estado: 'PUBLICADO',
+        pagina: 1,
+      }),
+    );
+  });
 });

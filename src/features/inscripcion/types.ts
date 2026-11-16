@@ -159,11 +159,15 @@ export interface ParticipanteConDisciplinas {
 /** Estado de la participación de un participante en una disciplina. */
 export type EstadoInscripcionFiltro = 'INSCRIPTO' | 'BAJA';
 
+/** Estado documental del listado, más el documento del titular que espera revisión. */
+export type EstadoDocumentalFiltro = 'PENDIENTE_APROBACION' | EstadoHabilitacion;
+
 /** Parámetros del listado de participantes (US-08: búsqueda, filtros + paginación). */
 export interface InscripcionesQuery {
   busqueda?: string;
   disciplinaId?: number;
   estado?: EstadoInscripcionFiltro;
+  estadoDocumental?: EstadoDocumentalFiltro;
   pagina?: number;
   porPagina?: number;
   ordenarPor?: string;

@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { ROUTES, esDeGestion } from '@/routes/paths';
+import { ROUTES, cruzaZonas } from '@/routes/paths';
 import { CLUB } from '@/config/club';
 import { cn } from '@/lib/utils/cn';
 import { PortalBrandLogo } from './PortalUI';
@@ -117,10 +117,10 @@ export function PortalSocioLayout() {
     await logout();
   }
 
-  // TASK-60: quien además tiene un rol de gestión puede ir al panel; todos, al sitio del club.
+  // 0008: el panel solo aparece si esta persona también gestiona y es socia.
   const linksCuenta: AsideNavItem[] = [
     ...PORTAL_ACCOUNT_LINKS,
-    ...(esDeGestion(usuario?.roles)
+    ...(cruzaZonas(usuario?.roles)
       ? [{ to: ROUTES.dashboard, label: 'Panel de gestión', icon: LayoutDashboard }]
       : []),
     { to: ROUTES.inicio, label: 'Sitio del club', icon: Globe },

@@ -23,6 +23,7 @@ export const sociosApi = {
         busqueda: query.busqueda || undefined,
         categoriaId: query.categoriaId || undefined,
         estado: query.estado || undefined,
+        estadoCuenta: query.estadoCuenta || undefined,
         pagina: query.pagina,
         porPagina: query.porPagina,
         ordenarPor: query.ordenarPor || undefined,

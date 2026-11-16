@@ -3,7 +3,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { Filter, Plus, Search, UserPlus } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner, StatusTabs, TablePagination, TableExportMenu } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import type { EstadoSocioFiltro, Socio } from '../types';
+import type { EstadoCuentaSocioFiltro, EstadoSocioFiltro, Socio } from '../types';
 import { sociosApi } from '../api/socios.api';
 import { formatearDni } from '@/lib/utils/dni';
 import type { ExportColumn } from '@/lib/utils/exportTable';
@@ -33,6 +33,7 @@ export function SociosPage() {
   const [busqueda, setBusqueda] = useState('');
   const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoSocio>('todos');
+  const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuentaSocioFiltro | ''>('');
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
   const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
@@ -89,6 +90,7 @@ export function SociosPage() {
     busqueda: busqueda || undefined,
     categoriaId,
     estado: estadoQuery,
+    estadoCuenta: estadoCuenta || undefined,
     pagina,
     porPagina,
     ordenarPor,
@@ -160,7 +162,9 @@ export function SociosPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Socios</h1>
-          <p className="mt-1 text-sm text-slate-500">Consultá, creá y editá los socios del club.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Sin un orden de columna, los morosos aparecen primero. Filtrá por cuenta, categoría o estado.
+          </p>
         </div>
 
         {esAdmin && (
@@ -226,6 +230,7 @@ export function SociosPage() {
                 busqueda: busqueda || undefined,
                 categoriaId,
                 estado: estadoQuery,
+                estadoCuenta: estadoCuenta || undefined,
                 pagina: 1,
                 porPagina: 10000,
                 ordenarPor,
@@ -234,6 +239,21 @@ export function SociosPage() {
               return res?.items ?? [];
             }}
           />
+
+          <Select
+            id="estadoCuenta"
+            aria-label="Filtrar por estado de cuenta"
+            value={estadoCuenta}
+            onChange={(e) => {
+              setPagina(1);
+              setEstadoCuenta(e.target.value as EstadoCuentaSocioFiltro | '');
+            }}
+            className="w-full sm:w-44"
+          >
+            <option value="">Toda la cuenta</option>
+            <option value="MOROSO">Morosos</option>
+            <option value="AL_DIA">Al día</option>
+          </Select>
 
           <Select
             id="categoria"
