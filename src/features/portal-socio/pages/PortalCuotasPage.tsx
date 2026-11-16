@@ -228,8 +228,16 @@ export function PortalCuotasPage() {
         {cuotasPendientes.length === 0 ? (
           <PortalEmptyState
             icon={<CheckCircle2 size={20} />}
-            title="Estás al día con tus cuotas"
-            description="No registrás períodos pendientes de pago. Tu membresía y acceso están completamente habilitados."
+            title={
+              cuotasDeportivas.length > 0
+                ? 'Estás al día con la cuota social'
+                : 'Estás al día con tus cuotas'
+            }
+            description={
+              cuotasDeportivas.length > 0
+                ? 'No debés meses de la cuota social. Abajo están las cuotas deportivas pendientes.'
+                : 'No registrás períodos pendientes de pago. Tu membresía y acceso están completamente habilitados.'
+            }
           />
         ) : (
           <div className="space-y-3">
