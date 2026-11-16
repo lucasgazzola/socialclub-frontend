@@ -76,6 +76,18 @@ describe('PortalSocioLayout', () => {
     expect(screen.queryByRole('link', { name: /Panel de gestión/i })).not.toBeInTheDocument();
   });
 
+  it('DT-62 · muestra «Mis cuotas» a quien participa en una disciplina sin ser socio', () => {
+    const sinMembresia = { id: 3, dni: '45111222', membresias: [] };
+    mockUsuario = { ...(mockUsuario as object), roles: [], persona: { ...sinMembresia, tieneInscripciones: true } };
+    const participante = renderWithProviders(<PortalSocioLayout />);
+    expect(screen.getByRole('link', { name: /Mis cuotas/i })).toHaveAttribute('href', ROUTES.misCuotas);
+    participante.unmount();
+
+    mockUsuario = { ...(mockUsuario as object), persona: { ...sinMembresia, tieneInscripciones: false } };
+    renderWithProviders(<PortalSocioLayout />);
+    expect(screen.queryByRole('link', { name: /Mis cuotas/i })).not.toBeInTheDocument();
+  });
+
   it('permite cerrar sesión desde el botón inferior del aside', async () => {
     const user = userEvent.setup();
     renderWithProviders(<PortalSocioLayout />);

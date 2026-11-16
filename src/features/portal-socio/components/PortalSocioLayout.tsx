@@ -30,13 +30,14 @@ interface AsideNavItem {
   label: string;
   icon: LucideIcon;
   soloSinMembresia?: boolean;
-  soloSocioOExSocio?: boolean;
+  /** DT-62: socio, ex socio o participante de alguna disciplina (tiene cuotas que pagar). */
+  soloConCuotas?: boolean;
   end?: boolean;
 }
 
 const PORTAL_ASIDE_LINKS: AsideNavItem[] = [
   { to: ROUTES.miClub, label: 'Inicio', icon: User, end: true },
-  { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloSocioOExSocio: true },
+  { to: ROUTES.misCuotas, label: 'Mis cuotas', icon: CreditCard, soloConCuotas: true },
   { to: ROUTES.hacermeSocio, label: 'Hacerme socio', icon: UserPlus, soloSinMembresia: true },
   { to: ROUTES.eventos, label: 'Eventos', icon: CalendarDays },
   { to: ROUTES.misEntradas, label: 'Mis entradas', icon: Ticket },
@@ -90,11 +91,12 @@ export function PortalSocioLayout() {
   const esOFueSocio = Boolean(
     usuario?.persona?.membresias && usuario.persona.membresias.length > 0,
   );
+  const tieneCuotas = esOFueSocio || Boolean(usuario?.persona?.tieneInscripciones);
 
   const linksPrincipales = PORTAL_ASIDE_LINKS.filter(
     (item) =>
       (!item.soloSinMembresia || !tieneMembresia) &&
-      (!item.soloSocioOExSocio || esOFueSocio),
+      (!item.soloConCuotas || tieneCuotas),
   );
 
   const nombreCompleto = usuario
