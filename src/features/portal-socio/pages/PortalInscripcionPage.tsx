@@ -1,16 +1,21 @@
 import { useState } from 'react';
-import { CalendarClock, Dumbbell, FileText, Users } from 'lucide-react';
+import { CalendarClock, Dumbbell, FileText, Upload, Users } from 'lucide-react';
 import {
   useCatalogoInscripcion,
   useMisSolicitudesInscripcion,
+  useCancelarSolicitudInscripcion,
+  useSubirDocumentacionSolicitud,
 } from '@/features/inscripcion/hooks/useSolicitarInscripcion';
 import type {
   DisciplinaCatalogo,
   EstadoSolicitudInscripcion,
+  SolicitudInscripcion,
 } from '@/features/inscripcion/types';
 import { PortalSolicitarInscripcionModal } from '../components/PortalModals';
+import { SubirDocumentacionSolicitudModal } from '@/features/inscripcion/components/SubirDocumentacionSolicitudModal';
 import {
   PortalButton,
+  PortalModal,
   PortalEmptyState,
   PortalSegmentedSwitch,
   PortalSpinner,
@@ -45,6 +50,9 @@ export function PortalInscripcionPage() {
   );
   const [disciplinaSeleccionada, setDisciplinaSeleccionada] =
     useState<DisciplinaCatalogo | null>(null);
+  const [solicitudACancelar, setSolicitudACancelar] = useState<number | null>(null);
+  const [solicitudDocumentacion, setSolicitudDocumentacion] =
+    useState<SolicitudInscripcion | null>(null);
 
   const {
     data: catalogo,
@@ -53,6 +61,8 @@ export function PortalInscripcionPage() {
   } = useCatalogoInscripcion();
   const { data: solicitudes = [], isLoading: cargandoSolicitudes } =
     useMisSolicitudesInscripcion();
+  const { cancelar, isPending: cancelando } = useCancelarSolicitudInscripcion();
+  const { subir } = useSubirDocumentacionSolicitud();
 
   const disciplinas = catalogo?.items ?? [];
 
@@ -243,7 +253,7 @@ export function PortalInscripcionPage() {
                   <p className="font-mono text-xs text-slate-400 tabular-nums">{fecha}</p>
                 </div>
 
-                <div className="flex flex-col items-start gap-1.5 sm:items-end">
+                <div className="flex flex-col items-start gap-2 sm:items-end">
                   <PortalTag tone={meta.tone} dot>
                     {meta.label}
                   </PortalTag>
@@ -252,6 +262,30 @@ export function PortalInscripcionPage() {
                   ) : s.estado === 'PENDIENTE' ? (
                     <span className="text-xs text-slate-400">En revisión por secretaría</span>
                   ) : null}
+                  {['PENDIENTE', 'PENDIENTE_DOCUMENTACION', 'APROBADA'].includes(s.estado) && (
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
+                      {['PENDIENTE', 'PENDIENTE_DOCUMENTACION'].includes(s.estado) && (
+                        <PortalButton
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setSolicitudDocumentacion(s)}
+                          data-testid={`btn-documentacion-solicitud-${s.id}`}
+                        >
+                          <Upload size={14} aria-hidden="true" />
+                          Documentación
+                        </PortalButton>
+                      )}
+                      <PortalButton
+                        size="sm"
+                        variant="danger"
+                        onClick={() => setSolicitudACancelar(s.id)}
+                        disabled={cancelando}
+                        data-testid={`btn-cancelar-solicitud-${s.id}`}
+                      >
+                        Cancelar
+                      </PortalButton>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -267,6 +301,61 @@ export function PortalInscripcionPage() {
           esSocio={catalogo?.esSocio}
         />
       )}
+
+      <PortalModal
+        open={solicitudACancelar !== null}
+        onClose={cancelando ? () => {} : () => setSolicitudACancelar(null)}
+        title="¿Cancelar solicitud de inscripción?"
+        description="Si la solicitud ya está aprobada, también se dará de baja la inscripción vigente."
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-300" data-testid="modal-confirmar-cancelacion">
+            Esta acción no se puede deshacer.
+          </p>
+          <div className="flex justify-end gap-2">
+            <PortalButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setSolicitudACancelar(null)}
+              disabled={cancelando}
+            >
+              Volver
+            </PortalButton>
+            <PortalButton
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                if (solicitudACancelar === null) return;
+                void cancelar(solicitudACancelar).then(() => setSolicitudACancelar(null));
+              }}
+              disabled={cancelando}
+              data-testid="confirmar-cancelacion-solicitud"
+            >
+              {cancelando ? 'Cancelando…' : 'Sí, cancelar'}
+            </PortalButton>
+          </div>
+        </div>
+      </PortalModal>
+
+      <SubirDocumentacionSolicitudModal
+        solicitud={solicitudDocumentacion}
+        onClose={() => setSolicitudDocumentacion(null)}
+        onSubmit={(solicitudId, payload, archivo) => subir({ solicitudId, payload, archivo })}
+        documentos={
+          solicitudDocumentacion
+            ? (() => {
+                const disciplina = disciplinas.find(
+                  (item) => item.id === solicitudDocumentacion.disciplinaId,
+                );
+                const categoria = disciplina?.categorias.find(
+                  (item) => item.id === solicitudDocumentacion.categoriaDisciplinaId,
+                );
+                return categoria?.documentosObligatorios ?? disciplina?.documentosObligatorios ?? [];
+              })()
+            : []
+        }
+      />
     </div>
   );
 }

@@ -14,6 +14,8 @@ import {
   obtenerCatalogoInscripcion,
   solicitarInscripcion,
   obtenerMisSolicitudesInscripcion,
+  cancelarSolicitudInscripcion,
+  subirDocumentacionSolicitud,
 } from './inscripcion.api';
 
 vi.mock('@/lib/api/client', () => ({
@@ -147,5 +149,32 @@ describe('inscripcion.api', () => {
       params: { estado: 'RECHAZADA' },
     });
     expect(res).toEqual(listaMock);
+  });
+
+  it('cancelarSolicitudInscripcion() envía patch al endpoint de cancelación', async () => {
+    const solicitudMock = { id: 5, estado: 'CANCELADA' };
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: solicitudMock });
+
+    const res = await cancelarSolicitudInscripcion(5);
+
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/solicitudes/5/cancelar');
+    expect(res).toEqual(solicitudMock);
+  });
+
+  it('subirDocumentacionSolicitud() envía multipart al endpoint de documentación', async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { id: 8 } });
+    const archivo = new File(['contenido'], 'dni.pdf', { type: 'application/pdf' });
+
+    await subirDocumentacionSolicitud(5, {
+      tipoDocumento: 'DNI',
+      fechaVencimiento: '2030-01-01',
+    }, archivo);
+
+    const [url, form, config] = vi.mocked(apiClient.post).mock.calls[0];
+    expect(url).toBe('/inscripcion/solicitudes/5/documentacion');
+    expect((form as FormData).get('tipoDocumento')).toBe('DNI');
+    expect((form as FormData).get('fechaVencimiento')).toBe('2030-01-01');
+    expect((form as FormData).get('archivo')).toBe(archivo);
+    expect(config).toEqual({ headers: { 'Content-Type': 'multipart/form-data' } });
   });
 });
