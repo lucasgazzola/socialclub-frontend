@@ -70,6 +70,12 @@ const navSections: NavSection[] = [
         icon: UserRound,
         roles: ['ADMIN', 'COLABORADOR', 'DELEGADO'],
       },
+      {
+        to: ROUTES.solicitudesInscripcion,
+        label: 'Solicitudes de inscripción',
+        icon: ClipboardList,
+        roles: ['ADMIN', 'DELEGADO'],
+      },
       { to: ROUTES.disciplinas, label: 'Disciplinas', icon: Dumbbell, roles: ['ADMIN', 'COLABORADOR'] },
     ],
   },
@@ -159,6 +165,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.auditoria]: 'Auditoría de Operaciones',
   [ROUTES.tareas]: 'Tareas Automáticas',
   [ROUTES.participantes]: 'Participantes de Disciplinas',
+  [ROUTES.solicitudesInscripcion]: 'Solicitudes de Inscripción',
 };
 
 /**

@@ -13,7 +13,12 @@
  */
 
 import type { GeneroDisciplina, Restricciones, TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
-import type { EstadoDeInscripcion, EstadoDocumentalInscripcion, EstadoHabilitacion } from '@/features/documentacion/types';
+import type {
+  EstadoDeDocumento,
+  EstadoDeInscripcion,
+  EstadoDocumentalInscripcion,
+  EstadoHabilitacion,
+} from '@/features/documentacion/types';
 
 // ── Persona / participante ──────────────────────────────────────────
 
@@ -284,4 +289,53 @@ export interface SolicitudInscripcion {
   disciplina: { id: number; nombre: string; descripcion?: string | null };
   categoriaDisciplina?: { id: number; nombre: string } | null;
   persona?: { id: number; nombre: string; apellido: string; dni: string };
+}
+
+// ── US-66: Evaluación administrativa de solicitudes de inscripción ───
+
+export interface DocumentacionSolicitudResumen {
+  estado: EstadoHabilitacion;
+  completa: boolean;
+  requiereDocumentacion: boolean;
+  documentos: EstadoDeDocumento[];
+  faltantes: string[];
+  motivos: string[];
+}
+
+export interface SolicitudInscripcionAdmin extends SolicitudInscripcion {
+  persona: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    dni: string;
+    email?: string | null;
+    telefono?: string | null;
+    activo?: boolean;
+  };
+  disciplina: {
+    id: number;
+    nombre: string;
+    descripcion?: string | null;
+    solicitaDocumentacion?: boolean;
+  };
+  revisadoPor?: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    email: string;
+  } | null;
+  documentacion: DocumentacionSolicitudResumen;
+}
+
+export interface SolicitudesInscripcionQuery {
+  estado?: EstadoSolicitudInscripcion;
+  disciplinaId?: number;
+  busqueda?: string;
+}
+
+export interface AprobarSolicitudInscripcionResultado {
+  solicitud: SolicitudInscripcion;
+  inscripcion: Inscripcion;
+  estadoDocumental: EstadoDeInscripcion | null;
+  cuotaGenerada?: CuotaGeneradaInfo;
 }
