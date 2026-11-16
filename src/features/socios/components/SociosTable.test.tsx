@@ -237,7 +237,7 @@ describe('SociosTable Component', () => {
     expect(screen.getByRole('button', { name: /Dar de alta|Re-asociar/i })).toBeInTheDocument();
   });
 
-  it('ordena los socios por fecha de creación descendente (más recientes primero)', () => {
+  it('respeta el orden que mandó el listado cuando no hay una columna elegida', () => {
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       usuario: { roles: ['ADMIN'] },
     } as unknown as ReturnType<typeof authHook.useAuth>);
@@ -262,8 +262,8 @@ describe('SociosTable Component', () => {
     renderWithProviders(<SociosTable socios={sociosDesordenados} />);
 
     const rows = screen.getAllByRole('row');
-    expect(rows[1]).toHaveTextContent('Reciente');
-    expect(rows[2]).toHaveTextContent('Antiguo');
+    expect(rows[1]).toHaveTextContent('Antiguo');
+    expect(rows[2]).toHaveTextContent('Reciente');
   });
 
   it('dispara onOrdenar con el campo correspondiente al hacer clic en los encabezados', () => {

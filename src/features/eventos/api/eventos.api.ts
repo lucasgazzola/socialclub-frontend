@@ -1,14 +1,14 @@
 import { apiClient } from '@/lib/api/client';
 import { localAInstante } from '@/lib/utils/fecha';
-import type { Evento, CrearEventoFormData, EventosPaginados } from '../types';
+import type { EstadoEventoBackend, Evento, CrearEventoFormData, EventosPaginados } from '../types';
 
 export interface FiltrarEventosParams {
   search?: string;
   soloDisponibles?: boolean;
-  incluirBorradores?: boolean;
   ordenar?: 'nombre' | 'reciente' | 'fecha';
   fechaDesde?: string;
   fechaHasta?: string;
+  estado?: EstadoEventoBackend;
   pagina?: number;
   porPagina?: number;
 }
@@ -19,10 +19,10 @@ export const eventosApi = {
       params: {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.soloDisponibles ? { soloDisponibles: 'true' } : {}),
-        ...(params?.incluirBorradores ? { incluirBorradores: 'true' } : {}),
         ...(params?.ordenar ? { ordenar: params.ordenar } : {}),
         ...(params?.fechaDesde ? { fechaDesde: params.fechaDesde } : {}),
         ...(params?.fechaHasta ? { fechaHasta: params.fechaHasta } : {}),
+        ...(params?.estado ? { estado: params.estado } : {}),
         ...(params?.pagina ? { pagina: params.pagina } : {}),
         ...(params?.porPagina ? { porPagina: params.porPagina } : {}),
       },

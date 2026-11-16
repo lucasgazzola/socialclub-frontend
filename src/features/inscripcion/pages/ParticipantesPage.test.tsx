@@ -239,4 +239,20 @@ describe('US-08 · ParticipantesPage', () => {
     expect(screen.getByRole('tab', { name: /^Inscriptos/i })).toHaveTextContent('2');
     expect(screen.getByRole('tab', { name: /^Baja/i })).toHaveTextContent('1');
   });
+
+  it('filtra por estado de documentación', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+
+    await user.selectOptions(
+      screen.getByLabelText('Filtrar por estado de documentación'),
+      'PENDIENTE_APROBACION',
+    );
+
+    await waitFor(() => {
+      expect(useInscripcionesMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ estadoDocumental: 'PENDIENTE_APROBACION', pagina: 1 }),
+      );
+    });
+  });
 });

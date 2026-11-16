@@ -208,7 +208,10 @@ function TooltipSerieSimple({
   unidad?: string;
 }) {
   if (!active || !payload?.length) return null;
-  const item = payload[0].payload;
+  // La dona tiene un anillo de fondo ({ valor: 1 }) que se ve en la separación
+  // entre sectores. Ese sector no trae porcentaje: si el tooltip lo toma, no crashear.
+  const item = payload.find((entry) => typeof entry.payload?.porcentaje === 'number')?.payload;
+  if (!item) return null;
   return (
     <div className="rounded-xl border border-slate-200/90 bg-white/95 px-3.5 py-2.5 text-xs shadow-xl backdrop-blur-xs">
       <div className="flex items-center gap-2 font-semibold text-slate-800">
@@ -617,6 +620,8 @@ export function DashboardGraficos({ metricas }: DashboardGraficosProps) {
                       fill="#f1f5f9"
                       stroke="none"
                       isAnimationActive={false}
+                      tooltipType="none"
+                      pointerEvents="none"
                     />
                     <Pie
                       data={segmentosDonaMorosidad}
@@ -852,6 +857,8 @@ export function DashboardGraficos({ metricas }: DashboardGraficosProps) {
                       fill="#f1f5f9"
                       stroke="none"
                       isAnimationActive={false}
+                      tooltipType="none"
+                      pointerEvents="none"
                     />
                     <Pie
                       data={segmentosComposicion}

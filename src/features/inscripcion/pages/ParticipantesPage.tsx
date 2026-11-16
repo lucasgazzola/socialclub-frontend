@@ -5,7 +5,12 @@ import { Button, Input, Modal, Select, Spinner, StatusTabs, TablePagination, Tab
 import { AuthContext } from '@/features/auth/context/auth-context';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
-import type { EstadoInscripcionFiltro, ParticipanteConDisciplinas, ParticipanteEncontrado } from '../types';
+import type {
+  EstadoDocumentalFiltro,
+  EstadoInscripcionFiltro,
+  ParticipanteConDisciplinas,
+  ParticipanteEncontrado,
+} from '../types';
 import { listarInscripciones } from '../api/inscripcion.api';
 import { formatearDni } from '@/lib/utils/dni';
 import type { ExportColumn } from '@/lib/utils/exportTable';
@@ -45,6 +50,7 @@ export function ParticipantesPage() {
   const [busqueda, setBusqueda] = useState('');
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoParticipante>('todos');
+  const [estadoDocumental, setEstadoDocumental] = useState<EstadoDocumentalFiltro | ''>('');
   const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
   const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
@@ -119,6 +125,7 @@ export function ParticipantesPage() {
     busqueda: busqueda || undefined,
     disciplinaId,
     estado: estadoQuery,
+    estadoDocumental: estadoDocumental || undefined,
     pagina,
     porPagina,
     ordenarPor,
@@ -181,7 +188,7 @@ export function ParticipantesPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Participantes</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Buscá participantes y filtrá por disciplina o estado.
+            Los pendientes de aprobación aparecen primero. Filtrá por estado, documentación o disciplina.
           </p>
         </div>
 
@@ -286,6 +293,7 @@ export function ParticipantesPage() {
                 busqueda: busqueda || undefined,
                 disciplinaId,
                 estado: estadoQuery,
+                estadoDocumental: estadoDocumental || undefined,
                 pagina: 1,
                 porPagina: 10000,
                 ordenarPor,
@@ -294,6 +302,23 @@ export function ParticipantesPage() {
               return res?.items ?? [];
             }}
           />
+
+          <Select
+            id="estadoDocumental"
+            aria-label="Filtrar por estado de documentación"
+            value={estadoDocumental}
+            onChange={(e) => {
+              setPagina(1);
+              setEstadoDocumental(e.target.value as EstadoDocumentalFiltro | '');
+            }}
+            className="w-full sm:w-60"
+          >
+            <option value="">Toda la documentación</option>
+            <option value="PENDIENTE_APROBACION">Pendiente de aprobación</option>
+            <option value="PENDIENTE">Pendiente de documentación</option>
+            <option value="BLOQUEADO">Bloqueado</option>
+            <option value="HABILITADO">Habilitado</option>
+          </Select>
 
           <Select
             id="disciplina"

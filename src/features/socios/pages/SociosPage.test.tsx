@@ -212,4 +212,18 @@ describe('SociosPage', () => {
       }),
     );
   });
+
+  it('filtra por estado de cuenta', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SociosPage />);
+
+    await user.selectOptions(screen.getByLabelText('Filtrar por estado de cuenta'), 'MOROSO');
+
+    expect(mockUseSocios).toHaveBeenCalledWith(
+      expect.objectContaining({
+        estadoCuenta: 'MOROSO',
+        pagina: 1,
+      }),
+    );
+  });
 });

@@ -84,6 +84,7 @@ export async function listarInscripciones(
       busqueda: query.busqueda || undefined,
       disciplinaId: query.disciplinaId || undefined,
       estado: query.estado || undefined,
+      estadoDocumental: query.estadoDocumental || undefined,
       pagina: query.pagina,
       porPagina: query.porPagina,
       ordenarPor: query.ordenarPor || undefined,
