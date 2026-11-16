@@ -2,9 +2,15 @@ import { useState } from 'react';
 import { Check, ExternalLink, FileSearch, X } from 'lucide-react';
 import { Button, Modal, ModalActions, Spinner } from '@/components/ui';
 import { env } from '@/config/env';
+import { etiquetaTipoDocumento } from '@/features/disciplinas/types';
 import { isoADisplay } from '@/lib/utils/fecha';
 import { usePendientesRevision, useRevisarDocumento } from '../hooks/useDocumentacion';
 import type { DocumentoPendienteRevision } from '../types';
+
+/** El nombre del catálogo. `tipo` es una descripción libre y en el padrón quedó el enum. */
+function nombreDocumento(doc: DocumentoPendienteRevision): string {
+  return doc.tipoDocumento ? etiquetaTipoDocumento(doc.tipoDocumento) : doc.tipo;
+}
 
 /**
  * TASK-60 — Documentos que los socios y participantes subieron desde Mi club y
@@ -81,7 +87,7 @@ export function DocumentosParaRevisar() {
                       {doc.persona.inscripciones.map((i) => i.disciplina.nombre).join(', ') || '—'}
                     </td>
                     <td className="px-5 py-3 text-slate-600">
-                      {doc.tipo}
+                      {nombreDocumento(doc)}
                       {doc.archivoNombre && (
                         <a
                           href={`${env.apiUrl}/documentacion/${doc.id}/archivo`}
@@ -104,7 +110,7 @@ export function DocumentosParaRevisar() {
                           size="sm"
                           disabled={revisar.isPending}
                           onClick={() => revisar.mutate({ id: doc.id, aprobar: true })}
-                          aria-label={`Aprobar ${doc.tipo} de ${doc.persona.nombre} ${doc.persona.apellido}`}
+                          aria-label={`Aprobar ${nombreDocumento(doc)} de ${doc.persona.nombre} ${doc.persona.apellido}`}
                         >
                           <Check size={14} /> Aprobar
                         </Button>
@@ -113,7 +119,7 @@ export function DocumentosParaRevisar() {
                           size="sm"
                           disabled={revisar.isPending}
                           onClick={() => setRechazando(doc)}
-                          aria-label={`Rechazar ${doc.tipo} de ${doc.persona.nombre} ${doc.persona.apellido}`}
+                          aria-label={`Rechazar ${nombreDocumento(doc)} de ${doc.persona.nombre} ${doc.persona.apellido}`}
                         >
                           <X size={14} /> Rechazar
                         </Button>
@@ -136,7 +142,7 @@ export function DocumentosParaRevisar() {
         title="Rechazar documento"
         description={
           rechazando
-            ? `${rechazando.tipo} de ${rechazando.persona.nombre} ${rechazando.persona.apellido}. Le vamos a avisar por email con el motivo para que lo vuelva a subir.`
+            ? `${nombreDocumento(rechazando)} de ${rechazando.persona.nombre} ${rechazando.persona.apellido}. Le vamos a avisar por email con el motivo para que lo vuelva a subir.`
             : undefined
         }
         icon={<X size={16} />}

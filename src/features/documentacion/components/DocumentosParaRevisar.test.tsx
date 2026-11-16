@@ -14,7 +14,7 @@ vi.mock('../hooks/useDocumentacion', () => ({
 
 const pendiente = {
   id: 50,
-  tipo: 'Certificado médico de aptitud física',
+  tipo: 'CERTIFICADO_MEDICO_APTITUD_FISICA',
   tipoDocumento: 'CERTIFICADO_MEDICO_APTITUD_FISICA',
   fechaVencimiento: '2027-03-01T00:00:00.000Z',
   personaId: 10,
@@ -38,6 +38,8 @@ describe('TASK-60 · Documentación para revisar (panel)', () => {
     mockPendientes.mockReturnValue({ data: [pendiente], isLoading: false, isError: false });
     renderWithProviders(<DocumentosParaRevisar />);
 
+    expect(screen.getByText('Certificado médico de aptitud física')).toBeInTheDocument();
+    expect(screen.queryByText('CERTIFICADO_MEDICO_APTITUD_FISICA')).not.toBeInTheDocument();
     expect(screen.getByText('Vázquez, Lucía')).toBeInTheDocument();
     expect(screen.getByText('Natación')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver archivo/ })).toHaveAttribute('href', expect.stringContaining('/documentacion/50/archivo'));
