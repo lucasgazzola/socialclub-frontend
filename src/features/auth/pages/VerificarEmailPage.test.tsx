@@ -54,10 +54,7 @@ describe('VerificarEmailPage (DT-54)', () => {
       confirmarPassword: 'Nueva123!',
     });
     expect(await screen.findByRole('status')).toHaveTextContent(/tu cuenta quedó activa/i);
-    expect(screen.getByRole('link', { name: /ir a iniciar sesión/i })).toHaveAttribute(
-      'href',
-      '/login',
-    );
+    expect(screen.getByRole('link', { name: /ir a iniciar sesión/i })).toHaveAttribute('href', '/login');
   });
 
   it('valida la contraseña antes de enviarla', async () => {

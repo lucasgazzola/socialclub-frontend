@@ -7,6 +7,7 @@ import { crearSocioFormSchema, type SocioFormData } from '../schemas';
 import { mismoEmail } from '@/lib/utils/email';
 import { ROUTES } from '@/routes/paths';
 import { useCategorias } from '../hooks/useCategorias';
+import { GENERO_DISCIPLINA_LABELS, type GeneroDisciplina } from '@/features/disciplinas/types';
 
 interface SocioFormProps {
   defaultValues?: SocioFormData;
@@ -23,6 +24,7 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
 
   // DT-54: en la edición se compara contra el email que ya tenía.
   const emailOriginal = defaultValues?.email;
+  const esAlta = !defaultValues;
   const {
     register,
     control,
@@ -30,12 +32,11 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
     watch,
     formState: { errors, isSubmitting },
   } = useForm<SocioFormData>({
-    resolver: zodResolver(crearSocioFormSchema(emailOriginal)),
+    resolver: zodResolver(crearSocioFormSchema(emailOriginal, esAlta)),
     defaultValues,
   });
   const emailActual = watch('email');
   // En el alta se pide siempre; en la edición, solo si cambia el email.
-  const esAlta = !defaultValues;
   const pideConfirmacion = esAlta || (!!emailActual?.trim() && !mismoEmail(emailActual, emailOriginal));
 
   const onFormSubmit = handleSubmit(async (values) => {
@@ -57,21 +58,21 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
           id="nombre"
-          label="Nombre"
+          label="Nombre *"
           placeholder="Ej: Juan"
           error={errors.nombre?.message}
           {...register('nombre')}
         />
         <Input
           id="apellido"
-          label="Apellido"
+          label="Apellido *"
           placeholder="Ej: Pérez"
           error={errors.apellido?.message}
           {...register('apellido')}
         />
         <Input
           id="dni"
-          label="DNI"
+          label="DNI *"
           placeholder="Ej: 12345678"
           error={errors.dni?.message}
           {...register('dni')}
@@ -82,7 +83,7 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
           render={({ field }) => (
             <DateInput
               id="fechaNacimiento"
-              label="Fecha de nacimiento"
+              label="Fecha de nacimiento *"
               error={errors.fechaNacimiento?.message}
               value={field.value}
               onChange={field.onChange}
@@ -93,7 +94,7 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
         />
         <Input
           id="email"
-          label="Email"
+          label="Email *"
           type="email"
           placeholder="ejemplo@correo.com"
           error={errors.email?.message}
@@ -102,7 +103,7 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
         {pideConfirmacion && (
           <Input
             id="confirmarEmail"
-            label="Repetí el email"
+            label="Repetí el email *"
             type="email"
             autoComplete="off"
             error={errors.confirmarEmail?.message}
@@ -111,15 +112,35 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: So
         )}
         <Input
           id="telefono"
-          label="Teléfono"
+          label="Teléfono *"
           placeholder="Ej: 351 123 4567"
           error={errors.telefono?.message}
           {...register('telefono')}
         />
 
+        <div>
+          <label htmlFor="genero" className="mb-1 block text-sm font-medium text-slate-700">
+            Género *
+          </label>
+          <Select
+            id="genero"
+            {...register('genero', {
+              setValueAs: (value) => (value === '' ? undefined : (value as GeneroDisciplina)),
+            })}
+          >
+            <option value="">Seleccioná un género</option>
+            {(Object.keys(GENERO_DISCIPLINA_LABELS) as GeneroDisciplina[]).map((genero) => (
+              <option key={genero} value={genero}>
+                {GENERO_DISCIPLINA_LABELS[genero]}
+              </option>
+            ))}
+          </Select>
+          {errors.genero && <p className="mt-1 text-xs text-red-600">{errors.genero.message}</p>}
+        </div>
+
         <div className="w-full sm:col-span-2">
           <label htmlFor="categoriaId" className="mb-1 block text-sm font-medium text-slate-700">
-            Categoría de socio
+            Categoría de socio *
           </label>
           <Select
             id="categoriaId"

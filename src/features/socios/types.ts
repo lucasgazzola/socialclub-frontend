@@ -1,4 +1,5 @@
 import type { SocioFormData } from './schemas';
+import type { GeneroDisciplina } from '@/features/disciplinas/types';
 
 export type { SocioFormData };
 
@@ -16,6 +17,7 @@ export interface Socio {
   email?: string | null;
   telefono?: string | null;
   fechaNacimiento?: string | null;
+  genero?: GeneroDisciplina | null;
   activo: boolean;
   categoriaId?: number | null;
   categoria?: CategoriaSocio | null;
@@ -49,6 +51,7 @@ export function socioToFormData(socio: Socio): SocioFormData {
     apellido: socio.apellido,
     dni: socio.dni,
     fechaNacimiento: socio.fechaNacimiento ?? undefined,
+    genero: socio.genero ?? undefined,
     email: socio.email ?? undefined,
     telefono: socio.telefono ?? undefined,
     categoriaId: socio.categoriaId ?? undefined,
