@@ -21,6 +21,7 @@ import type {
   HabilitacionExcepcional,
 } from '@/features/documentacion/types';
 import type { Paginated } from '@/types/api';
+import type { TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
 
 export async function buscarParticipantePorDni(dni: string): Promise<ParticipanteEncontrado> {
   const { data } = await apiClient.get<ParticipanteEncontrado>(`/personas/dni/${dni}`);
@@ -157,6 +158,33 @@ export async function obtenerMisSolicitudesInscripcion(
   const { data } = await apiClient.get<SolicitudInscripcion[]>(
     '/inscripcion/mis-solicitudes',
     estado ? { params: { estado } } : undefined,
+  );
+  return data;
+}
+
+/** US-65: cancelar una solicitud propia pendiente o aprobada vigente. */
+export async function cancelarSolicitudInscripcion(
+  solicitudId: number,
+): Promise<SolicitudInscripcion> {
+  const { data } = await apiClient.patch<SolicitudInscripcion>(
+    `/inscripcion/solicitudes/${solicitudId}/cancelar`,
+  );
+  return data;
+}
+
+export async function subirDocumentacionSolicitud(
+  solicitudId: number,
+  payload: { tipoDocumento: TipoDocumentacionDisciplina; fechaVencimiento?: string },
+  archivo: File,
+) {
+  const form = new FormData();
+  form.append('tipoDocumento', payload.tipoDocumento);
+  if (payload.fechaVencimiento) form.append('fechaVencimiento', payload.fechaVencimiento);
+  form.append('archivo', archivo);
+  const { data } = await apiClient.post(
+    `/inscripcion/solicitudes/${solicitudId}/documentacion`,
+    form,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
   );
   return data;
 }

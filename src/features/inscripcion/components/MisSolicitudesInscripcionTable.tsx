@@ -1,8 +1,14 @@
 import { useState, useMemo } from 'react';
-import { CalendarClock, Filter, AlertCircle, FileText } from 'lucide-react';
-import { Select } from '@/components/ui';
+import { CalendarClock, Filter, AlertCircle, FileText, Ban, Upload } from 'lucide-react';
+import { Button, ConfirmDialog, Select } from '@/components/ui';
 import { EstadoSolicitudBadge } from './EstadoSolicitudBadge';
-import type { SolicitudInscripcion, EstadoSolicitudInscripcion } from '../types';
+import type {
+  DocumentoRequeridoCatalogo,
+  SolicitudInscripcion,
+  EstadoSolicitudInscripcion,
+} from '../types';
+import type { TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
+import { SubirDocumentacionSolicitudModal } from './SubirDocumentacionSolicitudModal';
 
 type FiltroEstado = 'TODOS' | EstadoSolicitudInscripcion;
 
@@ -10,6 +16,16 @@ interface Props {
   solicitudes: SolicitudInscripcion[];
   filtroEstado?: FiltroEstado;
   onCambiarFiltro?: (estado: FiltroEstado) => void;
+  onCancelar?: (solicitudId: number) => Promise<unknown>;
+  cancelando?: boolean;
+  onSubirDocumentacion?: (
+    solicitudId: number,
+    payload: { tipoDocumento: TipoDocumentacionDisciplina; fechaVencimiento?: string },
+    archivo: File,
+  ) => Promise<unknown>;
+  obtenerDocumentosSolicitud?: (
+    solicitud: SolicitudInscripcion,
+  ) => DocumentoRequeridoCatalogo[];
 }
 
 const OPCIONES_FILTRO: { value: FiltroEstado; label: string }[] = [
@@ -25,8 +41,14 @@ export function MisSolicitudesInscripcionTable({
   solicitudes,
   filtroEstado: filtroProp,
   onCambiarFiltro,
+  onCancelar,
+  cancelando = false,
+  onSubirDocumentacion,
+  obtenerDocumentosSolicitud,
 }: Props) {
   const [filtroLocal, setFiltroLocal] = useState<FiltroEstado>('TODOS');
+  const [solicitudAConfirmar, setSolicitudAConfirmar] = useState<SolicitudInscripcion | null>(null);
+  const [solicitudDocumentacion, setSolicitudDocumentacion] = useState<SolicitudInscripcion | null>(null);
 
   const filtroActual = filtroProp ?? filtroLocal;
   const setFiltro = (nuevo: FiltroEstado) => {
@@ -101,6 +123,7 @@ export function MisSolicitudesInscripcionTable({
                 <th scope="col" className="px-4 py-3">Fecha y hora</th>
                 <th scope="col" className="px-4 py-3">Estado</th>
                 <th scope="col" className="px-4 py-3">Detalle / Motivo</th>
+                {onCancelar && <th scope="col" className="px-4 py-3 text-right">Acciones</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -147,7 +170,7 @@ export function MisSolicitudesInscripcionTable({
                           </div>
                         </div>
                       )}
-                      {s.estado === 'PENDIENTE' && (
+                      {['PENDIENTE', 'PENDIENTE_DOCUMENTACION', 'APROBADA'].includes(s.estado) && (
                         <span className="text-slate-500">En revisión por la administración</span>
                       )}
                       {s.estado === 'PENDIENTE_DOCUMENTACION' && (
@@ -163,12 +186,76 @@ export function MisSolicitudesInscripcionTable({
                         <span className="text-slate-400">Solicitud dada de baja o cancelada</span>
                       )}
                     </td>
+                    {onCancelar && (
+                      <td className="px-4 py-3 text-right">
+                        {['PENDIENTE', 'PENDIENTE_DOCUMENTACION', 'APROBADA'].includes(s.estado) && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                            data-testid="btn-cancelar-solicitud"
+                            onClick={() => setSolicitudAConfirmar(s)}
+                            disabled={cancelando}
+                          >
+                            <Ban size={14} aria-hidden="true" />
+                            Cancelar
+                          </Button>
+                        )}
+                        {onSubirDocumentacion &&
+                          ['PENDIENTE', 'PENDIENTE_DOCUMENTACION'].includes(s.estado) && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="ml-2"
+                              data-testid="btn-subir-documentacion-solicitud"
+                              onClick={() => setSolicitudDocumentacion(s)}
+                            >
+                              <Upload size={14} aria-hidden="true" />
+                              Documentación
+                            </Button>
+                          )}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+      )}
+      {onCancelar && (
+        <ConfirmDialog
+          open={solicitudAConfirmar !== null}
+          title="¿Cancelar solicitud de inscripción?"
+          description="La solicitud se cancelará y, si ya estaba aprobada, también se dará de baja la inscripción vigente."
+          confirmLabel="Sí, cancelar solicitud"
+          cancelLabel="Volver"
+          variant="danger"
+          loading={cancelando}
+          onCancel={() => setSolicitudAConfirmar(null)}
+          onConfirm={() => {
+            if (!solicitudAConfirmar) return;
+            void onCancelar(solicitudAConfirmar.id).then(() => setSolicitudAConfirmar(null));
+          }}
+        >
+          <p data-testid="modal-confirmar-cancelacion" className="text-sm text-slate-600">
+            Disciplina: <strong>{solicitudAConfirmar?.disciplina.nombre}</strong>
+          </p>
+        </ConfirmDialog>
+      )}
+      {onSubirDocumentacion && (
+        <SubirDocumentacionSolicitudModal
+          solicitud={solicitudDocumentacion}
+          onClose={() => setSolicitudDocumentacion(null)}
+          onSubmit={onSubirDocumentacion}
+          documentos={
+            solicitudDocumentacion && obtenerDocumentosSolicitud
+              ? obtenerDocumentosSolicitud(solicitudDocumentacion)
+              : []
+          }
+        />
       )}
     </div>
   );

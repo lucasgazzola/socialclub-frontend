@@ -159,6 +159,7 @@ export function PortalPerfilPage() {
                   value={persona?.fechaNacimiento?.slice(0, 10) ?? ''}
                   readOnly
                   disabled
+                  className="text-black"
                   hint="La fecha de nacimiento no se puede modificar."
                 />
                 <PortalFieldSelect

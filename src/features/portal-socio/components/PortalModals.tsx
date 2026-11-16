@@ -26,12 +26,16 @@ import {
   ventaAbierta,
 } from '@/features/eventos/helpers';
 import type { Evento } from '@/features/eventos/types';
-import { useSolicitarInscripcion } from '@/features/inscripcion/hooks/useSolicitarInscripcion';
+import {
+  useSolicitarInscripcion,
+  useSubirDocumentacionSolicitud,
+} from '@/features/inscripcion/hooks/useSolicitarInscripcion';
 import {
   solicitarInscripcionSchema,
   type SolicitarInscripcionFormValues,
 } from '@/features/inscripcion/schemas/solicitar-inscripcion.schema';
 import type { CategoriaCatalogo, DisciplinaCatalogo } from '@/features/inscripcion/types';
+import { DocumentacionSolicitudFields, type DocumentosSolicitudValues } from '@/features/inscripcion/components/DocumentacionSolicitudFields';
 import { ROUTES } from '@/routes/paths';
 import {
   PortalButton,
@@ -301,13 +305,9 @@ export function PortalSolicitarInscripcionModal({
     },
   });
 
-  const { solicitar, isPending } = useSolicitarInscripcion({
-    onSuccess: () => {
-      reset();
-      setCategoriaSeleccionadaId(null);
-      onClose();
-    },
-  });
+  const { solicitar, isPending } = useSolicitarInscripcion();
+  const { subir, isPending: subiendoDocumentacion } = useSubirDocumentacionSolicitud();
+  const [documentos, setDocumentos] = useState<DocumentosSolicitudValues>({});
 
   if (!disciplina) return null;
 
@@ -334,10 +334,31 @@ export function PortalSolicitarInscripcionModal({
   };
 
   const onSubmit = async () => {
-    await solicitar({
+    const solicitud = await solicitar({
       disciplinaId: disciplina.id,
       categoriaDisciplinaId: categoriaSeleccionadaId ?? undefined,
     });
+    await Promise.all(
+      docsObligatorios
+        .map((documento) => ({ documento, valor: documentos[documento.tipoDocumento] }))
+        .filter(({ valor }) => valor?.archivo)
+        .map(({ documento, valor }) =>
+          subir({
+            solicitudId: solicitud.id,
+            payload: {
+              tipoDocumento: documento.tipoDocumento,
+              ...(valor?.fechaVencimiento
+                ? { fechaVencimiento: valor.fechaVencimiento }
+                : {}),
+            },
+            archivo: valor!.archivo!,
+          }),
+        ),
+    );
+    reset();
+    setCategoriaSeleccionadaId(null);
+    setDocumentos({});
+    onClose();
   };
 
   return (
@@ -420,6 +441,32 @@ export function PortalSolicitarInscripcionModal({
           )}
         </div>
 
+        <div
+          className="space-y-3 rounded-[2px] border border-blue-400/20 bg-blue-500/[0.06] p-3"
+          data-testid="carga-documentacion-portal"
+        >
+          <div>
+            <p className="text-xs font-semibold text-slate-200">Adjuntar documentación (opcional)</p>
+            <p className="mt-0.5 text-[11px] text-slate-400">
+              Podés cargarla ahora o después desde «Mis solicitudes». Acepta PDF e imágenes.
+            </p>
+          </div>
+          <DocumentacionSolicitudFields
+            documentos={docsObligatorios}
+            valores={documentos}
+            onChange={(tipoDocumento, cambio) =>
+              setDocumentos((actuales) => ({
+                ...actuales,
+                [tipoDocumento]: {
+                  archivo: actuales[tipoDocumento]?.archivo ?? null,
+                  fechaVencimiento: actuales[tipoDocumento]?.fechaVencimiento ?? '',
+                  ...cambio,
+                },
+              }))
+            }
+          />
+        </div>
+
         {tieneCategorias && !categoriaSeleccionadaId ? (
           <div className="flex items-start gap-2 rounded-[2px] border border-slate-300/[0.12] bg-[#070b14] p-3 text-xs text-slate-300">
             <Info size={15} className="mt-0.5 shrink-0 text-blue-400" />
@@ -460,7 +507,7 @@ export function PortalSolicitarInscripcionModal({
             variant="secondary"
             size="sm"
             onClick={onClose}
-            disabled={isPending || isSubmitting}
+            disabled={isPending || isSubmitting || subiendoDocumentacion}
           >
             Cancelar
           </PortalButton>
@@ -470,6 +517,7 @@ export function PortalSolicitarInscripcionModal({
             size="sm"
             disabled={
               isPending ||
+              subiendoDocumentacion ||
               isSubmitting ||
               (tieneCategorias && !categoriaSeleccionadaId) ||
               !cumpleRestricciones
