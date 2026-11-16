@@ -5,6 +5,10 @@ import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useMisCuotas } from '@/features/pagos/hooks/useMisCuotas';
 import { useIniciarPagoCuotas } from '@/features/pagos/hooks/useIniciarPagoCuotas';
+import {
+  useIniciarPagoDeportivo,
+  useMisCuotasDeportivas,
+} from '@/features/pagos/hooks/useMisCuotasDeportivas';
 import { useHistorialPagos } from '@/features/pagos/hooks/useHistorialPagos';
 import { irAPagar } from '@/features/pasarela/hooks/usePasarela';
 import { etiquetaMetodoPago } from '@/features/pasarela/types';
@@ -37,10 +41,14 @@ export function PortalCuotasPage() {
   const { data: historial, isLoading: isLoadingHistorial } = useHistorialPagos({
     enabled: esOFueSocio,
   });
+  const { data: deportivas } = useMisCuotasDeportivas({ enabled: esOFueSocio });
   const iniciarPago = useIniciarPagoCuotas();
+  const iniciarPagoDeportivo = useIniciarPagoDeportivo();
 
   const [selectedPeriodos, setSelectedPeriodos] = useState<string[]>([]);
+  const [selectedDeportivas, setSelectedDeportivas] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalDeportivoOpen, setIsModalDeportivoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'pendientes' | 'historial'>('pendientes');
 
   if (!esOFueSocio) {
@@ -62,10 +70,47 @@ export function PortalCuotasPage() {
   );
   const totalSeleccionado = selectedCuotasObjects.reduce((sum, c) => sum + c.monto, 0);
 
+  const cuotasDeportivas = (deportivas?.cuotasPendientes ?? []).filter((cuota) => cuota.monto !== null);
+  const claveDeportiva = (disciplinaId: number, periodo: string) => `${disciplinaId}:${periodo}`;
+  const deportivasSeleccionadas = cuotasDeportivas.filter((cuota) =>
+    selectedDeportivas.includes(claveDeportiva(cuota.disciplinaId, cuota.periodo)),
+  );
+  const totalDeportivo = deportivasSeleccionadas.reduce((sum, cuota) => sum + (cuota.monto ?? 0), 0);
+  const todasDeportivas =
+    cuotasDeportivas.length > 0 && selectedDeportivas.length === cuotasDeportivas.length;
+
+  const toggleDeportiva = (disciplinaId: number, periodo: string) => {
+    const clave = claveDeportiva(disciplinaId, periodo);
+    setSelectedDeportivas((prev) =>
+      prev.includes(clave) ? prev.filter((item) => item !== clave) : [...prev, clave],
+    );
+  };
+
   const handleConfirmPago = async () => {
     if (selectedPeriodos.length === 0) return;
     try {
       const orden = await iniciarPago.mutateAsync(selectedPeriodos);
+      if (orden.urlPago) {
+        irAPagar(orden.urlPago);
+      } else {
+        navigate(`${ROUTES.resultadoPago}?referencia=${encodeURIComponent(orden.referencia)}`);
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'No se pudo iniciar el pago. Intentá nuevamente.',
+      );
+    }
+  };
+
+  const handleConfirmPagoDeportivo = async () => {
+    if (deportivasSeleccionadas.length === 0) return;
+    try {
+      const orden = await iniciarPagoDeportivo.mutateAsync(
+        deportivasSeleccionadas.map((cuota) => ({
+          disciplinaId: cuota.disciplinaId,
+          periodo: cuota.periodo,
+        })),
+      );
       if (orden.urlPago) {
         irAPagar(orden.urlPago);
       } else {
@@ -179,7 +224,8 @@ export function PortalCuotasPage() {
       />
 
       {activeTab === 'pendientes' ? (
-        cuotasPendientes.length === 0 ? (
+        <>
+        {cuotasPendientes.length === 0 ? (
           <PortalEmptyState
             icon={<CheckCircle2 size={20} />}
             title="Estás al día con tus cuotas"
@@ -278,7 +324,106 @@ export function PortalCuotasPage() {
               })}
             </PortalSurface>
           </div>
-        )
+        )}
+
+        {cuotasDeportivas.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-white">Cuota deportiva</h2>
+            <PortalSurface className="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedDeportivas(
+                    todasDeportivas
+                      ? []
+                      : cuotasDeportivas.map((cuota) =>
+                          claveDeportiva(cuota.disciplinaId, cuota.periodo),
+                        ),
+                  )
+                }
+                className="inline-flex items-center gap-2.5 text-xs font-medium text-slate-200 hover:text-white cursor-pointer"
+              >
+                <span
+                  className={cn(
+                    'flex h-4 w-4 items-center justify-center rounded-[2px] border transition-colors',
+                    todasDeportivas
+                      ? 'border-blue-500 bg-blue-600 text-white'
+                      : 'border-slate-500/60 bg-transparent',
+                  )}
+                >
+                  {todasDeportivas && <Check size={11} strokeWidth={3} />}
+                </span>
+                <span>
+                  {todasDeportivas ? 'Deseleccionar todas' : 'Seleccionar todas las cuotas deportivas'}
+                </span>
+              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs text-slate-400">
+                  Seleccionadas:{' '}
+                  <strong className="font-semibold text-blue-400 tabular-nums">
+                    ${totalDeportivo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  </strong>
+                </span>
+                <PortalButton
+                  variant="primary"
+                  size="sm"
+                  disabled={deportivasSeleccionadas.length === 0 || iniciarPagoDeportivo.isPending}
+                  onClick={() => setIsModalDeportivoOpen(true)}
+                >
+                  <CreditCard size={14} />
+                  Pagar disciplinas ({deportivasSeleccionadas.length})
+                </PortalButton>
+              </div>
+            </PortalSurface>
+            <PortalSurface className="divide-y divide-white/[0.08] overflow-hidden">
+              {cuotasDeportivas.map((cuota) => {
+                const clave = claveDeportiva(cuota.disciplinaId, cuota.periodo);
+                const selected = selectedDeportivas.includes(clave);
+                return (
+                  <button
+                    key={clave}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => toggleDeportiva(cuota.disciplinaId, cuota.periodo)}
+                    className={cn(
+                      'flex w-full flex-wrap items-center justify-between gap-4 border-l-2 px-4 py-3.5 text-left transition-colors cursor-pointer',
+                      selected
+                        ? 'border-l-blue-500 bg-blue-500/[0.09]'
+                        : 'border-l-transparent hover:bg-white/[0.02]',
+                    )}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={cn(
+                          'flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border transition-colors',
+                          selected
+                            ? 'border-blue-500 bg-blue-600 text-white'
+                            : 'border-slate-500/60 bg-transparent',
+                        )}
+                      >
+                        {selected && <Check size={11} strokeWidth={3} />}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white">{cuota.disciplinaNombre}</p>
+                        <p className="mt-0.5 text-xs text-slate-400 tabular-nums">
+                          Período {cuota.periodo}
+                          {cuota.categoriaNombre ? ` · ${cuota.categoriaNombre}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <PortalTag tone="pending">Pendiente</PortalTag>
+                      <span className="min-w-[92px] text-right text-sm font-semibold text-white tabular-nums">
+                        ${(cuota.monto ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </PortalSurface>
+          </div>
+        )}
+        </>
       ) : isLoadingHistorial ? (
         <div className="flex h-44 items-center justify-center">
           <PortalSpinner />
@@ -330,6 +475,18 @@ export function PortalCuotasPage() {
         total={totalSeleccionado}
         onConfirmar={() => void handleConfirmPago()}
         isLoading={iniciarPago.isPending}
+      />
+
+      <PortalConfirmarPagoModal
+        open={isModalDeportivoOpen}
+        onClose={() => setIsModalDeportivoOpen(false)}
+        titulo={`Cuotas deportivas (${deportivasSeleccionadas.length})`}
+        detalle={deportivasSeleccionadas
+          .map((cuota) => `${cuota.disciplinaNombre} ${cuota.periodo}`)
+          .join(' · ')}
+        total={totalDeportivo}
+        onConfirmar={() => void handleConfirmPagoDeportivo()}
+        isLoading={iniciarPagoDeportivo.isPending}
       />
     </div>
   );

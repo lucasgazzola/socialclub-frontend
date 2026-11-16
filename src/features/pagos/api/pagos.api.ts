@@ -47,6 +47,20 @@ export const pagosApi = {
 
   // ── US-21 · Cuota deportiva (secretaría) ────────────────────────────────────
 
+  /** DT-35: cuotas deportivas pendientes de quien está logueado. */
+  async getMisCuotasDeportivas(): Promise<PendientesDeportivosResponse> {
+    const { data } = await apiClient.get<PendientesDeportivosResponse>('/pagos-deportivos/mias');
+    return data;
+  },
+
+  /** DT-35: inicia el pago online de meses de una o varias disciplinas. */
+  async iniciarPagoDeportivo(
+    items: { disciplinaId: number; periodo: string }[],
+  ): Promise<OrdenPago> {
+    const { data } = await apiClient.post<OrdenPago>('/pagos-deportivos/checkout', { items });
+    return data;
+  },
+
   async getPendientesDeportivos(personaId: number): Promise<PendientesDeportivosResponse> {
     const { data } = await apiClient.get<PendientesDeportivosResponse>(
       `/pagos-deportivos/persona/${personaId}/pendientes`,
