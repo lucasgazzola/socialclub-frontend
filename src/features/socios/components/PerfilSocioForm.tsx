@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, AlertCircle, Lock, UserCheck, UserX } from 'lucide-react';
 import { Button, Input, Select } from '@/components/ui';
 import { formatearDni } from '@/lib/utils/dni';
-import { perfilSocioSchema, type PerfilSocioFormData } from '../schemas';
+import { crearPerfilSocioSchema, type PerfilSocioFormData } from '../schemas';
+import { mismoEmail } from '@/lib/utils/email';
 import { useUpdatePerfilSocio } from '../hooks/useSocios';
 import { useDarseDeBajaSocio } from '../hooks/useDarseDeBajaSocio';
 import { useReactivarmeSocio } from '../hooks/useReactivarmeSocio';
@@ -33,19 +34,23 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
   const esExSocio =
     !membresiaActiva && Boolean(persona?.membresias && persona.membresias.length > 0);
 
+  const emailOriginal = persona?.email || usuario.email || '';
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<PerfilSocioFormData>({
-    resolver: zodResolver(perfilSocioSchema),
+    resolver: zodResolver(crearPerfilSocioSchema(emailOriginal)),
     defaultValues: {
       nombre: usuario.nombre || '',
       apellido: usuario.apellido || '',
-      email: persona?.email || usuario.email || '',
+      email: emailOriginal,
+      confirmarEmail: '',
       telefono: persona?.telefono || '',
     },
   });
+  const emailCambio = !mismoEmail(watch('email'), emailOriginal);
 
   const onSubmit = handleSubmit(async (data) => {
     setMensajeExito(null);
@@ -53,7 +58,11 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
 
     try {
       await updatePerfil(data);
-      setMensajeExito('Tus datos personales fueron actualizados con éxito.');
+      setMensajeExito(
+        emailCambio
+          ? 'Te enviamos un email a la nueva dirección para confirmarla. Hasta que lo uses, un ingreso nuevo te va a pedir ese enlace. Esta sesión sigue abierta.'
+          : 'Tus datos personales fueron actualizados con éxito.',
+      );
     } catch (error) {
       const err = error as Error & { status?: number };
       if (
@@ -201,6 +210,17 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
             error={errors.email?.message}
             {...register('email')}
           />
+
+          {emailCambio && (
+            <Input
+              id="confirmarEmail"
+              label="Repetí el email *"
+              type="email"
+              autoComplete="off"
+              error={errors.confirmarEmail?.message}
+              {...register('confirmarEmail')}
+            />
+          )}
 
           <Input
             id="telefono"

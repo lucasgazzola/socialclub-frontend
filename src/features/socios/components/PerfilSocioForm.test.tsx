@@ -102,6 +102,7 @@ describe('PerfilSocioForm (US-11)', () => {
 
     await user.clear(emailInput);
     await user.type(emailInput, 'lucas.nuevo@club.com');
+    await user.type(screen.getByLabelText(/Repetí el email/i), 'lucas.nuevo@club.com');
 
     await user.clear(telefonoInput);
     await user.type(telefonoInput, '351 999 8888');
@@ -114,12 +115,13 @@ describe('PerfilSocioForm (US-11)', () => {
         nombre: 'Lucas David',
         apellido: 'Gazzola Alvarez',
         email: 'lucas.nuevo@club.com',
+        confirmarEmail: 'lucas.nuevo@club.com',
         telefono: '351 999 8888',
       });
     });
 
     expect(await screen.findByRole('status')).toHaveTextContent(
-      'Tus datos personales fueron actualizados con éxito.',
+      'Te enviamos un email a la nueva dirección para confirmarla.',
     );
   });
 
