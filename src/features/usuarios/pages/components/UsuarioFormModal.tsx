@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { BadgeCheck, BadgeAlertIcon, UserPlus, Edit3 } from 'lucide-react';
-import { Button, Modal } from '@/components/ui';
+import { Modal } from '@/components/ui';
 import { UsuarioForm } from '../../components/UsuarioForm';
+import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import type { Usuario } from '../../types';
 import type {
   UsuarioCreateFormValues,
@@ -19,10 +21,29 @@ interface UsuarioFormModalProps {
 
 export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: UsuarioFormModalProps) {
   const esEdicion = modo === 'editar';
+  // DT-42: opciones de disciplinas a cargo de un delegado.
+  const { disciplinas } = useDisciplinasActivas();
+  // DT-46: captura de errores de la API en el alta/edición de usuario.
+  const [errorServidor, setErrorServidor] = useState<string | null>(null);
+
+  useEffect(() => {
+    setErrorServidor(null);
+  }, [open, modo, usuario]);
+
+  function handleClose() {
+    setErrorServidor(null);
+    onClose();
+  }
 
   async function handleSubmit(values: UsuarioCreateFormValues | UsuarioEditFormValues) {
-    await onSubmit(values);
-    onClose();
+    setErrorServidor(null);
+    try {
+      await onSubmit(values);
+      handleClose();
+    } catch (err: unknown) {
+      const mensaje = err instanceof Error ? err.message : 'No se pudo guardar el usuario';
+      setErrorServidor(mensaje);
+    }
   }
 
   // En edición esperamos a tener el usuario cargado antes de mostrar el modal
@@ -32,19 +53,15 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
   return (
     <Modal
       open={abierto}
-      title={
-        <div className="flex items-center gap-2">
-          {esEdicion ? <Edit3 size={18} /> : <UserPlus size={18} />}
-          <span>{esEdicion ? 'Editar usuario' : 'Nuevo usuario'}</span>
-        </div>
-      }
+      title={esEdicion ? 'Editar usuario' : 'Nuevo usuario'}
+      icon={esEdicion ? <Edit3 /> : <UserPlus />}
       description={
         esEdicion
           ? 'Actualizá los datos básicos y los roles desde este panel.'
           : 'Completá los datos básicos y asigná los roles correspondientes.'
       }
-      onClose={onClose}
-      className="max-w-3xl"
+      onClose={handleClose}
+      size="lg"
     >
       <div className="space-y-6">
         {esEdicion && usuario ? (
@@ -66,20 +83,12 @@ export function UsuarioFormModal({ open, modo, usuario, onClose, onSubmit }: Usu
           key={esEdicion ? (usuario?.id ?? 'editar') : 'crear'}
           modo={modo}
           usuarioInicial={esEdicion ? usuario : null}
-          mostrarPasswordField={!esEdicion}
           onSubmit={handleSubmit}
+          onCancel={handleClose}
+          disciplinas={disciplinas}
+          errorServidor={errorServidor}
         />
 
-        <div className="border-t border-slate-200 pt-4">
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={onClose} 
-            className="w-full border-2"
-          >
-            Cancelar
-          </Button>
-        </div>
       </div>
     </Modal>
   );

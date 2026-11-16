@@ -11,28 +11,49 @@ export interface Usuario {
     nombre: string;
     apellido: string;
     activo: boolean;
+    /** DT-54: false mientras la persona no use el enlace del email (no puede iniciar sesión). */
+    emailVerificado?: boolean;
     ultimoLogin?: string | null;
     creadoEn: string;
     actualizadoEn?: string;
     roles: { rol: Rol }[];
+    /** DT-42: disciplinas a cargo (solo delegados). */
+    disciplinas?: { id: number; nombre: string }[];
 }
 
 export interface CreateUsuarioDto {
     dni: string;
     email: string;
-    password: string;
+    /** DT-54: el email escrito por segunda vez. */
+    confirmarEmail: string;
     nombre: string;
     apellido: string;
     roles: string[];
+    /** DT-42: disciplinas a cargo; solo para el rol DELEGADO. */
+    disciplinasIds?: number[];
 }
 
 export interface UpdateUsuarioDto {
     dni?: string;
     email?: string;
+    /** DT-54: solo si cambia el email. */
+    confirmarEmail?: string;
     nombre?: string;
     apellido?: string;
-    password?: string;
-    currentPassword?: string;
     roles?: string[];
+    disciplinasIds?: number[];
     activo?: boolean;
+}
+
+export type CriterioOrden = 'nombre' | 'dni' | 'email' | 'roles' | 'estado' | 'fecha';
+export type SentidoOrden = 'asc' | 'desc';
+
+export interface GetUsuariosParams {
+    busqueda?: string;
+    rolId?: number;
+    estado?: 'todos' | 'activos' | 'inactivos';
+    pagina?: number;
+    porPagina?: number;
+    ordenarPor?: CriterioOrden;
+    orden?: SentidoOrden;
 }

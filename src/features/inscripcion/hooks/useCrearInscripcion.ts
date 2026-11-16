@@ -4,7 +4,11 @@ import { inscripcionesKeys } from './useInscripciones';
 import type { CrearInscripcionPayload, InscripcionCreada } from '../types';
 import { toast } from 'sonner';
 
-export function useCrearInscripcion() {
+/**
+ * @param opciones.toastDeError en false el error no se muestra como toast: lo
+ * muestra quien llama (ej. en el campo del formulario), para no duplicarlo.
+ */
+export function useCrearInscripcion({ toastDeError = true }: { toastDeError?: boolean } = {}) {
   const qc = useQueryClient();
   const mutation = useMutation<InscripcionCreada, Error, CrearInscripcionPayload>({
     mutationFn: crearInscripcion,
@@ -13,7 +17,7 @@ export function useCrearInscripcion() {
       toast.success('Inscripción registrada correctamente');
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      if (toastDeError) toast.error(error.message);
     },
   });
 

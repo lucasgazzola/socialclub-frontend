@@ -84,6 +84,19 @@ describe('HacermeSocioForm (US-09)', () => {
     expect(onSubmit).toHaveBeenCalledWith({ dni: '40123456', categoriaId: 1 });
   });
 
+  it('DT-47: muestra el DNI precargado con formato agrupado con puntos (formatearDni)', () => {
+    render(
+      <HacermeSocioForm
+        defaultValues={{ ...defaultValues, dni: '30111222' }}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    const dniInput = screen.getByLabelText('DNI');
+    expect(dniInput).toHaveValue('30.111.222');
+    expect(dniInput).toHaveAttribute('disabled');
+  });
+
   it('muestra el mensaje del servidor cuando el DNI ya está en uso', async () => {
     const user = userEvent.setup();
     const onSubmit = vi

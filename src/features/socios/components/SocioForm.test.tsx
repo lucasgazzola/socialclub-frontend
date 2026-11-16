@@ -20,8 +20,10 @@ vi.mock('../schemas', () => {
     email: z.string().min(1, 'El email es obligatorio').email('El formato de email no es válido'),
     telefono: z.string().optional(),
     categoriaId: z.number().int().optional(),
+    confirmarEmail: z.string().optional(),
   });
-  return { socioFormSchema };
+  // DT-54: el formulario arma el schema según el email original.
+  return { socioFormSchema, crearSocioFormSchema: () => socioFormSchema };
 });
 
 vi.mock('../hooks/useCategorias', () => ({
@@ -35,7 +37,9 @@ vi.mock('../hooks/useCategorias', () => ({
 }));
 
 // Mock de los componentes de UI para inputs y mensajes de error sin depender de su implementación interna.
-vi.mock('@/components/ui', () => ({
+vi.mock('@/components/ui', async () => ({
+  // DT-40: el selector de fecha real (dd/mm/aaaa) para probar lo que ve el usuario.
+  DateInput: (await vi.importActual<typeof import('@/components/ui/DateInput')>('@/components/ui/DateInput')).DateInput,
   Input: ({ id, label, error, ...props }: { id: string; label: string; error?: string } & InputHTMLAttributes<HTMLInputElement>) => (
     <div>
       <label htmlFor={id}>{label}</label>
@@ -52,6 +56,7 @@ vi.mock('@/components/ui', () => ({
   Button: ({ children, ...props }: { children?: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props}>{children}</button>
   ),
+  ModalActions: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
 }));
 
 const navigateMock = vi.fn();
@@ -78,7 +83,8 @@ async function completarFormulario(
   await user.type(screen.getByLabelText('Apellido'), datos.apellido);
   await user.type(screen.getByLabelText('DNI'), datos.dni);
   if (datos.fechaNacimiento) {
-    await user.type(screen.getByLabelText('Fecha de nacimiento'), datos.fechaNacimiento);
+    // Se escribe como lo ve el usuario (dd/mm/aaaa); el formulario recibe ISO.
+    await user.type(screen.getByLabelText('Fecha de nacimiento'), datos.fechaNacimiento.split('-').reverse().join('/'));
   }
   await user.type(screen.getByLabelText('Email'), datos.email);
   if (datos.telefono) {
@@ -182,6 +188,26 @@ describe('SocioForm', () => {
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('DT-54: el email se escribe dos veces', () => {
+    it('en el alta muestra «Repetí el email» desde el principio', () => {
+      render(<SocioForm onSubmit={vi.fn()} submitLabel="Crear socio" />);
+
+      expect(screen.getByLabelText('Repetí el email')).toBeInTheDocument();
+    });
+
+    it('en la edición no lo pide mientras el email no cambie', () => {
+      render(
+        <SocioForm
+          onSubmit={vi.fn()}
+          submitLabel="Guardar cambios"
+          defaultValues={{ ...datosValidos, email: 'juan@club.local' }}
+        />,
+      );
+
+      expect(screen.queryByLabelText('Repetí el email')).not.toBeInTheDocument();
     });
   });
 });

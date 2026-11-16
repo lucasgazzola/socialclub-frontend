@@ -1,5 +1,15 @@
 import type { CategoriaSocio } from '@/features/socios/types';
 
+export type GeneroPersona =
+  'FEMENINO' | 'MASCULINO' | 'NO_BINARIO_NO_ESPECIFICADO' | 'PREFIERO_NO_DECIRLO';
+
+export const GENERO_PERSONA_LABELS: Record<GeneroPersona, string> = {
+  FEMENINO: 'Femenino',
+  MASCULINO: 'Masculino',
+  NO_BINARIO_NO_ESPECIFICADO: 'No binario',
+  PREFIERO_NO_DECIRLO: 'Prefiero no decirlo',
+};
+
 export type RolNombre = 'ADMIN' | 'COLABORADOR' | 'DELEGADO' | 'SOCIO';
 
 /** Membresía de una persona (período como socio). */
@@ -21,6 +31,7 @@ export interface PersonaDeUsuario {
   email?: string | null;
   telefono?: string | null;
   fechaNacimiento?: string | null;
+  genero?: GeneroPersona | null;
   membresias: MembresiaDePersona[];
 }
 
@@ -43,7 +54,38 @@ export interface LoginPayload {
 /** Datos del registro público (US-38). El backend no acepta roles ni dni acá. */
 export interface RegisterPayload {
   email: string;
+  /** DT-54: el email escrito por segunda vez. */
+  confirmarEmail: string;
   password: string;
+  confirmarPassword: string;
   nombre: string;
   apellido: string;
+  fechaNacimiento: string;
+  genero: GeneroPersona;
+}
+
+/**
+ * US-41: cuerpo de `PATCH /auth/cambiar-contrasena`. El backend rechaza el
+ * cambio (401) si `passwordActual` no coincide con la guardada.
+ */
+export interface CambiarContrasenaPayload {
+  passwordActual: string;
+  nuevaContrasena: string;
+  confirmarNuevaContrasena: string;
+}
+
+/** DT-54: a quién pertenece un enlace de verificación y qué pide. */
+export interface ConsultaVerificacion {
+  nombre: string;
+  email: string;
+  /** true si la cuenta la creó el club y todavía no tiene contraseña. */
+  requiereContrasena: boolean;
+  expiraEn: string;
+}
+
+/** DT-54: cuerpo de `POST /auth/verificacion`. */
+export interface VerificarEmailPayload {
+  token: string;
+  password?: string;
+  confirmarPassword?: string;
 }

@@ -1,7 +1,7 @@
 import { cuotaFormSchema } from './schemas';
 
 function baseValues(overrides: Record<string, unknown> = {}) {
-  return { disciplinaId: 1, categoriaId: 1, monto: 15000, periodoAplicacion: '', ...overrides };
+  return { disciplinaId: 1, categoriaDisciplinaId: 7, monto: 15000, periodoAplicacion: '', ...overrides };
 }
 
 describe('cuotaFormSchema', () => {
@@ -30,9 +30,16 @@ describe('cuotaFormSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rechaza la ausencia de categoría', () => {
-    const result = cuotaFormSchema.safeParse(baseValues({ categoriaId: 0 }));
-    expect(result.success).toBe(false);
+  it('TASK-33: sin categoría es la tarifa base de la disciplina', () => {
+    const result = cuotaFormSchema.safeParse(baseValues({ categoriaDisciplinaId: '' }));
+    expect(result.success).toBe(true);
+    expect(result.data?.categoriaDisciplinaId).toBeUndefined();
+  });
+
+  it('TASK-33: el descuento para socios es un entero de 0 a 100 (vacío = 0)', () => {
+    expect(cuotaFormSchema.safeParse(baseValues({ descuentoSocioPorcentaje: '' })).data?.descuentoSocioPorcentaje).toBe(0);
+    expect(cuotaFormSchema.safeParse(baseValues({ descuentoSocioPorcentaje: '101' })).success).toBe(false);
+    expect(cuotaFormSchema.safeParse(baseValues({ descuentoSocioPorcentaje: '12.5' })).success).toBe(false);
   });
 
   it('acepta un período de aplicación opcional en formato YYYY-MM', () => {

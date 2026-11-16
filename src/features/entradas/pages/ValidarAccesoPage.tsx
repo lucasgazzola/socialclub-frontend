@@ -1,10 +1,12 @@
+import { ROUTES } from '@/routes/paths';
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, History, ArrowRight, Trash2, ArrowLeft, QrCode, Search, Filter } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button, Card, Spinner } from '@/components/ui';
 import { QRScanner } from '../components/QRScanner';
 import { useValidarEntrada } from '../hooks/useEntradas';
-import { useEventos } from '@/features/eventos/hooks/useEventos';
+import { useEvento, useEventos } from '@/features/eventos/hooks/useEventos';
 
 // Categorías mockeadas — se reemplazarán cuando el modelo Evento tenga el campo.
 const CATEGORIAS_MOCK = [
@@ -20,7 +22,16 @@ interface ScanHistoryItem {
   id: string;
   token: string;
   timestamp: string;
-  status: 'PERMITIDO' | 'EVENTO_INCORRECTO' | 'YA_USADA' | 'INVALIDA' | 'EXPIRADA';
+  status:
+    | 'PERMITIDO'
+    | 'EVENTO_INCORRECTO'
+    | 'YA_USADA'
+    | 'INVALIDA'
+    | 'EXPIRADA'
+    /** H05: el acceso al evento todavía no abrió. */
+    | 'NO_HABILITADA'
+    /** El evento fue cancelado. */
+    | 'EVENTO_CANCELADO';
   eventoId?: number;
   eventoNombre?: string;
   mensaje: string;
@@ -53,17 +64,18 @@ export function ValidarAccesoPage() {
   }, [searchInput]);
 
   // Hook de eventos — refetch automático cuando cambia searchQuery
-  const { data: eventos, isLoading: isLoadingEventos } = useEventos(
+  const { data: eventosPaginados, isLoading: isLoadingEventos } = useEventos(
     searchQuery ? { search: searchQuery } : undefined
   );
+  const eventosItems = eventosPaginados?.items ?? [];
 
   // Filtro de categoría en front (mockeado, sin campo real en backend todavía)
   const eventosFiltrados = categoriaFiltro
-    ? eventos?.filter((evt) =>
+    ? eventosItems.filter((evt) =>
         evt.nombre.toLowerCase().includes(categoriaFiltro) ||
         (evt.descripcion ?? '').toLowerCase().includes(categoriaFiltro)
       )
-    : eventos;
+    : eventosItems;
 
   useEffect(() => {
     if (routeEventoId) {
@@ -96,20 +108,21 @@ export function ValidarAccesoPage() {
   const handleScan = async (token: string) => {
     if (validarMutation.isPending) return;
 
+    const eventoIdActivo = selectedEventoId ? Number(selectedEventoId) : undefined;
+
+    if (!eventoIdActivo) {
+      toast.error('Debés seleccionar un evento antes de validar entradas.');
+      return;
+    }
+
     try {
-      const res = await validarMutation.mutateAsync(token);
+      const res = await validarMutation.mutateAsync({ token, eventoId: eventoIdActivo });
 
       const eventoEscaneadoId = res.entrada.eventoId;
       const eventoEscaneadoNombre = res.entrada.eventoNombre;
 
-      let scanStatus: ScanHistoryItem['status'] = 'PERMITIDO';
-      let mensajeStatus = `Acceso concedido para "${eventoEscaneadoNombre}"`;
-
-      if (selectedEventoId && Number(selectedEventoId) !== eventoEscaneadoId) {
-        scanStatus = 'EVENTO_INCORRECTO';
-        const eventoSeleccionadoNombre = eventos?.find((e) => e.id === Number(selectedEventoId))?.nombre || 'evento seleccionado';
-        mensajeStatus = `Entrada para "${eventoEscaneadoNombre}", pero se está controlando "${eventoSeleccionadoNombre}".`;
-      }
+      const scanStatus: ScanHistoryItem['status'] = 'PERMITIDO';
+      const mensajeStatus = `Acceso concedido para "${eventoEscaneadoNombre}"`;
 
       const item: ScanHistoryItem = {
         id: Math.random().toString(36).substring(2, 9),
@@ -124,21 +137,44 @@ export function ValidarAccesoPage() {
       setCurrentResult(item);
       setHistory((prev) => [item, ...prev]);
     } catch (err) {
-      // Forma del error de axios, sin recurrir a `any`.
-      const error = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
-      const statusHttp = error?.response?.status;
-      const errorMsg =
+      // El interceptor de `apiClient` rechaza con un Error que trae `status`
+      // (no el error de axios): se lee de ahí, con la forma de axios de respaldo.
+      const error = err as {
+        status?: number;
+        response?: { status?: number; data?: { message?: string } };
+        message?: string;
+      };
+      const statusHttp = error?.status ?? error?.response?.status;
+      const rawErrorMsg =
         error?.response?.data?.message || error?.message || 'Error al validar la entrada.';
+      const errorMsg = Array.isArray(rawErrorMsg) ? rawErrorMsg.join(', ') : rawErrorMsg;
 
       let scanStatus: ScanHistoryItem['status'] = 'INVALIDA';
       if (statusHttp === 409) {
-        scanStatus = 'YA_USADA';
+        if (errorMsg.toLowerCase().includes('otro evento')) {
+          scanStatus = 'EVENTO_INCORRECTO';
+          toast.error(errorMsg);
+        } else {
+          scanStatus = 'YA_USADA';
+          toast.error(errorMsg);
+        }
       } else if (statusHttp === 400 && errorMsg.toLowerCase().includes('expirada')) {
         scanStatus = 'EXPIRADA';
+        toast.error(errorMsg);
+      } else if (statusHttp === 400 && errorMsg.toLowerCase().includes('todavía no se habilitó')) {
+        scanStatus = 'NO_HABILITADA';
+        toast.error(errorMsg);
+      } else if (statusHttp === 400 && errorMsg.toLowerCase().includes('cancelado')) {
+        scanStatus = 'EVENTO_CANCELADO';
+        toast.error(errorMsg);
+      } else {
+        toast.error(errorMsg);
       }
 
-      const currentEvtId = selectedEventoId ? Number(selectedEventoId) : undefined;
-      const currentEvtNombre = currentEvtId ? eventos?.find((e) => e.id === currentEvtId)?.nombre : undefined;
+      const currentEvtId = eventoIdActivo;
+      const currentEvtNombre = currentEvtId
+        ? (eventosItems.find((e) => e.id === currentEvtId)?.nombre ?? eventoPorId?.nombre)
+        : undefined;
 
       const item: ScanHistoryItem = {
         id: Math.random().toString(36).substring(2, 9),
@@ -147,7 +183,7 @@ export function ValidarAccesoPage() {
         status: scanStatus,
         eventoId: currentEvtId,
         eventoNombre: currentEvtNombre,
-        mensaje: Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg,
+        mensaje: errorMsg,
       };
 
       setCurrentResult(item);
@@ -159,8 +195,11 @@ export function ValidarAccesoPage() {
     setCurrentResult(null);
   };
 
+  // H05: si el evento elegido no está en la página del listado (p. ej. al entrar
+  // por /admin/eventos/:id/validar), se trae por id para mostrar su nombre.
+  const { data: eventoPorId } = useEvento(selectedEventoId ? Number(selectedEventoId) : 0);
   const eventoSeleccionado = selectedEventoId
-    ? eventos?.find((e) => e.id === Number(selectedEventoId))
+    ? (eventosItems.find((e) => e.id === Number(selectedEventoId)) ?? eventoPorId ?? null)
     : null;
 
   // Filtrar historial según el evento seleccionado
@@ -178,9 +217,9 @@ export function ValidarAccesoPage() {
   // Resetear página cuando cambian los filtros
   useEffect(() => { setCurrentPage(1); }, [searchQuery, categoriaFiltro]);
 
-  const totalEventos = eventosFiltrados?.length ?? 0;
+  const totalEventos = eventosFiltrados.length;
   const totalPages = Math.ceil(totalEventos / PAGE_SIZE);
-  const eventosPaginados = eventosFiltrados?.slice(
+  const eventosPaginadosLocal = eventosFiltrados.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE,
   );
@@ -190,11 +229,10 @@ export function ValidarAccesoPage() {
   // ----------------─────────────────────────────────────────────────────────────
   if (selectedEventoId === null) {
     return (
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="space-y-6">
         <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <ShieldCheck className="text-brand-600" size={28} />
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Validación de Acceso por QR
             </h1>
             <p className="text-sm text-slate-500">
@@ -251,7 +289,7 @@ export function ValidarAccesoPage() {
         ) : (
           <>
             <div className="rounded-2xl border border-slate-200 bg-white shadow-xs divide-y divide-slate-100 overflow-hidden">
-              {eventosPaginados?.map((evt) => (
+              {eventosPaginadosLocal?.map((evt) => (
                 <div
                   key={evt.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 hover:bg-slate-50/80 transition-colors gap-4 cursor-pointer"
@@ -337,7 +375,7 @@ export function ValidarAccesoPage() {
   // VISTA 2: ESCÁNER DE CÁMARA + CONTROL DE ACCESO (Evento Seleccionado)
   // ----------------─────────────────────────────────────────────────────────────
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
       {/* Botón para cambiar de evento */}
       <div className="flex items-center justify-between">
         <Button
@@ -345,7 +383,7 @@ export function ValidarAccesoPage() {
           size="sm"
           onClick={() => {
             if (routeEventoId) {
-              navigate('/entradas/validar');
+              navigate(ROUTES.validarAcceso);
             }
             setSelectedEventoId(null);
           }}
@@ -357,8 +395,7 @@ export function ValidarAccesoPage() {
 
       {/* Encabezado sin dropdown adicional */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <ShieldCheck className="text-brand-600" size={28} />
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Control de Acceso: {eventoSeleccionado?.nombre}
         </h1>
         <p className="text-sm text-slate-500">
@@ -459,6 +496,22 @@ export function ValidarAccesoPage() {
                     </p>
                     <div className="mt-3 rounded-md bg-red-100 p-2 text-xs text-red-900 font-semibold">
                       ⛔ Posible intento de reingreso no autorizado.
+                    </div>
+                  </>
+                )}
+
+                {(currentResult.status === 'NO_HABILITADA' ||
+                  currentResult.status === 'EVENTO_CANCELADO') && (
+                  <>
+                    <AlertTriangle size={56} className="text-amber-600 mb-2" />
+                    <h2 className="text-xl font-bold text-amber-900">
+                      {currentResult.status === 'NO_HABILITADA'
+                        ? '¡ACCESO TODAVÍA NO HABILITADO!'
+                        : '¡EVENTO CANCELADO!'}
+                    </h2>
+                    <p className="text-sm font-medium text-amber-800 mt-2">{currentResult.mensaje}</p>
+                    <div className="mt-3 rounded-md bg-amber-100 p-2 text-xs text-amber-900 font-semibold">
+                      La entrada no se usó: sigue siendo de su dueño.
                     </div>
                   </>
                 )}

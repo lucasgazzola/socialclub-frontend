@@ -1,0 +1,223 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { apiClient } from '@/lib/api/client';
+import {
+  buscarParticipantePorDni,
+  obtenerRequisitos,
+  crearInscripcion,
+  getInscripcion,
+  getInscripcionesPorPersona,
+  actualizarDatosPersona,
+  actualizarInscripcion,
+  listarInscripciones,
+  darDeBajaParticipante,
+  activarParticipante,
+  obtenerCatalogoInscripcion,
+  solicitarInscripcion,
+  obtenerMisSolicitudesInscripcion,
+  listarSolicitudesInscripcion,
+  aprobarSolicitudInscripcion,
+  rechazarSolicitudInscripcion,
+  cancelarSolicitudInscripcion,
+  subirDocumentacionSolicitud,
+} from './inscripcion.api';
+
+vi.mock('@/lib/api/client', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+describe('inscripcion.api', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('buscarParticipantePorDni() consulta /personas/dni/:dni', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { id: 1, dni: '123' } });
+    const res = await buscarParticipantePorDni('123');
+    expect(apiClient.get).toHaveBeenCalledWith('/personas/dni/123');
+    expect(res).toEqual({ id: 1, dni: '123' });
+  });
+
+  it('obtenerRequisitos() consulta /inscripcion/requisitos con params', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { documentos: [] } });
+    await obtenerRequisitos({ disciplinaId: 2, personaId: 5 });
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/requisitos', {
+      params: { disciplinaId: 2, personaId: 5 },
+    });
+  });
+
+  it('crearInscripcion() envía post a /inscripcion', async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { id: 10 } });
+    const payload = { disciplinaId: 1, personaId: 2 } as any;
+    const res = await crearInscripcion(payload);
+    expect(apiClient.post).toHaveBeenCalledWith('/inscripcion', payload);
+    expect(res).toEqual({ id: 10 });
+  });
+
+  it('getInscripcion() consulta /inscripcion/:id', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { id: 5 } });
+    const res = await getInscripcion(5);
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/5');
+    expect(res).toEqual({ id: 5 });
+  });
+
+  it('getInscripcionesPorPersona() consulta /inscripcion/persona/:id con params', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: [] });
+    await getInscripcionesPorPersona(10, true);
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/persona/10', {
+      params: { incluirBajas: true },
+    });
+  });
+
+  it('actualizarDatosPersona() envía patch a /personas/:id', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: { id: 10 } });
+    const payload = { nombre: 'Carlos' } as any;
+    const res = await actualizarDatosPersona(10, payload);
+    expect(apiClient.patch).toHaveBeenCalledWith('/personas/10', payload);
+    expect(res).toEqual({ id: 10 });
+  });
+
+  it('actualizarInscripcion() envía patch a /inscripcion/:id', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: { id: 10 } });
+    const payload = { disciplinaId: 2 } as any;
+    const res = await actualizarInscripcion(10, payload);
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/10', payload);
+    expect(res).toEqual({ id: 10 });
+  });
+
+  it('listarInscripciones() envía get a /inscripcion con params', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { items: [], total: 0 } });
+    await listarInscripciones({ busqueda: 'Ana', pagina: 1, porPagina: 10 });
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion', {
+      params: {
+        busqueda: 'Ana',
+        disciplinaId: undefined,
+        estado: undefined,
+        pagina: 1,
+        porPagina: 10,
+      },
+    });
+  });
+
+  it('darDeBajaParticipante() envía delete a /inscripcion/persona/:id', async () => {
+    vi.mocked(apiClient.delete).mockResolvedValueOnce({ data: { ok: true } });
+    const res = await darDeBajaParticipante(10);
+    expect(apiClient.delete).toHaveBeenCalledWith('/inscripcion/persona/10');
+    expect(res).toEqual({ ok: true });
+  });
+
+  it('activarParticipante() envía patch a /inscripcion/persona/:id/activar', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: { ok: true } });
+    const res = await activarParticipante(10);
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/persona/10/activar');
+    expect(res).toEqual({ ok: true });
+  });
+
+  it('obtenerCatalogoInscripcion() envía get a /inscripcion/catalogo', async () => {
+    const catalogoMock = { esSocio: true, items: [] };
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: catalogoMock });
+    const res = await obtenerCatalogoInscripcion();
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/catalogo');
+    expect(res).toEqual(catalogoMock);
+  });
+
+  it('solicitarInscripcion() envía post a /inscripcion/solicitar', async () => {
+    const solicitudMock = { id: 1, disciplinaId: 5, estado: 'PENDIENTE' };
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: solicitudMock });
+    const res = await solicitarInscripcion({ disciplinaId: 5, categoriaDisciplinaId: 10 });
+    expect(apiClient.post).toHaveBeenCalledWith('/inscripcion/solicitar', {
+      disciplinaId: 5,
+      categoriaDisciplinaId: 10,
+    });
+    expect(res).toEqual(solicitudMock);
+  });
+
+  it('obtenerMisSolicitudesInscripcion() envía get a /inscripcion/mis-solicitudes', async () => {
+    const listaMock = [{ id: 1, estado: 'PENDIENTE' }];
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: listaMock });
+    const res = await obtenerMisSolicitudesInscripcion();
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/mis-solicitudes', undefined);
+    expect(res).toEqual(listaMock);
+  });
+
+  it('obtenerMisSolicitudesInscripcion(estado) envía get con params', async () => {
+    const listaMock = [{ id: 2, estado: 'RECHAZADA' }];
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: listaMock });
+    const res = await obtenerMisSolicitudesInscripcion('RECHAZADA');
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/mis-solicitudes', {
+      params: { estado: 'RECHAZADA' },
+    });
+    expect(res).toEqual(listaMock);
+  });
+
+  it('listarSolicitudesInscripcion() envía get a /inscripcion/solicitudes con filtros', async () => {
+    const listaMock = [{ id: 10, estado: 'PENDIENTE' }];
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: listaMock });
+    const res = await listarSolicitudesInscripcion({
+      estado: 'PENDIENTE',
+      disciplinaId: 2,
+      busqueda: '  Luna  ',
+    });
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/solicitudes', {
+      params: {
+        estado: 'PENDIENTE',
+        disciplinaId: 2,
+        busqueda: 'Luna',
+      },
+    });
+    expect(res).toEqual(listaMock);
+  });
+
+  it('aprobarSolicitudInscripcion() envía patch a /inscripcion/solicitudes/:id/aprobar', async () => {
+    const respuestaMock = {
+      solicitud: { id: 10, estado: 'APROBADA' },
+      inscripcion: { id: 500 },
+      estadoDocumental: { estado: 'HABILITADO' },
+    };
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: respuestaMock });
+    const res = await aprobarSolicitudInscripcion(10);
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/solicitudes/10/aprobar');
+    expect(res).toEqual(respuestaMock);
+  });
+
+  it('rechazarSolicitudInscripcion() envía patch a /inscripcion/solicitudes/:id/rechazar con motivo', async () => {
+    const respuestaMock = { id: 10, estado: 'RECHAZADA', motivoRechazo: 'Cupo completo' };
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: respuestaMock });
+    const res = await rechazarSolicitudInscripcion(10, 'Cupo completo');
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/solicitudes/10/rechazar', {
+      motivo: 'Cupo completo',
+    });
+    expect(res).toEqual(respuestaMock);
+  });
+
+  it('cancelarSolicitudInscripcion() envía patch al endpoint de cancelación', async () => {
+    const solicitudMock = { id: 5, estado: 'CANCELADA' };
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: solicitudMock });
+
+    const res = await cancelarSolicitudInscripcion(5);
+
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/solicitudes/5/cancelar');
+    expect(res).toEqual(solicitudMock);
+  });
+
+  it('subirDocumentacionSolicitud() envía multipart al endpoint de documentación', async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { id: 8 } });
+    const archivo = new File(['contenido'], 'dni.pdf', { type: 'application/pdf' });
+
+    await subirDocumentacionSolicitud(5, {
+      tipoDocumento: 'DNI',
+      fechaVencimiento: '2030-01-01',
+    }, archivo);
+
+    const [url, form, config] = vi.mocked(apiClient.post).mock.calls[0];
+    expect(url).toBe('/inscripcion/solicitudes/5/documentacion');
+    expect((form as FormData).get('tipoDocumento')).toBe('DNI');
+    expect((form as FormData).get('fechaVencimiento')).toBe('2030-01-01');
+    expect((form as FormData).get('archivo')).toBe(archivo);
+    expect(config).toEqual({ headers: { 'Content-Type': 'multipart/form-data' } });
+  });
+});

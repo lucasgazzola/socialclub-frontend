@@ -3,9 +3,17 @@ import type { Paginated } from '@/types/api';
 import type { Socio, SocioFormData, SociosQuery } from '../types';
 import type { PerfilSocioFormData } from '../schemas';
 
+/** DT-54: la confirmación del email viaja solo si se escribió. */
+function sinConfirmacionVacia<T extends { confirmarEmail?: string }>(datos: T): T {
+  if (datos.confirmarEmail?.trim()) return datos;
+  const resto = { ...datos };
+  delete resto.confirmarEmail;
+  return resto;
+}
+
 export const sociosApi = {
   async create(formData: SocioFormData): Promise<Socio> {
-    const { data } = await apiClient.post<Socio>('/socios', formData);
+    const { data } = await apiClient.post<Socio>('/socios', sinConfirmacionVacia(formData));
     return data;
   },
 
@@ -15,8 +23,11 @@ export const sociosApi = {
         busqueda: query.busqueda || undefined,
         categoriaId: query.categoriaId || undefined,
         estado: query.estado || undefined,
+        estadoCuenta: query.estadoCuenta || undefined,
         pagina: query.pagina,
         porPagina: query.porPagina,
+        ordenarPor: query.ordenarPor || undefined,
+        orden: query.orden || undefined,
       },
     });
     return data;
@@ -40,12 +51,30 @@ export const sociosApi = {
   },
 
   async update(id: number, formData: Partial<SocioFormData>): Promise<Socio> {
-    const { data } = await apiClient.patch<Socio>(`/socios/${id}`, formData);
+    const { data } = await apiClient.patch<Socio>(`/socios/${id}`, sinConfirmacionVacia(formData));
     return data;
   },
 
   async deactivate(id: number): Promise<Socio> {
     const { data } = await apiClient.delete<Socio>(`/socios/${id}`);
+    return data;
+  },
+
+  /** US-42: Darme de baja como socio logueado. */
+  async darseDeBaja(): Promise<Socio> {
+    const { data } = await apiClient.post<Socio>('/socios/darse-de-baja');
+    return data;
+  },
+
+  /** US-43: Reactivar membresía de un socio (Admin/Colaborador). */
+  async activate(id: number): Promise<Socio> {
+    const { data } = await apiClient.patch<Socio>(`/socios/${id}/activar`);
+    return data;
+  },
+
+  /** US-43: Reactivar mi membresía como ex-socio logueado. */
+  async reactivarme(): Promise<Socio> {
+    const { data } = await apiClient.post<Socio>('/socios/reactivarme');
     return data;
   },
 };

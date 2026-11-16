@@ -1,54 +1,156 @@
 import { useState } from 'react';
-import { Button, Select, Spinner } from '@/components/ui';
+import { ChevronDown } from 'lucide-react';
+import { Button, Spinner, TableExportMenu } from '@/components/ui';
+import type { ExportColumn } from '@/lib/utils/exportTable';
+import { auditoriaApi } from '../api/auditoria.api';
+import type { RegistroAuditoria } from '../types';
+import { cn } from '@/lib/utils/cn';
 import { useAuditoria } from '../hooks/useAuditoria';
+import { useResponsables } from '../hooks/useResponsables';
 import { AuditoriaTable } from '../components/AuditoriaTable';
-import { ACCIONES_AUDITORIA } from '../constants';
+import { AuditoriaFilters } from '../components/AuditoriaFilters';
+import type { AuditoriaFiltrosFormValues } from '../schemas/auditoria-filtros.schema';
 import type { AccionAuditoria } from '../constants';
+import { formatearFechaHora24 } from '@/lib/utils/fecha';
 
-const POR_PAGINA = 20;
+const POR_PAGINA_DEFAULT = 10;
+
+const COLUMNAS_EXPORT_AUDITORIA: ExportColumn<RegistroAuditoria>[] = [
+  { header: 'Fecha y hora', accessor: (r) => formatearFechaHora24(r.fechaHora) },
+  { header: 'Acción', accessor: (r) => r.accion },
+  { header: 'Entidad', accessor: (r) => r.entidad },
+  { header: 'ID', accessor: (r) => r.idEntidad ?? '—' },
+  {
+    header: 'Responsable',
+    accessor: (r) => (r.responsable ? `${r.responsable.nombre} ${r.responsable.apellido}` : '—'),
+  },
+  { header: 'Detalle', accessor: (r) => r.detalle ?? '—' },
+];
 
 export function AuditoriaPage() {
-  const [accion, setAccion] = useState<AccionAuditoria | undefined>(undefined);
+  const [filtros, setFiltros] = useState<AuditoriaFiltrosFormValues>({
+    periodo: 'todo',
+  });
   const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(POR_PAGINA_DEFAULT);
+  const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
+  const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
+
+  function handleOrdenar(campo: string) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+  }
+
+  const esPersonalizado = filtros.periodo === 'personalizado';
+
+  const { data: responsables = [] } = useResponsables();
 
   const { data, isLoading, isError, error, isFetching } = useAuditoria({
-    accion,
+    accion: (filtros.accion as AccionAuditoria) || undefined,
+    entidad: filtros.entidad?.trim() || undefined,
+    responsableId: filtros.responsableId,
+    periodo: filtros.periodo && filtros.periodo !== 'todo' ? filtros.periodo : undefined,
+    fechaDesde: esPersonalizado ? filtros.fechaDesde || undefined : undefined,
+    fechaHasta: esPersonalizado ? filtros.fechaHasta || undefined : undefined,
     pagina,
-    porPagina: POR_PAGINA,
+    porPagina,
+    ordenarPor,
+    orden,
   });
 
-  const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
-  const hayResultados = (data?.items.length ?? 0) > 0;
+  const total = data?.total ?? 0;
+  const totalPaginas = Math.max(1, Math.ceil(total / porPagina));
+  const hayResultados = (data?.items?.length ?? 0) > 0;
+
+  const registroDesde = total > 0 ? (pagina - 1) * porPagina + 1 : 0;
+  const registroHasta = total > 0 ? Math.min(pagina * porPagina, total) : 0;
+
+  function generarPaginas(actual: number, totalPags: number): (number | '...')[] {
+    if (totalPags <= 7) {
+      return Array.from({ length: totalPags }, (_, i) => i + 1);
+    }
+    if (actual <= 4) {
+      return [1, 2, 3, 4, 5, '...', totalPags];
+    }
+    if (actual >= totalPags - 3) {
+      return [1, '...', totalPags - 4, totalPags - 3, totalPags - 2, totalPags - 1, totalPags];
+    }
+    return [1, '...', actual - 1, actual, actual + 1, '...', totalPags];
+  }
+
+  const paginasVisibles = generarPaginas(pagina, totalPaginas);
+
+  function handleFiltrar(nuevosFiltros: AuditoriaFiltrosFormValues) {
+    setPagina(1);
+    setFiltros(nuevosFiltros);
+  }
+
+  function handleLimpiar() {
+    setPagina(1);
+    setFiltros({ periodo: 'todo' });
+  }
+
+  function handleCambiarPorPagina(nuevoPorPagina: number) {
+    setPorPagina(nuevoPorPagina);
+    setPagina(1);
+  }
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Auditoría</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Registro inalterable de todas las operaciones del sistema.
-          </p>
-        </div>
-
-        <Select
-          id="accion"
-          value={accion ?? ''}
-          onChange={(e) => {
-            setPagina(1);
-            setAccion(e.target.value ? (e.target.value as AccionAuditoria) : undefined);
-          }}
-          className="min-w-[180px]"
-        >
-          <option value="">Todas las acciones</option>
-          {ACCIONES_AUDITORIA.map((a) => (
-            <option key={a.value} value={a.value}>
-              {a.label}
-            </option>
-          ))}
-        </Select>
+    <div className="space-y-4">
+      {/* Encabezado según ESTANDARES_UI_UX.md */}
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Auditoría</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Registro inalterable de todas las operaciones del sistema.
+        </p>
       </header>
 
-      {isLoading ? (
+      {/* Componente de Filtros */}
+      <AuditoriaFilters
+        onFiltrar={handleFiltrar}
+        onLimpiar={handleLimpiar}
+        filtrosActivos={filtros}
+        deshabilitado={isLoading && !data}
+        responsables={responsables}
+        exportAction={
+          <TableExportMenu<RegistroAuditoria>
+            filename="auditoria"
+            title="Auditoría"
+            disabled={isLoading && !data}
+            columns={COLUMNAS_EXPORT_AUDITORIA}
+            fetchRows={async () => {
+              const res = await auditoriaApi.list({
+                accion: (filtros.accion as AccionAuditoria) || undefined,
+                entidad: filtros.entidad?.trim() || undefined,
+                responsableId: filtros.responsableId,
+                periodo: filtros.periodo && filtros.periodo !== 'todo' ? filtros.periodo : undefined,
+                fechaDesde: esPersonalizado ? filtros.fechaDesde || undefined : undefined,
+                fechaHasta: esPersonalizado ? filtros.fechaHasta || undefined : undefined,
+                pagina: 1,
+                porPagina: 10000,
+                ordenarPor,
+                orden,
+              });
+              return res?.items ?? [];
+            }}
+          />
+        }
+      />
+
+      {/* Estado de carga inicial */}
+      {isLoading && !data ? (
         <div className="flex justify-center py-12">
           <Spinner className="h-6 w-6" />
         </div>
@@ -57,38 +159,109 @@ export function AuditoriaPage() {
           {error instanceof Error ? error.message : 'No se pudo cargar el log de auditoría.'}
         </div>
       ) : (
-        <>
-          <AuditoriaTable registros={data?.items ?? []} />
+        <div>
+          {/* Tabla de auditoría */}
+          <AuditoriaTable
+            registros={data?.items ?? []}
+            isFetching={isFetching}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
+          />
 
+          {/* Barra de paginación completa con rango de resultados, selector de filas y páginas */}
           {hayResultados && (
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>
-                {data?.total ?? 0} registro(s){isFetching ? ' · actualizando…' : ''}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina <= 1}
-                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </Button>
+            <div
+              style={{ marginTop: '16px' }}
+              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500"
+            >
+              {/* Izquierda: Mostrando X-Y de Z resultados (estilo Showing 1-3 of 3 results) */}
+              <div style={{ marginTop: '-1px' }}>
                 <span>
-                  Página {pagina} de {totalPaginas}
+                  Mostrando {registroDesde}-{registroHasta} de {total} resultados
                 </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina >= totalPaginas}
-                  onClick={() => setPagina((p) => p + 1)}
-                >
-                  Siguiente
-                </Button>
+                {isFetching && <span className="text-slate-400"> · actualizando…</span>}
+              </div>
+
+              {/* Derecha: Selector de filas + Botonera de páginas */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <label htmlFor="porPagina" className="text-slate-500">
+                    Filas
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="porPagina"
+                      aria-label="Filas por página"
+                      value={porPagina}
+                      onChange={(e) => handleCambiarPorPagina(Number(e.target.value))}
+                      disabled={isFetching}
+                      className="h-8 rounded-lg border border-slate-200/90 bg-white pl-2.5 pr-7 text-xs font-medium text-slate-700 shadow-xs transition-colors hover:border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/15 cursor-pointer appearance-none"
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <ChevronDown
+                      size={12}
+                      className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={pagina <= 1 || isFetching}
+                    onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                    className="h-8 px-2.5 text-xs font-medium"
+                  >
+                    Anterior
+                  </Button>
+
+                  {paginasVisibles.map((p, idx) =>
+                    typeof p === 'number' ? (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPagina(p)}
+                        disabled={isFetching}
+                        aria-label={`Página ${p}`}
+                        aria-current={p === pagina ? 'page' : undefined}
+                        className={cn(
+                          'inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-medium transition-all select-none',
+                          p === pagina
+                            ? 'bg-brand-600 text-white font-semibold shadow-xs'
+                            : 'border border-slate-200/90 bg-white text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900',
+                        )}
+                      >
+                        {p}
+                      </button>
+                    ) : (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        className="inline-flex h-8 w-5 items-center justify-center text-xs text-slate-400"
+                      >
+                        …
+                      </span>
+                    ),
+                  )}
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={pagina >= totalPaginas || isFetching}
+                    onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+                    className="h-8 px-2.5 text-xs font-medium"
+                  >
+                    Siguiente
+                  </Button>
+                </div>
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

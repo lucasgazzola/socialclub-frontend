@@ -4,11 +4,29 @@ import userEvent from '@testing-library/user-event';
 import { PerfilSocioForm } from './PerfilSocioForm';
 import type { PersonaDeUsuario, UsuarioAutenticado } from '@/features/auth/types';
 
-const mockMutateAsync = vi.fn();
+const { mockMutateAsync, mockDarseDeBajaMutateAsync, mockReactivarmeMutateAsync } = vi.hoisted(() => ({
+  mockMutateAsync: vi.fn(),
+  mockDarseDeBajaMutateAsync: vi.fn(),
+  mockReactivarmeMutateAsync: vi.fn(),
+}));
 
 vi.mock('../hooks/useSocios', () => ({
   useUpdatePerfilSocio: () => ({
     mutateAsync: mockMutateAsync,
+    isPending: false,
+  }),
+}));
+
+vi.mock('../hooks/useDarseDeBajaSocio', () => ({
+  useDarseDeBajaSocio: () => ({
+    mutateAsync: mockDarseDeBajaMutateAsync,
+    isPending: false,
+  }),
+}));
+
+vi.mock('../hooks/useReactivarmeSocio', () => ({
+  useReactivarmeSocio: () => ({
+    mutateAsync: mockReactivarmeMutateAsync,
     isPending: false,
   }),
 }));
@@ -46,7 +64,7 @@ describe('PerfilSocioForm (US-11)', () => {
     render(<PerfilSocioForm usuario={mockUsuario} persona={mockPersona} />);
 
     const dniInput = screen.getByLabelText(/DNI/i);
-    expect(dniInput).toHaveValue('40123456');
+    expect(dniInput).toHaveValue('40.123.456');
     expect(dniInput).toBeDisabled();
     expect(dniInput).toHaveAttribute('readonly');
 
@@ -84,6 +102,7 @@ describe('PerfilSocioForm (US-11)', () => {
 
     await user.clear(emailInput);
     await user.type(emailInput, 'lucas.nuevo@club.com');
+    await user.type(screen.getByLabelText(/Repetí el email/i), 'lucas.nuevo@club.com');
 
     await user.clear(telefonoInput);
     await user.type(telefonoInput, '351 999 8888');
@@ -96,12 +115,13 @@ describe('PerfilSocioForm (US-11)', () => {
         nombre: 'Lucas David',
         apellido: 'Gazzola Alvarez',
         email: 'lucas.nuevo@club.com',
+        confirmarEmail: 'lucas.nuevo@club.com',
         telefono: '351 999 8888',
       });
     });
 
     expect(await screen.findByRole('status')).toHaveTextContent(
-      'Tus datos personales fueron actualizados con éxito.',
+      'Te enviamos un email a la nueva dirección para confirmarla.',
     );
   });
 
@@ -153,5 +173,53 @@ describe('PerfilSocioForm (US-11)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'El correo electrónico ya se encuentra registrado por otro usuario activo.',
     );
+  });
+
+  it('US-42: muestra la opción de darse de baja cuando tiene membresía activa y abre el modal', async () => {
+    const user = userEvent.setup();
+    mockDarseDeBajaMutateAsync.mockResolvedValueOnce({});
+
+    render(<PerfilSocioForm usuario={mockUsuario} persona={mockPersona} />);
+
+    const bajaBtn = screen.getByRole('button', { name: /Solicitar baja como socio/i });
+    expect(bajaBtn).toBeInTheDocument();
+
+    await user.click(bajaBtn);
+
+    expect(screen.getByText(/Confirmar baja como socio/i)).toBeInTheDocument();
+
+    const confirmModalBtn = screen.getByRole('button', { name: /Sí, confirmar baja/i });
+    await user.click(confirmModalBtn);
+
+    expect(mockDarseDeBajaMutateAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('US-43: muestra la opción de reactivar la membresía cuando la persona es ex-socio inactivo', async () => {
+    const user = userEvent.setup();
+    mockReactivarmeMutateAsync.mockResolvedValueOnce({});
+
+    const personaInactiva: PersonaDeUsuario = {
+      ...mockPersona,
+      membresias: [
+        {
+          id: 1,
+          categoriaId: 1,
+          categoria: { id: 1, nombre: 'Activo' },
+          fechaAlta: '2025-01-01',
+          activo: false,
+        },
+      ],
+    };
+
+    render(<PerfilSocioForm usuario={mockUsuario} persona={personaInactiva} />);
+
+    expect(screen.getByText(/Estado de membresía: Inactivo \(Ex-socio\)/i)).toBeInTheDocument();
+
+    const reactivarBtn = screen.getByRole('button', { name: /Reactivar mi membresía/i });
+    expect(reactivarBtn).toBeInTheDocument();
+
+    await user.click(reactivarBtn);
+
+    expect(mockReactivarmeMutateAsync).toHaveBeenCalledTimes(1);
   });
 });

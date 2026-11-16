@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   listarInscripciones,
   getInscripcion,
@@ -19,9 +19,32 @@ export function useInscripciones(query: InscripcionesQuery = {}) {
   const busqueda = query.busqueda;
   const disciplinaId = query.disciplinaId;
   const estado = query.estado;
+  const estadoDocumental = query.estadoDocumental;
+  const ordenarPor = query.ordenarPor;
+  const orden = query.orden;
   return useQuery({
-    queryKey: inscripcionesKeys.list({ pagina, porPagina, busqueda, disciplinaId, estado }),
-    queryFn: () => listarInscripciones({ pagina, porPagina, busqueda, disciplinaId, estado }),
+    queryKey: inscripcionesKeys.list({
+      pagina,
+      porPagina,
+      busqueda,
+      disciplinaId,
+      estado,
+      estadoDocumental,
+      ordenarPor,
+      orden,
+    }),
+    queryFn: () =>
+      listarInscripciones({
+        pagina,
+        porPagina,
+        busqueda,
+        disciplinaId,
+        estado,
+        estadoDocumental,
+        ordenarPor,
+        orden,
+      }),
+    placeholderData: keepPreviousData,
   });
 }
 

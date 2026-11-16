@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { auditoriaApi } from '../api/auditoria.api';
 import type { AuditoriaQuery } from '../types';
 
@@ -11,5 +11,6 @@ export function useAuditoria(query: AuditoriaQuery) {
   return useQuery({
     queryKey: auditoriaKeys.list(query),
     queryFn: () => auditoriaApi.list(query),
+    placeholderData: keepPreviousData,
   });
 }

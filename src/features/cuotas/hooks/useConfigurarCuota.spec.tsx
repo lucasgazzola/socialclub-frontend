@@ -34,7 +34,7 @@ describe('useConfigurarCuota', () => {
   });
 
   it('envía la configuración y confirma con un toast de éxito', async () => {
-    const payload = { disciplinaId: 1, categoriaId: 1, monto: 15000 };
+    const payload = { disciplinaId: 1, categoriaDisciplinaId: 7, monto: 15000 };
     (cuotasApi.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1 });
 
     const { result } = renderHook(() => useConfigurarCuota(), { wrapper: createWrapper() });
@@ -48,7 +48,7 @@ describe('useConfigurarCuota', () => {
   });
 
   it('envía el período de aplicación cuando se indica', async () => {
-    const payload = { disciplinaId: 1, categoriaId: 1, monto: 15000, periodoAplicacion: '2026-09' };
+    const payload = { disciplinaId: 1, categoriaDisciplinaId: 7, monto: 15000, periodoAplicacion: '2026-09' };
     (cuotasApi.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1 });
 
     const { result } = renderHook(() => useConfigurarCuota(), { wrapper: createWrapper() });
@@ -66,7 +66,7 @@ describe('useConfigurarCuota', () => {
     const { result } = renderHook(() => useConfigurarCuota(), { wrapper: createWrapper() });
 
     await expect(
-      result.current.mutateAsync({ disciplinaId: 1, categoriaId: 1, monto: 0 }),
+      result.current.mutateAsync({ disciplinaId: 1, categoriaDisciplinaId: 7, monto: 0 }),
     ).rejects.toThrow('El monto debe ser mayor a cero');
 
     await waitFor(() => {

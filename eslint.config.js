@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules'] },
+  { ignores: ['dist', 'node_modules', 'coverage', 'test-results', 'playwright-report', 'dist-e2e'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -43,6 +43,20 @@ export default tseslint.config(
     },
     rules: {
       'react-refresh/only-export-components': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    // TASK-43: pruebas E2E con Playwright (corren en Node). Los fixtures de
+    // Playwright reciben `use` (no es un hook de React) y exigen desestructurar
+    // con `{}` aunque no usen otros fixtures.
+    files: ['e2e/**/*.ts', 'playwright.config.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      'no-empty-pattern': 'off',
     },
   },
   {

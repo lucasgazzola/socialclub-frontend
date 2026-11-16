@@ -1,115 +1,289 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pencil } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Coins, Pencil, UserCheck, UserMinus } from 'lucide-react';
+import { Badge, Button, HeaderOrdenable } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { useDesactivarSocio } from '../hooks/useDesactivarSocio';
+import { useReactivarSocio } from '../hooks/useReactivarSocio';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
+import { ModalCobroCuotaSocio } from '@/features/pagos/components/ModalCobroCuotaSocio';
+import { useCuotasPendientesSocio } from '@/features/pagos/hooks/useCuotasPendientesSocio';
 import type { Socio } from '../types';
 
 interface SociosTableProps {
   socios: Socio[];
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
+  onOrdenar?: (campo: string) => void;
 }
 
-export function SociosTable({ socios }: SociosTableProps) {
+function SocioEstadoCell({ socio }: { socio: Socio }) {
+  return (
+    <Badge variant={socio.activo ? 'success' : 'danger'}>
+      {socio.activo ? 'Activo' : 'Inactivo'}
+    </Badge>
+  );
+}
+
+function SocioCuentaCell({
+  socio,
+  puedeCobrar,
+  onCobrar,
+}: {
+  socio: Socio;
+  puedeCobrar: boolean;
+  onCobrar: () => void;
+}) {
+  const { data, isLoading, isError } = useCuotasPendientesSocio(socio.id);
+
+  if (isLoading) {
+    return (
+      <span
+        data-testid={`estado-cuota-loading-${socio.id}`}
+        className="inline-block h-5 w-16 animate-pulse rounded-full bg-slate-100"
+      />
+    );
+  }
+
+  if (isError || !data) {
+    return <span className="text-xs text-slate-400">—</span>;
+  }
+
+  if (data.estadoFinanciero === 'AL_DIA' || data.cuotasPendientes.length === 0) {
+    return <Badge variant="success">Al día</Badge>;
+  }
+
+  const label = `Moroso (${data.cuotasPendientes.length})`;
+
+  if (puedeCobrar) {
+    return (
+      <button
+        type="button"
+        onClick={onCobrar}
+        title="Cobrar cuotas pendientes"
+        className="cursor-pointer transition-opacity hover:opacity-80"
+      >
+        <Badge variant="warning">{label}</Badge>
+      </button>
+    );
+  }
+
+  return <Badge variant="warning">{label}</Badge>;
+}
+
+export function SociosTable({ socios, ordenarPor, orden, onOrdenar }: SociosTableProps) {
   const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [socioCobro, setSocioCobro] = useState<Socio | null>(null);
   const { mutate: desactivar, isPending } = useDesactivarSocio();
+  const { mutate: reactivar, isPending: isReactivando } = useReactivarSocio();
   const navigate = useNavigate();
   const { usuario } = useAuth();
-  const esAdmin = usuario?.roles.includes('ADMIN');
+  const puedeGestionar = Boolean(
+    usuario?.roles.some((r) => r === 'ADMIN' || r === 'COLABORADOR'),
+  );
+  const puedeCobrar = Boolean(usuario?.roles.some((r) => r === 'ADMIN' || r === 'COLABORADOR'));
+
+  const sociosOrdenados = useMemo(() => {
+    // El orden por defecto (morosos primero) lo resuelve el backend sobre
+    // todas las páginas. Reordenar acá solo la página visible lo deshacía.
+    if (!ordenarPor || !orden) return socios;
+
+    const copia = [...socios];
+    copia.sort((a, b) => {
+      let comp: number;
+      switch (ordenarPor) {
+        case 'dni': {
+          const dniA = Number(String(a.dni ?? '').replace(/\D/g, '')) || 0;
+          const dniB = Number(String(b.dni ?? '').replace(/\D/g, '')) || 0;
+          comp = dniA - dniB;
+          break;
+        }
+        case 'email':
+          comp = (a.email ?? '').localeCompare(b.email ?? '', 'es', { sensitivity: 'base' });
+          break;
+        case 'categoria': {
+          const catA = a.categoria?.nombre ?? '';
+          const catB = b.categoria?.nombre ?? '';
+          comp = catA.localeCompare(catB, 'es', { sensitivity: 'base' });
+          break;
+        }
+        case 'estado':
+          comp = (b.activo ? 1 : 0) - (a.activo ? 1 : 0);
+          break;
+        case 'nombre':
+        default: {
+          const nA = `${a.apellido} ${a.nombre}`.trim().toLowerCase();
+          const nB = `${b.apellido} ${b.nombre}`.trim().toLowerCase();
+          comp = nA.localeCompare(nB, 'es', { sensitivity: 'base' });
+          break;
+        }
+      }
+      return orden === 'asc' ? comp : -comp;
+    });
+    return copia;
+  }, [socios, ordenarPor, orden]);
 
   if (socios.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
+      <div className="rounded-xl border border-slate-200/80 bg-white p-8 text-center text-sm text-slate-500 shadow-xs">
         No se encontraron resultados
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-          <tr>
-            <th className="px-4 py-3 font-medium">Apellido y nombre</th>
-            <th className="px-4 py-3 font-medium">DNI</th>
-            <th className="px-4 py-3 font-medium">Email</th>
-            <th className="px-4 py-3 font-medium">Categoría</th>
-            <th className="px-4 py-3 font-medium">Estado</th>
-            <th className="px-4 py-3 font-medium">Acciones</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {socios.map((socio) => (
-            <tr key={socio.id} className="hover:bg-slate-50">
-              <td className="px-4 py-3 text-slate-900">
-                {socio.apellido}, {socio.nombre}
-              </td>
-              <td className="px-4 py-3 text-slate-600">{socio.dni}</td>
-              <td className="px-4 py-3 text-slate-600">{socio.email ?? '—'}</td>
-              <td className="px-4 py-3 text-slate-600">{socio.categoria?.nombre ?? '—'}</td>
-              <td className="px-4 py-3">
-                <span
-                  className={
-                    socio.activo
-                      ? 'rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700'
-                      : 'rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500'
-                  }
-                >
-                  {socio.activo ? 'Alta' : 'Baja'}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-2">
-                  {esAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(ROUTES.sociosEditar.replace(':id', String(socio.id)))}
-                    >
-                      <Pencil size={14} />
-                      Editar
-                    </Button>
-                  )}
-                  {socio.activo && (
-                    confirmId === socio.id ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500">¿Confirmar baja?</span>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          disabled={isPending}
-                          onClick={() => {
-                            desactivar(socio.id);
-                            setConfirmId(null);
-                          }}
-                        >
-                          Sí
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setConfirmId(null)}
-                        >
-                          No
-                        </Button>
-                      </div>
-                    ) : (
+    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-slate-200/80 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <tr>
+              <HeaderOrdenable
+                campo="nombre"
+                label="Apellido y nombre"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="dni"
+                label="DNI"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="email"
+                label="Email"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="categoria"
+                label="Categoría"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <HeaderOrdenable
+                campo="estado"
+                label="Estado"
+                ordenarPor={ordenarPor}
+                orden={orden}
+                onOrdenar={onOrdenar}
+              />
+              <th className="px-5 py-3.5">Estado de cuenta</th>
+              <th className="px-5 py-3.5 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sociosOrdenados.map((socio) => (
+              <tr
+                key={socio.id}
+                className="border-b border-slate-100 last:border-b-0 transition-colors hover:bg-slate-50/70"
+              >
+                <td className="px-5 py-3.5 font-medium text-slate-900">
+                  {socio.apellido}, {socio.nombre}
+                </td>
+                <td className="px-5 py-3.5 font-mono text-xs text-slate-600 tabular-nums">{formatearDni(socio.dni)}</td>
+                <td className="px-5 py-3.5 text-slate-600">{socio.email ?? '—'}</td>
+                <td className="px-5 py-3.5 text-slate-600">{socio.categoria?.nombre ?? '—'}</td>
+                <td className="px-5 py-3.5">
+                  <SocioEstadoCell socio={socio} />
+                </td>
+                <td className="px-5 py-3.5">
+                  <SocioCuentaCell
+                    socio={socio}
+                    puedeCobrar={puedeCobrar}
+                    onCobrar={() => setSocioCobro(socio)}
+                  />
+                </td>
+                <td className="px-5 py-3.5 text-right">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {puedeCobrar && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setConfirmId(socio.id)}
+                        onClick={() => setSocioCobro(socio)}
                       >
-                        Dar de baja
+                        <Coins size={14} />
+                        Cobrar
                       </Button>
-                    )
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    )}
+                    {puedeGestionar && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(ROUTES.editarSocio(socio.id))}
+                      >
+                        <Pencil size={14} />
+                        Editar
+                      </Button>
+                    )}
+                    {puedeGestionar && !socio.activo && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label="Dar de alta (Re-asociar)"
+                        className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                        disabled={isReactivando}
+                        onClick={() => reactivar(socio.id)}
+                      >
+                        <UserCheck size={14} />
+                        Dar de alta
+                      </Button>
+                    )}
+                    {puedeGestionar && socio.activo && (
+                      confirmId === socio.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-slate-500">¿Confirmar baja?</span>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={isPending}
+                            onClick={() => {
+                              desactivar(socio.id);
+                              setConfirmId(null);
+                            }}
+                          >
+                            Sí
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmId(null)}
+                          >
+                            No
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                          onClick={() => {
+                            setConfirmId(socio.id);
+                          }}
+                        >
+                          <UserMinus size={14} />
+                          Dar de baja
+                        </Button>
+                      )
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <ModalCobroCuotaSocio
+        open={Boolean(socioCobro)}
+        onClose={() => setSocioCobro(null)}
+        socio={socioCobro}
+      />
     </div>
   );
 }

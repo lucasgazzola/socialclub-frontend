@@ -8,11 +8,11 @@ export function useActualizarCuota() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: ActualizarCuotaDto }) =>
+    mutationFn: ({ id, payload }: { id: number; payload: ActualizarCuotaDto; mensaje?: string }) =>
       cuotasApi.update(id, payload),
-    onSuccess: () => {
+    onSuccess: (_cuota, { mensaje }) => {
       queryClient.invalidateQueries({ queryKey: cuotasKeys.all });
-      toast.success('Cuota actualizada exitosamente');
+      toast.success(mensaje ?? 'Cuota actualizada exitosamente');
     },
     onError: (error: unknown) => {
       toast.error(error instanceof Error ? error.message : 'Error al actualizar la cuota');

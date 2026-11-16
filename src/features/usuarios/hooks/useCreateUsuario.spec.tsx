@@ -32,7 +32,7 @@ function buildPayload(overrides: Record<string, unknown> = {}) {
   return {
     dni: '40123456',
     email: 'nuevo.admin@socialclub.local',
-    password: 'Admin123!',
+    confirmarEmail: 'nuevo.admin@socialclub.local',
     nombre: 'Nuevo',
     apellido: 'Administrador',
     roles: ['ADMIN'],
@@ -70,7 +70,9 @@ describe('HU1 - Registrar un nuevo usuario administrativo', () => {
 
       expect(usuariosApi.create).toHaveBeenCalledWith(buildPayload(), expect.anything());
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith('Usuario creado exitosamente');
+        expect(toast.success).toHaveBeenCalledWith(
+          'Usuario creado. Le enviamos un email para que elija su contraseña.',
+        );
       });
     });
 
@@ -87,7 +89,9 @@ describe('HU1 - Registrar un nuevo usuario administrativo', () => {
 
       expect(usuariosApi.create).toHaveBeenCalledWith(payload, expect.anything());
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith('Usuario creado exitosamente');
+        expect(toast.success).toHaveBeenCalledWith(
+          'Usuario creado. Le enviamos un email para que elija su contraseña.',
+        );
       });
     });
   });
@@ -175,7 +179,7 @@ describe('HU1 - Registrar un nuevo usuario administrativo', () => {
   });
 
   describe('Criterio: El sistema confirma el registro exitoso con un mensaje claro', () => {
-    it('muestra toast.success con el mensaje "Usuario creado exitosamente" tras crear un usuario', async () => {
+    it('DT-54: muestra toast.success avisando que se envió el email para elegir la contraseña', async () => {
       (usuariosApi.create as ReturnType<typeof vi.fn>).mockResolvedValue(buildCreatedUser());
 
       const { result } = renderHook(() => useCreateUsuario(), { wrapper: createWrapper() });
@@ -183,7 +187,9 @@ describe('HU1 - Registrar un nuevo usuario administrativo', () => {
       await result.current.mutateAsync(buildPayload());
 
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith('Usuario creado exitosamente');
+        expect(toast.success).toHaveBeenCalledWith(
+          'Usuario creado. Le enviamos un email para que elija su contraseña.',
+        );
       });
       expect(toast.success).toHaveBeenCalledTimes(1);
     });

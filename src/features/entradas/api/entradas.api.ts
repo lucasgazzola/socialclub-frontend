@@ -1,5 +1,14 @@
 import { apiClient } from '@/lib/api/client';
-import type { CrearEntradasResult, Entrada, ValidarAccesoResponse } from '../types';
+import type {
+  ComprarEntradasPayload,
+  CrearEntradasResult,
+  Entrada,
+  FiltrosMisEntradas,
+  MisEntradasPaginadas,
+  ValidarAccesoResponse,
+  ValidarEntradaDto,
+} from '../types';
+import type { OrdenPago } from '@/features/pasarela/types';
 
 export const entradasApi = {
   async crearEntradas(eventoId: number, cantidad: number): Promise<CrearEntradasResult> {
@@ -15,9 +24,20 @@ export const entradasApi = {
     return data;
   },
 
-  async validarEntrada(token: string): Promise<ValidarAccesoResponse> {
-    const { data } = await apiClient.post<ValidarAccesoResponse>('/entradas/validar', {
-      token,
+  async validarEntrada(payload: ValidarEntradaDto): Promise<ValidarAccesoResponse> {
+    const { data } = await apiClient.post<ValidarAccesoResponse>('/entradas/validar', payload);
+    return data;
+  },
+
+  /** US-52 · TASK-51: reserva el cupo y devuelve la orden con la URL de la pasarela. */
+  async iniciarCompra(payload: ComprarEntradasPayload): Promise<OrdenPago> {
+    const { data } = await apiClient.post<OrdenPago>('/entradas/checkout', payload);
+    return data;
+  },
+
+  async listarMisEntradas(params?: FiltrosMisEntradas): Promise<MisEntradasPaginadas> {
+    const { data } = await apiClient.get<MisEntradasPaginadas>('/entradas/mis-entradas', {
+      params,
     });
     return data;
   },

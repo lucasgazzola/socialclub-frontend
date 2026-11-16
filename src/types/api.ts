@@ -6,6 +6,7 @@ export interface Paginated<T> {
   total: number;
   pagina: number;
   porPagina: number;
+  counts?: Record<string, number>;
 }
 
 /** Formato uniforme de error que devuelve el backend (HttpExceptionFilter). */

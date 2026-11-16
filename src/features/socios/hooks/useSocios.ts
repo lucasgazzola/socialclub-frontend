@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { sociosApi } from '../api/socios.api';
 import type { PerfilSocioFormData } from '../schemas';
@@ -15,6 +15,7 @@ export function useSocios(query: SociosQuery) {
   return useQuery({
     queryKey: sociosKeys.list(query),
     queryFn: () => sociosApi.list(query),
+    placeholderData: keepPreviousData,
   });
 }
 

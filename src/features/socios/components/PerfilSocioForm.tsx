@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, AlertCircle, Lock } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
-import { perfilSocioSchema, type PerfilSocioFormData } from '../schemas';
+import { CheckCircle2, AlertCircle, Lock, UserCheck, UserX } from 'lucide-react';
+import { Button, Input, Select } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
+import { crearPerfilSocioSchema, type PerfilSocioFormData } from '../schemas';
+import { mismoEmail } from '@/lib/utils/email';
 import { useUpdatePerfilSocio } from '../hooks/useSocios';
-import type { PersonaDeUsuario, UsuarioAutenticado } from '@/features/auth/types';
+import { useDarseDeBajaSocio } from '../hooks/useDarseDeBajaSocio';
+import { useReactivarmeSocio } from '../hooks/useReactivarmeSocio';
+import { ModalConfirmarBajaSocio } from './ModalConfirmarBajaSocio';
+import {
+  GENERO_PERSONA_LABELS,
+  type PersonaDeUsuario,
+  type UsuarioAutenticado,
+} from '@/features/auth/types';
 
 interface PerfilSocioFormProps {
   usuario: UsuarioAutenticado;
@@ -15,24 +24,33 @@ interface PerfilSocioFormProps {
 export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [mensajeError, setMensajeError] = useState<string | null>(null);
+  const [modalBajaAbierto, setModalBajaAbierto] = useState(false);
 
   const { mutateAsync: updatePerfil, isPending } = useUpdatePerfilSocio();
+  const { mutateAsync: darseDeBaja, isPending: isBajaPending } = useDarseDeBajaSocio();
+  const { mutateAsync: reactivarme, isPending: isReactivando } = useReactivarmeSocio();
 
   const membresiaActiva = persona?.membresias?.find((m) => m.activo);
+  const esExSocio =
+    !membresiaActiva && Boolean(persona?.membresias && persona.membresias.length > 0);
 
+  const emailOriginal = persona?.email || usuario.email || '';
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<PerfilSocioFormData>({
-    resolver: zodResolver(perfilSocioSchema),
+    resolver: zodResolver(crearPerfilSocioSchema(emailOriginal)),
     defaultValues: {
       nombre: usuario.nombre || '',
       apellido: usuario.apellido || '',
-      email: persona?.email || usuario.email || '',
+      email: emailOriginal,
+      confirmarEmail: '',
       telefono: persona?.telefono || '',
     },
   });
+  const emailCambio = !mismoEmail(watch('email'), emailOriginal);
 
   const onSubmit = handleSubmit(async (data) => {
     setMensajeExito(null);
@@ -40,13 +58,25 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
 
     try {
       await updatePerfil(data);
-      setMensajeExito('Tus datos personales fueron actualizados con éxito.');
+      setMensajeExito(
+        emailCambio
+          ? 'Te enviamos un email a la nueva dirección para confirmarla. Hasta que lo uses, un ingreso nuevo te va a pedir ese enlace. Esta sesión sigue abierta.'
+          : 'Tus datos personales fueron actualizados con éxito.',
+      );
     } catch (error) {
       const err = error as Error & { status?: number };
-      if (err.status === 409 || err.message?.toLowerCase().includes('correo') || err.message?.toLowerCase().includes('email')) {
-        setMensajeError('El correo electrónico ya se encuentra registrado por otro usuario activo.');
+      if (
+        err.status === 409 ||
+        err.message?.toLowerCase().includes('correo') ||
+        err.message?.toLowerCase().includes('email')
+      ) {
+        setMensajeError(
+          'El correo electrónico ya se encuentra registrado por otro usuario activo.',
+        );
       } else {
-        setMensajeError(err.message || 'Ocurrió un error al guardar los cambios. Intentá nuevamente.');
+        setMensajeError(
+          err.message || 'Ocurrió un error al guardar los cambios. Intentá nuevamente.',
+        );
       }
     }
   });
@@ -75,28 +105,49 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
         </div>
       )}
 
+      {/* Sección: Estado Inactivo para Ex-socios */}
+      {esExSocio && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+          <h3 className="mb-1 text-sm font-semibold text-amber-900">
+            Estado de membresía: Inactivo (Ex-socio)
+          </h3>
+          <p className="text-xs text-amber-800">
+            Tu membresía previa se encuentra dada de baja. Podés solicitar la reactivación de tu
+            cuenta en cualquier momento para recuperar el acceso a tus beneficios.
+          </p>
+        </div>
+      )}
+
       {/* Sección: Datos Inalterables / Solo Lectura — SOLO si tiene membresía activa */}
       {membresiaActiva && (
         <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-          <h3 className="mb-3 text-sm font-semibold text-slate-700">Información de la membresía (Solo lectura)</h3>
+          <h3 className="mb-3 text-sm font-semibold text-slate-700">
+            Información de la membresía (Solo lectura)
+          </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label htmlFor="dni" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
+              <label
+                htmlFor="dni"
+                className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600"
+              >
                 <Lock size={14} className="text-slate-400" />
                 DNI
               </label>
               <Input
                 id="dni"
-                value={persona?.dni ?? '—'}
+                value={formatearDni(persona?.dni)}
                 readOnly
                 disabled
-                className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
+                className="cursor-not-allowed bg-slate-100 font-medium text-slate-500"
               />
               <p className="mt-1 text-xs text-slate-400">El DNI es inalterable en el sistema.</p>
             </div>
 
             <div>
-              <label htmlFor="categoria" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
+              <label
+                htmlFor="categoria"
+                className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600"
+              >
                 <Lock size={14} className="text-slate-400" />
                 Categoría
               </label>
@@ -105,12 +156,15 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
                 value={membresiaActiva.categoria?.nombre || 'Socio'}
                 readOnly
                 disabled
-                className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
+                className="cursor-not-allowed bg-slate-100 font-medium text-slate-500"
               />
             </div>
 
             <div>
-              <label htmlFor="estado" className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600">
+              <label
+                htmlFor="estado"
+                className="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-600"
+              >
                 <Lock size={14} className="text-slate-400" />
                 Estado
               </label>
@@ -119,7 +173,7 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
                 value={membresiaActiva.activo ? 'Activo' : 'Inactivo'}
                 readOnly
                 disabled
-                className="cursor-not-allowed bg-slate-100 text-slate-500 font-medium"
+                className="cursor-not-allowed bg-slate-100 font-medium text-slate-500"
               />
             </div>
           </div>
@@ -128,7 +182,9 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
 
       {/* Sección: Datos Editables */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-slate-800">Datos Personales y de Contacto</h3>
+        <h3 className="mb-3 text-sm font-semibold text-slate-800">
+          Datos Personales y de Contacto
+        </h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
             id="nombre"
@@ -155,6 +211,17 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
             {...register('email')}
           />
 
+          {emailCambio && (
+            <Input
+              id="confirmarEmail"
+              label="Repetí el email *"
+              type="email"
+              autoComplete="off"
+              error={errors.confirmarEmail?.message}
+              {...register('confirmarEmail')}
+            />
+          )}
+
           <Input
             id="telefono"
             label="Teléfono"
@@ -163,6 +230,41 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
             error={errors.telefono?.message}
             {...register('telefono')}
           />
+          <div>
+            <Input
+              id="fechaNacimiento"
+              type="date"
+              label="Fecha de nacimiento"
+              value={persona?.fechaNacimiento?.slice(0, 10) ?? ''}
+              readOnly
+              disabled
+              className="cursor-not-allowed bg-slate-100 text-slate-500"
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              La fecha de nacimiento no se puede modificar.
+            </p>
+          </div>
+          <div>
+            <label
+              htmlFor="genero"
+              className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-600"
+            >
+              GENERO
+            </label>
+            <Select
+              id="genero"
+              value={persona?.genero ?? ''}
+              disabled
+              aria-label="GENERO"
+              className="cursor-not-allowed bg-slate-100 text-slate-500"
+            >
+              <option value="">Sin especificar</option>
+              {persona?.genero && (
+                <option value={persona.genero}>{GENERO_PERSONA_LABELS[persona.genero]}</option>
+              )}
+            </Select>
+            <p className="mt-1 text-xs text-slate-400">El género no se puede modificar.</p>
+          </div>
         </div>
       </div>
 
@@ -171,6 +273,70 @@ export function PerfilSocioForm({ usuario, persona }: PerfilSocioFormProps) {
           {isPending ? 'Guardando cambios…' : 'Guardar Cambios'}
         </Button>
       </div>
+
+      {/* Sección: Reactivar mi membresía como ex-socio */}
+      {esExSocio && (
+        <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900">
+            <UserCheck size={18} className="text-emerald-600" />
+            <span>Reactivar mi membresía como socio</span>
+          </div>
+          <p className="text-xs text-emerald-800">
+            Como ex-socio podés reactivar tu membresía para volver a acceder a todos los beneficios
+            y servicios del club.
+          </p>
+          <div>
+            <Button
+              type="button"
+              disabled={isReactivando}
+              onClick={async () => {
+                try {
+                  await reactivarme();
+                } catch {
+                  // Manejo de errores notificado por sonner en el hook
+                }
+              }}
+            >
+              {isReactivando ? 'Reactivando membresía…' : 'Reactivar mi membresía'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Sección: Darme de baja como socio — SOLO si tiene membresía activa */}
+      {membresiaActiva && (
+        <div className="space-y-3 rounded-xl border border-red-200 bg-red-50/50 p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-red-800">
+            <UserX size={18} className="text-red-600" />
+            <span>Darme de baja como socio</span>
+          </div>
+          <p className="text-xs text-red-700">
+            Si decidís darte de baja, tu estado cambiará a Inactivo y no podrás acceder a los
+            beneficios exclusivos para socios. Tu usuario y tus registros se conservarán en el
+            sistema.
+          </p>
+          <div>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={() => setModalBajaAbierto(true)}
+            >
+              Solicitar baja como socio
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <ModalConfirmarBajaSocio
+        open={modalBajaAbierto}
+        onClose={() => setModalBajaAbierto(false)}
+        onConfirm={async () => {
+          await darseDeBaja();
+          setModalBajaAbierto(false);
+        }}
+        isPending={isBajaPending}
+      />
     </form>
   );
 }

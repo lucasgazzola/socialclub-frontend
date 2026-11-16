@@ -88,7 +88,7 @@ describe('US-08 · ParticipantesTable', () => {
     );
 
     expect(screen.getByText('Perez, Juan')).toBeInTheDocument();
-    expect(screen.getByText('12345678')).toBeInTheDocument();
+    expect(screen.getByText('12.345.678')).toBeInTheDocument();
     expect(screen.getByText('Fútbol, Vóley')).toBeInTheDocument();
     expect(screen.getByText('Activo')).toBeInTheDocument();
   });
@@ -321,4 +321,62 @@ describe('US-08 · ParticipantesTable', () => {
       expect(screen.queryByRole('button', { name: /Reactivar a/i })).not.toBeInTheDocument();
     });
   });
+
+  it('muestra la fecha de baja de una disciplina dada de baja', async () => {
+    const user = userEvent.setup();
+    render(
+      <ParticipantesTable
+        participantes={[
+          participante({
+            disciplinas: [disciplina({ activo: false, estado: 'BAJA', fechaBaja: '2026-09-15T13:00:00.000Z' })],
+          }),
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Ver disciplinas de/i }));
+
+    expect(screen.getByText('el 15/09/2026')).toBeInTheDocument();
+  });
+
+  describe('US-25 · Estado documental en listado', () => {
+    it('TC-185: muestra badge de estado documental y motivos en las disciplinas expandidas', async () => {
+      const user = userEvent.setup();
+      render(
+        <ParticipantesTable
+          participantes={[
+            participante({
+              estadoDocumental: 'BLOQUEADO',
+              disciplinas: [
+                disciplina({
+                  estadoDocumental: 'BLOQUEADO',
+                  motivosDocumentacion: ['Certificado médico vencido el 30/09/2026'],
+                }),
+              ],
+            }),
+          ]}
+        />,
+      );
+
+      expect(screen.getByText('Bloqueado')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /Ver disciplinas de/i }));
+
+      expect(screen.getByText('Certificado médico vencido el 30/09/2026')).toBeInTheDocument();
+    });
+
+    it('dispara onOrdenar con el campo correspondiente al hacer clic en los encabezados', async () => {
+      const user = userEvent.setup();
+      const onOrdenar = vi.fn();
+      render(<ParticipantesTable participantes={[participante()]} onOrdenar={onOrdenar} />);
+      const btnNombre = screen.getByRole('button', { name: /^Apellido y nombre$/i });
+      await user.click(btnNombre);
+      expect(onOrdenar).toHaveBeenCalledWith('nombre');
+
+      const btnDni = screen.getByRole('button', { name: /^DNI$/i });
+      await user.click(btnDni);
+      expect(onOrdenar).toHaveBeenCalledWith('dni');
+    });
+  });
 });
+

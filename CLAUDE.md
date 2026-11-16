@@ -18,6 +18,12 @@ Consume la API del repo hermano `socialclub-backend` (`/api/v1`).
 - Las features **no** llaman a `apiClient` directo: pasan por `features/<x>/api/*.api.ts`.
 - Rutas centralizadas en `src/routes/paths.ts` (`ROUTES.xxx`), árbol en `AppRouter.tsx`.
 - Rutas protegidas con `ProtectedRoute` (sesión + rol). Navegación en `components/layout/AppLayout.tsx` con visibilidad por rol.
+- **Tres zonas (TASK-60, ver `docs/decisiones/0006` en el back):**
+  - **Sitio público:** `/` (landing del Club Sportivo Unión de Ordóñez, `features/landing/`), `/asociarme` (alta de socio con primera cuota), login y registro.
+  - **Mi club (`/mi-club/*`):** autogestión de cualquier usuario con sesión: el **portal de socios** (`features/portal-socio`, diseño de Luis, tema oscuro limitado a `.portal-socio`). Todo lo **personal** (perfil, cuotas, entradas, reservas, inscripciones y documentación propias) va acá, no en el panel. La documentación que sube el titular queda en revisión y se aprueba desde el panel (`DocumentosParaRevisar`). Las solicitudes de inscripción propias se consultan, se cancelan y reciben documentación en Mis solicitudes (US-64 y US-65).
+  - **Panel (`/admin/*`):** gestión del club, solo ADMIN, COLABORADOR y DELEGADO (`ProtectedRoute soloGestion`), con `AppLayout`. El panel y Mi club no se enlazan entre sí, salvo que la persona tenga un rol de gestión y además sea socia (decisión 0008, en el back). ADMIN y DELEGADO evalúan las solicitudes en «Solicitudes de inscripción» (US-66).
+  - No mover `/verificar-email` ni `/pagos/resultado`: los arma la API. Las rutas viejas redirigen con `rutaNuevaDe` (`routes/paths.ts`).
+  - Identidad del club (nombre, misión, contacto **de ejemplo**) en `src/config/club.ts`.
 - `VITE_API_URL` es **build-time** (Vite reemplaza `import.meta.env` al compilar → cada entorno se compila con su URL de API).
 - Roles: `ADMIN`, `COLABORADOR`, `DELEGADO`, `SOCIO`.
 
@@ -39,6 +45,7 @@ objetivo cumplido · código commiteado/pusheado · **tests unitarios pasando (c
 ## Testing
 - Vitest + @testing-library/react. Cubrir hooks (react-query), componentes de formulario (validación zod) y flujos clave.
 - Al implementar una US: sumar tests y cargar los casos en la matriz con el skill **`/casos-prueba`** (tipos: Unitaria, Integral, Funcional, Regresión, Aceptación, No funcional).
+- **E2E (TASK-43):** Playwright en `e2e/`, contra el sistema real (este front + la API de `../socialclub-backend` + Postgres `socialclub_e2e`). Cada test es un caso de la planilla: título `TC-XXX · …`, tag `@US-XX`, y cada paso con `paso('1. …', …)` (deja una captura). Usá `resaltar()` sobre lo que verificás. Selectores por rol y texto accesible; datos propios con `dniUnico()`/`sufijoUnico()`. Si tu cambio toca un flujo cubierto, corré `npm run e2e`.
 
 ## Comandos
 ```bash
@@ -47,6 +54,9 @@ npm test               # Vitest (usar antes de commitear)
 npm run typecheck      # tsc -b --noEmit
 npm run build          # tsc -b && vite build
 npm run lint
+npm run e2e            # Playwright: levanta API (3101) y front (5174); requiere Postgres local
+npm run e2e:reporte    # reporte HTML con capturas, video y trace
+npm run e2e:evidencia -- --registrar   # evidencia a ../socialclub-backend/docs/pruebas
 ```
 > Requiere el backend corriendo en `VITE_API_URL` (default `http://localhost:3000/api/v1`).
 
@@ -56,3 +66,4 @@ npm run lint
 - Mantené los textos de UI en español; alineá los campos al contrato del backend (revisá `socialclub-backend`).
 - Verificá con `npm run typecheck` + `npm test` + `npm run build` antes de dar algo por terminado.
 - Skills del equipo en `.claude/skills/`. Documentación del proyecto en `docs/` del repo backend.
+- Despliegue: `DESPLIEGUE.md`. Operar test/main (comandos Azure/GitHub/Vercel): `socialclub-backend/docs/RUNBOOK-OPERACIONES.md`.

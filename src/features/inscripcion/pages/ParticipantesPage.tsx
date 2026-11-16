@@ -1,82 +1,342 @@
-import { useEffect, useState } from 'react';
-import { Button, Input, Select, Spinner } from '@/components/ui';
+import { useContext, useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ClipboardCheck, FileText, Filter, Plus, Search, UserPlus } from 'lucide-react';
+import { Button, Input, Modal, Select, Spinner, StatusTabs, TablePagination, TableExportMenu } from '@/components/ui';
+import { ROUTES } from '@/routes/paths';
+import { AuthContext } from '@/features/auth/context/auth-context';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
-import type { EstadoInscripcionFiltro } from '../types';
+import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
+import type {
+  EstadoDocumentalFiltro,
+  EstadoInscripcionFiltro,
+  ParticipanteConDisciplinas,
+  ParticipanteEncontrado,
+} from '../types';
+import { listarInscripciones } from '../api/inscripcion.api';
+import { formatearDni } from '@/lib/utils/dni';
+import type { ExportColumn } from '@/lib/utils/exportTable';
 import { useInscripciones } from '../hooks/useInscripciones';
 import { ParticipantesTable } from '../components/ParticipantesTable';
-
-const POR_PAGINA = 10;
+import { InscripcionForm } from '../components/InscripcionForm';
+import { EditarParticipanteModal } from '../components/EditarParticipanteModal';
 
 /**
  * US-08 — Consultar participantes.
  *
  * Lista a los participantes de todas las disciplinas y permite combinar la
  * búsqueda por nombre/apellido/DNI con filtros de disciplina y estado.
+ *
+ * DT-11 — Es la pantalla única del participante: desde acá se inscribe
+ * (US-05, modal) y se gestiona su documentación (US-24, modal). Las rutas
+ * viejas /inscripcion y /documentacion redirigen acá.
  */
+type FiltroEstadoParticipante = 'todos' | 'inscriptos' | 'baja';
+
+const COLUMNAS_EXPORT_PARTICIPANTES: ExportColumn<ParticipanteConDisciplinas>[] = [
+  { header: 'Apellido y nombre', accessor: (p) => `${p.persona.apellido}, ${p.persona.nombre}` },
+  { header: 'DNI', accessor: (p) => formatearDni(p.persona.dni) },
+  {
+    header: 'Disciplinas',
+    accessor: (p) =>
+      p.disciplinas.map((d) => `${d.disciplina.nombre}${d.categoriaDisciplina ? ` (${d.categoriaDisciplina.nombre})` : ''}`).join(', ') || '—',
+  },
+  { header: 'Estado', accessor: (p) => (p.estado === 'INSCRIPTO' ? 'Activo' : 'Inactivo') },
+  { header: 'Documentación', accessor: (p) => p.estadoDocumental ?? '—' },
+];
+
 export function ParticipantesPage() {
+  const auth = useContext(AuthContext);
+  const puedeInscribir = !auth || auth.usuario?.roles.some((r) => ['ADMIN', 'DELEGADO'].includes(r));
   const [textoInput, setTextoInput] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [disciplinaId, setDisciplinaId] = useState<number | undefined>(undefined);
-  const [estado, setEstado] = useState<EstadoInscripcionFiltro | undefined>(undefined);
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoParticipante>('todos');
+  const [estadoDocumental, setEstadoDocumental] = useState<EstadoDocumentalFiltro | ''>('');
   const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
+  const [ordenarPor, setOrdenarPor] = useState<string | undefined>(undefined);
+  const [orden, setOrden] = useState<'asc' | 'desc' | undefined>(undefined);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  function handleOrdenar(campo: string) {
+    if (ordenarPor === campo) {
+      if (orden === 'asc') {
+        setOrden('desc');
+      } else if (orden === 'desc') {
+        setOrdenarPor(undefined);
+        setOrden(undefined);
+      } else {
+        setOrden('asc');
+      }
+    } else {
+      setOrdenarPor(campo);
+      setOrden('asc');
+    }
+    setPagina(1);
+  }
+  const inscripcionAbierta = Boolean(puedeInscribir) && searchParams.get('nueva') === '1';
+  const [conDocumentacion, setConDocumentacion] = useState<ParticipanteConDisciplinas | null>(null);
+
+  const [aInscribir, setAInscribir] = useState<ParticipanteEncontrado | null>(null);
+  // DT-20: la edición es un modal sobre el listado (?editar=<id>).
+  const participanteAEditar = Number(searchParams.get('editar')) || null;
+  const abrirInscripcion = () => {
+    setAInscribir(null);
+    setSearchParams({ nueva: '1' });
+  };
+  const cerrarInscripcion = () => {
+    setAInscribir(null);
+    setSearchParams({});
+  };
+  const inscribirExistente = (p: ParticipanteConDisciplinas) => {
+    setAInscribir({ ...p.persona, genero: p.persona.genero ?? null, inscripciones: [] });
+    setSearchParams({ nueva: '1' });
+  };
+  // TASK-31: después de inscribir, se puede pasar directo a su documentación.
+  const verDocumentacionDe = (persona: { id: number; nombre: string; apellido: string; dni: string }) => {
+    cerrarInscripcion();
+    setConDocumentacion({
+      personaId: persona.id,
+      persona: { ...persona, fechaNacimiento: null, email: null, telefono: null, activo: true },
+      disciplinas: [],
+      cantidadDisciplinas: 0,
+      estado: 'INSCRIPTO',
+    });
+  };
 
   const { disciplinas } = useDisciplinasActivas();
 
-  // Debounce de la búsqueda: evita pegarle a la API en cada tecla.
+  // Debounce de la búsqueda: evita pegarle a la API en cada tecla. Solo vuelve
+  // a la página 1 si la búsqueda cambió (si no, pisaba un "Siguiente" hecho
+  // en los primeros 300 ms).
   useEffect(() => {
+    const nueva = textoInput.trim();
+    if (nueva === busqueda) return;
     const timer = setTimeout(() => {
       setPagina(1);
-      setBusqueda(textoInput.trim());
+      setBusqueda(nueva);
     }, 300);
     return () => clearTimeout(timer);
-  }, [textoInput]);
+  }, [textoInput, busqueda]);
+
+  const estadoQuery: EstadoInscripcionFiltro | undefined =
+    filtroEstado === 'inscriptos' ? 'INSCRIPTO' : filtroEstado === 'baja' ? 'BAJA' : undefined;
 
   const { data, isLoading, isError, error, isFetching } = useInscripciones({
     busqueda: busqueda || undefined,
     disciplinaId,
-    estado,
+    estado: estadoQuery,
+    estadoDocumental: estadoDocumental || undefined,
     pagina,
-    porPagina: POR_PAGINA,
+    porPagina,
+    ordenarPor,
+    orden,
   });
 
-  const totalPaginas = data ? Math.max(1, Math.ceil(data.total / data.porPagina)) : 1;
   const hayResultados = (data?.items.length ?? 0) > 0;
+
+  const [cachedCounts, setCachedCounts] = useState<{
+    todos: number;
+    inscriptos: number;
+    baja: number;
+  }>({ todos: 0, inscriptos: 0, baja: 0 });
+
+  useEffect(() => {
+    if (data?.counts) {
+      setCachedCounts({
+        todos: data.counts.todos ?? 0,
+        inscriptos: data.counts.inscriptos ?? 0,
+        baja: data.counts.baja ?? 0,
+      });
+    } else if (filtroEstado === 'todos' && data) {
+      const inscriptos = (data.items ?? []).filter((p) => p.estado === 'INSCRIPTO').length;
+      const baja = (data.items ?? []).filter((p) => p.estado === 'BAJA').length;
+      setCachedCounts({
+        todos: data.total ?? (data.items ?? []).length,
+        inscriptos,
+        baja,
+      });
+    }
+  }, [data, filtroEstado]);
+
+  const counts = data?.counts
+    ? {
+        todos: data.counts.todos ?? cachedCounts.todos,
+        inscriptos: data.counts.inscriptos ?? cachedCounts.inscriptos,
+        baja: data.counts.baja ?? cachedCounts.baja,
+      }
+    : cachedCounts;
 
   const cambiarDisciplina = (value: string) => {
     setPagina(1);
     setDisciplinaId(value ? Number(value) : undefined);
   };
 
-  const cambiarEstado = (value: string) => {
+  function cambiarFiltro(valor: string) {
     setPagina(1);
-    setEstado(value ? (value as EstadoInscripcionFiltro) : undefined);
-  };
+    if (valor === 'inscriptos' || valor === 'INSCRIPTO') {
+      setFiltroEstado('inscriptos');
+    } else if (valor === 'baja' || valor === 'BAJA') {
+      setFiltroEstado('baja');
+    } else {
+      setFiltroEstado('todos');
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Participantes</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Participantes</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Buscá participantes y filtrá por disciplina o estado.
+            Los pendientes de aprobación aparecen primero. Filtrá por estado, documentación o disciplina.
           </p>
         </div>
 
-        <div className="flex w-full max-w-3xl flex-wrap items-end gap-2">
+        {puedeInscribir && (
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <Link
+              to={ROUTES.solicitudesInscripcion}
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-2xs transition-colors hover:bg-slate-50"
+            >
+              <ClipboardCheck size={16} />
+              Solicitudes de inscripción
+            </Link>
+            <Button onClick={abrirInscripcion} className="shadow-xs">
+              <Plus size={16} />
+              Nuevo participante
+            </Button>
+          </div>
+        )}
+      </header>
+
+      <Modal
+        open={inscripcionAbierta}
+        title={aInscribir ? `Inscribir a ${aInscribir.apellido}, ${aInscribir.nombre}` : 'Nuevo participante'}
+        description={
+          aInscribir
+            ? 'Elegí la disciplina y la categoría.'
+            : 'Registrá al participante y la disciplina en la que se inscribe.'
+        }
+        onClose={cerrarInscripcion}
+        icon={<UserPlus />}
+        size="lg"
+      >
+        <InscripcionForm
+          key={aInscribir?.id ?? 'nuevo'}
+          participante={aInscribir}
+          onCancel={cerrarInscripcion}
+          onCargarDocumentacion={verDocumentacionDe}
+        />
+      </Modal>
+
+      <EditarParticipanteModal personaId={participanteAEditar} onClose={() => setSearchParams({})} />
+
+      <Modal
+        open={conDocumentacion !== null}
+        title={
+          conDocumentacion
+            ? `Documentación de ${conDocumentacion.persona.apellido}, ${conDocumentacion.persona.nombre}`
+            : 'Documentación'
+        }
+        description={conDocumentacion ? `DNI ${formatearDni(conDocumentacion.persona.dni)}` : undefined}
+        onClose={() => setConDocumentacion(null)}
+        icon={<FileText />}
+        size="lg"
+      >
+        {conDocumentacion && <DocumentacionParticipante persona={conDocumentacion.persona} />}
+      </Modal>
+
+      {/* Controles de filtro y búsqueda agrupados */}
+      <div className="space-y-3">
+        {/* Selector de estado estilo pestañas segmentadas (Apex) */}
+        <div>
+          <StatusTabs<FiltroEstadoParticipante>
+            value={filtroEstado}
+            onChange={(val) => cambiarFiltro(val)}
+            tabs={[
+              { value: 'todos', label: 'Todos', count: counts.todos },
+              { value: 'inscriptos', label: 'Inscriptos', count: counts.inscriptos },
+              { value: 'baja', label: 'Baja', count: counts.baja },
+            ]}
+          />
+
+          {/* Accesibilidad y compatibilidad con pruebas */}
+          <div className="relative h-0 w-0 overflow-hidden">
+            <select
+              id="filtroEstado"
+              aria-label="Filtrar por estado"
+              value={filtroEstado === 'inscriptos' ? 'INSCRIPTO' : filtroEstado === 'baja' ? 'BAJA' : 'todos'}
+              onChange={(e) => cambiarFiltro(e.target.value)}
+              className="sr-only"
+              tabIndex={-1}
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="INSCRIPTO">Solo inscriptos</option>
+              <option value="BAJA">Solo baja</option>
+              <option value="inscriptos" className="hidden">Inscriptos</option>
+              <option value="baja" className="hidden">Baja</option>
+            </select>
+          </div>
+        </div>
+
+      {/* Barra de búsqueda y disciplina estilo Apex */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:max-w-xs">
           <Input
             id="busqueda-participantes"
-            placeholder="Buscar por nombre, apellido o DNI"
+            placeholder="Buscar por nombre, apellido o DNI..."
             value={textoInput}
             onChange={(e) => setTextoInput(e.target.value)}
-            className="min-w-55 flex-1"
+            leftIcon={<Search />}
           />
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <TableExportMenu<ParticipanteConDisciplinas>
+            filename="participantes"
+            title="Participantes"
+            disabled={isLoading && !data}
+            columns={COLUMNAS_EXPORT_PARTICIPANTES}
+            fetchRows={async () => {
+              const res = await listarInscripciones({
+                busqueda: busqueda || undefined,
+                disciplinaId,
+                estado: estadoQuery,
+                estadoDocumental: estadoDocumental || undefined,
+                pagina: 1,
+                porPagina: 10000,
+                ordenarPor,
+                orden,
+              });
+              return res?.items ?? [];
+            }}
+          />
+
+          <Select
+            id="estadoDocumental"
+            aria-label="Filtrar por estado de documentación"
+            value={estadoDocumental}
+            onChange={(e) => {
+              setPagina(1);
+              setEstadoDocumental(e.target.value as EstadoDocumentalFiltro | '');
+            }}
+            className="w-full sm:w-60"
+          >
+            <option value="">Toda la documentación</option>
+            <option value="PENDIENTE_APROBACION">Pendiente de aprobación</option>
+            <option value="PENDIENTE">Pendiente de documentación</option>
+            <option value="BLOQUEADO">Bloqueado</option>
+            <option value="HABILITADO">Habilitado</option>
+          </Select>
 
           <Select
             id="disciplina"
             aria-label="Filtrar por disciplina"
             value={disciplinaId ?? ''}
             onChange={(e) => cambiarDisciplina(e.target.value)}
-            className="min-w-40"
+            leftIcon={<Filter />}
+            className="w-full sm:w-52"
           >
             <option value="">Todas las disciplinas</option>
             {disciplinas.map((disciplina) => (
@@ -85,20 +345,9 @@ export function ParticipantesPage() {
               </option>
             ))}
           </Select>
-
-          <Select
-            id="estado"
-            aria-label="Filtrar por estado"
-            value={estado ?? ''}
-            onChange={(e) => cambiarEstado(e.target.value)}
-            className="min-w-35"
-          >
-            <option value="">Todos los estados</option>
-            <option value="INSCRIPTO">Inscripto</option>
-            <option value="BAJA">Baja</option>
-          </Select>
         </div>
-      </header>
+      </div>
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -109,38 +358,31 @@ export function ParticipantesPage() {
           {error instanceof Error ? error.message : 'No se pudieron cargar los participantes.'}
         </div>
       ) : (
-        <>
-          <ParticipantesTable participantes={data?.items ?? []} />
+        <div>
+          <ParticipantesTable
+            participantes={data?.items ?? []}
+            ordenarPor={ordenarPor}
+            orden={orden}
+            onOrdenar={handleOrdenar}
+            onVerDocumentacion={puedeInscribir ? setConDocumentacion : undefined}
+            onInscribir={puedeInscribir ? inscribirExistente : undefined}
+          />
 
           {hayResultados && (
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>
-                {data?.total ?? 0} participante(s){isFetching ? ' · actualizando…' : ''}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina <= 1}
-                  onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </Button>
-                <span>
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={pagina >= totalPaginas}
-                  onClick={() => setPagina((p) => p + 1)}
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
+            <TablePagination
+              pagina={pagina}
+              porPagina={porPagina}
+              total={data?.total ?? 0}
+              isFetching={isFetching}
+              onChangePagina={setPagina}
+              onChangePorPagina={(nuevo) => {
+                setPorPagina(nuevo);
+                setPagina(1);
+              }}
+              srSummary={`${data?.total ?? 0} participante(s)`}
+            />
           )}
-        </>
+        </div>
       )}
     </div>
   );

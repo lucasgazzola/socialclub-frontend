@@ -12,6 +12,14 @@
  * ese acoplamiento se filtre en el contrato del backend.
  */
 
+import type { GeneroDisciplina, Restricciones, TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
+import type {
+  EstadoDeDocumento,
+  EstadoDeInscripcion,
+  EstadoDocumentalInscripcion,
+  EstadoHabilitacion,
+} from '@/features/documentacion/types';
+
 // ── Persona / participante ──────────────────────────────────────────
 
 export interface InscripcionResumida {
@@ -25,9 +33,28 @@ export interface ParticipanteEncontrado {
   nombre: string;
   apellido: string;
   dni: string;
+  fechaNacimiento: string | null;
+  genero: GeneroDisciplina | null;
   email: string | null;
   telefono: string | null;
+  activo?: boolean;
   inscripciones: InscripcionResumida[];
+}
+
+export interface DocumentoAdjuntoPayload {
+  tipoDocumento: TipoDocumentacionDisciplina;
+  fechaVencimiento?: string;
+  tipo?: string;
+  archivo?: File;
+}
+
+export interface CuotaGeneradaInfo {
+  periodo: string;
+  monto: number | null;
+  montoTarifa: number | null;
+  descuentoSocioPorcentaje: number;
+  esSocio: boolean;
+  sinTarifa: boolean;
 }
 
 export interface CrearInscripcionPayload {
@@ -36,15 +63,33 @@ export interface CrearInscripcionPayload {
   apellido?: string;
   dni?: string;
   fechaNacimiento?: string;
+  genero?: GeneroDisciplina;
   email?: string;
+  /** DT-54: obligatorio si se carga el email de un participante nuevo. */
+  confirmarEmail?: string;
   telefono?: string;
   disciplinaId: number;
   categoriaDisciplinaId?: number;
+  documentos?: Array<{
+    tipoDocumento: TipoDocumentacionDisciplina;
+    fechaVencimiento?: string;
+    tipo?: string;
+  }>;
 }
 
 export interface InscripcionCreada {
   persona: { id: number; nombre: string; apellido: string; dni: string };
   inscripcion: { id: number; disciplinaId: number; categoriaDisciplinaId: number | null };
+  /** TASK-31: qué documentación falta y hasta cuándo (US-05). */
+  estadoDocumental?: EstadoDocumentalInscripcion | null;
+  /** US-05 Criterio 10: cuota generada automáticamente para la disciplina en el período actual */
+  cuotaGenerada?: CuotaGeneradaInfo | null;
+}
+
+/** US-05: lo que se le va a exigir a una inscripción antes de confirmarla. */
+export interface RequisitosInscripcion {
+  restricciones: Restricciones;
+  documentacion: EstadoDeInscripcion;
 }
 
 export interface Inscripcion {
@@ -60,6 +105,7 @@ export interface Inscripcion {
     telefono: string | null;
     /** US-07: estado propio del participante (Inactivo = dado de baja). */
     activo: boolean;
+    genero?: GeneroDisciplina | null;
   };
   disciplinaId: number;
   disciplina: { id: number; nombre: string };
@@ -79,9 +125,14 @@ export interface DisciplinaInscripta {
   categoriaDisciplinaId: number | null;
   categoriaDisciplina: { id: number; nombre: string } | null;
   fechaInscripcion: string;
+  /** Cuándo se dio de baja (null mientras está inscripto). */
+  fechaBaja?: string | null;
   activo: boolean;
   /** Estado legible de la inscripción en esta disciplina. */
   estado: EstadoInscripcionFiltro;
+  /** TASK-31: estado documental de esta inscripción (null si está dada de baja). */
+  estadoDocumental?: EstadoHabilitacion | null;
+  motivosDocumentacion?: string[];
 }
 
 /**
@@ -101,22 +152,31 @@ export interface ParticipanteConDisciplinas {
     telefono: string | null;
     /** US-07: estado propio del participante (Inactivo = dado de baja). */
     activo: boolean;
+    genero?: GeneroDisciplina | null;
   };
   disciplinas: DisciplinaInscripta[];
   cantidadDisciplinas: number;
   estado: EstadoInscripcionFiltro;
+  /** TASK-31: el peor estado documental entre sus inscripciones activas. */
+  estadoDocumental?: EstadoHabilitacion | null;
 }
 
 /** Estado de la participación de un participante en una disciplina. */
 export type EstadoInscripcionFiltro = 'INSCRIPTO' | 'BAJA';
+
+/** Estado documental del listado, más el documento del titular que espera revisión. */
+export type EstadoDocumentalFiltro = 'PENDIENTE_APROBACION' | EstadoHabilitacion;
 
 /** Parámetros del listado de participantes (US-08: búsqueda, filtros + paginación). */
 export interface InscripcionesQuery {
   busqueda?: string;
   disciplinaId?: number;
   estado?: EstadoInscripcionFiltro;
+  estadoDocumental?: EstadoDocumentalFiltro;
   pagina?: number;
   porPagina?: number;
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
 }
 
 /** Disciplina de la que se dio de baja al participante (US-07). */
@@ -148,6 +208,7 @@ export interface ActualizarDatosPersonaPayload {
   apellido?: string;
   dni?: string;
   fechaNacimiento?: string;
+  genero?: GeneroDisciplina;
   email?: string;
   telefono?: string;
 }
@@ -159,4 +220,122 @@ export interface PersonaActualizada {
   apellido: string;
   dni: string;
   activo: boolean;
+}
+
+// ── US-63 / US-64: Solicitud de inscripción ──────────────────────────
+
+export type EstadoSolicitudInscripcion =
+  | 'PENDIENTE'
+  | 'PENDIENTE_DOCUMENTACION'
+  | 'APROBADA'
+  | 'RECHAZADA'
+  | 'CANCELADA';
+
+export interface DocumentoRequeridoCatalogo {
+  tipoDocumento: TipoDocumentacionDisciplina;
+  nombre: string;
+  plazoDiasTolerancia: number;
+}
+
+export interface CategoriaCatalogo {
+  id: number;
+  nombre: string;
+  genero: GeneroDisciplina | null;
+  edadMinima: number | null;
+  edadMaxima: number | null;
+  arancelMensual: number;
+  documentosObligatorios: DocumentoRequeridoCatalogo[];
+  cumpleRestricciones: boolean;
+  motivosIncumplimiento: string[];
+}
+
+export interface DisciplinaCatalogo {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  genero: GeneroDisciplina | null;
+  edadMinima: number | null;
+  edadMaxima: number | null;
+  solicitaDocumentacion: boolean;
+  arancelMensual: number;
+  descuentoSocioPorcentaje: number;
+  documentosObligatorios: DocumentoRequeridoCatalogo[];
+  categorias: CategoriaCatalogo[];
+  cumpleRestricciones: boolean;
+  motivosIncumplimiento: string[];
+  inscripto: boolean;
+  solicitudPendiente: boolean;
+}
+
+export interface CatalogoInscripcionResponse {
+  esSocio: boolean;
+  items: DisciplinaCatalogo[];
+}
+
+export interface SolicitarInscripcionPayload {
+  disciplinaId: number;
+  categoriaDisciplinaId?: number;
+}
+
+export interface SolicitudInscripcion {
+  id: number;
+  personaId: number;
+  disciplinaId: number;
+  categoriaDisciplinaId: number | null;
+  estado: EstadoSolicitudInscripcion;
+  fechaSolicitud: string;
+  fechaResolucion: string | null;
+  motivoRechazo: string | null;
+  disciplina: { id: number; nombre: string; descripcion?: string | null };
+  categoriaDisciplina?: { id: number; nombre: string } | null;
+  persona?: { id: number; nombre: string; apellido: string; dni: string };
+}
+
+// ── US-66: Evaluación administrativa de solicitudes de inscripción ───
+
+export interface DocumentacionSolicitudResumen {
+  estado: EstadoHabilitacion;
+  completa: boolean;
+  requiereDocumentacion: boolean;
+  documentos: EstadoDeDocumento[];
+  faltantes: string[];
+  motivos: string[];
+}
+
+export interface SolicitudInscripcionAdmin extends SolicitudInscripcion {
+  persona: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    dni: string;
+    email?: string | null;
+    telefono?: string | null;
+    activo?: boolean;
+  };
+  disciplina: {
+    id: number;
+    nombre: string;
+    descripcion?: string | null;
+    solicitaDocumentacion?: boolean;
+  };
+  revisadoPor?: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    email: string;
+  } | null;
+  documentacion: DocumentacionSolicitudResumen;
+}
+
+export interface SolicitudesInscripcionQuery {
+  estado?: EstadoSolicitudInscripcion;
+  disciplinaId?: number;
+  busqueda?: string;
+}
+
+export interface AprobarSolicitudInscripcionResultado {
+  solicitud: SolicitudInscripcion;
+  inscripcion: Inscripcion;
+  estadoDocumental: EstadoDeInscripcion | null;
+  cuotaGenerada?: CuotaGeneradaInfo;
 }

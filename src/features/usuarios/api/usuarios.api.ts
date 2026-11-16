@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
-import type { Usuario, CreateUsuarioDto, UpdateUsuarioDto } from '../types';
+import type { Paginated } from '@/types/api';
+import type { Usuario, CreateUsuarioDto, UpdateUsuarioDto, GetUsuariosParams } from '../types';
 
 export const usuariosApi = {
   async create(payload: CreateUsuarioDto): Promise<Usuario> {
@@ -7,10 +8,18 @@ export const usuariosApi = {
     return data;
   },
 
-  // El backend devuelve activos e inactivos en una sola respuesta; el filtro
-  // por estado se aplica en la pantalla.
-  async list(): Promise<Usuario[]> {
-    const { data } = await apiClient.get<Usuario[]>('/usuarios');
+  async list(params?: GetUsuariosParams): Promise<Paginated<Usuario>> {
+    const { data } = await apiClient.get<Paginated<Usuario>>('/usuarios', {
+      params: {
+        ordenarPor: params?.ordenarPor,
+        orden: params?.orden,
+        busqueda: params?.busqueda?.trim() || undefined,
+        rolId: params?.rolId || undefined,
+        estado: params?.estado && params.estado !== 'todos' ? params.estado : undefined,
+        pagina: params?.pagina,
+        porPagina: params?.porPagina,
+      },
+    });
     return data;
   },
 
@@ -31,6 +40,14 @@ export const usuariosApi = {
 
   async activate(id: number): Promise<Usuario> {
     const { data } = await apiClient.patch<Usuario>(`/usuarios/${id}/activar`);
+    return data;
+  },
+
+  /** DT-54: manda un enlace nuevo a un usuario que todavía no verificó su email. */
+  async reenviarVerificacion(id: number): Promise<{ mensaje: string }> {
+    const { data } = await apiClient.post<{ mensaje: string }>(
+      `/usuarios/${id}/reenviar-verificacion`,
+    );
     return data;
   },
 };

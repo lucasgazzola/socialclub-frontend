@@ -12,7 +12,7 @@ export const cuotasApi = {
     const { data } = await apiClient.get<Paginated<ConfiguracionCuotaDeportiva>>('/cuotas', {
       params: {
         disciplinaId: query.disciplinaId || undefined,
-        categoriaId: query.categoriaId || undefined,
+        categoriaDisciplinaId: query.categoriaDisciplinaId || undefined,
         periodoAplicacion: query.periodoAplicacion || undefined,
         pagina: query.pagina,
         porPagina: query.porPagina,

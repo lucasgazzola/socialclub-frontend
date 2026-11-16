@@ -3,6 +3,7 @@ import type {
   ActualizarDatosPersonaPayload,
   ActivacionParticipanteResultado,
   BajaParticipanteResultado,
+  CatalogoInscripcionResponse,
   CrearInscripcionPayload,
   InscripcionCreada,
   Inscripcion,
@@ -10,11 +11,33 @@ import type {
   ParticipanteConDisciplinas,
   ParticipanteEncontrado,
   PersonaActualizada,
+  RequisitosInscripcion,
+  SolicitarInscripcionPayload,
+  SolicitudInscripcion,
+  SolicitudInscripcionAdmin,
+  SolicitudesInscripcionQuery,
+  AprobarSolicitudInscripcionResultado,
+  EstadoSolicitudInscripcion,
 } from '../types';
+import type {
+  CrearHabilitacionExcepcionalPayload,
+  HabilitacionExcepcional,
+} from '@/features/documentacion/types';
 import type { Paginated } from '@/types/api';
+import type { TipoDocumentacionDisciplina } from '@/features/disciplinas/types';
 
 export async function buscarParticipantePorDni(dni: string): Promise<ParticipanteEncontrado> {
   const { data } = await apiClient.get<ParticipanteEncontrado>(`/personas/dni/${dni}`);
+  return data;
+}
+
+/** US-05: restricciones y documentación exigida antes de inscribir. */
+export async function obtenerRequisitos(params: {
+  disciplinaId: number;
+  categoriaDisciplinaId?: number;
+  personaId?: number;
+}): Promise<RequisitosInscripcion> {
+  const { data } = await apiClient.get<RequisitosInscripcion>('/inscripcion/requisitos', { params });
   return data;
 }
 
@@ -65,8 +88,11 @@ export async function listarInscripciones(
       busqueda: query.busqueda || undefined,
       disciplinaId: query.disciplinaId || undefined,
       estado: query.estado || undefined,
+      estadoDocumental: query.estadoDocumental || undefined,
       pagina: query.pagina,
       porPagina: query.porPagina,
+      ordenarPor: query.ordenarPor || undefined,
+      orden: query.orden || undefined,
     },
   });
   return data;
@@ -88,6 +114,116 @@ export async function activarParticipante(
 ): Promise<ActivacionParticipanteResultado> {
   const { data } = await apiClient.patch<ActivacionParticipanteResultado>(
     `/inscripcion/persona/${personaId}/activar`,
+  );
+  return data;
+}
+
+/** US-28: registrar la habilitación excepcional de una inscripción bloqueada. */
+export async function habilitarExcepcional(
+  inscripcionId: number,
+  payload: CrearHabilitacionExcepcionalPayload,
+): Promise<HabilitacionExcepcional> {
+  const { data } = await apiClient.post<HabilitacionExcepcional>(
+    `/inscripcion/${inscripcionId}/habilitacion-excepcional`,
+    payload,
+  );
+  return data;
+}
+
+/** US-28: listar historial de habilitaciones excepcionales de una inscripción. */
+export async function listarHabilitacionesExcepcionales(
+  inscripcionId: number,
+): Promise<HabilitacionExcepcional[]> {
+  const { data } = await apiClient.get<HabilitacionExcepcional[]>(
+    `/inscripcion/${inscripcionId}/habilitaciones-excepcionales`,
+  );
+  return data;
+}
+
+/** US-63: obtener catálogo de disciplinas y categorías activas para postulación. */
+export async function obtenerCatalogoInscripcion(): Promise<CatalogoInscripcionResponse> {
+  const { data } = await apiClient.get<CatalogoInscripcionResponse>('/inscripcion/catalogo');
+  return data;
+}
+
+/** US-63: solicitar inscripción a una disciplina y categoría. */
+export async function solicitarInscripcion(
+  payload: SolicitarInscripcionPayload,
+): Promise<SolicitudInscripcion> {
+  const { data } = await apiClient.post<SolicitudInscripcion>('/inscripcion/solicitar', payload);
+  return data;
+}
+
+/** US-63 / US-64: listar solicitudes de inscripción del socio autenticado con filtro opcional por estado. */
+export async function obtenerMisSolicitudesInscripcion(
+  estado?: EstadoSolicitudInscripcion,
+): Promise<SolicitudInscripcion[]> {
+  const { data } = await apiClient.get<SolicitudInscripcion[]>(
+    '/inscripcion/mis-solicitudes',
+    estado ? { params: { estado } } : undefined,
+  );
+  return data;
+}
+
+/** US-66: listar solicitudes de inscripción a disciplinas para evaluación administrativa. */
+export async function listarSolicitudesInscripcion(
+  query: SolicitudesInscripcionQuery = {},
+): Promise<SolicitudInscripcionAdmin[]> {
+  const { data } = await apiClient.get<SolicitudInscripcionAdmin[]>('/inscripcion/solicitudes', {
+    params: {
+      estado: query.estado || undefined,
+      disciplinaId: query.disciplinaId || undefined,
+      busqueda: query.busqueda?.trim() || undefined,
+    },
+  });
+  return data;
+}
+
+/** US-66: aprobar una solicitud de inscripción pendiente. */
+export async function aprobarSolicitudInscripcion(
+  id: number,
+): Promise<AprobarSolicitudInscripcionResultado> {
+  const { data } = await apiClient.patch<AprobarSolicitudInscripcionResultado>(
+    `/inscripcion/solicitudes/${id}/aprobar`,
+  );
+  return data;
+}
+
+/** US-66: rechazar una solicitud de inscripción pendiente con motivo obligatorio. */
+export async function rechazarSolicitudInscripcion(
+  id: number,
+  motivo: string,
+): Promise<SolicitudInscripcion> {
+  const { data } = await apiClient.patch<SolicitudInscripcion>(
+    `/inscripcion/solicitudes/${id}/rechazar`,
+    { motivo },
+  );
+  return data;
+}
+
+/** US-65: cancelar una solicitud propia pendiente o aprobada vigente. */
+export async function cancelarSolicitudInscripcion(
+  solicitudId: number,
+): Promise<SolicitudInscripcion> {
+  const { data } = await apiClient.patch<SolicitudInscripcion>(
+    `/inscripcion/solicitudes/${solicitudId}/cancelar`,
+  );
+  return data;
+}
+
+export async function subirDocumentacionSolicitud(
+  solicitudId: number,
+  payload: { tipoDocumento: TipoDocumentacionDisciplina; fechaVencimiento?: string },
+  archivo: File,
+) {
+  const form = new FormData();
+  form.append('tipoDocumento', payload.tipoDocumento);
+  if (payload.fechaVencimiento) form.append('fechaVencimiento', payload.fechaVencimiento);
+  form.append('archivo', archivo);
+  const { data } = await apiClient.post(
+    `/inscripcion/solicitudes/${solicitudId}/documentacion`,
+    form,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
   );
   return data;
 }

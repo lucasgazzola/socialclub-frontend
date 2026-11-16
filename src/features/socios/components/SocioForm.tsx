@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input, Select } from '@/components/ui';
-import { socioFormSchema, type SocioFormData } from '../schemas';
+import { Button, DateInput, Input, ModalActions, Select } from '@/components/ui';
+import { crearSocioFormSchema, type SocioFormData } from '../schemas';
+import { mismoEmail } from '@/lib/utils/email';
 import { ROUTES } from '@/routes/paths';
 import { useCategorias } from '../hooks/useCategorias';
 
@@ -11,21 +12,31 @@ interface SocioFormProps {
   defaultValues?: SocioFormData;
   onSubmit: (data: SocioFormData) => Promise<void>;
   submitLabel: string;
+  /** Cancelar dentro del modal (DT-20). */
+  onCancel?: () => void;
 }
 
-export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormProps) {
+export function SocioForm({ defaultValues, onSubmit, submitLabel, onCancel }: SocioFormProps) {
   const navigate = useNavigate();
   const [errorServidor, setErrorServidor] = useState<string | null>(null);
   const { data: categorias, isLoading: cargandoCategorias } = useCategorias();
 
+  // DT-54: en la edición se compara contra el email que ya tenía.
+  const emailOriginal = defaultValues?.email;
   const {
     register,
+    control,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SocioFormData>({
-    resolver: zodResolver(socioFormSchema),
+    resolver: zodResolver(crearSocioFormSchema(emailOriginal)),
     defaultValues,
   });
+  const emailActual = watch('email');
+  // En el alta se pide siempre; en la edición, solo si cambia el email.
+  const esAlta = !defaultValues;
+  const pideConfirmacion = esAlta || (!!emailActual?.trim() && !mismoEmail(emailActual, emailOriginal));
 
   const onFormSubmit = handleSubmit(async (values) => {
     setErrorServidor(null);
@@ -65,12 +76,20 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
           error={errors.dni?.message}
           {...register('dni')}
         />
-        <Input
-          id="fechaNacimiento"
-          label="Fecha de nacimiento"
-          type="date"
-          error={errors.fechaNacimiento?.message}
-          {...register('fechaNacimiento')}
+        <Controller
+          control={control}
+          name="fechaNacimiento"
+          render={({ field }) => (
+            <DateInput
+              id="fechaNacimiento"
+              label="Fecha de nacimiento"
+              error={errors.fechaNacimiento?.message}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              ref={field.ref}
+            />
+          )}
         />
         <Input
           id="email"
@@ -80,6 +99,16 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
           error={errors.email?.message}
           {...register('email')}
         />
+        {pideConfirmacion && (
+          <Input
+            id="confirmarEmail"
+            label="Repetí el email"
+            type="email"
+            autoComplete="off"
+            error={errors.confirmarEmail?.message}
+            {...register('confirmarEmail')}
+          />
+        )}
         <Input
           id="telefono"
           label="Teléfono"
@@ -116,14 +145,14 @@ export function SocioForm({ defaultValues, onSubmit, submitLabel }: SocioFormPro
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{errorServidor}</p>
       )}
 
-      <div className="flex items-center gap-3 pt-2">
+      <ModalActions>
+        <Button type="button" variant="secondary" onClick={onCancel ?? (() => navigate(ROUTES.socios))}>
+          Cancelar
+        </Button>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Guardando…' : submitLabel}
         </Button>
-        <Button type="button" variant="secondary" onClick={() => navigate(ROUTES.socios)}>
-          Cancelar
-        </Button>
-      </div>
+      </ModalActions>
     </form>
   );
 }

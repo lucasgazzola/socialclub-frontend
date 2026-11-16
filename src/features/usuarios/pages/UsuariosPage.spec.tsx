@@ -19,6 +19,7 @@ const state = vi.hoisted(() => ({
   updateMutateAsync: vi.fn(),
   deactivateMutateAsync: vi.fn(),
   activateMutateAsync: vi.fn(),
+  reenviarMutate: vi.fn(),
 }));
 
 vi.mock('../hooks/useUsers', () => ({
@@ -44,6 +45,21 @@ vi.mock('../hooks/useDeactivateUsuario', () => ({
 
 vi.mock('../hooks/useActivateUsuario', () => ({
   useActivateUsuario: () => ({ mutateAsync: state.activateMutateAsync, isPending: false }),
+}));
+
+vi.mock('../hooks/useReenviarVerificacion', () => ({
+  useReenviarVerificacion: () => ({ mutate: state.reenviarMutate, isPending: false }),
+}));
+
+vi.mock('@/features/disciplinas/hooks/useDisciplinasActivas', () => ({
+  useDisciplinasActivas: () => ({
+    disciplinas: [
+      { id: 1, nombre: 'Fútbol Mayor' },
+      { id: 4, nombre: 'Natación' },
+    ],
+    cargando: false,
+    error: null,
+  }),
 }));
 
 function buildUsuario(overrides: Partial<Usuario> = {}): Usuario {
@@ -73,6 +89,12 @@ describe('UsuariosPage', () => {
     state.activateMutateAsync.mockResolvedValue(undefined);
   });
 
+  /** Obtiene las filas de datos de la tabla de usuarios (excluyendo el header). */
+  function getFilasUsuarios(): HTMLElement[] {
+    const tbody = document.querySelector('tbody');
+    return tbody ? within(tbody).queryAllByRole('row') : [];
+  }
+
   /** Confirma la acción en el ConfirmDialog abierto. */
   async function confirmarEnDialogo(user: ReturnType<typeof userEvent.setup>, etiqueta: RegExp) {
     const dialogo = await screen.findByRole('dialog');
@@ -99,7 +121,7 @@ describe('UsuariosPage', () => {
     expect(screen.getByText('Inactivo')).toBeInTheDocument();
 
     // Una fila por usuario, en el orden que devuelve el backend.
-    const filas = screen.getAllByRole('listitem');
+    const filas = getFilasUsuarios();
     expect(filas).toHaveLength(2);
     expect(filas[0]).toHaveTextContent('Admin Gestor');
     expect(filas[1]).toHaveTextContent('Ana Pérez');
@@ -135,8 +157,8 @@ describe('UsuariosPage', () => {
     await user.type(screen.getByLabelText(/nombre/i), 'Nuevo');
     await user.type(screen.getByLabelText(/apellido/i), 'Administrador');
     await user.type(screen.getByLabelText(/dni/i), '40123456');
-    await user.type(screen.getByLabelText(/email/i), 'nuevo.admin@socialclub.local');
-    await user.type(screen.getByLabelText(/contraseña/i), 'Admin123!');
+    await user.type(screen.getByLabelText('Email'), 'nuevo.admin@socialclub.local');
+    await user.type(screen.getByLabelText('Repetí el email'), 'nuevo.admin@socialclub.local');
     await user.click(screen.getByRole('button', { name: /crear usuario/i }));
 
     await waitFor(() => {
@@ -146,7 +168,7 @@ describe('UsuariosPage', () => {
           apellido: 'Administrador',
           dni: '40123456',
           email: 'nuevo.admin@socialclub.local',
-          password: 'Admin123!',
+          confirmarEmail: 'nuevo.admin@socialclub.local',
           roles: ['ADMIN'],
         }),
       );
@@ -155,6 +177,27 @@ describe('UsuariosPage', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
+  });
+
+  it('DT-46: si la API rechaza el alta, mantiene el modal abierto y muestra el error en el formulario', async () => {
+    state.usuarios = [buildUsuario()];
+    state.createMutateAsync = vi.fn().mockRejectedValue(new Error('El apellido contiene caracteres inválidos'));
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    await user.click(screen.getByRole('button', { name: /nuevo usuario/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/nombre/i), 'Nuevo');
+    await user.type(screen.getByLabelText(/apellido/i), 'Admin123');
+    await user.type(screen.getByLabelText(/dni/i), '40123456');
+    await user.type(screen.getByLabelText('Email'), 'nuevo.admin@socialclub.local');
+    await user.type(screen.getByLabelText('Repetí el email'), 'nuevo.admin@socialclub.local');
+    await user.click(screen.getByRole('button', { name: /crear usuario/i }));
+
+    expect(await screen.findByText('El apellido contiene caracteres inválidos')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('precarga los datos y permite guardar los cambios de un usuario existente (TC-009)', async () => {
@@ -173,9 +216,11 @@ describe('UsuariosPage', () => {
     await user.clear(nombreInput);
     await user.type(nombreInput, 'AdminModificado');
 
-    const emailInput = screen.getByLabelText(/email/i);
+    const emailInput = screen.getByLabelText('Email');
     await user.clear(emailInput);
     await user.type(emailInput, 'admin.modificado@socialclub.local');
+    // DT-54: al cambiar el email hay que escribirlo dos veces.
+    await user.type(screen.getByLabelText('Repetí el email'), 'admin.modificado@socialclub.local');
 
     await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
 
@@ -185,6 +230,7 @@ describe('UsuariosPage', () => {
         payload: expect.objectContaining({
           nombre: 'AdminModificado',
           email: 'admin.modificado@socialclub.local',
+          confirmarEmail: 'admin.modificado@socialclub.local',
         }),
       });
     });
@@ -211,6 +257,66 @@ describe('UsuariosPage', () => {
         payload: expect.objectContaining({
           roles: expect.arrayContaining(['ADMIN', 'COLABORADOR']),
         }),
+      });
+    });
+  });
+
+  it('DT-42: muestra las disciplinas a cargo de un delegado en la grilla', () => {
+    state.usuarios = [
+      buildUsuario({
+        roles: [{ rol: { id: 3, nombre: 'DELEGADO' } }],
+        disciplinas: [
+          { id: 1, nombre: 'Fútbol Mayor' },
+          { id: 4, nombre: 'Natación' },
+        ],
+      }),
+    ];
+
+    render(<UsuariosPage />);
+
+    expect(screen.getByText('Fútbol Mayor, Natación')).toBeInTheDocument();
+  });
+
+  it('DT-42: al hacer delegado a un usuario envía los ids de sus disciplinas', async () => {
+    state.usuarios = [buildUsuario()];
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole('checkbox', { name: /^admin$/i }));
+    await user.click(screen.getByRole('checkbox', { name: /delegado/i }));
+    await user.click(screen.getByRole('checkbox', { name: 'Natación' }));
+    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+    await waitFor(() => {
+      expect(state.updateMutateAsync).toHaveBeenCalledWith({
+        id: 1,
+        payload: expect.objectContaining({ roles: ['DELEGADO'], disciplinasIds: [4] }),
+      });
+    });
+  });
+
+  it('DT-42: si deja de ser delegado manda la lista de disciplinas vacía', async () => {
+    state.usuarios = [
+      buildUsuario({
+        roles: [{ rol: { id: 3, nombre: 'DELEGADO' } }],
+        disciplinas: [{ id: 4, nombre: 'Natación' }],
+      }),
+    ];
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole('checkbox', { name: /colaborador/i }));
+    await user.click(screen.getByRole('checkbox', { name: /delegado/i }));
+    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+    await waitFor(() => {
+      expect(state.updateMutateAsync).toHaveBeenCalledWith({
+        id: 1,
+        payload: expect.objectContaining({ roles: ['COLABORADOR'], disciplinasIds: [] }),
       });
     });
   });
@@ -281,6 +387,23 @@ describe('UsuariosPage', () => {
     });
   });
 
+  it('DT-54: marca al usuario pendiente de verificación y permite reenviarle el enlace', async () => {
+    state.usuarios = [
+      buildUsuario({ id: 7, nombre: 'Pendiente', apellido: 'Ruiz', emailVerificado: false }),
+      buildUsuario({ id: 8, nombre: 'Verificado', apellido: 'Paz', emailVerificado: true }),
+    ];
+    const user = userEvent.setup();
+
+    render(<UsuariosPage />);
+
+    expect(screen.getAllByText('Pendiente de verificación')).toHaveLength(1);
+    const botones = screen.getAllByRole('button', { name: /reenviar enlace/i });
+    expect(botones).toHaveLength(1);
+
+    await user.click(botones[0]);
+    expect(state.reenviarMutate).toHaveBeenCalledWith(7);
+  });
+
   describe('orden y filtro de la grilla (DT-03)', () => {
     function dosUsuariosActivos() {
       return [
@@ -300,7 +423,7 @@ describe('UsuariosPage', () => {
 
       render(<UsuariosPage />);
 
-      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Admin Gestor');
+      expect(getFilasUsuarios()[0]).toHaveTextContent('Admin Gestor');
 
       // Se desactiva al segundo usuario de la lista.
       await user.click(screen.getAllByRole('button', { name: /desactivar/i })[1]);
@@ -311,7 +434,7 @@ describe('UsuariosPage', () => {
       });
 
       await waitFor(() => {
-        const filas = screen.getAllByRole('listitem');
+        const filas = getFilasUsuarios();
         expect(filas[0]).toHaveTextContent('Ana Pérez');
         expect(filas[0]).toHaveAttribute('aria-current', 'true');
       });
@@ -327,7 +450,7 @@ describe('UsuariosPage', () => {
       await confirmarEnDialogo(user, /cancelar/i);
 
       expect(state.deactivateMutateAsync).not.toHaveBeenCalled();
-      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Admin Gestor');
+      expect(getFilasUsuarios()[0]).toHaveTextContent('Admin Gestor');
     });
 
     it('filtra la grilla por estado y limpia el usuario destacado', async () => {
@@ -347,7 +470,7 @@ describe('UsuariosPage', () => {
 
       await user.selectOptions(screen.getByLabelText(/filtrar por estado/i), 'inactivos');
 
-      const filas = screen.getAllByRole('listitem');
+      const filas = getFilasUsuarios();
       expect(filas).toHaveLength(1);
       expect(filas[0]).toHaveTextContent('Ana Pérez');
       expect(filas[0]).not.toHaveAttribute('aria-current');
@@ -362,7 +485,65 @@ describe('UsuariosPage', () => {
       await user.selectOptions(screen.getByLabelText(/filtrar por estado/i), 'inactivos');
 
       expect(screen.getByText(/ningún usuario coincide con el filtro/i)).toBeInTheDocument();
-      expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+      expect(getFilasUsuarios()).toHaveLength(0);
+    });
+
+    it('permite ciclo de ordenamiento de 3 estados (neutral -> asc -> desc -> neutral)', async () => {
+      state.usuarios = [
+        buildUsuario({ id: 1, nombre: 'Zack', apellido: 'Zeta', dni: '40000000' }),
+        buildUsuario({ id: 2, nombre: 'Aaron', apellido: 'Alfa', dni: '20000000' }),
+      ];
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      // Estado 1: Neutral (orden natural sin selección)
+      let filas = getFilasUsuarios();
+      expect(filas[0]).toHaveTextContent('Zack Zeta');
+      expect(filas[1]).toHaveTextContent('Aaron Alfa');
+
+      const botonDni = screen.getByRole('button', { name: /dni/i });
+
+      // Estado 2: Primer clic -> ascendente (20.000.000 antes que 40.000.000)
+      await user.click(botonDni);
+      filas = getFilasUsuarios();
+      expect(filas[0]).toHaveTextContent('Aaron Alfa');
+      expect(filas[1]).toHaveTextContent('Zack Zeta');
+
+      // Estado 3: Segundo clic -> descendente (40.000.000 antes que 20.000.000)
+      await user.click(botonDni);
+      filas = getFilasUsuarios();
+      expect(filas[0]).toHaveTextContent('Zack Zeta');
+      expect(filas[1]).toHaveTextContent('Aaron Alfa');
+
+      // Estado 4: Tercer clic -> vuelve al estado primario neutral
+      await user.click(botonDni);
+      filas = getFilasUsuarios();
+      expect(filas[0]).toHaveTextContent('Zack Zeta');
+      expect(filas[1]).toHaveTextContent('Aaron Alfa');
+    });
+
+    it('permite ordenar por fecha de alta', async () => {
+      state.usuarios = [
+        buildUsuario({ id: 1, nombre: 'Viejo', apellido: 'Usuario', creadoEn: '2026-01-01T00:00:00.000Z' }),
+        buildUsuario({ id: 2, nombre: 'Nuevo', apellido: 'Usuario', creadoEn: '2026-10-15T00:00:00.000Z' }),
+      ];
+      const user = userEvent.setup();
+
+      render(<UsuariosPage />);
+
+      const botonAlta = screen.getByRole('button', { name: /alta/i });
+      // Click en Alta -> asc (más antiguo primero)
+      await user.click(botonAlta);
+      let filas = getFilasUsuarios();
+      expect(filas[0]).toHaveTextContent('Viejo Usuario');
+      expect(filas[1]).toHaveTextContent('Nuevo Usuario');
+
+      // Click en Alta de nuevo -> desc (más reciente primero)
+      await user.click(botonAlta);
+      filas = getFilasUsuarios();
+      expect(filas[0]).toHaveTextContent('Nuevo Usuario');
+      expect(filas[1]).toHaveTextContent('Viejo Usuario');
     });
   });
 });

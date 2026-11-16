@@ -27,13 +27,19 @@ export interface Socio {
 
 export type EstadoSocioFiltro = 'ALTA' | 'BAJA';
 
+/** Misma regla de mora que el badge de la fila y que el listado de morosos. */
+export type EstadoCuentaSocioFiltro = 'MOROSO' | 'AL_DIA';
+
 /** Parámetros del listado de socios (US-15: búsqueda, filtros + paginación). */
 export interface SociosQuery {
   busqueda?: string;
   categoriaId?: number;
   estado?: EstadoSocioFiltro;
+  estadoCuenta?: EstadoCuentaSocioFiltro;
   pagina?: number;
   porPagina?: number;
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
 }
 
 /** Convierte un Socio (de API) en datos de formulario. */

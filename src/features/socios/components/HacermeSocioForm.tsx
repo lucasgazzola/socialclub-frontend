@@ -1,13 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Select } from '@/components/ui';
+import { formatearDni } from '@/lib/utils/dni';
 import { useCategorias } from '../hooks/useCategorias';
 import { hacermeSocioFormSchema, type HacermeSocioFormValues } from '../schemas';
 
 interface HacermeSocioFormProps {
   /** Datos del usuario logueado que se precompletan (solo lectura). */
-  defaultValues: { nombre: string; apellido: string; email: string; dni?: string };
+  defaultValues: {
+    nombre: string;
+    apellido: string;
+    email: string;
+    dni?: string;
+    /** TASK-60: plan elegido en la landing (id de la categoría de socio). */
+    categoriaId?: number;
+  };
   onSubmit: (data: { dni: string; categoriaId: number }) => Promise<void>;
   submitLabel?: string;
 }
@@ -30,13 +38,24 @@ export function HacermeSocioForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<HacermeSocioFormValues>({
     resolver: zodResolver(hacermeSocioFormSchema),
     defaultValues: {
       dni: defaultValues.dni ?? '',
+      categoriaId: defaultValues.categoriaId ? String(defaultValues.categoriaId) : '',
     },
   });
+
+  // TASK-60: las opciones llegan después del valor inicial; se reaplica el plan
+  // elegido para que el select lo muestre seleccionado.
+  const categoriaInicial = defaultValues.categoriaId;
+  useEffect(() => {
+    if (categorias?.length && categoriaInicial) {
+      setValue('categoriaId', String(categoriaInicial));
+    }
+  }, [categorias, categoriaInicial, setValue]);
 
   const onFormSubmit = handleSubmit(async (values) => {
     setErrorServidor(null);
@@ -80,7 +99,7 @@ export function HacermeSocioForm({
           <Input
             id="dni-readonly"
             label="DNI"
-            value={defaultValues.dni}
+            value={formatearDni(defaultValues.dni)}
             readOnly
             disabled
             className="cursor-not-allowed bg-slate-100 text-slate-500"
