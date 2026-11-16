@@ -242,7 +242,7 @@ export function describirAniosNacimiento(
 }
 
 export function etiquetaPlazo(dias: number): string {
-  return dias === 0 ? 'Obligatorio al inscribirse' : `${dias} días para presentarlo`;
+  return dias === 0 ? 'Hay que presentarlo al inscribirse' : `${dias} días para presentarlo`;
 }
 
 /**

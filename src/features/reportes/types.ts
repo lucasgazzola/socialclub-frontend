@@ -1,6 +1,6 @@
 /** US-35 — Reporte de estado financiero (contrato de GET /reportes/estado-financiero). */
 
-export type ConceptoCuota = 'CUOTA_SOCIAL' | 'CUOTA_DEPORTIVA';
+export type ConceptoCuota = 'CUOTA_SOCIAL' | 'CUOTA_DEPORTIVA' | 'ENTRADAS' | 'RESERVAS';
 
 export interface Indicadores {
   recaudado: number;

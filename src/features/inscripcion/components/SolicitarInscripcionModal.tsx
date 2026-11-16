@@ -14,6 +14,7 @@ import {
   type DocumentosSolicitudValues,
 } from './DocumentacionSolicitudFields';
 import { subirDocumentacionSolicitud } from '../api/inscripcion.api';
+import { etiquetaPlazo } from '@/features/disciplinas/types';
 
 interface Props {
   disciplina: DisciplinaCatalogo | null;
@@ -168,9 +169,7 @@ export function SolicitarInscripcionModal({ disciplina, open, onClose, esSocio }
                 <li key={doc.tipoDocumento} className="flex items-center justify-between px-3 py-2 text-xs">
                   <span className="font-medium text-slate-700">{doc.nombre}</span>
                   <span className="text-[11px] text-slate-400">
-                    {doc.plazoDiasTolerancia === 0
-                      ? 'Requerido al inicio'
-                      : `${doc.plazoDiasTolerancia} días de tolerancia`}
+                    {etiquetaPlazo(doc.plazoDiasTolerancia)}
                   </span>
                 </li>
               ))}

@@ -41,7 +41,7 @@ export const hacermeSocioFormSchema = z.object({
 export type HacermeSocioFormValues = z.infer<typeof hacermeSocioFormSchema>;
 
 /** Formulario de 'Editar datos personales' (US-11). */
-export const perfilSocioSchema = z.object({
+const perfilSocioCampos = z.object({
   nombre: z
     .string()
     .min(1, 'El nombre es obligatorio')
@@ -61,7 +61,19 @@ export const perfilSocioSchema = z.object({
     .max(30, 'El teléfono no puede tener más de 30 caracteres')
     .optional()
     .or(z.literal('')),
+  confirmarEmail: z.string().optional(),
 });
 
-export type PerfilSocioFormData = z.infer<typeof perfilSocioSchema>;
+/** DT-59: al cambiar el email hay que escribirlo dos veces. */
+export function crearPerfilSocioSchema(emailOriginal?: string | null) {
+  return perfilSocioCampos.superRefine((valores, ctx) => {
+    if (mismoEmail(valores.email, emailOriginal)) return;
+    const error = errorConfirmacionEmail(valores.email, valores.confirmarEmail);
+    if (error) ctx.addIssue({ code: 'custom', path: ['confirmarEmail'], message: error });
+  });
+}
+
+export const perfilSocioSchema = crearPerfilSocioSchema();
+
+export type PerfilSocioFormData = z.infer<typeof perfilSocioCampos>;
 

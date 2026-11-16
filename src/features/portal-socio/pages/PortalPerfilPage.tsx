@@ -8,7 +8,8 @@ import { GENERO_PERSONA_LABELS } from '@/features/auth/types';
 import { useDarseDeBajaSocio } from '@/features/socios/hooks/useDarseDeBajaSocio';
 import { useReactivarmeSocio } from '@/features/socios/hooks/useReactivarmeSocio';
 import { useUpdatePerfilSocio } from '@/features/socios/hooks/useSocios';
-import { perfilSocioSchema, type PerfilSocioFormData } from '@/features/socios/schemas';
+import { crearPerfilSocioSchema, type PerfilSocioFormData } from '@/features/socios/schemas';
+import { mismoEmail } from '@/lib/utils/email';
 import { formatearDni } from '@/lib/utils/dni';
 import { ROUTES } from '@/routes/paths';
 import { PortalBajaSocioModal } from '../components/PortalModals';
@@ -40,19 +41,23 @@ export function PortalPerfilPage() {
   const esExSocio =
     !membresiaActiva && Boolean(persona?.membresias && persona.membresias.length > 0);
 
+  const emailOriginal = persona?.email || usuario?.email || '';
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<PerfilSocioFormData>({
-    resolver: zodResolver(perfilSocioSchema),
+    resolver: zodResolver(crearPerfilSocioSchema(emailOriginal)),
     defaultValues: {
       nombre: usuario?.nombre || '',
       apellido: usuario?.apellido || '',
-      email: persona?.email || usuario?.email || '',
+      email: emailOriginal,
+      confirmarEmail: '',
       telefono: persona?.telefono || '',
     },
   });
+  const emailCambio = !mismoEmail(watch('email'), emailOriginal);
 
   if (!usuario) return null;
 
@@ -61,7 +66,11 @@ export function PortalPerfilPage() {
     setMensajeError(null);
     try {
       await updatePerfil(data);
-      setMensajeExito('Tus datos personales fueron actualizados con éxito.');
+      setMensajeExito(
+        emailCambio
+          ? 'Te enviamos un email a la nueva dirección para confirmarla. Hasta que lo uses, un ingreso nuevo te va a pedir ese enlace. Esta sesión sigue abierta.'
+          : 'Tus datos personales fueron actualizados con éxito.',
+      );
     } catch (error) {
       const err = error as Error & { status?: number };
       if (
@@ -144,6 +153,16 @@ export function PortalPerfilPage() {
                   error={errors.email?.message}
                   {...register('email')}
                 />
+                {emailCambio && (
+                  <PortalFieldInput
+                    id="confirmarEmail"
+                    type="email"
+                    label="Repetí el email *"
+                    autoComplete="off"
+                    error={errors.confirmarEmail?.message}
+                    {...register('confirmarEmail')}
+                  />
+                )}
                 <PortalFieldInput
                   id="telefono"
                   type="tel"

@@ -14,9 +14,11 @@ const pesos = (n: number) => n.toLocaleString('es-AR', { style: 'currency', curr
 const porcentaje = (p: number | null) =>
   p === null ? '—' : `${p.toLocaleString('es-AR', { maximumFractionDigits: 1 })} %`;
 
-const CONCEPTO: Record<ConceptoCuota, { etiqueta: string; morosos: string }> = {
+const CONCEPTO: Record<ConceptoCuota, { etiqueta: string; morosos?: string }> = {
   CUOTA_SOCIAL: { etiqueta: 'Cuota social', morosos: ROUTES.morososCuotaSocial },
   CUOTA_DEPORTIVA: { etiqueta: 'Cuota deportiva', morosos: ROUTES.morososCuotaDeportiva },
+  ENTRADAS: { etiqueta: 'Entradas' },
+  RESERVAS: { etiqueta: 'Señas de reservas' },
 };
 
 function Indicador({
@@ -161,10 +163,12 @@ export function EstadoFinancieroPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {data.porConcepto.map((c) => (
+                  {data.porConcepto.map((c) => {
+                    const concepto = CONCEPTO[c.concepto];
+                    return (
                     <tr key={c.concepto}>
                       <td className="py-2.5 font-medium text-slate-800">
-                        {CONCEPTO[c.concepto].etiqueta}
+                        {concepto.etiqueta}
                       </td>
                       <td className="py-2.5 text-right text-slate-700 tabular-nums">
                         {pesos(c.recaudado)}
@@ -173,20 +177,25 @@ export function EstadoFinancieroPage() {
                         {pesos(c.adeudado)}
                       </td>
                       <td className="py-2.5 text-right">
-                        <Link
-                          to={CONCEPTO[c.concepto].morosos}
-                          className="text-brand-600 inline-flex items-center gap-0.5 font-medium tabular-nums hover:underline"
-                          aria-label={`Ver morosos de ${CONCEPTO[c.concepto].etiqueta.toLowerCase()} (${c.morosos})`}
-                        >
-                          {c.morosos}
-                          <ArrowUpRight size={12} />
-                        </Link>
+                        {concepto.morosos ? (
+                          <Link
+                            to={concepto.morosos}
+                            className="text-brand-600 inline-flex items-center gap-0.5 font-medium tabular-nums hover:underline"
+                            aria-label={`Ver morosos de ${concepto.etiqueta.toLowerCase()} (${c.morosos})`}
+                          >
+                            {c.morosos}
+                            <ArrowUpRight size={12} />
+                          </Link>
+                        ) : (
+                          <span className="text-slate-400 tabular-nums">—</span>
+                        )}
                       </td>
                       <td className="py-2.5 pl-6">
                         <BarraCobranza porcentajeCobranza={c.porcentajeCobranza} />
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

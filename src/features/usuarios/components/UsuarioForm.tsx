@@ -167,6 +167,14 @@ export function UsuarioForm({
         </p>
       )}
 
+      {modo === 'editar' && pideConfirmacion && (
+        <p className="flex items-start gap-2 rounded-lg border border-brand-100 bg-brand-50/60 px-3 py-2 text-sm text-brand-800">
+          <MailCheck size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+          Le vamos a enviar un enlace a la dirección nueva para verificarla. Hasta que lo use, no
+          puede volver a entrar. La contraseña no cambia.
+        </p>
+      )}
+
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Roles</legend>
 
