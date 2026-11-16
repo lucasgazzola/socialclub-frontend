@@ -7,6 +7,7 @@ export function useMisCuotasDeportivas(options?: { enabled?: boolean }) {
     queryKey: pagosKeys.misCuotasDeportivas(),
     queryFn: pagosApi.getMisCuotasDeportivas,
     enabled: options?.enabled,
+    refetchOnMount: 'always',
   });
 }
 

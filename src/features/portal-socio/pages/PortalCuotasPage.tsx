@@ -10,8 +10,10 @@ import {
   useMisCuotasDeportivas,
 } from '@/features/pagos/hooks/useMisCuotasDeportivas';
 import { useHistorialPagos } from '@/features/pagos/hooks/useHistorialPagos';
+import { useMiHistorialDeportivo } from '@/features/pagos/hooks/useMiHistorialDeportivo';
 import { irAPagar } from '@/features/pasarela/hooks/usePasarela';
 import { etiquetaMetodoPago } from '@/features/pasarela/types';
+import type { PagoDeportivoHistorial, PagoRealizado } from '@/features/pagos/types';
 import { ROUTES } from '@/routes/paths';
 import { cn } from '@/lib/utils/cn';
 import { PortalConfirmarPagoModal } from '../components/PortalModals';
@@ -43,6 +45,10 @@ export function PortalCuotasPage() {
   const { data: historial, isLoading: isLoadingHistorial } = useHistorialPagos({
     enabled: esOFueSocio,
   });
+  const { data: historialDeportivo, isLoading: isLoadingHistorialDeportivo } =
+    useMiHistorialDeportivo({
+      enabled: esOFueSocio || participa,
+    });
   const { data: deportivas, isLoading: isLoadingDeportivas } = useMisCuotasDeportivas({
     enabled: esOFueSocio || participa,
   });
@@ -54,6 +60,17 @@ export function PortalCuotasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalDeportivoOpen, setIsModalDeportivoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'pendientes' | 'historial'>('pendientes');
+
+  const historialUnificado: Array<
+    | { tipo: 'social'; pago: PagoRealizado }
+    | { tipo: 'deportiva'; pago: PagoDeportivoHistorial }
+  > = [
+    ...(historial ?? []).map((pago) => ({ tipo: 'social' as const, pago })),
+    ...(historialDeportivo?.pagos ?? []).map((pago) => ({ tipo: 'deportiva' as const, pago })),
+  ].sort(
+    (a, b) =>
+      new Date(b.pago.fechaPago).getTime() - new Date(a.pago.fechaPago).getTime(),
+  );
 
   if (!esOFueSocio && !participa) {
     return <Navigate to={ROUTES.miClub} replace />;
@@ -346,7 +363,7 @@ export function PortalCuotasPage() {
                 Abonados
               </p>
               <p className="mt-1.5 text-2xl font-semibold text-white tabular-nums">
-                {historial?.length ?? 0}
+                {historialUnificado.length}
               </p>
               <p className="mt-0.5 text-[11px] text-slate-500">comprobantes</p>
             </div>
@@ -360,7 +377,7 @@ export function PortalCuotasPage() {
         onChange={setActiveTab}
         tabs={[
           { value: 'pendientes', label: 'Cuotas pendientes', count: cuotasPendientes.length },
-          { value: 'historial', label: 'Historial de pagos', count: historial?.length ?? 0 },
+          { value: 'historial', label: 'Historial de pagos', count: historialUnificado.length },
         ]}
       />
 
@@ -477,22 +494,22 @@ export function PortalCuotasPage() {
 
         {seccionDeportiva}
         </>
-      ) : isLoadingHistorial ? (
+      ) : isLoadingHistorial || isLoadingHistorialDeportivo ? (
         <div className="flex h-44 items-center justify-center">
           <PortalSpinner />
         </div>
-      ) : !historial || historial.length === 0 ? (
+      ) : historialUnificado.length === 0 ? (
         <PortalEmptyState
           icon={<History size={20} />}
           title="Sin pagos registrados"
-          description="Cuando abones una cuota social online o en secretaría, verás el comprobante en esta lista."
+          description="Cuando abones una cuota social o deportiva, verás el comprobante en esta lista."
         />
       ) : (
         /* Historial cronológico de comprobantes — cero tabla de administración */
         <PortalSurface className="divide-y divide-slate-300/[0.08] overflow-hidden">
-          {historial.map((pago) => (
+          {historialUnificado.map(({ tipo, pago }) => (
             <div
-              key={pago.id}
+              key={`${tipo}-${pago.id}`}
               className="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5 hover:bg-white/[0.02]"
             >
               <div className="flex items-center gap-3">
@@ -501,7 +518,7 @@ export function PortalCuotasPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white tabular-nums">
-                    Cuota {pago.periodo}
+                    {tipo === 'deportiva' ? `Cuota deportiva · ${pago.disciplinaNombre}` : `Cuota ${pago.periodo}`}
                   </p>
                   <p className="text-xs text-slate-400 tabular-nums">
                     Abonada el {new Date(pago.fechaPago).toLocaleDateString('es-AR')}
@@ -510,7 +527,10 @@ export function PortalCuotasPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <PortalTag tone="info">{etiquetaMetodoPago(pago.metodoPago)}</PortalTag>
+                <PortalTag tone="info">
+                  {tipo === 'deportiva' ? 'Deportiva · ' : ''}
+                  {etiquetaMetodoPago(pago.metodoPago)}
+                </PortalTag>
                 <span className="min-w-[88px] text-right text-sm font-semibold text-white tabular-nums">
                   ${pago.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </span>

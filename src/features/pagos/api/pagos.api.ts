@@ -90,6 +90,16 @@ export const pagosApi = {
     return data;
   },
 
+  async getMiHistorialDeportivo(
+    filtro: HistorialDeportivoFiltro = {},
+  ): Promise<HistorialDeportivoResponse> {
+    const { data } = await apiClient.get<HistorialDeportivoResponse>(
+      '/pagos-deportivos/mias/historial',
+      { params: filtro },
+    );
+    return data;
+  },
+
   // ── US-19 · Morosos de cuota social ──────────────────────────────────────────
 
   async getMorososCuotaSocial(
@@ -114,4 +124,3 @@ export const pagosApi = {
     return data;
   },
 };
-
