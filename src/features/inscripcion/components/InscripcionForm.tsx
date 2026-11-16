@@ -615,8 +615,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
                   {obligatorios.length > 0 && (
                     <div className="rounded-lg border border-slate-200 bg-white p-3.5 space-y-2.5">
                       <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <p className="font-semibold text-slate-800">Documentación obligatoria</p>
-                        <span className="text-xs text-slate-500">Exigida al inscribirse</span>
+                        <p className="font-semibold text-slate-800">Hay que presentarlo al inscribirse</p>
                       </div>
                       <ul className="space-y-2">
                         {obligatorios.map(renderItemDocumento)}
@@ -627,8 +626,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
                   {opcionales.length > 0 && (
                     <div className="rounded-lg border border-slate-200 bg-white p-3.5 space-y-2.5">
                       <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <p className="font-semibold text-slate-800">Documentación opcional</p>
-                        <span className="text-xs text-slate-500">Con plazo posterior de presentación</span>
+                        <p className="font-semibold text-slate-800">Con plazo para presentar</p>
                       </div>
                       <ul className="space-y-2">
                         {opcionales.map(renderItemDocumento)}
@@ -637,7 +635,7 @@ export function InscripcionForm({ participante, onInscripto, onCancel, onCargarD
                   )}
 
                   <p className="text-xs text-slate-500">
-                    Si falta documentación, la inscripción queda <strong>pendiente</strong> hasta presentarla dentro del plazo.
+                    Lo que hay que presentar al inscribirse no se puede dejar para después. El resto queda pendiente hasta el plazo.
                   </p>
                 </div>
               )}

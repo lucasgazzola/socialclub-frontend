@@ -36,6 +36,7 @@ import {
 } from '@/features/inscripcion/schemas/solicitar-inscripcion.schema';
 import type { CategoriaCatalogo, DisciplinaCatalogo } from '@/features/inscripcion/types';
 import { DocumentacionSolicitudFields, type DocumentosSolicitudValues } from '@/features/inscripcion/components/DocumentacionSolicitudFields';
+import { etiquetaPlazo } from '@/features/disciplinas/types';
 import { ROUTES } from '@/routes/paths';
 import {
   PortalButton,
@@ -431,9 +432,7 @@ export function PortalSolicitarInscripcionModal({
                 >
                   <span className="font-medium text-slate-200">{doc.nombre}</span>
                   <span className="text-slate-400 tabular-nums">
-                    {doc.plazoDiasTolerancia === 0
-                      ? 'Requerido al inicio'
-                      : `${doc.plazoDiasTolerancia} días de tolerancia`}
+                    {etiquetaPlazo(doc.plazoDiasTolerancia)}
                   </span>
                 </li>
               ))}

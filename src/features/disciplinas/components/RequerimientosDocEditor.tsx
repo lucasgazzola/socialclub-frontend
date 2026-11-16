@@ -62,7 +62,7 @@ export function RequerimientosDocEditor({ id, label, value, onChange, tiposExclu
           <Plus size={16} />
         </Button>
       </div>
-      <p className="mt-1 text-xs text-slate-500">Plazo en días desde la inscripción. 0 = obligatorio al inscribirse.</p>
+      <p className="mt-1 text-xs text-slate-500">Plazo en días desde la inscripción. 0 = hay que presentarlo al inscribirse.</p>
       {error && <p className="mt-1 text-xs font-medium text-rose-600">{error}</p>}
       <div className="mt-3 space-y-2">
         {value.map((requisito) => (
