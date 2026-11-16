@@ -99,6 +99,26 @@ export function destinoAlIngresar(roles: readonly string[] | undefined): string 
 }
 
 /**
+ * Puente entre el panel y Mi club. Solo quien gestiona y además es socio
+ * pertenece a las dos zonas. 0008.
+ */
+export function cruzaZonas(roles: readonly string[] | undefined): boolean {
+  return esDeGestion(roles) && Boolean(roles?.includes('SOCIO'));
+}
+
+/** Zonas a las que la landing puede mandar a alguien que ya tiene sesión. */
+export function destinosDeSesion(
+  roles: readonly string[] | undefined,
+): { to: string; etiqueta: string }[] {
+  const destinos: { to: string; etiqueta: string }[] = [];
+  if (esDeGestion(roles)) destinos.push({ to: ROUTES.dashboard, etiqueta: 'Ir al panel' });
+  if (!esDeGestion(roles) || cruzaZonas(roles)) {
+    destinos.push({ to: ROUTES.miClub, etiqueta: 'Ir a Mi club' });
+  }
+  return destinos;
+}
+
+/**
  * Rutas del panel anteriores a TASK-60 (sin el prefijo `/admin`). Se redirigen
  * para no romper marcadores ni enlaces viejos.
  */

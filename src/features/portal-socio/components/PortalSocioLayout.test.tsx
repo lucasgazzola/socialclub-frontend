@@ -59,6 +59,21 @@ describe('PortalSocioLayout', () => {
     expect(screen.getByRole('link', { name: /Eventos/i })).toHaveAttribute('href', ROUTES.eventos);
     expect(screen.getByRole('link', { name: /Disciplinas/i })).toHaveAttribute('href', ROUTES.solicitarInscripcion);
     expect(screen.queryByRole('link', { name: /Hacerme socio/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Panel de gestión/i })).not.toBeInTheDocument();
+  });
+
+  it('0008 · muestra el panel solo si además tiene un rol de gestión', () => {
+    mockUsuario = {
+      ...(mockUsuario as object),
+      roles: ['DELEGADO', 'SOCIO'],
+    };
+    const dual = renderWithProviders(<PortalSocioLayout />);
+    expect(screen.getByRole('link', { name: /Panel de gestión/i })).toHaveAttribute('href', ROUTES.dashboard);
+    dual.unmount();
+
+    mockUsuario = { ...(mockUsuario as object), roles: ['ADMIN'] };
+    renderWithProviders(<PortalSocioLayout />);
+    expect(screen.queryByRole('link', { name: /Panel de gestión/i })).not.toBeInTheDocument();
   });
 
   it('permite cerrar sesión desde el botón inferior del aside', async () => {

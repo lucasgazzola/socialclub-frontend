@@ -87,11 +87,27 @@ describe('TASK-60 · Landing del club', () => {
     expect(screen.getByText('Datos de ejemplo')).toBeInTheDocument();
   });
 
-  it('con sesión iniciada ofrece ir a Mi club (y al panel si es de gestión)', () => {
+  it('0008 · un admin ve solo el panel, un socio solo Mi club, y quien es ambos ve los dos', () => {
     mockUsuario = { id: 1, email: 'a@club.local', roles: ['ADMIN'] };
-    renderWithProviders(<LandingPage />);
-    expect(screen.getAllByRole('link', { name: /Mi club/ })[0]).toHaveAttribute('href', '/mi-club');
-    expect(screen.getByRole('link', { name: /Panel/ })).toHaveAttribute('href', '/admin');
+    const { unmount } = renderWithProviders(<LandingPage />);
+    expect(screen.getAllByRole('link', { name: 'Panel' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Ir al panel' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: 'Mi club' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Ir a Mi club' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Ya soy socio, ingresar' })).not.toBeInTheDocument();
+    unmount();
+
+    mockUsuario = { id: 2, email: 'l@club.local', roles: ['SOCIO'] };
+    const socio = renderWithProviders(<LandingPage />);
+    expect(screen.getByRole('link', { name: 'Mi club' })).toHaveAttribute('href', '/mi-club');
+    expect(screen.getAllByRole('link', { name: 'Ir a Mi club' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: 'Panel' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Ir al panel' })).not.toBeInTheDocument();
+    socio.unmount();
+
+    mockUsuario = { id: 3, email: 'd@club.local', roles: ['DELEGADO', 'SOCIO'] };
+    renderWithProviders(<LandingPage />);
+    expect(screen.getAllByRole('link', { name: 'Panel' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Mi club' }).length).toBeGreaterThan(0);
   });
 });

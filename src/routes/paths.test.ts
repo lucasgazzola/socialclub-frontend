@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ROUTES, destinoAlIngresar, esDeGestion, rutaNuevaDe } from './paths';
+import { ROUTES, cruzaZonas, destinosDeSesion, destinoAlIngresar, esDeGestion, rutaNuevaDe } from './paths';
 
 describe('TASK-60 · zonas del sitio', () => {
   it('el panel vive en /admin, lo personal en /mi-club y las rutas que arma la API no se mueven', () => {
@@ -21,6 +21,16 @@ describe('TASK-60 · zonas del sitio', () => {
     [undefined, false],
   ])('esDeGestion(%j) = %s', (roles, esperado) => {
     expect(esDeGestion(roles as string[] | undefined)).toBe(esperado);
+  });
+
+  it('el puente entre zonas existe solo para quien gestiona y es socio', () => {
+    expect(cruzaZonas(['ADMIN'])).toBe(false);
+    expect(cruzaZonas(['COLABORADOR'])).toBe(false);
+    expect(cruzaZonas(['SOCIO'])).toBe(false);
+    expect(cruzaZonas(['DELEGADO', 'SOCIO'])).toBe(true);
+    expect(destinosDeSesion(['ADMIN']).map((d) => d.to)).toEqual(['/admin']);
+    expect(destinosDeSesion(['SOCIO']).map((d) => d.to)).toEqual(['/mi-club']);
+    expect(destinosDeSesion(['DELEGADO', 'SOCIO']).map((d) => d.to)).toEqual(['/admin', '/mi-club']);
   });
 
   it('al ingresar, la gestión va al panel y el resto a Mi club', () => {

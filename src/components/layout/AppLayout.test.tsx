@@ -95,9 +95,13 @@ describe('AppLayout', () => {
     expect(mockLogout).toHaveBeenCalled();
   });
 
-  it('TASK-60 · lo personal vive en Mi club: el menú no lo lista y el encabezado lleva a Mi club', () => {
-    renderWithProviders(<AppLayout />, { ruta: '/admin' });
+  it('0008 · el encabezado lleva a Mi club solo si además es socio', () => {
+    const admin = renderWithProviders(<AppLayout />, { ruta: '/admin' });
+    expect(screen.queryByRole('link', { name: /^Mi club$/i })).not.toBeInTheDocument();
+    admin.unmount();
 
+    mockUsuario = { ...mockUsuario, roles: ['DELEGADO', 'SOCIO'] };
+    renderWithProviders(<AppLayout />, { ruta: '/admin' });
     expect(screen.getByRole('link', { name: /^Mi club$/i })).toHaveAttribute('href', '/mi-club');
     for (const personal of [/Mis cuotas/i, /Mis entradas/i, /Mis reservas/i, /Mi perfil/i, /Hacerme socio/i]) {
       expect(screen.queryByRole('link', { name: personal })).not.toBeInTheDocument();

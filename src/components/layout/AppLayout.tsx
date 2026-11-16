@@ -26,7 +26,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Breadcrumbs, ClubLogo } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { RolNombre } from '@/features/auth/types';
-import { ROUTES } from '@/routes/paths';
+import { ROUTES, cruzaZonas } from '@/routes/paths';
 import { cn } from '@/lib/utils/cn';
 
 interface NavItem {
@@ -431,16 +431,17 @@ export function AppLayout() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* TASK-60: lo personal (perfil, cuotas, entradas…) vive en Mi club. */}
-            <NavLink
-              to={ROUTES.miClub}
-              className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-xs font-semibold text-brand-700 shadow-2xs transition-colors hover:bg-brand-100"
-            >
-              <UserRound size={14} aria-hidden />
-              Mi club
-            </NavLink>
+            {cruzaZonas(usuario?.roles) && (
+              <NavLink
+                to={ROUTES.miClub}
+                className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-xs font-semibold text-brand-700 shadow-2xs transition-colors hover:bg-brand-100"
+              >
+                <UserRound size={14} aria-hidden />
+                Mi club
+              </NavLink>
+            )}
 
-            <div className="h-4 w-px bg-slate-200" />
+            {cruzaZonas(usuario?.roles) && <div className="h-4 w-px bg-slate-200" />}
 
             <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs">
               {usuario ? rolPrincipal : 'Invitado'}
