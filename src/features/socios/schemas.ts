@@ -6,6 +6,7 @@ export const socioFormSchema = z.object({
   apellido: z.string().min(1, 'Requerido').max(30).regex(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s'-]+$/),
   dni: z.string().min(6).max(8).regex(/^\d+$/, 'Solo números'),
   fechaNacimiento: z.string().optional(),
+  genero: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   /** DT-54: el email escrito por segunda vez (al cargarlo o cambiarlo). */
   confirmarEmail: z.string().optional(),
@@ -20,8 +21,26 @@ export type SocioFormData = z.infer<typeof socioFormSchema>;
  * escribirlo dos veces. En el alta, el socio recibe un enlace para activar
  * su cuenta.
  */
-export function crearSocioFormSchema(emailOriginal?: string | null) {
+export function crearSocioFormSchema(emailOriginal?: string | null, requerirDatosAlta = false) {
   return socioFormSchema.superRefine((valores, ctx) => {
+    if (requerirDatosAlta) {
+      const camposObligatorios: Array<[keyof typeof valores, string]> = [
+        ['fechaNacimiento', 'La fecha de nacimiento es obligatoria'],
+        ['genero', 'El género es obligatorio'],
+        ['email', 'El email es obligatorio'],
+        ['telefono', 'El teléfono es obligatorio'],
+      ];
+      for (const [campo, mensaje] of camposObligatorios) {
+        if (!valores[campo]) ctx.addIssue({ code: 'custom', path: [campo], message: mensaje });
+      }
+      if (valores.categoriaId === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['categoriaId'],
+          message: 'La categoría de socio es obligatoria',
+        });
+      }
+    }
     if (mismoEmail(valores.email, emailOriginal)) return;
     const error = errorConfirmacionEmail(valores.email, valores.confirmarEmail);
     if (error) ctx.addIssue({ code: 'custom', path: ['confirmarEmail'], message: error });
@@ -76,4 +95,3 @@ export function crearPerfilSocioSchema(emailOriginal?: string | null) {
 export const perfilSocioSchema = crearPerfilSocioSchema();
 
 export type PerfilSocioFormData = z.infer<typeof perfilSocioCampos>;
-
