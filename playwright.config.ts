@@ -86,6 +86,9 @@ export default defineConfig({
         PASARELA_PAGOS: 'simulada',
         // US-60..62: las reservas de ejemplo (RES-SEED*) vuelven a su estado inicial.
         SEED_RESETEAR_RESERVAS: '1',
+        // Los E2E dependen del padrón chico (personas, tarifas y RES-SEED*).
+        // El seed por defecto es el padrón realista de demostración.
+        SEED_PERFIL: 'base',
         MP_ACCESS_TOKEN: '',
         // H05: el evento de prueba es dentro de 7 días y se valida enseguida; se
         // abre el acceso con anticipación de sobra (la regla tiene sus tests unitarios).

@@ -21,7 +21,7 @@ import { API_URL, BACKEND_DIR, DATABASE_URL } from '../../playwright.config';
  *   copia a `docs/pruebas/evidencias/<US>/e2e/`.
  */
 
-/** Usuarios del seed del backend (`prisma/seed.ts`). */
+/** Usuarios del padrón chico del backend (`prisma/seed.base.ts`, SEED_PERFIL=base). */
 export const USUARIOS = {
   admin: 'admin@socialclub.local',
   colaborador: 'franco.bustos@socialclub.local',
