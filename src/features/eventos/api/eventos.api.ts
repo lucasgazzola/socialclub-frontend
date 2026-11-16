@@ -5,7 +5,7 @@ import type { EstadoEventoBackend, Evento, CrearEventoFormData, EventosPaginados
 export interface FiltrarEventosParams {
   search?: string;
   soloDisponibles?: boolean;
-  ordenar?: 'nombre' | 'reciente' | 'fecha';
+  ordenar?: 'nombre' | 'reciente' | 'fecha' | 'precio';
   fechaDesde?: string;
   fechaHasta?: string;
   estado?: EstadoEventoBackend;
