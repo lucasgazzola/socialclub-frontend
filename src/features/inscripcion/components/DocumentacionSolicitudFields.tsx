@@ -12,6 +12,21 @@ export type DocumentosSolicitudValues = Partial<
   Record<TipoDocumentacionDisciplina, DocumentoSolicitudValue>
 >;
 
+export function documentosConVencimientoInvalido(
+  documentos: DocumentoRequeridoCatalogo[],
+  valores: DocumentosSolicitudValues,
+): DocumentoRequeridoCatalogo[] {
+  const hoy = new Date();
+  const hoyIso = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(
+    hoy.getDate(),
+  ).padStart(2, '0')}`;
+
+  return documentos.filter(({ tipoDocumento }) => {
+    const fecha = valores[tipoDocumento]?.fechaVencimiento;
+    return Boolean(fecha && fecha < hoyIso);
+  });
+}
+
 interface Props {
   documentos: DocumentoRequeridoCatalogo[];
   valores: DocumentosSolicitudValues;

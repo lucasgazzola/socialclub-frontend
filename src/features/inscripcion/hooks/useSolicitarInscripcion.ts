@@ -28,6 +28,7 @@ export function useCatalogoInscripcion(enabled = true) {
     queryFn: obtenerCatalogoInscripcion,
     enabled,
     refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -40,6 +41,7 @@ export function useMisSolicitudesInscripcion(
     queryFn: () => obtenerMisSolicitudesInscripcion(estado),
     enabled,
     refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 

@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   FileWarning,
   Filter,
+  ExternalLink,
   Search,
   X,
 } from 'lucide-react';
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import { formatearDni } from '@/lib/utils/dni';
+import { env } from '@/config/env';
 import { EstadoSolicitudBadge } from '../components/EstadoSolicitudBadge';
 import {
   useAprobarSolicitudInscripcion,
@@ -299,9 +301,20 @@ export function SolicitudesInscripcionPage() {
                           <Badge variant="success">Documentación completa</Badge>
                           <ul className="mt-1 space-y-0.5 text-xs text-slate-600">
                             {doc.documentos.map((d) => (
-                              <li key={d.tipoDocumento} className="flex items-center gap-1">
+                              <li key={d.tipoDocumento} className="flex items-center justify-between gap-2">
                                 <Check size={12} className="shrink-0 text-emerald-600" />
-                                <span>{d.etiqueta} (Vigente)</span>
+                                <span className="min-w-0 flex-1">{d.etiqueta} (Vigente)</span>
+                                {d.documentoId !== null && (
+                                  <a
+                                    href={`${env.apiUrl}/documentacion/${d.documentoId}/archivo`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex shrink-0 items-center gap-1 font-semibold text-brand-700 hover:underline"
+                                    data-testid={`ver-archivo-solicitud-${s.id}-${d.documentoId}`}
+                                  >
+                                    Ver archivo <ExternalLink size={11} aria-hidden="true" />
+                                  </a>
+                                )}
                               </li>
                             ))}
                           </ul>
@@ -313,15 +326,26 @@ export function SolicitudesInscripcionPage() {
                             {doc.documentos.map((d) => {
                               const ok = d.estado === 'VIGENTE' || d.estado === 'POR_VENCER';
                               return (
-                                <li key={d.tipoDocumento} className="flex items-center gap-1">
+                                <li key={d.tipoDocumento} className="flex items-center justify-between gap-2">
                                   {ok ? (
                                     <Check size={12} className="shrink-0 text-emerald-600" />
                                   ) : (
                                     <FileWarning size={12} className="shrink-0 text-amber-600" />
                                   )}
-                                  <span className={ok ? 'text-slate-600' : 'font-medium text-amber-800'}>
+                                  <span className={`min-w-0 flex-1 ${ok ? 'text-slate-600' : 'font-medium text-amber-800'}`}>
                                     {d.etiqueta}: {ok ? 'Vigente' : 'Faltante'}
                                   </span>
+                                  {d.documentoId !== null && (
+                                    <a
+                                      href={`${env.apiUrl}/documentacion/${d.documentoId}/archivo`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex shrink-0 items-center gap-1 font-semibold text-brand-700 hover:underline"
+                                      data-testid={`ver-archivo-solicitud-${s.id}-${d.documentoId}`}
+                                    >
+                                      Ver archivo <ExternalLink size={11} aria-hidden="true" />
+                                    </a>
+                                  )}
                                 </li>
                               );
                             })}

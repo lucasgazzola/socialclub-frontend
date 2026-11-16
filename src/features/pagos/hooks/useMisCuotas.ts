@@ -11,5 +11,6 @@ export function useMisCuotas(options?: UseMisCuotasOptions) {
     queryKey: pagosKeys.misCuotas(),
     queryFn: pagosApi.getMisCuotas,
     enabled: options?.enabled,
+    refetchOnMount: 'always',
   });
 }

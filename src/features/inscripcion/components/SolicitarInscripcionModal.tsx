@@ -14,6 +14,8 @@ import {
   type DocumentosSolicitudValues,
 } from './DocumentacionSolicitudFields';
 import { subirDocumentacionSolicitud } from '../api/inscripcion.api';
+import { toast } from 'sonner';
+import { documentosConVencimientoInvalido } from './DocumentacionSolicitudFields';
 import { etiquetaPlazo } from '@/features/disciplinas/types';
 
 interface Props {
@@ -75,6 +77,14 @@ export function SolicitarInscripcionModal({ disciplina, open, onClose, esSocio }
   };
 
   const onSubmit = async () => {
+    const documentosInvalidos = documentosConVencimientoInvalido(docsObligatorios, documentos);
+    if (documentosInvalidos.length > 0) {
+      toast.error(
+        `La fecha de vencimiento de ${documentosInvalidos[0].nombre} no puede ser anterior a la fecha actual.`,
+      );
+      return;
+    }
+
     const solicitud = await solicitar({
       disciplinaId: disciplina.id,
       categoriaDisciplinaId: categoriaSeleccionadaId ?? undefined,

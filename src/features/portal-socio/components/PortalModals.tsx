@@ -35,7 +35,12 @@ import {
   type SolicitarInscripcionFormValues,
 } from '@/features/inscripcion/schemas/solicitar-inscripcion.schema';
 import type { CategoriaCatalogo, DisciplinaCatalogo } from '@/features/inscripcion/types';
-import { DocumentacionSolicitudFields, type DocumentosSolicitudValues } from '@/features/inscripcion/components/DocumentacionSolicitudFields';
+import {
+  DocumentacionSolicitudFields,
+  documentosConVencimientoInvalido,
+  type DocumentosSolicitudValues,
+} from '@/features/inscripcion/components/DocumentacionSolicitudFields';
+import { toast } from 'sonner';
 import { etiquetaPlazo } from '@/features/disciplinas/types';
 import { ROUTES } from '@/routes/paths';
 import {
@@ -335,6 +340,14 @@ export function PortalSolicitarInscripcionModal({
   };
 
   const onSubmit = async () => {
+    const documentosInvalidos = documentosConVencimientoInvalido(docsObligatorios, documentos);
+    if (documentosInvalidos.length > 0) {
+      toast.error(
+        `La fecha de vencimiento de ${documentosInvalidos[0].nombre} no puede ser anterior a la fecha actual.`,
+      );
+      return;
+    }
+
     const solicitud = await solicitar({
       disciplinaId: disciplina.id,
       categoriaDisciplinaId: categoriaSeleccionadaId ?? undefined,
