@@ -34,6 +34,8 @@ export function PortalCuotasPage() {
   const esOFueSocio = Boolean(
     usuario?.persona?.membresias && usuario.persona.membresias.length > 0,
   );
+  // DT-62: quien participa en una disciplina sin ser socio también paga su cuota deportiva.
+  const participa = Boolean(usuario?.persona?.tieneInscripciones);
 
   const { data: resumen, isLoading: isLoadingCuotas, isError, error } = useMisCuotas({
     enabled: esOFueSocio,
@@ -41,7 +43,9 @@ export function PortalCuotasPage() {
   const { data: historial, isLoading: isLoadingHistorial } = useHistorialPagos({
     enabled: esOFueSocio,
   });
-  const { data: deportivas } = useMisCuotasDeportivas({ enabled: esOFueSocio });
+  const { data: deportivas, isLoading: isLoadingDeportivas } = useMisCuotasDeportivas({
+    enabled: esOFueSocio || participa,
+  });
   const iniciarPago = useIniciarPagoCuotas();
   const iniciarPagoDeportivo = useIniciarPagoDeportivo();
 
@@ -51,7 +55,7 @@ export function PortalCuotasPage() {
   const [isModalDeportivoOpen, setIsModalDeportivoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'pendientes' | 'historial'>('pendientes');
 
-  if (!esOFueSocio) {
+  if (!esOFueSocio && !participa) {
     return <Navigate to={ROUTES.miClub} replace />;
   }
 
@@ -122,6 +126,143 @@ export function PortalCuotasPage() {
       );
     }
   };
+
+  const seccionDeportiva =
+    cuotasDeportivas.length > 0 ? (
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold text-white">Cuota deportiva</h2>
+        <PortalSurface className="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
+          <button
+            type="button"
+            onClick={() =>
+              setSelectedDeportivas(
+                todasDeportivas
+                  ? []
+                  : cuotasDeportivas.map((cuota) =>
+                      claveDeportiva(cuota.disciplinaId, cuota.periodo),
+                    ),
+              )
+            }
+            className="inline-flex items-center gap-2.5 text-xs font-medium text-slate-200 hover:text-white cursor-pointer"
+          >
+            <span
+              className={cn(
+                'flex h-4 w-4 items-center justify-center rounded-[2px] border transition-colors',
+                todasDeportivas
+                  ? 'border-blue-500 bg-blue-600 text-white'
+                  : 'border-slate-500/60 bg-transparent',
+              )}
+            >
+              {todasDeportivas && <Check size={11} strokeWidth={3} />}
+            </span>
+            <span>
+              {todasDeportivas ? 'Deseleccionar todas' : 'Seleccionar todas las cuotas deportivas'}
+            </span>
+          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs text-slate-400">
+              Seleccionadas:{' '}
+              <strong className="font-semibold text-blue-400 tabular-nums">
+                ${totalDeportivo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              </strong>
+            </span>
+            <PortalButton
+              variant="primary"
+              size="sm"
+              disabled={deportivasSeleccionadas.length === 0 || iniciarPagoDeportivo.isPending}
+              onClick={() => setIsModalDeportivoOpen(true)}
+            >
+              <CreditCard size={14} />
+              Pagar disciplinas ({deportivasSeleccionadas.length})
+            </PortalButton>
+          </div>
+        </PortalSurface>
+        <PortalSurface className="divide-y divide-white/[0.08] overflow-hidden">
+          {cuotasDeportivas.map((cuota) => {
+            const clave = claveDeportiva(cuota.disciplinaId, cuota.periodo);
+            const selected = selectedDeportivas.includes(clave);
+            return (
+              <button
+                key={clave}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => toggleDeportiva(cuota.disciplinaId, cuota.periodo)}
+                className={cn(
+                  'flex w-full flex-wrap items-center justify-between gap-4 border-l-2 px-4 py-3.5 text-left transition-colors cursor-pointer',
+                  selected
+                    ? 'border-l-blue-500 bg-blue-500/[0.09]'
+                    : 'border-l-transparent hover:bg-white/[0.02]',
+                )}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    className={cn(
+                      'flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border transition-colors',
+                      selected
+                        ? 'border-blue-500 bg-blue-600 text-white'
+                        : 'border-slate-500/60 bg-transparent',
+                    )}
+                  >
+                    {selected && <Check size={11} strokeWidth={3} />}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white">{cuota.disciplinaNombre}</p>
+                    <p className="mt-0.5 text-xs text-slate-400 tabular-nums">
+                      Período {cuota.periodo}
+                      {cuota.categoriaNombre ? ` · ${cuota.categoriaNombre}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-3">
+                  <PortalTag tone="pending">Pendiente</PortalTag>
+                  <span className="min-w-[92px] text-right text-sm font-semibold text-white tabular-nums">
+                    ${(cuota.monto ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </PortalSurface>
+      </div>
+    ) : null;
+
+  const modalDeportivo = (
+    <PortalConfirmarPagoModal
+      open={isModalDeportivoOpen}
+      onClose={() => setIsModalDeportivoOpen(false)}
+      titulo={`Cuotas deportivas (${deportivasSeleccionadas.length})`}
+      detalle={deportivasSeleccionadas
+        .map((cuota) => `${cuota.disciplinaNombre} ${cuota.periodo}`)
+        .join(' · ')}
+      total={totalDeportivo}
+      onConfirmar={() => void handleConfirmPagoDeportivo()}
+      isLoading={iniciarPagoDeportivo.isPending}
+    />
+  );
+
+  // DT-62: sin membresías no hay cuota social; solo la deportiva de sus disciplinas.
+  if (!esOFueSocio) {
+    if (isLoadingDeportivas) {
+      return (
+        <div className="flex h-56 items-center justify-center">
+          <PortalSpinner />
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-6">
+        <PortalTitleBar title="Mis cuotas" summary="Cuota deportiva de tus disciplinas" />
+        {seccionDeportiva ?? (
+          <PortalEmptyState
+            icon={<CheckCircle2 size={20} />}
+            title="Estás al día con tus disciplinas"
+            description="No registrás cuotas deportivas pendientes de pago."
+          />
+        )}
+        {modalDeportivo}
+      </div>
+    );
+  }
 
   if (isLoadingCuotas) {
     return (
@@ -228,8 +369,16 @@ export function PortalCuotasPage() {
         {cuotasPendientes.length === 0 ? (
           <PortalEmptyState
             icon={<CheckCircle2 size={20} />}
-            title="Estás al día con tus cuotas"
-            description="No registrás períodos pendientes de pago. Tu membresía y acceso están completamente habilitados."
+            title={
+              cuotasDeportivas.length > 0
+                ? 'Estás al día con la cuota social'
+                : 'Estás al día con tus cuotas'
+            }
+            description={
+              cuotasDeportivas.length > 0
+                ? 'No debés meses de la cuota social. Abajo están las cuotas deportivas pendientes.'
+                : 'No registrás períodos pendientes de pago. Tu membresía y acceso están completamente habilitados.'
+            }
           />
         ) : (
           <div className="space-y-3">
@@ -326,103 +475,7 @@ export function PortalCuotasPage() {
           </div>
         )}
 
-        {cuotasDeportivas.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-white">Cuota deportiva</h2>
-            <PortalSurface className="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
-              <button
-                type="button"
-                onClick={() =>
-                  setSelectedDeportivas(
-                    todasDeportivas
-                      ? []
-                      : cuotasDeportivas.map((cuota) =>
-                          claveDeportiva(cuota.disciplinaId, cuota.periodo),
-                        ),
-                  )
-                }
-                className="inline-flex items-center gap-2.5 text-xs font-medium text-slate-200 hover:text-white cursor-pointer"
-              >
-                <span
-                  className={cn(
-                    'flex h-4 w-4 items-center justify-center rounded-[2px] border transition-colors',
-                    todasDeportivas
-                      ? 'border-blue-500 bg-blue-600 text-white'
-                      : 'border-slate-500/60 bg-transparent',
-                  )}
-                >
-                  {todasDeportivas && <Check size={11} strokeWidth={3} />}
-                </span>
-                <span>
-                  {todasDeportivas ? 'Deseleccionar todas' : 'Seleccionar todas las cuotas deportivas'}
-                </span>
-              </button>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-xs text-slate-400">
-                  Seleccionadas:{' '}
-                  <strong className="font-semibold text-blue-400 tabular-nums">
-                    ${totalDeportivo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                  </strong>
-                </span>
-                <PortalButton
-                  variant="primary"
-                  size="sm"
-                  disabled={deportivasSeleccionadas.length === 0 || iniciarPagoDeportivo.isPending}
-                  onClick={() => setIsModalDeportivoOpen(true)}
-                >
-                  <CreditCard size={14} />
-                  Pagar disciplinas ({deportivasSeleccionadas.length})
-                </PortalButton>
-              </div>
-            </PortalSurface>
-            <PortalSurface className="divide-y divide-white/[0.08] overflow-hidden">
-              {cuotasDeportivas.map((cuota) => {
-                const clave = claveDeportiva(cuota.disciplinaId, cuota.periodo);
-                const selected = selectedDeportivas.includes(clave);
-                return (
-                  <button
-                    key={clave}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => toggleDeportiva(cuota.disciplinaId, cuota.periodo)}
-                    className={cn(
-                      'flex w-full flex-wrap items-center justify-between gap-4 border-l-2 px-4 py-3.5 text-left transition-colors cursor-pointer',
-                      selected
-                        ? 'border-l-blue-500 bg-blue-500/[0.09]'
-                        : 'border-l-transparent hover:bg-white/[0.02]',
-                    )}
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span
-                        className={cn(
-                          'flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border transition-colors',
-                          selected
-                            ? 'border-blue-500 bg-blue-600 text-white'
-                            : 'border-slate-500/60 bg-transparent',
-                        )}
-                      >
-                        {selected && <Check size={11} strokeWidth={3} />}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white">{cuota.disciplinaNombre}</p>
-                        <p className="mt-0.5 text-xs text-slate-400 tabular-nums">
-                          Período {cuota.periodo}
-                          {cuota.categoriaNombre ? ` · ${cuota.categoriaNombre}` : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-3">
-                      <PortalTag tone="pending">Pendiente</PortalTag>
-                      <span className="min-w-[92px] text-right text-sm font-semibold text-white tabular-nums">
-                        ${(cuota.monto ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </PortalSurface>
-          </div>
-        )}
+        {seccionDeportiva}
         </>
       ) : isLoadingHistorial ? (
         <div className="flex h-44 items-center justify-center">
@@ -477,17 +530,7 @@ export function PortalCuotasPage() {
         isLoading={iniciarPago.isPending}
       />
 
-      <PortalConfirmarPagoModal
-        open={isModalDeportivoOpen}
-        onClose={() => setIsModalDeportivoOpen(false)}
-        titulo={`Cuotas deportivas (${deportivasSeleccionadas.length})`}
-        detalle={deportivasSeleccionadas
-          .map((cuota) => `${cuota.disciplinaNombre} ${cuota.periodo}`)
-          .join(' · ')}
-        total={totalDeportivo}
-        onConfirmar={() => void handleConfirmPagoDeportivo()}
-        isLoading={iniciarPagoDeportivo.isPending}
-      />
+      {modalDeportivo}
     </div>
   );
 }

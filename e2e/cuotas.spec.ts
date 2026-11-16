@@ -16,6 +16,8 @@ import {
  *
  * El participante se prepara por API (el alta por pantalla la cubre TC-017):
  * inscripto hoy en Natación · Adultos / Libre, cuya tarifa del seed es $16.000.
+ * Natación exige la ficha técnica al inscribir (plazo 0, H13), así que va
+ * en el alta.
  */
 test.describe.configure({ mode: 'serial' });
 
@@ -45,6 +47,12 @@ test.beforeAll(async ({ apiAdmin }) => {
         genero: 'MASCULINO',
         disciplinaId: natacion.id,
         categoriaDisciplinaId: natacion.categorias.find((c) => c.nombre === 'Adultos / Libre')!.id,
+        documentos: [
+          {
+            tipoDocumento: 'FICHA_TECNICA_NATACION',
+            fechaVencimiento: `${new Date().getFullYear() + 1}-03-15`,
+          },
+        ],
       },
     }),
   );

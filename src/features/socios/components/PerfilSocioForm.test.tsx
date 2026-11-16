@@ -60,6 +60,15 @@ describe('PerfilSocioForm (US-11)', () => {
     vi.clearAllMocks();
   });
 
+  it('DT-63 · toma el email del usuario aunque la ficha tenga otro, sin pedir confirmarlo', () => {
+    render(
+      <PerfilSocioForm usuario={mockUsuario} persona={{ ...mockPersona, email: 'viejo@club.com' }} />,
+    );
+
+    expect(screen.getByLabelText(/Correo electrónico \*/i)).toHaveValue('lucas@club.com');
+    expect(screen.queryByLabelText(/Repetí el email/i)).not.toBeInTheDocument();
+  });
+
   it('muestra el DNI, categoría y estado en modo solo lectura/deshabilitado', () => {
     render(<PerfilSocioForm usuario={mockUsuario} persona={mockPersona} />);
 

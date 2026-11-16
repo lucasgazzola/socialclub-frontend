@@ -144,7 +144,7 @@ export function EstadoFinancieroPage() {
             <Indicador
               titulo="Porcentaje de cobranza"
               valor={porcentaje(data.totales.porcentajeCobranza)}
-              detalle="Recaudado sobre lo exigible del período"
+              detalle="Cuotas cobradas sobre lo exigible del período (sin entradas ni señas)"
               testId="porcentaje-cobranza"
             />
           </div>
@@ -191,7 +191,12 @@ export function EstadoFinancieroPage() {
                         )}
                       </td>
                       <td className="py-2.5 pl-6">
-                        <BarraCobranza porcentajeCobranza={c.porcentajeCobranza} />
+                        {/* DT-63: entradas y señas no generan deuda; su cobranza no dice nada. */}
+                        {concepto.morosos ? (
+                          <BarraCobranza porcentajeCobranza={c.porcentajeCobranza} />
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                     </tr>
                     );

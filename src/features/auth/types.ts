@@ -33,6 +33,8 @@ export interface PersonaDeUsuario {
   fechaNacimiento?: string | null;
   genero?: GeneroPersona | null;
   membresias: MembresiaDePersona[];
+  /** DT-62: participa (o participó) en alguna disciplina, aunque no sea socio. */
+  tieneInscripciones?: boolean;
 }
 
 /** Usuario autenticado tal como lo expone el backend en /auth/me y /auth/login. */

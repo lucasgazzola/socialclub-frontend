@@ -14,9 +14,10 @@ import {
  * faltante, la alerta aparece en su Inicio y solo la ven los delegados de esa
  * disciplina (US-05, US-26, DT-42).
  *
- * Natación (seed) exige la ficha técnica al inscribirse (plazo 0) y el
- * certificado médico a los 10 días: los dos faltantes entran en la ventana de
- * alertas desde el primer día. El delegado del seed tiene Natación a cargo.
+ * Natación (seed) exige la ficha técnica al inscribirse (plazo 0, se adjunta
+ * en el alta desde H13) y el certificado médico a los 10 días: ese faltante
+ * entra en la ventana de alertas desde el primer día. El delegado del seed
+ * tiene Natación a cargo.
  */
 test.describe.configure({ mode: 'serial' });
 
@@ -28,6 +29,7 @@ const participante = {
 };
 const nombreEnAlertas = `${participante.apellido}, ${participante.nombre}`;
 const delegadoBasquet = {
+  dni: dniUnico(),
   email: `delegado.basquet.${Date.now()}@socialclub.local`,
   password: 'Delegado123!',
 };
@@ -64,13 +66,30 @@ test(
         await dialogo.getByLabel('Disciplina').selectOption({ label: 'Natación' });
         await dialogo.getByLabel('Categoría').selectOption({ label: 'Adultos / Libre' });
         const requisitos = dialogo.getByRole('region', { name: 'Requisitos de la inscripción' });
-        await expect(requisitos.getByText('Documentación obligatoria')).toBeVisible();
+        // H13: la ficha técnica (plazo 0) se presenta al inscribir; el certificado tiene plazo.
+        await expect(requisitos.getByText('Hay que presentarlo al inscribirse')).toBeVisible();
+        await expect(requisitos.getByText('Ficha técnica: Natación')).toBeVisible();
+        await expect(requisitos.getByText('Con plazo para presentar')).toBeVisible();
         await expect(requisitos.getByText('Certificado médico de aptitud física')).toBeVisible();
         await resaltar(requisitos);
       },
     );
 
-    await paso('5. Registrar al participante sin adjuntar la documentación', async () => {
+    await paso('5. Adjuntar la ficha técnica, que hay que presentar al inscribirse', async () => {
+      const ficha = dialogo.getByRole('listitem').filter({ hasText: 'Ficha técnica: Natación' });
+      await ficha.getByRole('button', { name: 'Cargar' }).click();
+      await ficha
+        .locator('#vencimiento-FICHA_TECNICA_NATACION')
+        .fill(`15/03/${new Date().getFullYear() + 1}`);
+      await ficha.getByLabel('Archivo para Ficha técnica: Natación').setInputFiles({
+        name: 'ficha-natacion.pdf',
+        mimeType: 'application/pdf',
+        buffer: Buffer.from('%PDF-1.4 ficha técnica de prueba'),
+      });
+      await resaltar(ficha);
+    });
+
+    await paso('6. Registrar al participante sin el certificado, que tiene plazo', async () => {
       await dialogo.getByRole('button', { name: 'Registrar participante' }).click();
       const resultado = dialogo.getByRole('status');
       await expect(resultado).toContainText(
@@ -93,16 +112,14 @@ test(
     await paso('2. Mirar las alertas del Inicio', async () => {
       const alertas = page.getByRole('region', { name: 'Alertas de documentación' });
       const filas = alertas.getByRole('row').filter({ hasText: nombreEnAlertas });
-      // La ficha técnica se exige al inscribirse (vence hoy) y el certificado
-      // médico tiene 10 días: los dos faltantes entran en la ventana de alertas.
-      const ficha = filas.filter({ hasText: 'Ficha técnica: Natación' });
-      await expect(ficha).toContainText('Natación · Adultos / Libre');
-      await expect(ficha).toContainText('hoy');
-      await expect(ficha).toContainText('Falta presentar');
+      // El certificado médico tiene 10 días: entra en la ventana de alertas.
+      // La ficha técnica se presentó al inscribir (H13), así que no falta.
       const certificado = filas.filter({ hasText: 'Certificado médico de aptitud física' });
+      await expect(certificado).toContainText('Natación · Adultos / Libre');
       await expect(certificado).toContainText('en 10 días');
       await expect(certificado).toContainText('Falta presentar');
-      await resaltar(ficha, certificado);
+      await expect(filas.filter({ hasText: 'Ficha técnica: Natación' })).toHaveCount(0);
+      await resaltar(certificado);
     });
   },
 );
@@ -121,7 +138,7 @@ test(
     await paso('2. Cargar un delegado nuevo sin disciplinas: el formulario las exige', async () => {
       await dialogo.getByLabel('Nombre').fill('Bruno');
       await dialogo.getByLabel('Apellido').fill('Delegado');
-      await dialogo.getByLabel('DNI').fill(dniUnico());
+      await dialogo.getByLabel('DNI').fill(delegadoBasquet.dni);
       await dialogo.getByLabel('Email', { exact: true }).fill(delegadoBasquet.email);
       // DT-54: el email se escribe dos veces; la contraseña la elige el delegado.
       await dialogo.getByLabel('Repetí el email').fill(delegadoBasquet.email);
@@ -140,7 +157,8 @@ test(
     });
 
     await paso('4. La grilla muestra la disciplina debajo del rol', async () => {
-      await page.getByPlaceholder(/Buscar por nombre/).fill('Bruno');
+      // Por DNI: la base de los E2E acumula un «Bruno Delegado» por corrida.
+      await page.getByPlaceholder(/Buscar por nombre/).fill(delegadoBasquet.dni);
       const fila = page.getByRole('row').filter({ hasText: delegadoBasquet.email });
       await expect(fila).toContainText('DELEGADO');
       await expect(fila).toContainText('Básquet');
