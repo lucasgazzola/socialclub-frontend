@@ -14,6 +14,9 @@ import type {
   RequisitosInscripcion,
   SolicitarInscripcionPayload,
   SolicitudInscripcion,
+  SolicitudInscripcionAdmin,
+  SolicitudesInscripcionQuery,
+  AprobarSolicitudInscripcionResultado,
   EstadoSolicitudInscripcion,
 } from '../types';
 import type {
@@ -158,6 +161,42 @@ export async function obtenerMisSolicitudesInscripcion(
   const { data } = await apiClient.get<SolicitudInscripcion[]>(
     '/inscripcion/mis-solicitudes',
     estado ? { params: { estado } } : undefined,
+  );
+  return data;
+}
+
+/** US-66: listar solicitudes de inscripción a disciplinas para evaluación administrativa. */
+export async function listarSolicitudesInscripcion(
+  query: SolicitudesInscripcionQuery = {},
+): Promise<SolicitudInscripcionAdmin[]> {
+  const { data } = await apiClient.get<SolicitudInscripcionAdmin[]>('/inscripcion/solicitudes', {
+    params: {
+      estado: query.estado || undefined,
+      disciplinaId: query.disciplinaId || undefined,
+      busqueda: query.busqueda?.trim() || undefined,
+    },
+  });
+  return data;
+}
+
+/** US-66: aprobar una solicitud de inscripción pendiente. */
+export async function aprobarSolicitudInscripcion(
+  id: number,
+): Promise<AprobarSolicitudInscripcionResultado> {
+  const { data } = await apiClient.patch<AprobarSolicitudInscripcionResultado>(
+    `/inscripcion/solicitudes/${id}/aprobar`,
+  );
+  return data;
+}
+
+/** US-66: rechazar una solicitud de inscripción pendiente con motivo obligatorio. */
+export async function rechazarSolicitudInscripcion(
+  id: number,
+  motivo: string,
+): Promise<SolicitudInscripcion> {
+  const { data } = await apiClient.patch<SolicitudInscripcion>(
+    `/inscripcion/solicitudes/${id}/rechazar`,
+    { motivo },
   );
   return data;
 }

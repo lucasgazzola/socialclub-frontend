@@ -69,6 +69,8 @@ export const ROUTES = {
   /** DT-11: abre el alta de inscripción dentro de Participantes. */
   nuevaInscripcion: `${ADMIN}/participantes?nueva=1`,
   editarParticipante: (id: number) => `${ADMIN}/participantes?editar=${id}`,
+  /** US-66: evaluación administrativa de solicitudes de inscripción a disciplinas. */
+  solicitudesInscripcion: `${ADMIN}/inscripcion/solicitudes`,
   documentacion: `${ADMIN}/documentacion`,
   /** US-60 y US-55. */
   solicitudesReserva: `${ADMIN}/reservas/solicitudes`,

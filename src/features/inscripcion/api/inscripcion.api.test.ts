@@ -14,6 +14,9 @@ import {
   obtenerCatalogoInscripcion,
   solicitarInscripcion,
   obtenerMisSolicitudesInscripcion,
+  listarSolicitudesInscripcion,
+  aprobarSolicitudInscripcion,
+  rechazarSolicitudInscripcion,
   cancelarSolicitudInscripcion,
   subirDocumentacionSolicitud,
 } from './inscripcion.api';
@@ -149,6 +152,46 @@ describe('inscripcion.api', () => {
       params: { estado: 'RECHAZADA' },
     });
     expect(res).toEqual(listaMock);
+  });
+
+  it('listarSolicitudesInscripcion() envía get a /inscripcion/solicitudes con filtros', async () => {
+    const listaMock = [{ id: 10, estado: 'PENDIENTE' }];
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ data: listaMock });
+    const res = await listarSolicitudesInscripcion({
+      estado: 'PENDIENTE',
+      disciplinaId: 2,
+      busqueda: '  Luna  ',
+    });
+    expect(apiClient.get).toHaveBeenCalledWith('/inscripcion/solicitudes', {
+      params: {
+        estado: 'PENDIENTE',
+        disciplinaId: 2,
+        busqueda: 'Luna',
+      },
+    });
+    expect(res).toEqual(listaMock);
+  });
+
+  it('aprobarSolicitudInscripcion() envía patch a /inscripcion/solicitudes/:id/aprobar', async () => {
+    const respuestaMock = {
+      solicitud: { id: 10, estado: 'APROBADA' },
+      inscripcion: { id: 500 },
+      estadoDocumental: { estado: 'HABILITADO' },
+    };
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: respuestaMock });
+    const res = await aprobarSolicitudInscripcion(10);
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/solicitudes/10/aprobar');
+    expect(res).toEqual(respuestaMock);
+  });
+
+  it('rechazarSolicitudInscripcion() envía patch a /inscripcion/solicitudes/:id/rechazar con motivo', async () => {
+    const respuestaMock = { id: 10, estado: 'RECHAZADA', motivoRechazo: 'Cupo completo' };
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({ data: respuestaMock });
+    const res = await rechazarSolicitudInscripcion(10, 'Cupo completo');
+    expect(apiClient.patch).toHaveBeenCalledWith('/inscripcion/solicitudes/10/rechazar', {
+      motivo: 'Cupo completo',
+    });
+    expect(res).toEqual(respuestaMock);
   });
 
   it('cancelarSolicitudInscripcion() envía patch al endpoint de cancelación', async () => {

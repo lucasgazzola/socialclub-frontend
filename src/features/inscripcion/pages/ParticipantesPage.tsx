@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { FileText, Filter, Plus, Search, UserPlus } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ClipboardCheck, FileText, Filter, Plus, Search, UserPlus } from 'lucide-react';
 import { Button, Input, Modal, Select, Spinner, StatusTabs, TablePagination, TableExportMenu } from '@/components/ui';
+import { ROUTES } from '@/routes/paths';
 import { AuthContext } from '@/features/auth/context/auth-context';
 import { useDisciplinasActivas } from '@/features/disciplinas/hooks/useDisciplinasActivas';
 import { DocumentacionParticipante } from '@/features/documentacion/components/DocumentacionParticipante';
@@ -193,10 +194,19 @@ export function ParticipantesPage() {
         </div>
 
         {puedeInscribir && (
-          <Button onClick={abrirInscripcion} className="self-start shadow-xs sm:self-auto">
-            <Plus size={16} />
-            Nuevo participante
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <Link
+              to={ROUTES.solicitudesInscripcion}
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-2xs transition-colors hover:bg-slate-50"
+            >
+              <ClipboardCheck size={16} />
+              Solicitudes de inscripción
+            </Link>
+            <Button onClick={abrirInscripcion} className="shadow-xs">
+              <Plus size={16} />
+              Nuevo participante
+            </Button>
+          </div>
         )}
       </header>
 
